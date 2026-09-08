@@ -4,7 +4,7 @@
 
 const allowedMethods = new Set(['GET', 'HEAD', 'POST', 'PATCH', 'PUT', 'DELETE']);
 const allowedMethodsHeader = [...allowedMethods, 'OPTIONS'].join(', ');
-const maxBodyBytes = 1024 * 1024;
+const maxBodyBytes = 6 * 1024 * 1024;
 const upstreamTimeoutMs = 15000;
 
 export const config = { api: { bodyParser: false } };
@@ -53,7 +53,7 @@ async function readBody(request) {
   for await (const chunk of request) {
     size += chunk.length;
     if (size > maxBodyBytes) {
-      const error = new Error('El cuerpo de la solicitud supera 1 MB.');
+      const error = new Error('El cuerpo de la solicitud supera 6 MB.');
       error.status = 413;
       throw error;
     }

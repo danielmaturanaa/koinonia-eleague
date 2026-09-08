@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
@@ -6,6 +6,14 @@ import { DataState, PageHeader, formatDate, gp } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
 
 const asList = value => Array.isArray(value) ? value : [];
+
+function relatedName(item, side, type, index) {
+  const camel = `${side}${type}`;
+  const snake = `${side}_${type.toLowerCase()}`;
+  const embedded = item[camel] ?? item[snake];
+  const id = embedded?.id ?? item[`${camel}Id`] ?? item[`${snake}_id`];
+  return embedded?.name ?? item[`${camel}Name`] ?? item[`${snake}_name`] ?? index.get(id)?.name;
+}
 
 async function loadAllPlayers(signal) {
   const first = await endpoints.players({ page: 1, pageSize: 100 }, signal);
@@ -99,11 +107,13 @@ export function MarketPage({ teams }) {
   const players = useApiQuery(loadAllPlayers);
   const refresh = () => { transfers.retry(); trades.retry(); freeAgents.retry(); players.retry(); };
   const playerRows = asList(players.data);
+  const playersById = useMemo(() => new Map(playerRows.map(player => [player.id, player])), [playerRows]);
+  const teamsById = useMemo(() => new Map(teams.map(team => [team.id, team])), [teams]);
   return <main className="newspaper data-page"><section className="data-paper"><PageHeader kicker="OPERACIONES OFICIALES" title="MERCADO DE FICHAJES"><button className="page-action" onClick={() => setShowAdmin(value => !value)}>{showAdmin ? 'CERRAR GESTIÓN' : '⚙ GESTIONAR MERCADO'}</button></PageHeader>
     {showAdmin && <MarketAdmin teams={teams} players={playerRows} onChanged={refresh}/>} 
     <div className={`market-grid ${showAdmin ? 'with-admin' : ''}`}>
       <MarketPanel title="TRANSFERENCIAS" query={transfers} render={item => <article className="market-item" key={item.id}><b>{item.player?.name ?? item.playerName ?? 'Jugador'}</b><span>{item.fromTeam?.name ?? 'Origen'} → {item.toTeam?.name ?? 'Destino'}</span><small>{gp(item.gpAmount)} · {item.status ?? 'pendiente'} · {formatDate(item.createdAt)}</small><TransferActions item={item} onChanged={refresh}/></article>}/>
-      <MarketPanel title="TRUEQUES" query={trades} render={item => <article className="market-item" key={item.id}><b>{item.fromPlayer?.name ?? 'Jugador'} ⇄ {item.toPlayer?.name ?? 'Jugador'}</b><span>{item.fromTeam?.name ?? 'Origen'} / {item.toTeam?.name ?? 'Destino'}</span><small>{item.status ?? 'pendiente'}</small><TradeActions item={item} onChanged={refresh}/></article>}/>
+      <MarketPanel title="TRUEQUES" query={trades} render={item => <article className="market-item" key={item.id}><b>{relatedName(item, 'from', 'Player', playersById) ?? 'Jugador'} ⇄ {relatedName(item, 'to', 'Player', playersById) ?? 'Jugador'}</b><span>{relatedName(item, 'from', 'Team', teamsById) ?? 'Origen'} / {relatedName(item, 'to', 'Team', teamsById) ?? 'Destino'}</span><small>{item.status ?? 'pendiente'}</small><TradeActions item={item} onChanged={refresh}/></article>}/>
       <MarketPanel title="AGENTES LIBRES" query={freeAgents} render={item => <article className="market-item" key={item.id}><b>{item.name}</b><span>{item.position ?? 'SIN POSICIÓN'}</span><small>{gp(item.gpValue)}</small></article>}/>
     </div>
   </section></main>;

@@ -55,7 +55,12 @@ export function TournamentsPage({ classificationOnly = false, teams = [] }) {
   const tournaments = useApiQuery(signal => endpoints.tournaments({ page: 1, pageSize: 100 }, signal));
   const [selectedId, setSelectedId] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
-  const rows = Array.isArray(tournaments.data) ? tournaments.data : [];
+  const rows = useMemo(() => {
+    const source = Array.isArray(tournaments.data) ? tournaments.data : [];
+    if (!classificationOnly) return source;
+    const priority = tournament => tournament.format === 'league' || /liga/i.test(tournament.name ?? '') ? 0 : 1;
+    return [...source].sort((a, b) => priority(a) - priority(b) || (a.name ?? '').localeCompare(b.name ?? '', 'es'));
+  }, [classificationOnly, tournaments.data]);
   useEffect(() => { if (!selectedId && rows[0]?.id) setSelectedId(rows[0].id); }, [rows, selectedId]);
   const deleted = () => { setSelectedId(null); tournaments.retry(); };
   return <main className="newspaper data-page"><section className="data-paper"><PageHeader kicker="COMPETICIONES OFICIALES" title={classificationOnly ? 'CLASIFICACIÓN' : 'TORNEOS'}>{!classificationOnly && <button className="page-action" onClick={() => setShowCreate(value => !value)}>{showCreate ? 'CERRAR ALTA' : '+ CREAR TORNEO'}</button>}</PageHeader>{showCreate && <CreateTournamentForm onChanged={() => tournaments.retry()}/>}<DataState query={tournaments}/>{rows.length > 0 && <div className="tournament-tabs">{rows.map(item => <button className={selectedId === item.id ? 'active' : ''} key={item.id} onClick={() => setSelectedId(item.id)}>{item.name}<small>{item.status}</small></button>)}</div>}{selectedId && <TournamentWorkspace tournamentId={selectedId} classificationOnly={classificationOnly} teams={teams} onChanged={() => tournaments.retry()} onDeleted={deleted}/>}</section></main>;

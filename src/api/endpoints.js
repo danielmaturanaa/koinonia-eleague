@@ -10,6 +10,9 @@ export const endpoints = {
   team: (teamId, signal) => get(`/teams/${teamId}`, null, signal),
   teamSquad: (teamId, signal) => get(`/teams/${teamId}/squad`, null, signal),
   teamMatches: (teamId, signal) => get(`/teams/${teamId}/matches`, null, signal),
+  presidents: (query, signal) => get('/presidents', query, signal),
+  coaches: (query, signal) => get('/coaches', query, signal),
+  coach: (coachId, signal) => get(`/coaches/${coachId}`, null, signal),
   nationalTeams: (query, signal) => get('/national-teams', query, signal),
   squadRankings: (query, signal) => get('/rankings/squads', query, signal),
   history: (entityType, entityId, query, signal) => get(`/history/${entityType}/${entityId}`, query, signal),
@@ -29,6 +32,18 @@ export const endpoints = {
   freeAgents: (query, signal) => get('/market/free-agents', query, signal),
   createTeam: (body, signal) => apiClient.post('/teams', body, { actor: 'web', signal }),
   updateTeam: (teamId, body, signal) => apiClient.patch(`/teams/${teamId}`, body, { actor: 'web', signal }),
+  updatePresident: (presidentId, body, signal) => apiClient.patch(`/presidents/${presidentId}`, body, { actor: 'web', signal }),
+  createCoach: (body, signal) => apiClient.post('/coaches', body, { actor: 'web', signal }),
+  updateCoach: (coachId, body, signal) => apiClient.patch(`/coaches/${coachId}`, body, { actor: 'web', signal }),
+  deleteCoach: (coachId, signal) => apiClient.delete(`/coaches/${coachId}`, {}, { actor: 'web', signal }),
+  uploadImage: (file, { entityType, entityId } = {}, signal) => {
+    const body = new FormData();
+    body.append('file', file);
+    if (entityType) body.append('entityType', entityType);
+    if (entityId) body.append('entityId', entityId);
+    return apiClient.post('/media/images', body, { actor: 'web', signal });
+  },
+  deleteImage: (assetId, signal) => apiClient.delete(`/media/images/${assetId}`, {}, { actor: 'web', signal }),
   creditTeam: (teamId, body, signal) => apiClient.post(`/teams/${teamId}/credit`, body, { actor: 'web', signal }),
   debitTeam: (teamId, body, signal) => apiClient.post(`/teams/${teamId}/debit`, body, { actor: 'web', signal }),
   linkTeamDiscord: (teamId, body, signal) => apiClient.post(`/teams/${teamId}/link-discord`, body, { actor: 'web', signal }),

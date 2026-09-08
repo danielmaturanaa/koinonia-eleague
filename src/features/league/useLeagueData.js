@@ -5,7 +5,7 @@ const list = value => Array.isArray(value) ? value : [];
 
 export function useLeagueData(teamId) {
   const [revision, setRevision] = useState(0);
-  const [league, setLeague] = useState({ home: null, teams: [], standings: [] });
+  const [league, setLeague] = useState({ home: null, teams: [], standings: [], standingsByTournament: {}, upcomingMatches: [] });
   const [teamDetail, setTeamDetail] = useState(null);
   const [squad, setSquad] = useState([]);
   const [teamMatches, setTeamMatches] = useState([]);
@@ -18,12 +18,16 @@ export function useLeagueData(teamId) {
     Promise.all([
       getData('/home', { signal: controller.signal }),
       getData('/teams', { query: { page: 1, pageSize: 100 }, signal: controller.signal }),
-    ]).then(async ([home, teams]) => {
-      const tournament = list(home?.activeTournaments)[0];
-      const standings = tournament?.id
-        ? await getData(`/tournaments/${tournament.id}/standings`, { signal: controller.signal }).catch(() => [])
-        : [];
-      setLeague({ home, teams: list(teams), standings: list(standings) });
+      getData('/matches', { query: { page: 1, pageSize: 100, status: 'pending' }, signal: controller.signal }),
+    ]).then(async ([home, teams, upcomingMatches]) => {
+      const tournaments = list(home?.activeTournaments);
+      const standingsEntries = await Promise.all(tournaments.map(async tournament => [
+        tournament.id,
+        list(await getData(`/tournaments/${tournament.id}/standings`, { signal: controller.signal }).catch(() => [])),
+      ]));
+      const standingsByTournament = Object.fromEntries(standingsEntries);
+      const primaryTournament = tournaments.find(tournament => tournament.format === 'league') ?? tournaments[0];
+      setLeague({ home, teams: list(teams), standings: standingsByTournament[primaryTournament?.id] ?? [], standingsByTournament, upcomingMatches: list(upcomingMatches) });
       setState(current => ({ ...current, loading: false, error: '' }));
     }).catch(error => {
       if (error.code !== 'REQUEST_ABORTED') {

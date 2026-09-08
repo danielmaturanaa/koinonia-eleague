@@ -1,7 +1,9 @@
 import { useLayoutEffect, useState } from 'react';
 import { ApiStatus } from './ApiStatus.jsx';
+import { MusicPlayer } from './MusicPlayer.jsx';
 import { Navigation } from './Navigation.jsx';
 import { TeamMark } from './TeamMark.jsx';
+import { leaguePlaylist } from '../app/playlist.js';
 
 function HeaderEmblems({ teams, side, navigate }) {
   return <div className={`header-emblems header-emblems-${side}`} aria-label={`Emblemas de equipos, lado ${side === 'left' ? 'izquierdo' : 'derecho'}`}>{teams.map(team => <button className="header-team-button" type="button" key={team.id} title={team.name} aria-label={`Abrir equipo ${team.name}`} onClick={() => navigate(`/equipos/${encodeURIComponent(team.id)}`)}><TeamMark team={team}/></button>)}</div>;
@@ -10,7 +12,11 @@ function HeaderEmblems({ teams, side, navigate }) {
 export function ArcadeLayout({ route, navigate, children, sidebar, error, dismissError, headerTeams = [] }) {
   const [scale, setScale] = useState(1);
   useLayoutEffect(() => {
-    const resize = () => setScale(Math.min(window.innerWidth / 1536, window.innerHeight / 1024, 1.25));
+    const resize = () => {
+      const widthScale = window.innerWidth / 1536;
+      const heightScale = window.innerHeight / 1024;
+      setScale(Math.min(widthScale, Math.max(heightScale, widthScale * 0.94), 1.25));
+    };
     resize();
     window.addEventListener('resize', resize);
     return () => window.removeEventListener('resize', resize);
@@ -23,14 +29,13 @@ export function ArcadeLayout({ route, navigate, children, sidebar, error, dismis
     <div className="football-world" style={{ transform: `scale(${scale})` }}>
       <header className="game-header">
         <HeaderEmblems teams={visibleTeams.slice(0, splitAt)} side="left" navigate={navigate}/>
-        <button className="brand" onClick={() => navigate('/')}>
-          <span className="brand-top">KOINONIA</span><span className="brand-bottom">e-LEAGUE</span>
-          <span className="brand-caption">e F O O T B A L L&nbsp;&nbsp; T O U R N A M E N T S</span>
+        <button className="brand" onClick={() => navigate('/')} aria-label="Koinonia e-League eFootball Tournaments">
+          <img className="brand-logo" src="/koinonia-eleague-logo.png" alt="Koinonia e-League"/>
         </button>
         <HeaderEmblems teams={visibleTeams.slice(splitAt)} side="right" navigate={navigate}/>
         <ApiStatus/>
       </header>
-      <div className="home-composition"><Navigation route={route} navigate={navigate}/>{children}{sidebar}</div>
+      <div className="home-composition"><div className="left-rail"><Navigation route={route} navigate={navigate}/><MusicPlayer tracks={leaguePlaylist}/></div>{children}{sidebar}</div>
       {error && <div className="preview-notice" role="status">{error}<button onClick={dismissError} aria-label="Cerrar aviso">×</button></div>}
     </div>
   </div>;

@@ -42,18 +42,20 @@ export async function apiRequest(path, {
   signal?.addEventListener('abort', abort, { once: true });
 
   let payload = body;
-  if (WRITE_METHODS.has(normalizedMethod) && actor && body && typeof body === 'object' && !Array.isArray(body)) {
+  const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+  if (WRITE_METHODS.has(normalizedMethod) && actor && body && typeof body === 'object' && !Array.isArray(body) && !isFormData) {
     payload = { ...body, actor };
   }
+  if (isFormData && actor && !payload.has('actor')) payload.append('actor', actor);
 
   try {
     const response = await fetch(buildUrl(path, query), {
       method: normalizedMethod,
-      headers: payload === undefined ? { Accept: 'application/json' } : {
+      headers: payload === undefined || isFormData ? { Accept: 'application/json' } : {
         Accept: 'application/json',
         'Content-Type': 'application/json',
       },
-      body: payload === undefined ? undefined : JSON.stringify(payload),
+      body: payload === undefined ? undefined : isFormData ? payload : JSON.stringify(payload),
       signal: controller.signal,
     });
     const result = await parseResponse(response);

@@ -20,7 +20,7 @@ const port = Number(values.API_PROXY_PORT || 5175);
 const allowedOrigin = values.WEB_ORIGIN || 'http://127.0.0.1:5174';
 const allowedMethods = new Set(['GET', 'HEAD', 'POST', 'PATCH', 'PUT', 'DELETE']);
 const allowedMethodsHeader = [...allowedMethods, 'OPTIONS'].join(', ');
-const maxBodyBytes = 1024 * 1024;
+const maxBodyBytes = 6 * 1024 * 1024;
 
 function setCors(request, response) {
   const origin = request.headers.origin;
@@ -38,7 +38,7 @@ async function readBody(request) {
   for await (const chunk of request) {
     size += chunk.length;
     if (size > maxBodyBytes) {
-      const error = new Error('El cuerpo de la solicitud supera 1 MB.');
+      const error = new Error('El cuerpo de la solicitud supera 6 MB.');
       error.status = 413;
       throw error;
     }

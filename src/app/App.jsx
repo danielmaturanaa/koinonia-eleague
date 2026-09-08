@@ -16,14 +16,16 @@ import { TeamsDirectoryPage } from '../features/public/TeamsDirectoryPage.jsx';
 import { useRoute } from './useRoute.js';
 
 const list = value => Array.isArray(value) ? value : [];
+const tournamentPriority = tournament => tournament.format === 'league' || /liga/i.test(tournament.name ?? '') ? 0 : 1;
 
 export function App() {
   const { route, navigate } = useRoute();
   const { league, teamDetail, squad, teamMatches, teamHistory, teamHistoryError, state, refresh, dismissError } = useLeagueData(route.teamId);
   const indexedTeams = useMemo(() => new Map(league.teams.map(team => [team.id, team])), [league.teams]);
   const resolveTeam = team => ({ ...team, ...(indexedTeams.get(team?.id ?? team?.team_id) ?? {}) });
-  const tournament = list(league.home?.activeTournaments)[0];
-  const upcoming = list(league.home?.upcomingMatches).slice(0, 5);
+  const activeTournaments = [...list(league.home?.activeTournaments)].sort((a, b) => tournamentPriority(a) - tournamentPriority(b) || (a.name ?? '').localeCompare(b.name ?? '', 'es'));
+  const tournament = activeTournaments.find(item => item.format === 'league') ?? activeTournaments[0];
+  const upcoming = league.upcomingMatches.length ? league.upcomingMatches : list(league.home?.upcomingMatches);
   const completed = list(league.home?.recentMatches).slice(0, 5);
 
   let page;
@@ -51,11 +53,11 @@ export function App() {
   } else if (route.path === '/torneos') {
     page = <TournamentsPage teams={league.teams}/>;
   } else if (route.path === '/noticias') {
-    page = <NewsPage/>;
+    page = <NewsPage teams={league.teams}/>;
   } else {
     page = <SectionPage path={route.path}/>;
   }
 
-  const sidebar = <MatchSidebar completed={completed} upcoming={upcoming} standings={league.standings} resolveTeam={resolveTeam} loading={state.loading}/>;
+  const sidebar = <MatchSidebar completed={completed} upcoming={upcoming} tournaments={activeTournaments} standingsByTournament={league.standingsByTournament} resolveTeam={resolveTeam} loading={state.loading}/>;
   return <ArcadeLayout route={route} navigate={navigate} sidebar={sidebar} error={state.error} dismissError={dismissError} headerTeams={league.teams}>{page}</ArcadeLayout>;
 }
