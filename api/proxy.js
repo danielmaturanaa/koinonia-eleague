@@ -1,5 +1,6 @@
-// Proxy de API para Vercel: espeja api-proxy.mjs (el proxy de desarrollo).
-// El cliente siempre pide /api/*, así que la API_KEY nunca sale al bundle.
+// Proxy de API para Vercel: espeja api-proxy.mjs (el gateway de desarrollo).
+// vercel.json reescribe /api/* hacia aquí y pasa la ruta en el parámetro `path`,
+// de modo que el cliente siempre consume /api/* y la API_KEY nunca sale al bundle.
 
 const allowedMethods = new Set(['GET', 'HEAD', 'POST', 'PATCH', 'PUT', 'DELETE']);
 const allowedMethodsHeader = [...allowedMethods, 'OPTIONS'].join(', ');
@@ -16,17 +17,27 @@ function apiBaseUrl() {
   return new URL(value.endsWith('/') ? value : `${value}/`);
 }
 
+function badRequest(message) {
+  const error = new Error(message);
+  error.status = 400;
+  return error;
+}
+
 function upstreamUrl(requestUrl, apiBase) {
   const incoming = new URL(requestUrl, 'http://proxy.local');
-  const suffix = incoming.pathname.slice('/api/'.length);
+
+  // La reescritura inyecta la ruta como parámetro; no debe viajar a la API.
+  const suffix = (incoming.searchParams.get('path') ?? incoming.pathname.slice('/api/'.length))
+    .replace(/^\/+/, '');
+  incoming.searchParams.delete('path');
+  if (!suffix || suffix === 'proxy') throw badRequest('Falta la ruta de API.');
+
   const target = suffix === 'health' ? new URL('/health', apiBase.origin) : new URL(suffix, apiBase);
-  target.search = incoming.search;
+  target.search = incoming.searchParams.toString();
 
   const apiPath = apiBase.pathname.endsWith('/') ? apiBase.pathname : `${apiBase.pathname}/`;
   if (target.origin !== apiBase.origin || (suffix !== 'health' && !target.pathname.startsWith(apiPath))) {
-    const error = new Error('Ruta de API no permitida.');
-    error.status = 400;
-    throw error;
+    throw badRequest('Ruta de API no permitida.');
   }
   return target;
 }

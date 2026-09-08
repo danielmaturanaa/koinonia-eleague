@@ -50,6 +50,6 @@ Copia `.env.example` como `.env` y completa `API_BASE_URL` y `API_KEY`. Si `API_
 
 ### Despliegue en Vercel
 
-`api/[...path].js` es la versión serverless del gateway: expone el mismo contrato `/api/*` que el cliente ya consume, por lo que el frontend no cambia entre desarrollo y producción. En el proyecto de Vercel define `API_BASE_URL` y `API_KEY` como Environment Variables; `.env` no se publica y `api-proxy.mjs` solo corre en local.
+`api/proxy.js` es la versión serverless del gateway y `vercel.json` reescribe `/api/:path*` hacia él pasando la ruta en el parámetro `path`. Expone el mismo contrato `/api/*` que el cliente ya consume, por lo que el frontend no cambia entre desarrollo y producción. En el proyecto de Vercel define `API_BASE_URL` y `API_KEY` como Environment Variables; `.env` no se publica y `api-proxy.mjs` solo corre en local.
 
 Dependencias: React, React DOM y Vite. El gateway usa únicamente APIs incluidas en Node.js.
