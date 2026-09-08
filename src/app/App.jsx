@@ -24,7 +24,7 @@ export function App() {
   const resolveTeam = team => ({ ...team, ...(indexedTeams.get(team?.id ?? team?.team_id) ?? {}) });
   const tournament = list(league.home?.activeTournaments)[0];
   const upcoming = list(league.home?.upcomingMatches).slice(0, 5);
-  const completed = list(league.home?.liveMatches).filter(match => match.status !== 'pending').slice(0, 5);
+  const completed = list(league.home?.recentMatches).slice(0, 5);
 
   let page;
   if (route.name === 'home') {
