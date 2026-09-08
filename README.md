@@ -48,4 +48,8 @@ La séptima etapa cierra la integración con controles operativos: indicador de 
 
 Copia `.env.example` como `.env` y completa `API_BASE_URL` y `API_KEY`. Si `API_BASE_URL` termina en `/v1`, las rutas del cliente se escriben sin repetir ese prefijo; `/api/health` se dirige correctamente a `/health`.
 
+### Despliegue en Vercel
+
+`api/[...path].js` es la versión serverless del gateway: expone el mismo contrato `/api/*` que el cliente ya consume, por lo que el frontend no cambia entre desarrollo y producción. En el proyecto de Vercel define `API_BASE_URL` y `API_KEY` como Environment Variables; `.env` no se publica y `api-proxy.mjs` solo corre en local.
+
 Dependencias: React, React DOM y Vite. El gateway usa únicamente APIs incluidas en Node.js.
