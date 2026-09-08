@@ -3,6 +3,7 @@ import { ApiStatus } from './ApiStatus.jsx';
 import { MusicPlayer } from './MusicPlayer.jsx';
 import { Navigation } from './Navigation.jsx';
 import { TeamMark } from './TeamMark.jsx';
+import { TransparentLogo } from './TransparentLogo.jsx';
 import { leaguePlaylist } from '../app/playlist.js';
 
 function HeaderEmblems({ teams, side, navigate }) {
@@ -30,7 +31,7 @@ export function ArcadeLayout({ route, navigate, children, sidebar, error, dismis
       <header className="game-header">
         <HeaderEmblems teams={visibleTeams.slice(0, splitAt)} side="left" navigate={navigate}/>
         <button className="brand" onClick={() => navigate('/')} aria-label="Koinonia e-League eFootball Tournaments">
-          <img className="brand-logo" src="/koinonia-eleague-logo.png" alt="Koinonia e-League"/>
+          <TransparentLogo className="brand-logo" src="/koinonia-eleague-logo.png" label="Koinonia e-League"/>
         </button>
         <HeaderEmblems teams={visibleTeams.slice(splitAt)} side="right" navigate={navigate}/>
         <ApiStatus/>

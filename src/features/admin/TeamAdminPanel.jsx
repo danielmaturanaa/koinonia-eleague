@@ -43,13 +43,6 @@ function BudgetForm({ team, onChanged }) {
   return <div className="admin-form"><p className="balance-label">SALDO INFORMADO <b>{balance.toLocaleString('es-CL')} GP</b></p><label>MONTO<input min="1" step="1" type="number" required value={form.amount} onChange={event => setForm(current => ({ ...current, amount: event.target.value }))}/></label><label>MOTIVO<input value={form.reason} onChange={event => setForm(current => ({ ...current, reason: event.target.value }))}/></label><div className="button-row"><button type="button" className="action-button positive" disabled={!form.amount || credit.loading || debit.loading} onClick={submitCredit}>ACREDITAR</button><button type="button" className="action-button danger" disabled={!form.amount || !form.reason || credit.loading || debit.loading} onClick={submitDebit}>DEBITAR</button></div><FormFeedback mutation={credit.error || credit.success ? credit : debit}/></div>;
 }
 
-function DiscordForm({ team, onChanged }) {
-  const [discordUserId, setDiscordUserId] = useState(team.president?.discordUserId ?? '');
-  useEffect(() => setDiscordUserId(team.president?.discordUserId ?? ''), [team]);
-  const mutation = useApiMutation((body, signal) => endpoints.linkTeamDiscord(team.id, body, signal), { onSuccess: onChanged });
-  return <form className="admin-form" onSubmit={event => { event.preventDefault(); mutation.execute({ discordUserId }); }}><p>ESTADO: <b>{team.president?.discordUserId ? `VINCULADO A ${team.president.discordUserId}` : 'SIN VINCULAR'}</b></p><label>ID DE USUARIO DISCORD<input required value={discordUserId} onChange={event => setDiscordUserId(event.target.value)}/></label><button className="action-button" disabled={mutation.loading}>VINCULAR DISCORD</button><FormFeedback mutation={mutation}/></form>;
-}
-
 function MemberEditor({ teamId, player, onChanged }) {
   const [form, setForm] = useState({ jerseyNumber: player.jerseyNumber ?? '', squadOrder: player.squadOrder ?? '', isStarter: Boolean(player.isStarter ?? player.section === 'starters') });
   const mutation = useApiMutation((body, signal) => endpoints.updateSquadMember(teamId, player.id, body, signal), { onSuccess: onChanged });
@@ -78,6 +71,6 @@ function OrderEditor({ team, squad, onChanged }) {
 
 export function TeamAdminPanel({ team, squad, onChanged }) {
   const [tab, setTab] = useState('profile');
-  const tabs = [['profile','PERFIL'],['president','PRESIDENTE'],['budget','PRESUPUESTO'],['discord','DISCORD'],['squad','PLANTEL'],['order','ORDEN']];
-  return <section className="team-admin"><header><p>GESTIÓN PÚBLICA DEL EQUIPO</p><nav>{tabs.map(([value, label]) => <button className={tab === value ? 'active' : ''} onClick={() => setTab(value)} key={value}>{label}</button>)}</nav></header>{tab === 'profile' && <ProfileForm team={team} onChanged={onChanged}/>} {tab === 'president' && <PresidentForm team={team} onChanged={onChanged}/>} {tab === 'budget' && <BudgetForm team={team} onChanged={onChanged}/>} {tab === 'discord' && <DiscordForm team={team} onChanged={onChanged}/>} {tab === 'squad' && <SquadEditor team={team} squad={squad} onChanged={onChanged}/>} {tab === 'order' && <OrderEditor team={team} squad={squad} onChanged={onChanged}/>}</section>;
+  const tabs = [['profile','PERFIL'],['president','PRESIDENTE'],['budget','PRESUPUESTO'],['squad','PLANTEL'],['order','ORDEN']];
+  return <section className="team-admin"><header><p>GESTIÓN PÚBLICA DEL EQUIPO</p><nav>{tabs.map(([value, label]) => <button className={tab === value ? 'active' : ''} onClick={() => setTab(value)} key={value}>{label}</button>)}</nav></header>{tab === 'profile' && <ProfileForm team={team} onChanged={onChanged}/>} {tab === 'president' && <PresidentForm team={team} onChanged={onChanged}/>} {tab === 'budget' && <BudgetForm team={team} onChanged={onChanged}/>} {tab === 'squad' && <SquadEditor team={team} squad={squad} onChanged={onChanged}/>} {tab === 'order' && <OrderEditor team={team} squad={squad} onChanged={onChanged}/>}</section>;
 }

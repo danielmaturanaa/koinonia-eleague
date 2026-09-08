@@ -25,7 +25,7 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .football-world::before { content: ''; position: absolute; inset: 0; background: url('/stadium-background-v2.jpeg') center / cover no-repeat; z-index: -2; }
 .game-header { position: relative; height: 162px; }
 .brand { position: absolute; z-index: 1; top: 4px; left: 50%; width: 620px; height: 150px; padding: 0; overflow: hidden; border: 0; background: transparent; transform: translateX(-50%); }
-.brand-logo { display: block; width: 100%; height: 100%; object-fit: cover; object-position: center; mix-blend-mode: screen; }
+.brand-logo { position: absolute; top: 50%; left: 0; display: block; width: 100%; height: auto; transform: translateY(-50%); }
 .header-emblems { position: absolute; z-index: 2; top: 42px; display: grid; grid-template-columns: repeat(6, 52px); gap: 8px; align-items: center; }
 .header-emblems-left { left: 28px; }
 .header-emblems-right { right: 28px; }
@@ -118,13 +118,15 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .badge { display: inline-block; width: 30px; height: 33px; background-image: url('/reference-art.png'); background-size: 1536px 1024px; }
 .team-mark { display: block; width: 30px; height: 30px; object-fit: contain; flex: 0 0 30px; }
 .emoji-mark { display: grid; place-items: center; font-size: 24px; line-height: 1; }
-.home-name, .away-name { font: 500 13.5px/1.05 'Roboto Condensed', sans-serif; white-space: nowrap; letter-spacing: -.5px; }
+.home-name, .away-name { min-width: 0; overflow: hidden; font: 500 13.5px/1.05 'Roboto Condensed', sans-serif; text-overflow: ellipsis; white-space: nowrap; letter-spacing: -.5px; }
 .away-name { text-align: right; }
 .score-line strong { text-align: center; font: 700 19px/1 'Roboto Condensed', sans-serif; white-space: nowrap; }
 .versus { font-size: 15px; text-align: center; }
 .upcoming-panel .score-line { min-height: 32px; }
 .upcoming-panel .badge { height: 30px; }
-.upcoming-scroll { max-height: 145px; overflow-y: auto; }
+.upcoming-panel { min-width: 0; overflow: hidden; }
+.upcoming-scroll { width: 100%; max-width: 100%; max-height: 145px; overflow-x: hidden; overflow-y: auto; overscroll-behavior-x: none; }
+.upcoming-scroll .score-line { width: 100%; min-width: 0; }
 .standings-panel { padding-bottom: 7px; }
 .sidebar-tournament-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; padding: 3px 0 5px; }
 .sidebar-tournament-tabs button { min-width: 0; min-height: 28px; padding: 3px 4px; overflow: hidden; border: 1px solid #0b2e73; color: #10204c; background: #d9cfb8; font: 600 9px/1 'Oswald', sans-serif; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
