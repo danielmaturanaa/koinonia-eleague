@@ -10,7 +10,7 @@ function HeaderEmblems({ teams, side, navigate }) {
 export function ArcadeLayout({ route, navigate, children, sidebar, error, dismissError, headerTeams = [] }) {
   const [scale, setScale] = useState(1);
   useLayoutEffect(() => {
-    const resize = () => setScale(Math.min(window.innerWidth / 1536, 1.25));
+    const resize = () => setScale(Math.min(window.innerWidth / 1536, window.innerHeight / 1024, 1.25));
     resize();
     window.addEventListener('resize', resize);
     return () => window.removeEventListener('resize', resize);

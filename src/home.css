@@ -193,7 +193,7 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .club-rank small { font: 500 11px/1 'Oswald', sans-serif; letter-spacing: .8px; }
 .club-rank b { color: #ffd425; font: 400 56px/.9 'Anton', sans-serif; text-shadow: 3px 3px #030a20; }
 .club-rank strong { font: 700 16px/1 'Roboto Condensed', sans-serif; }
-.club-stats { display: grid; grid-template-columns: repeat(4, 1fr); margin: 10px 0; border: 2px solid #172758; background: #d9cfb8; }
+.club-stats { display: grid; grid-template-columns: repeat(5, 1fr); margin: 10px 0; border: 2px solid #172758; background: #d9cfb8; }
 .club-stats span { padding: 5px 7px; border-right: 1px solid #8d816a; font: 500 12px/1 'Oswald', sans-serif; }
 .club-stats span:last-child { border-right: 0; }
 .club-stats b { display: block; margin-top: 3px; font-size: 19px; color: #07194a; }
@@ -373,6 +373,7 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .directory-grid span, .crest-gallery article { font: 500 14px/1 'Oswald', sans-serif; }
 .directory-grid span, .crest-gallery article > b, .crest-gallery article > small { display: grid; gap: 4px; }
 .directory-grid small, .crest-gallery small { font: 500 11px/1 'Roboto Condensed', sans-serif; }
+.directory-loading { margin-bottom: 6px; color: #8c0019; font: 600 11px/1 'Oswald', sans-serif; letter-spacing: .6px; }
 .crest-gallery { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
 .team-page-header .admin-toggle { position: absolute; right: 8px; top: 8px; padding: 6px 9px; border: 2px solid #ffd42a; color: #fff; background: #a90020; font: 500 13px/1 'Oswald', sans-serif; }
 .admin-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 10px; border: 3px double #625d4e; background: #d9cfb8; }

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
+import { teamBalance } from '../../utils/teamPresentation.js';
 import { FormFeedback } from './FormFeedback.jsx';
 import { useApiMutation } from './useApiMutation.js';
 
@@ -14,6 +15,7 @@ function ProfileForm({ team, onChanged }) {
 }
 
 function BudgetForm({ team, onChanged }) {
+  const balance = teamBalance(team) ?? 0;
   const [form, setForm] = useState({ amount: '', reason: '' });
   const credit = useApiMutation((body, signal) => endpoints.creditTeam(team.id, body, signal), { onSuccess: onChanged });
   const debit = useApiMutation((body, signal) => endpoints.debitTeam(team.id, body, signal), { onSuccess: onChanged });
@@ -22,7 +24,7 @@ function BudgetForm({ team, onChanged }) {
   const submitDebit = () => {
     if (window.confirm(`¿DEBITAR ${form.amount} GP DE ${team.name}?`)) debit.execute(payload());
   };
-  return <div className="admin-form"><p className="balance-label">SALDO INFORMADO <b>{Number(team.budget ?? team.budgetValue ?? 0).toLocaleString('es-CL')} GP</b></p><label>MONTO<input min="1" step="1" type="number" required value={form.amount} onChange={event => setForm(current => ({ ...current, amount: event.target.value }))}/></label><label>MOTIVO<input value={form.reason} onChange={event => setForm(current => ({ ...current, reason: event.target.value }))}/></label><div className="button-row"><button type="button" className="action-button positive" disabled={!form.amount || credit.loading || debit.loading} onClick={submitCredit}>ACREDITAR</button><button type="button" className="action-button danger" disabled={!form.amount || !form.reason || credit.loading || debit.loading} onClick={submitDebit}>DEBITAR</button></div><FormFeedback mutation={credit.error || credit.success ? credit : debit}/></div>;
+  return <div className="admin-form"><p className="balance-label">SALDO INFORMADO <b>{balance.toLocaleString('es-CL')} GP</b></p><label>MONTO<input min="1" step="1" type="number" required value={form.amount} onChange={event => setForm(current => ({ ...current, amount: event.target.value }))}/></label><label>MOTIVO<input value={form.reason} onChange={event => setForm(current => ({ ...current, reason: event.target.value }))}/></label><div className="button-row"><button type="button" className="action-button positive" disabled={!form.amount || credit.loading || debit.loading} onClick={submitCredit}>ACREDITAR</button><button type="button" className="action-button danger" disabled={!form.amount || !form.reason || credit.loading || debit.loading} onClick={submitDebit}>DEBITAR</button></div><FormFeedback mutation={credit.error || credit.success ? credit : debit}/></div>;
 }
 
 function DiscordForm({ team, onChanged }) {
