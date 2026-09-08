@@ -11,6 +11,12 @@ function StandingsTable({ rows, resolveTeam }) {
   return <div className="table-scroll"><table className="league-table"><thead><tr><th>#</th><th>EQUIPO</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>GF</th><th>GC</th><th>DG</th><th>PTS</th></tr></thead><tbody>{rows.map((row, index) => <tr key={row.team_id ?? row.id}><td>{index + 1}</td><td><TeamMark team={resolveTeam(row)}/>{row.name}</td><td>{row.played}</td><td>{row.wins}</td><td>{row.draws}</td><td>{row.losses}</td><td>{row.gf}</td><td>{row.ga}</td><td>{row.gd}</td><td><b>{row.points}</b></td></tr>)}</tbody></table></div>;
 }
 
+function GroupStandings({ tournamentId, groupLabel, resolveTeam }) {
+  const standings = useApiQuery(signal => endpoints.standings(tournamentId, { group: groupLabel }, signal), [tournamentId, groupLabel]);
+  const rows = Array.isArray(standings.data) ? standings.data : [];
+  return <section className="workspace-panel"><h4>GRUPO {groupLabel}</h4><DataState query={standings}/>{rows.length > 0 && <StandingsTable rows={rows} resolveTeam={resolveTeam}/>}</section>;
+}
+
 function CreateTournamentForm({ onChanged }) {
   const [form, setForm] = useState({ name: '', format: 'league', competitorKind: 'club' });
   const mutation = useApiMutation((body, signal) => endpoints.createTournament(body, signal), { onSuccess: onChanged });
@@ -34,10 +40,12 @@ function TournamentWorkspace({ tournamentId, classificationOnly, teams, onChange
   const scorerRows = Array.isArray(scorers.data) ? scorers.data : [];
   const teamIndex = useMemo(() => new Map(teams.map(team => [team.id, team])), [teams]);
   const resolveTeam = team => ({ ...team, ...(teamIndex.get(team?.id ?? team?.team_id) ?? {}) });
+  const groupLabels = useMemo(() => [...new Set((detail.data?.teams ?? []).map(team => team.groupLabel).filter(Boolean))]
+    .sort((left, right) => String(left).localeCompare(String(right))), [detail.data]);
   const refresh = () => { detail.retry(); standings.retry(); fixtures.retry(); bracket.retry(); scorers.retry(); onChanged?.(); };
 
   return <section className={`tournament-workspace ${classificationOnly ? 'classification-workspace' : ''}`}><DataState query={detail}/>{detail.data && <><header><div><small>{detail.data.format?.replaceAll('_', ' ')} · {detail.data.competitorKind}</small><h2>{detail.data.name}</h2></div><div className="workspace-heading-actions"><b className={`status status-${detail.data.status}`}>{detail.data.status}</b>{!classificationOnly && <button onClick={() => setShowAdmin(value => !value)}>{showAdmin ? 'CERRAR GESTIÓN' : '⚙ GESTIONAR'}</button>}</div></header>{showAdmin && <TournamentAdminPanel key={detail.data.id} tournament={detail.data} teams={teams} onChanged={refresh} onDeleted={() => { setShowAdmin(false); onDeleted(); }}/>}</>}
-    <section className="workspace-panel standings-workspace-panel"><h3>CLASIFICACIÓN</h3><DataState query={standings}/>{standingRows.length > 0 && <StandingsTable rows={standingRows} resolveTeam={resolveTeam}/>}</section>
+    {groupLabels.length > 0 ? <section className="standings-workspace-panel"><h3>CLASIFICACIÓN POR GRUPOS</h3><div className="workspace-columns">{groupLabels.map(groupLabel => <GroupStandings key={groupLabel} tournamentId={tournamentId} groupLabel={groupLabel} resolveTeam={resolveTeam}/>)}</div></section> : <section className="workspace-panel standings-workspace-panel"><h3>CLASIFICACIÓN</h3><DataState query={standings}/>{standingRows.length > 0 && <StandingsTable rows={standingRows} resolveTeam={resolveTeam}/>}</section>}
     <div className="workspace-columns"><section className="workspace-panel"><h3>GOLEADORES</h3><DataState query={scorers}/>{scorerRows.map((row, index) => <p className="ranking-row" key={row.playerId ?? row.id}><b>{index + 1}</b><span>{row.playerName ?? row.name}</span><strong>{row.goals ?? 0}</strong></p>)}</section>{!classificationOnly && <section className="workspace-panel"><h3>LLAVE</h3><DataState query={bracket}/>{Array.isArray(bracket.data) && bracket.data.map(item => <div className="bracket-row" key={item.id}><TeamMark team={resolveTeam(item.homeTeam)}/><span>{item.homeTeam?.name ?? 'Por definir'}</span><b>VS</b><span>{item.awayTeam?.name ?? 'Por definir'}</span><TeamMark team={resolveTeam(item.awayTeam)}/></div>)}</section>}</div>
     {!classificationOnly && <section className="workspace-panel fixture-panel"><h3>FIXTURE <small>{fixtureRows.length} PARTIDOS</small></h3><DataState query={fixtures}/><div className="fixture-grid">{fixtureRows.slice(0, 40).map(match => <article key={match.id}><small>{match.groupLabel ? `GRUPO ${match.groupLabel}` : `FECHA ${match.roundNumber ?? '—'}`}</small><div className="fixture-match"><TeamMark team={resolveTeam(match.homeTeam)}/><span>{match.homeTeam?.name ?? 'Por definir'}</span><b>{match.homeScore ?? '–'} : {match.awayScore ?? '–'}</b><span>{match.awayTeam?.name ?? 'Por definir'}</span><TeamMark team={resolveTeam(match.awayTeam)}/></div></article>)}</div></section>}
   </section>;

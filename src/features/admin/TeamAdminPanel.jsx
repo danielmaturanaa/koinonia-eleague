@@ -26,9 +26,10 @@ function BudgetForm({ team, onChanged }) {
 }
 
 function DiscordForm({ team, onChanged }) {
-  const [discordUserId, setDiscordUserId] = useState('');
+  const [discordUserId, setDiscordUserId] = useState(team.president?.discordUserId ?? '');
+  useEffect(() => setDiscordUserId(team.president?.discordUserId ?? ''), [team]);
   const mutation = useApiMutation((body, signal) => endpoints.linkTeamDiscord(team.id, body, signal), { onSuccess: onChanged });
-  return <form className="admin-form" onSubmit={event => { event.preventDefault(); mutation.execute({ discordUserId }); }}><label>ID DE USUARIO DISCORD<input required value={discordUserId} onChange={event => setDiscordUserId(event.target.value)}/></label><button className="action-button" disabled={mutation.loading}>VINCULAR DISCORD</button><FormFeedback mutation={mutation}/></form>;
+  return <form className="admin-form" onSubmit={event => { event.preventDefault(); mutation.execute({ discordUserId }); }}><p>ESTADO: <b>{team.president?.discordUserId ? `VINCULADO A ${team.president.discordUserId}` : 'SIN VINCULAR'}</b></p><label>ID DE USUARIO DISCORD<input required value={discordUserId} onChange={event => setDiscordUserId(event.target.value)}/></label><button className="action-button" disabled={mutation.loading}>VINCULAR DISCORD</button><FormFeedback mutation={mutation}/></form>;
 }
 
 function MemberEditor({ teamId, player, onChanged }) {
