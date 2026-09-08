@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "scripts": { "dev": "start /B node api-proxy.mjs && vite --host 127.0.0.1 --port 5174 --strictPort", "build": "vite build", "preview": "vite preview --host 127.0.0.1 --port 4174" },
+  "scripts": { "dev": "start /B node api-proxy.mjs && vite --configLoader native --host 127.0.0.1 --port 5174 --strictPort", "dev:api": "node api-proxy.mjs", "build": "vite build --configLoader native", "preview": "vite preview --configLoader native --host 127.0.0.1 --port 4174", "smoke": "node scripts/smoke-api.mjs", "test:news": "node scripts/test-news-generator.mjs", "check": "pnpm build && pnpm test:news && pnpm smoke" },
   "dependencies": { "react": "19.2.6", "react-dom": "19.2.6" },
   "devDependencies": { "vite": "8.0.13" }
 }
