@@ -23,7 +23,7 @@ export function Navigation({ route, navigate }) {
       : route.path === item.path || route.path.startsWith(`${item.path}/`);
     return <div className={`nav-box ${active ? 'selected' : ''} ${item.children ? 'with-children' : ''}`} key={item.label}>
       <button className="nav-primary" aria-current={active ? 'page' : undefined} onClick={() => goTo(item.path)}>
-        <Icon type={item.icon}/><span>{item.label}</span>{active && <span className="selection-arrow"/>}
+        <Icon type={item.icon}/><span>{item.label}</span>
       </button>
       {item.children && <div className="nav-children">{item.children.map(child =>
         <button className={route.path === child.path ? 'active' : ''} key={child.path} onClick={() => goTo(child.path)}>

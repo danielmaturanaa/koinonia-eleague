@@ -21,7 +21,6 @@ export const navigationItems = [
     ],
   },
   { label: 'Transferencias', icon: 'arrows', path: '/transferencias' },
-  { label: 'Sanciones', icon: 'card', path: '/sanciones' },
   { label: 'Torneos', icon: 'cup', path: '/torneos' },
   { label: 'Noticias', icon: 'news', path: '/noticias' },
 ];

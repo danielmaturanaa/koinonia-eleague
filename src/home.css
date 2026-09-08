@@ -24,13 +24,13 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 /* Fondo de estadio aportado por el usuario; navegación y contenido son HTML. */
 .football-world::before { content: ''; position: absolute; inset: 0; background: url('/stadium-background-v2.jpeg') center / cover no-repeat; z-index: -2; }
 .game-header { position: relative; height: 162px; }
-.brand { position: absolute; top: 0; left: 50%; width: 620px; height: 160px; background: #031b57 url('/paper-grain.svg'); text-align: center; text-decoration: none; display: flex; flex-direction: column; justify-content: center; transform: translateX(-50%) skew(-6deg); }
+.brand { position: absolute; z-index: 1; top: 0; left: 50%; width: 620px; height: 160px; background: #031b57 url('/paper-grain.svg'); text-align: center; text-decoration: none; display: flex; flex-direction: column; justify-content: center; transform: translateX(-50%) skew(-6deg); }
 .brand-top, .brand-bottom { font-family: 'Anton', Impact, sans-serif; font-style: italic; font-weight: 400; letter-spacing: 5px; line-height: .94; }
 .brand-top, .brand-bottom { transform: scaleX(1.78); }
 .brand-top { font-size: 61px; color: #ffc818; text-shadow: 0 -2px #fff2a0, 0 3px #ef9c00, 2px 5px #cd6612, 4px 7px #9b2911, 7px 9px #090d21; }
 .brand-bottom { font-size: 59px; color: #e8e9ea; text-shadow: 0 -2px white, 0 3px #b5bac5, 2px 5px #717782, 4px 7px #414c69, 7px 9px #090d21; letter-spacing: 7px; }
 .brand-caption { margin-top: 9px; height: 25px; color: #eee8d3; background: #081017; border: 2px solid #efc640; box-shadow: 2px 3px #071029; font: 400 14px/21px 'Oswald', sans-serif; white-space: nowrap; }
-.header-emblems { position: absolute; top: 42px; display: grid; grid-template-columns: repeat(6, 52px); gap: 8px; align-items: center; }
+.header-emblems { position: absolute; z-index: 2; top: 42px; display: grid; grid-template-columns: repeat(6, 52px); gap: 8px; align-items: center; }
 .header-emblems-left { left: 28px; }
 .header-emblems-right { right: 28px; }
 .header-team-button { display: grid; width: 52px; height: 68px; place-items: center; padding: 4px; border: 0; border-bottom: 3px solid #71bce4; color: #fff; background: #041d58cc url('/paper-grain.svg'); filter: drop-shadow(3px 4px #0008); transition: transform 120ms ease, background 120ms ease; }
@@ -54,11 +54,10 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .menu-column nav { display: grid; gap: 10px; }
 .nav-box { border: 3px solid #43a8d6; background-color: #031d58; background-image: repeating-linear-gradient(0deg, transparent 0 3px, #ffffff04 3px 4px), radial-gradient(ellipse at 35% 0, #14397b60, transparent 70%); box-shadow: inset 0 0 0 2px #052a74, inset 0 3px #88b9d96e, 4px 4px 0 #000c24; color: #fcf9e7; }
 .nav-primary { position: relative; display: flex; align-items: center; width: 100%; min-height: 44px; gap: 16px; background: none; border: 0; padding: 1px 12px; color: inherit; text-align: left; font: 500 21px/1 'Oswald', sans-serif; letter-spacing: .6px; text-transform: uppercase; }
-.nav-primary span:not(.selection-arrow) { white-space: nowrap; }
+.nav-primary span { white-space: nowrap; }
 .menu-icon { width: 48px; height: 42px; flex: 0 0 48px; filter: drop-shadow(2px 2px 0 #0009); }
 .nav-box.selected { border-color: #ffb628; background: linear-gradient(#e70017, #bc0017); box-shadow: inset 0 0 0 2px #f5222f, inset 0 3px #ffb178, 4px 4px #000b23; }
 .selected .nav-primary { min-height: 56px; font-size: 25px; }
-.selection-arrow { position: absolute; right: 9px; top: 18px; border-left: 12px solid #fff6a6; border-top: 10px solid transparent; border-bottom: 10px solid transparent; }
 .nav-box:has(button:hover) { transform: translateX(3px); }
 .nav-box { transition: transform 120ms ease; }
 .nav-primary:active, .nav-children button:active { transform: translateY(2px); }
@@ -499,7 +498,6 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
   .nav-primary { min-height: 48px; gap: 8px; padding: 3px 8px; font-size: 17px; }
   .selected .nav-primary { min-height: 48px; font-size: 18px; }
   .menu-icon { width: 36px; height: 34px; flex-basis: 36px; }
-  .selection-arrow { top: 14px; border-left-width: 9px; border-top-width: 8px; border-bottom-width: 8px; }
   .nav-children { display: none; padding: 0 8px 8px 43px; }
   .nav-box.selected .nav-children { display: grid; }
   .newspaper { width: 100%; height: auto; min-height: 650px; }
