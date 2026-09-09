@@ -566,11 +566,15 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
   .team-page-header { padding-bottom: 40px; }
   .team-page-header h1 { font-size: 38px; }
   .team-page-header span { left: 8px; right: auto; }
-  .club-header { grid-template-columns: 92px 1fr; }
-  .club-crest { width: 82px; height: 82px; }
-  .club-header h1 { font-size: 34px; }
-  .club-rank { grid-column: 1 / -1; grid-template-columns: 1fr auto; justify-items: start; align-items: center; gap: 12px; padding: 8px 0 0; border-left: 0; border-top: 2px solid #72b4e3; }
-  .club-rank b { font-size: 38px; }
+  .club-header { grid-template-columns: 72px minmax(0, 1fr); align-items: center; gap: 10px; min-height: 0; padding: 10px; overflow: hidden; }
+  .club-header > div:not(.club-rank) { min-width: 0; }
+  .club-crest { width: 68px; height: 68px; }
+  .club-header p { max-width: 100%; font-size: 12px; line-height: 1.2; letter-spacing: .8px; overflow-wrap: anywhere; white-space: normal; }
+  .club-header h1 { max-width: 100%; margin: 5px 0; font-size: clamp(27px, 9vw, 34px); line-height: 1; overflow-wrap: anywhere; word-break: break-word; }
+  .club-header > div:not(.club-rank) > span { display: block; max-width: 100%; font-size: 12px; line-height: 1.2; overflow-wrap: anywhere; white-space: normal; }
+  .club-rank { grid-column: 1 / -1; display: grid; width: 100%; grid-template-columns: minmax(0, 1fr) auto; justify-items: start; align-items: center; gap: 12px; padding: 9px 4px 0; border-left: 0; border-top: 2px solid #72b4e3; }
+  .club-rank small { min-width: 0; font-size: 12px; white-space: normal; }
+  .club-rank b { min-width: 48px; justify-self: end; font-size: 38px; text-align: right; }
   .club-stats { grid-template-columns: repeat(2, 1fr); }
   .club-stats span:nth-child(2) { border-right: 0; }
   .roster-columns { display: none; }
