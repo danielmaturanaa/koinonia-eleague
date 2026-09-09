@@ -127,6 +127,10 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .upcoming-panel { min-width: 0; overflow: hidden; }
 .upcoming-scroll { width: 100%; max-width: 100%; max-height: 145px; overflow-x: hidden; overflow-y: auto; overscroll-behavior-x: none; }
 .upcoming-scroll .score-line { width: 100%; min-width: 0; }
+.upcoming-groups { display: grid; gap: 6px; }
+.upcoming-group { border: 1px solid #8f846e; background: #eee4cc; }
+.upcoming-group h3 { position: sticky; z-index: 1; top: 0; padding: 4px 7px; color: #fff9e8; background: linear-gradient(90deg, #a90020, #720016); font: 600 12px/1 'Oswald', sans-serif; letter-spacing: 1px; }
+.upcoming-group .score-line { padding: 0 3px; }
 .standings-panel { padding-bottom: 7px; }
 .sidebar-tournament-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; padding: 3px 0 5px; }
 .sidebar-tournament-tabs button { min-width: 0; min-height: 28px; padding: 3px 4px; overflow: hidden; border: 1px solid #0b2e73; color: #10204c; background: #d9cfb8; font: 600 9px/1 'Oswald', sans-serif; text-overflow: ellipsis; text-transform: uppercase; white-space: nowrap; }
@@ -569,7 +573,13 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
   .club-rank b { font-size: 38px; }
   .club-stats { grid-template-columns: repeat(2, 1fr); }
   .club-stats span:nth-child(2) { border-right: 0; }
-  .roster-columns, .roster-row { grid-template-columns: 42px minmax(0, 1fr) 92px 52px 82px; gap: 4px; }
+  .roster-columns { display: none; }
+  .roster-row { grid-template-columns: 34px minmax(0, 1fr) 82px; grid-template-areas: 'number name value' 'number country position'; gap: 3px 7px; min-height: 48px; padding: 5px 6px; }
+  .roster-row > b { grid-area: number; align-self: center; }
+  .roster-row > span:not(.player-country) { grid-area: name; overflow: visible; font-size: 13px; font-weight: 700; white-space: normal; }
+  .roster-row .player-country { grid-area: country; }
+  .roster-row > small { grid-area: position; align-self: center; text-align: right; }
+  .roster-row > strong { grid-area: value; align-self: center; }
   .section-paper { min-height: 540px; padding: 28px 18px; }
   .section-paper h1 { font-size: 44px; }
   .section-paper > p:not(.section-kicker) { font-size: 19px; }
