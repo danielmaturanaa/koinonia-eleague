@@ -40,7 +40,7 @@ export function App() {
   } else if (route.path === '/clasificacion') {
     page = <TournamentsPage classificationOnly teams={league.teams}/>;
   } else if (route.path === '/clasificacion/rankings') {
-    page = <RankingsPage/>;
+    page = <RankingsPage teams={league.teams}/>;
   } else if (route.path === '/equipos/jugadores') {
     page = <PlayersPage teams={league.teams}/>;
   } else if (route.path.startsWith('/equipos/')) {

@@ -7,22 +7,19 @@ import { TransparentLogo } from './TransparentLogo.jsx';
 import { leaguePlaylist } from '../app/playlist.js';
 
 const DESIGN_HEIGHT = 1024;
-const MIN_DESIGN_WIDTH = Math.round(DESIGN_HEIGHT * 4 / 3);
-const MAX_DESIGN_WIDTH = Math.round(DESIGN_HEIGHT * 16 / 9);
+const DESIGN_WIDTH = Math.round(DESIGN_HEIGHT * 4 / 3);
 
 function HeaderEmblems({ teams, side, navigate }) {
   return <div className={`header-emblems header-emblems-${side}`} aria-label={`Emblemas de equipos, lado ${side === 'left' ? 'izquierdo' : 'derecho'}`}>{teams.map(team => <button className="header-team-button" type="button" key={team.id} title={team.name} aria-label={`Abrir equipo ${team.name}`} onClick={() => navigate(`/equipos/${encodeURIComponent(team.id)}`)}><TeamMark team={team}/></button>)}</div>;
 }
 
 export function ArcadeLayout({ route, navigate, children, sidebar, error, dismissError, headerTeams = [] }) {
-  const [viewport, setViewport] = useState({ width: MAX_DESIGN_WIDTH, scale: 1 });
+  const [scale, setScale] = useState(1);
   useLayoutEffect(() => {
     const resize = () => {
-      const aspectWidth = Math.round(DESIGN_HEIGHT * window.innerWidth / window.innerHeight);
-      const designWidth = Math.min(MAX_DESIGN_WIDTH, Math.max(MIN_DESIGN_WIDTH, aspectWidth));
-      const widthScale = window.innerWidth / designWidth;
+      const widthScale = window.innerWidth / DESIGN_WIDTH;
       const heightScale = window.innerHeight / DESIGN_HEIGHT;
-      setViewport({ width: designWidth, scale: Math.min(widthScale, heightScale, 1.25) });
+      setScale(Math.min(widthScale, heightScale, 1.25));
     };
     resize();
     window.addEventListener('resize', resize);
@@ -32,8 +29,8 @@ export function ArcadeLayout({ route, navigate, children, sidebar, error, dismis
   const visibleTeams = headerTeams.slice(0, 12);
   const splitAt = Math.ceil(visibleTeams.length / 2);
 
-  return <div className="desktop-frame" style={{ width: viewport.width * viewport.scale, height: DESIGN_HEIGHT * viewport.scale }}>
-    <div className="football-world" style={{ '--design-width': `${viewport.width}px`, transform: `scale(${viewport.scale})` }}>
+  return <div className="desktop-frame" style={{ width: DESIGN_WIDTH * scale, height: DESIGN_HEIGHT * scale }}>
+    <div className="football-world" style={{ transform: `scale(${scale})` }}>
       <header className="game-header">
         <HeaderEmblems teams={visibleTeams.slice(0, splitAt)} side="left" navigate={navigate}/>
         <button className="brand" onClick={() => navigate('/')} aria-label="Koinonia e-League eFootball Tournaments">

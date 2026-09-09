@@ -4,7 +4,7 @@ import { TeamMark } from '../../components/TeamMark.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { TournamentAdminPanel } from '../admin/TournamentAdminPanel.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
-import { DataState, PageHeader } from './DataStates.jsx';
+import { DataState, PageHeader, gp } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
 
 function StandingsTable({ rows, resolveTeam }) {
@@ -66,8 +66,11 @@ export function TournamentsPage({ classificationOnly = false, teams = [] }) {
   return <main className="newspaper data-page"><section className="data-paper"><PageHeader kicker="COMPETICIONES OFICIALES" title={classificationOnly ? 'CLASIFICACIÓN' : 'TORNEOS'}>{!classificationOnly && <button className="page-action" onClick={() => setShowCreate(value => !value)}>{showCreate ? 'CERRAR ALTA' : '+ CREAR TORNEO'}</button>}</PageHeader>{showCreate && <CreateTournamentForm onChanged={() => tournaments.retry()}/>}<DataState query={tournaments}/>{rows.length > 0 && <div className="tournament-tabs">{rows.map(item => <button className={selectedId === item.id ? 'active' : ''} key={item.id} onClick={() => setSelectedId(item.id)}>{item.name}<small>{item.status}</small></button>)}</div>}{selectedId && <TournamentWorkspace tournamentId={selectedId} classificationOnly={classificationOnly} teams={teams} onChanged={() => tournaments.retry()} onDeleted={deleted}/>}</section></main>;
 }
 
-export function RankingsPage() {
+export function RankingsPage({ teams = [] }) {
   const rankings = useApiQuery(signal => endpoints.squadRankings({ page: 1, pageSize: 100 }, signal));
   const divisions = useApiQuery(signal => endpoints.divisions(signal));
-  return <main className="newspaper data-page"><section className="data-paper"><PageHeader kicker="ESTADÍSTICAS GLOBALES" title="RANKINGS Y DIVISIONES"/><div className="workspace-columns"><section className="workspace-panel"><h3>VALOR DE PLANTELES</h3><DataState query={rankings}/>{(rankings.data ?? []).map((row, index) => <p className="ranking-row" key={row.teamId ?? row.id}><b>{index + 1}</b><span>{row.teamName ?? row.name}</span><strong>{row.squadValue ?? row.value ?? '—'} GP</strong></p>)}</section><section className="workspace-panel"><h3>DIVISIONES</h3><DataState query={divisions}/>{(divisions.data ?? []).map(row => <p className="ranking-row" key={row.id ?? row.name}><span>{row.name ?? row.division}</span><strong>{row.teamCount ?? row.teams?.length ?? '—'} EQUIPOS</strong></p>)}</section></div></section></main>;
+  const rankingRows = Array.isArray(rankings.data) ? rankings.data : [];
+  const divisionRows = Array.isArray(divisions.data) ? divisions.data : Object.entries(divisions.data ?? {}).map(([name, members]) => ({ name, teams: Array.isArray(members) ? members : [] }));
+  const teamIndex = new Map(teams.map(team => [team.id, team]));
+  return <main className="newspaper data-page"><section className="data-paper"><PageHeader kicker="ESTADÍSTICAS GLOBALES" title="RANKINGS Y DIVISIONES"/><div className="workspace-columns"><section className="workspace-panel"><h3>VALOR DE PLANTELES</h3><DataState query={rankings}/>{rankingRows.map((row, index) => <p className="ranking-row ranking-team-row" key={row.teamId ?? row.team_id ?? row.id}><b>{index + 1}</b><TeamMark team={{ ...row, ...(teamIndex.get(row.teamId ?? row.team_id ?? row.id) ?? {}) }}/><span>{row.teamName ?? row.team_name ?? row.name}</span><strong>{gp(row.squadValue ?? row.squad_value ?? row.value)}</strong></p>)}</section><section className="workspace-panel"><h3>DIVISIONES</h3><DataState query={divisions}/>{divisionRows.map(row => <p className="ranking-row division-row" key={row.id ?? row.name}><span>{String(row.name ?? row.division).replaceAll('_', ' ').toUpperCase()}</span><strong>{row.teamCount ?? row.team_count ?? row.teams?.length ?? '—'} EQUIPOS</strong></p>)}</section></div></section></main>;
 }
