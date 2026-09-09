@@ -30,7 +30,7 @@ export function App() {
 
   let page;
   if (route.name === 'home') {
-    page = <HomePage tournament={tournament} lead={upcoming[0]}/>;
+    page = <HomePage tournament={tournament} lead={upcoming[0]} teams={league.teams}/>;
   } else if (route.name === 'teams') {
     page = <TeamsPage teams={league.teams} loading={state.loading} onChoose={id => navigate(`/equipos/${encodeURIComponent(id)}`)} onChanged={refresh}/>;
   } else if (route.name === 'team') {

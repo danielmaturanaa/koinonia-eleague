@@ -23,10 +23,19 @@ const teamId = team => team?.id ?? team?.teamId ?? team?.team_id;
 export function NewsArtwork({ item, teams = [] }) {
   const context = contextOf(item);
   const index = useMemo(() => new Map(teams.map(team => [team.id, team])), [teams]);
-  const rawPrimary = item.sourceType === 'match' ? item.original?.homeTeam
+  const homeTeam = item.original?.homeTeam;
+  const awayTeam = item.original?.awayTeam;
+  const homeScore = Number(item.original?.homeScore);
+  const awayScore = Number(item.original?.awayScore);
+  const hasResult = item.sourceType === 'match'
+    && item.original?.homeScore !== null && item.original?.awayScore !== null
+    && Number.isFinite(homeScore) && Number.isFinite(awayScore);
+  const matchPrimary = hasResult && awayScore > homeScore ? awayTeam : homeTeam;
+  const matchSecondary = matchPrimary === awayTeam ? homeTeam : awayTeam;
+  const rawPrimary = item.sourceType === 'match' ? matchPrimary
     : item.sourceType === 'transfer' ? item.original?.toTeam ?? item.original?.destinationTeam
       : item.original?.team ?? item.original?.player?.team ?? item.original?.redCard?.team;
-  const rawSecondary = item.sourceType === 'match' ? item.original?.awayTeam
+  const rawSecondary = item.sourceType === 'match' ? matchSecondary
     : item.sourceType === 'transfer' ? item.original?.fromTeam ?? item.original?.originTeam : null;
   const primary = { ...rawPrimary, ...(index.get(teamId(rawPrimary)) ?? {}) };
   const secondary = rawSecondary ? { ...rawSecondary, ...(index.get(teamId(rawSecondary)) ?? {}) } : null;
@@ -43,7 +52,8 @@ export function NewsArtwork({ item, teams = [] }) {
   }, [primary.imageUrl, context]);
 
   const score = item.sourceType === 'match' && item.type !== 'upcoming'
-    ? `${item.original?.homeScore ?? '–'} : ${item.original?.awayScore ?? '–'}` : null;
+    ? matchPrimary === awayTeam ? `${awayScore} : ${homeScore}` : `${homeScore} : ${awayScore}`
+    : null;
   const style = { '--news-primary': colors[0], '--news-secondary': colors[1], '--news-accent': colors[2] };
   return <div className={`news-artwork news-artwork-${context}`} style={style} aria-label={`Gráfica ${contextLabels[context]} de ${primary.name ?? 'Koinonia e-League'}`}>
     <span className="news-artwork-grid"/>

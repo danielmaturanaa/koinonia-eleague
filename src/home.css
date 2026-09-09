@@ -93,6 +93,14 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .automatic-small-story time { display: block; margin-bottom: 5px; color: #a0001d; font: 500 10px/1 'Oswald', sans-serif; }
 .automatic-small-story h4 { font-size: 17px; line-height: .98; }
 .automatic-small-story p { font-size: 14px; line-height: 1.05; }
+.secondary-news-content { display: grid; grid-template-columns: 68px minmax(0, 1fr); gap: 7px; min-width: 0; }
+.secondary-news-content > div:last-child { min-width: 0; }
+.automatic-small-story .news-artwork { height: 145px; min-height: 145px; max-height: 145px; align-self: start; }
+.automatic-small-story .news-artwork-context { top: 5px; left: 4px; padding: 2px 3px; font-size: 8px; letter-spacing: .3px; }
+.automatic-small-story .news-artwork .news-artwork-primary { width: 52px; height: 52px; }
+.automatic-small-story .news-artwork .news-artwork-secondary { right: 5px; bottom: 22px; width: 27px; height: 27px; }
+.automatic-small-story .news-artwork strong { top: 27px; right: 4px; font-size: 13px; }
+.automatic-small-story .news-artwork small { right: 4px; bottom: 5px; left: 4px; font-size: 8px; }
 .transfer-illustration { display: flex; align-items: center; gap: 8px; height: 70px; margin-bottom: 7px; }
 .transfer-portrait { width: 98px; height: 70px; background: url('/reference-art.png') -330px -744px / 1536px 1024px; }
 .transfer-arrow { font: 800 49px/.8 Arial, sans-serif; color: #14b532; -webkit-text-stroke: 1px #034909; }
