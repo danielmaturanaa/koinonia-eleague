@@ -20,7 +20,7 @@ button { font: inherit; cursor: pointer; }
 button:focus-visible, a:focus-visible { outline: 4px solid var(--yellow); outline-offset: 3px; }
 figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .desktop-frame { position: relative; margin: 0 auto; overflow: hidden; }
-.football-world { position: relative; width: 1365px; height: 1024px; transform-origin: top left; isolation: isolate; overflow: hidden; background: #04216b; }
+.football-world { position: relative; width: var(--design-width, 1365px); height: 1024px; transform-origin: top left; isolation: isolate; overflow: hidden; background: #04216b; }
 /* Fondo de estadio aportado por el usuario; navegación y contenido son HTML. */
 .football-world::before { content: ''; position: absolute; inset: 0; background: url('/stadium-background-v2.jpeg') center / cover no-repeat; z-index: -2; }
 .game-header { position: relative; height: 162px; }
@@ -43,7 +43,7 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .fatal-screen h1 { margin: 10px 0; font: italic 400 46px/1 'Anton', sans-serif; }
 .fatal-screen span { display: block; font: 500 18px/1.25 'Roboto Condensed', sans-serif; }
 .fatal-screen button { margin-top: 22px; padding: 10px 18px; border: 2px solid #72b4e3; color: #fff; background: #a90020; font: 500 16px/1 'Oswald', sans-serif; }
-.home-composition { display: grid; grid-template-columns: 224px minmax(0, 1fr) 318px; gap: 12px; position: relative; margin: 0 7px; align-items: start; }
+.home-composition { display: grid; grid-template-columns: 248px minmax(0, 1fr) 342px; gap: 14px; position: relative; margin: 0 24px; align-items: start; }
 .home-composition > * { min-width: 0; }
 .left-rail { display: grid; min-width: 0; gap: 12px; align-content: start; }
 .left-rail .music-player h2 { font-size: 15px; }
@@ -53,7 +53,7 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .mobile-menu-toggle { display: none; }
 .menu-column nav { display: grid; gap: 10px; }
 .nav-box { border: 3px solid #43a8d6; background-color: #031d58; background-image: repeating-linear-gradient(0deg, transparent 0 3px, #ffffff04 3px 4px), radial-gradient(ellipse at 35% 0, #14397b60, transparent 70%); box-shadow: inset 0 0 0 2px #052a74, inset 0 3px #88b9d96e, 4px 4px 0 #000c24; color: #fcf9e7; }
-.nav-primary { position: relative; display: flex; align-items: center; width: 100%; min-height: 44px; gap: 16px; background: none; border: 0; padding: 1px 12px; color: inherit; text-align: left; font: 500 21px/1 'Oswald', sans-serif; letter-spacing: .6px; text-transform: uppercase; }
+.nav-primary { position: relative; display: flex; align-items: center; width: 100%; min-height: 44px; gap: 10px; background: none; border: 0; padding: 1px 8px; color: inherit; text-align: left; font: 500 21px/1 'Oswald', sans-serif; letter-spacing: .3px; text-transform: uppercase; }
 .nav-primary span { white-space: nowrap; }
 .menu-icon { width: 48px; height: 42px; flex: 0 0 48px; filter: drop-shadow(2px 2px 0 #0009); }
 .nav-box.selected { border-color: #ffb628; background: linear-gradient(#e70017, #bc0017); box-shadow: inset 0 0 0 2px #f5222f, inset 0 3px #ffb178, 4px 4px #000b23; }
