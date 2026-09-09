@@ -9,6 +9,7 @@ const fallbackPalettes = {
 };
 
 const contextOf = item => {
+  if (item.type === 'victory' || item.type === 'defeat' || item.type === 'draw') return item.type;
   if (item.sourceType === 'transfer') return 'transfer';
   if (item.sourceType === 'sanction') return 'sanction';
   if (item.type === 'draw' || item.type === 'crazyDraw') return 'draw';

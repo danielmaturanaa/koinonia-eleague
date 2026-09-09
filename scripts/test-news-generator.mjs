@@ -1,52 +1,128 @@
 import assert from 'node:assert/strict';
-import { classifyMatch, generateMatchNews, generateSanctionNews, generateTransferNews } from '../src/utils/newsGenerator.js';
+import { newsTemplates } from '../src/features/news/newsTemplates.js';
+import { classifyMatchResult, generateNews } from '../src/features/news/newsEngine.js';
+import { generateMatchNews, generateSanctionNews, generateTransferNews } from '../src/utils/newsGenerator.js';
 
-const baseMatch = {
-  homeTeam: { name: 'Forestyle FC' },
-  awayTeam: { name: 'Bombo FC' },
-  tournament: { name: 'Liga 2026' },
-  roundNumber: 4,
-  status: 'finished',
-  finishedAt: '2026-09-07T03:20:05.151Z',
+const expectedStructure = {
+  victory: ['narrow', 'normal', 'big'],
+  defeat: ['narrow', 'normal', 'big'],
+  draw: ['goalless', 'normal', 'crazy'],
+  transfer: ['arrival', 'departure', 'move'],
+  sanction: ['player', 'club'],
 };
 
-const cases = [
-  ['upcoming', { id: 'pending', status: 'pending', homeScore: null, awayScore: null }],
-  ['narrowVictory', { id: 'narrow', homeScore: 2, awayScore: 1 }],
-  ['victory', { id: 'victory', homeScore: 3, awayScore: 1 }],
-  ['bigVictory', { id: 'big-victory', homeScore: 4, awayScore: 1 }],
-  ['draw', { id: 'draw', homeScore: 2, awayScore: 2 }],
-  ['crazyDraw', { id: 'crazy-draw', homeScore: 3, awayScore: 3 }],
-  ['defeat', { id: 'defeat', homeScore: 1, awayScore: 3 }],
-  ['bigDefeat', { id: 'big-defeat', homeScore: 1, awayScore: 5 }],
+let templateCount = 0;
+for (const [type, subtypes] of Object.entries(expectedStructure)) {
+  assert.deepEqual(Object.keys(newsTemplates[type]), subtypes, `Subcategorías incorrectas en ${type}`);
+  for (const subtype of subtypes) {
+    const group = newsTemplates[type][subtype];
+    for (const field of ['labels', 'headlines', 'bodies']) {
+      assert.equal(group[field].length, 10, `${type}.${subtype}.${field} debe contener exactamente 10 plantillas`);
+      templateCount += group[field].length;
+    }
+  }
+}
+assert.equal(templateCount, 420);
+
+const matchCases = [
+  [{ golesEquipo: 4, golesRival: 2 }, { type: 'victory', subtype: 'normal' }],
+  [{ golesEquipo: 2, golesRival: 1 }, { type: 'victory', subtype: 'narrow' }],
+  [{ golesEquipo: 5, golesRival: 1 }, { type: 'victory', subtype: 'big' }],
+  [{ golesEquipo: 1, golesRival: 3 }, { type: 'defeat', subtype: 'normal' }],
+  [{ golesEquipo: 1, golesRival: 2 }, { type: 'defeat', subtype: 'narrow' }],
+  [{ golesEquipo: 0, golesRival: 4 }, { type: 'defeat', subtype: 'big' }],
+  [{ golesEquipo: 0, golesRival: 0 }, { type: 'draw', subtype: 'goalless' }],
+  [{ golesEquipo: 2, golesRival: 2 }, { type: 'draw', subtype: 'normal' }],
+  [{ golesEquipo: 4, golesRival: 4 }, { type: 'draw', subtype: 'crazy' }],
 ];
 
-for (const [expected, values] of cases) {
-  const match = { ...baseMatch, ...values };
-  assert.equal(classifyMatch(match), expected);
-  const first = generateMatchNews(match);
-  const second = generateMatchNews(structuredClone(match));
-  assert.deepEqual(
-    { label: first.label, headline: first.headline, body: first.body },
-    { label: second.label, headline: second.headline, body: second.body },
-    `La noticia ${expected} debe ser determinista`,
-  );
-  assert.equal(first.id, `match-${match.id}`);
+for (const [scores, expected] of matchCases) {
+  assert.deepEqual(classifyMatchResult(scores), expected);
+  const event = {
+    id: `match-${scores.golesEquipo}-${scores.golesRival}`,
+    kind: 'match',
+    equipo: 'Forestyle FC',
+    rival: 'Bombo FC',
+    resultado: `${scores.golesEquipo}-${scores.golesRival}`,
+    jornada: 'la Jornada 4',
+    competicion: 'Liga 2026',
+    ...scores,
+  };
+  const first = generateNews(event);
+  const second = generateNews(structuredClone(event));
+  assert.deepEqual(first, second, `${expected.type}.${expected.subtype} debe ser determinista`);
+  assert.equal(first.type, expected.type);
+  assert.equal(first.subtype, expected.subtype);
+  assert.deepEqual(Object.keys(first), ['id', 'type', 'subtype', 'label', 'headline', 'body']);
 }
 
-const transfer = generateTransferNews({ id: 'transfer-1', player: { name: 'Jugador Uno' }, fromTeam: { name: 'Club A' }, toTeam: { name: 'Club B' }, createdAt: '2026-09-08T10:00:00Z' });
-assert.equal(transfer.id, 'transfer-transfer-1');
-assert.match(transfer.body, /Jugador Uno/);
-assert.match(transfer.body, /Club A/);
-assert.match(transfer.body, /Club B/);
+const transferBase = {
+  id: 184,
+  type: 'transfer',
+  jugador: 'Juan Pérez',
+  equipoOrigen: 'Bombo FC',
+  equipoDestino: 'Forestyle FC',
+  competicion: 'Koinonia e-League',
+};
+for (const subtype of ['arrival', 'departure', 'move']) {
+  const news = generateNews({ ...transferBase, subtype });
+  assert.equal(news.type, 'transfer');
+  assert.equal(news.subtype, subtype);
+  assert.match(`${news.headline} ${news.body}`, /Juan Pérez/);
+}
 
-const sanction = generateSanctionNews({ id: 'sanction-1', player: { name: 'Jugador Dos' }, team: { name: 'Club C' }, suspensionMatches: 2, occurredAt: '2026-09-08T11:00:00Z' });
-assert.equal(sanction.id, 'sanction-sanction-1');
-assert.match(sanction.body, /Jugador Dos/);
-assert.match(sanction.body, /Club C/);
-assert.match(sanction.body, /2/);
+const playerSanction = generateNews({
+  id: 'player-sanction', type: 'sanction', subtype: 'player', jugador: 'Jugador Uno', equipo: 'Club A',
+  partidosSancion: 2, tipoSancion: 'suspensión', competicion: 'Liga 2026',
+});
+assert.equal(playerSanction.subtype, 'player');
+assert.match(`${playerSanction.headline} ${playerSanction.body}`, /Jugador Uno/);
 
+const clubSanction = generateNews({
+  id: 'club-sanction', type: 'sanction', subtype: 'club', equipo: 'Club B', tipoSancion: 'amonestación',
+});
+assert.equal(clubSanction.subtype, 'club');
+assert.match(`${clubSanction.headline} ${clubSanction.body}`, /Club B/);
+
+const sanctionWithoutMatches = generateNews({
+  id: 'without-match-count', type: 'sanction', subtype: 'player', jugador: 'Jugador Dos', equipo: 'Club C',
+});
+assert.ok(sanctionWithoutMatches);
+assert.doesNotMatch(JSON.stringify(sanctionWithoutMatches), /undefined|\{\w+\}/);
+
+const stringIdEvent = {
+  id: 'uuid-37ba206b-16ad-44ea', kind: 'match', equipo: 'Club A', rival: 'Club B', resultado: '2-1',
+  golesEquipo: 2, golesRival: 1,
+};
+assert.deepEqual(generateNews(stringIdEvent), generateNews(structuredClone(stringIdEvent)));
+
+const apiMatch = generateMatchNews({
+  id: 'api-match', homeTeam: { name: 'Club A' }, awayTeam: { name: 'Club B' }, homeScore: 4, awayScore: 2,
+  tournament: { name: 'Liga 2026' }, roundNumber: 3, finishedAt: '2026-09-08T10:00:00Z',
+});
+assert.equal(apiMatch.id, 'match-api-match');
+assert.equal(apiMatch.type, 'victory');
+assert.equal(apiMatch.subtype, 'normal');
+assert.equal(apiMatch.sourceType, 'match');
+
+for (const subtype of ['arrival', 'departure', 'move']) {
+  const transfer = generateTransferNews({
+    id: `transfer-${subtype}`, player: { name: 'Jugador Tres' }, fromTeam: { name: 'Club A' },
+    toTeam: { name: 'Club B' }, createdAt: '2026-09-08T10:00:00Z',
+  }, subtype);
+  assert.equal(transfer.subtype, subtype);
+}
+
+const adaptedPlayerSanction = generateSanctionNews({
+  id: 'sanction-player', player: { name: 'Jugador Cuatro' }, team: { name: 'Club C' }, suspensionMatches: 2,
+});
+assert.equal(adaptedPlayerSanction.subtype, 'player');
+
+const adaptedClubSanction = generateSanctionNews({ id: 'sanction-club', team: { name: 'Club D' }, type: 'club_warning' });
+assert.equal(adaptedClubSanction.subtype, 'club');
+
+assert.equal(generateMatchNews({ id: 'pending', homeTeam: { name: 'A' }, awayTeam: { name: 'B' } }), null);
 assert.equal(generateTransferNews({ id: 'incomplete' }), null);
 assert.equal(generateSanctionNews({ id: 'incomplete' }), null);
 
-console.log(`Generador verificado: ${cases.length} tipos de partido, traspaso, sanción y determinismo.`);
+console.log(`Generador verificado: 14 subcategorías, ${templateCount} plantillas y selección determinista.`);
