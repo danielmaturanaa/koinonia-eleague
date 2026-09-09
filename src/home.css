@@ -68,18 +68,18 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .newspaper { height: 773px; padding: 9px 10px 15px; border: 3px solid #ab9e80; outline: 2px solid #0b1226; background-color: var(--paper); background-image: url('/paper-grain.svg'); box-shadow: inset 0 0 0 2px #efe9d6, 4px 4px 0 #061229; }
 .main-edition { border: 3px double #5f5949; padding: 8px 13px 10px; }
 .newspaper-header { position: relative; height: 92px; border-bottom: 2px solid #24261f; }
-.newspaper-header h1 { padding: 0 0 5px; border-bottom: 2px solid #35392c; font: italic 400 48px/1.14 'Anton', Impact, sans-serif; letter-spacing: .3px; white-space: nowrap; }
+.newspaper-header h1 { width: 100%; overflow: hidden; padding: 0 4px 5px; border-bottom: 2px solid #35392c; font: italic 400 42px/1.12 'Anton', Impact, sans-serif; letter-spacing: .3px; text-align: center; white-space: nowrap; }
 .newspaper-header h1 em { font-style: inherit; color: #b90022; text-shadow: 1px 1px #f07569; }
-.newspaper-header h1 > span { display: block; width: max-content; transform: skew(-9deg) scaleX(1.63); transform-origin: left center; padding-left: 3px; }
+.newspaper-header h1 > span { display: block; width: 100%; overflow: hidden; padding: 0 3px; transform: skew(-7deg); transform-origin: center; }
 .newspaper-header p { text-align: center; padding-top: 3px; font: 700 15px/1 'Roboto Condensed', sans-serif; letter-spacing: 2.6px; }
 .edition-date { position: absolute; right: -1px; bottom: -24px; padding: 5px 12px; border: 1px solid #726b56; background: var(--paper); font: 500 16px/1.25 'Oswald', sans-serif; z-index: 2; }
 .lead-story h2 { position: relative; z-index: 1; margin: 10px 0 3px; font: 400 63px/1.01 'Anton', Impact, sans-serif; letter-spacing: 1.4px; }
 .lead-story h2 span { display: block; width: max-content; transform-origin: left center; }
 .lead-story h2 .headline-team { transform: scaleX(1.33); }
 .lead-story h2 .headline-result { font-size: 66px; letter-spacing: 2.4px; color: #cb0524; text-shadow: 1px 1px #9a0019; transform: scaleX(1.35); }
-.lead-story h2.automatic-news-headline { min-height: 124px; display: grid; align-content: center; gap: 4px; }
-.lead-story h2.automatic-news-headline .headline-team { max-width: 760px; color: #11120e; font-size: 38px; transform: none; }
-.lead-story h2.automatic-news-headline .headline-result { max-width: 790px; font-size: 48px; line-height: .94; transform: none; }
+.lead-story h2.automatic-news-headline { display: grid; width: 100%; min-width: 0; min-height: 124px; align-content: center; gap: 5px; overflow: hidden; padding: 4px 3px 5px; }
+.lead-story h2.automatic-news-headline .headline-team { width: fit-content; max-width: 100%; padding: 2px 8px; border-left: 6px solid #a90020; color: #11120e; background: #ded2b8; font: 700 clamp(25px, 2.1vw, 34px)/1 'Oswald', sans-serif; letter-spacing: .4px; white-space: normal; overflow-wrap: anywhere; transform: none; }
+.lead-story h2.automatic-news-headline .headline-result { width: 100%; max-width: 100%; padding: 0 4px 3px 0; color: #cb0524; font: 400 clamp(34px, 3vw, 48px)/.96 'Anton', Impact, sans-serif; letter-spacing: .6px; text-wrap: balance; text-shadow: 1px 1px #9a0019; white-space: normal; overflow-wrap: anywhere; transform: none; }
 .lead-columns { display: grid; grid-template-columns: 187px 1fr; gap: 10px; }
 .lead-copy p { font: 500 20px/1 'Roboto Condensed', Arial, sans-serif; padding-top: 5px; }
 .lead-copy blockquote { position: relative; width: 205px; margin-top: 12px; font: italic 700 18px/1.04 Georgia, serif; }
@@ -529,8 +529,8 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
   .standings-panel { grid-column: 1 / -1; }
   .music-player { grid-column: 1 / -1; }
   .preview-notice { position: fixed; left: 14px; right: 14px; bottom: 14px; font-size: 17px; }
-  .newspaper-header h1 { font-size: clamp(27px, 7vw, 48px); }
-  .newspaper-header h1 > span { transform: skew(-9deg) scaleX(1.15); }
+  .newspaper-header h1 { font-size: clamp(27px, 5.6vw, 40px); }
+  .newspaper-header h1 > span { transform: skew(-3deg); }
   .lead-story h2 { font-size: clamp(38px, 9vw, 63px); }
   .lead-story h2 .headline-result { font-size: clamp(40px, 9.4vw, 66px); transform: scaleX(1.1); }
   .lead-story h2 .headline-team { transform: scaleX(1.08); }
@@ -556,7 +556,7 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
   .lead-columns { grid-template-columns: 1fr; }
   .newspaper-header { height: auto; min-height: 104px; padding-bottom: 5px; }
   .newspaper-header h1 { white-space: normal; }
-  .newspaper-header h1 > span, .lead-story h2 .headline-team, .lead-story h2 .headline-result { width: auto; transform: none; }
+  .newspaper-header h1 > span, .lead-story h2 .headline-team, .lead-story h2 .headline-result { width: auto; white-space: normal; transform: none; }
   .edition-date { position: static; width: max-content; margin: 8px 0 0 auto; }
   .lead-story h2 { overflow-wrap: anywhere; }
   .lead-copy blockquote { width: auto; }
