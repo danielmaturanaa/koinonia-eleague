@@ -53,10 +53,10 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .home-composition { display: grid; grid-template-columns: 280px var(--center-panel-width) 342px; justify-content: center; gap: 14px; position: relative; margin: 0 8px; align-items: start; }
 .home-composition > * { min-width: 0; }
 .center-stage { display: grid; width: var(--center-panel-width); min-width: 0; gap: 11px; justify-items: center; }
-.press-start-prompt { display: grid; grid-template-columns: 132px minmax(0, 390px) 132px; width: min(680px, 100%); min-height: 96px; align-items: center; justify-content: center; gap: 12px; filter: drop-shadow(5px 6px 0 #00102ecc); }
+.press-start-prompt { display: grid; grid-template-columns: 128px minmax(0, 423px) 128px; width: 100%; min-height: 90px; margin-top: -28px; align-items: center; justify-content: center; gap: 10px; filter: drop-shadow(5px 6px 0 #00102ecc); }
 .press-start-prompt img { display: block; width: 100%; height: auto; object-fit: contain; image-rendering: pixelated; }
-.press-start-controller { max-height: 92px; }
-.konami-code { max-height: 110px; }
+.press-start-controller { max-height: 90px; }
+.konami-code { max-height: 125px; }
 .left-rail { display: grid; min-width: 0; gap: 12px; align-content: start; }
 .left-rail .music-player h2 { font-size: 15px; }
 .left-rail .music-player h2 small { font-size: 9px; }
@@ -295,7 +295,6 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .rules-table { width: 100%; margin-top: 9px; border-collapse: collapse; font: 500 15px/1.2 'Roboto Condensed', sans-serif; }
 .rules-table th { padding: 8px; color: #fff9e8; background: #a90020; border: 2px solid #172758; font-family: 'Oswald', sans-serif; text-align: left; }
 .rules-table td { padding: 8px; border: 2px solid #8d816a; background: #eee4cc; vertical-align: top; }
-.rules-download { display: inline-block; margin: 1px 8px 18px; padding: 7px 11px; border: 2px solid #ffd42a; color: #fff; background: #a90020; font: 500 14px/1 'Oswald', sans-serif; text-decoration: none; }
 .data-paper { height: 100%; padding: 12px; border: 3px double #5f5949; overflow: auto; }
 .data-page-header { position: relative; min-height: 82px; margin-bottom: 10px; padding: 4px 8px 9px; border-bottom: 3px solid #171a16; }
 .data-page-header p { color: #a0001d; font: 600 14px/1.2 'Oswald', sans-serif; letter-spacing: 2px; }
@@ -613,7 +612,7 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
   .lead-photo { height: auto; background-position: 63% 43%; }
   .lead-winner-crest { width: 70px; height: 70px; }
   .lead-winner-crest .team-mark { width: 56px; height: 56px; flex-basis: 56px; }
-  .press-start-prompt { width: min(280px, 82vw); }
+  .press-start-prompt { grid-template-columns: 64px minmax(0, 1fr) 64px; width: min(340px, 92vw); min-height: 70px; margin-top: -12px; gap: 5px; }
   .secondary-stories { height: auto; }
   .small-story { min-height: 195px; }
   .team-page-header { padding-bottom: 40px; }

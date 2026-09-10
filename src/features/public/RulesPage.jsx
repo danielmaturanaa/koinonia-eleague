@@ -68,7 +68,6 @@ export function RulesPage() {
   return <main className="newspaper"><article className="data-paper rules-paper">
     <header className="rules-header"><p>KOINONIA e-LEAGUE · DOCUMENTO OFICIAL</p><h1>Reglamento Oficial de la Liga eFootball</h1></header>
     <p className="rules-intro">Este documento establece la normativa oficial para el desarrollo de la liga, incluyendo reglas de jugabilidad, sanciones, sistema de divisiones, mercado de fichajes y sistema de premiación. Todos los presidentes y participantes están obligados a cumplir estas normativas.</p>
-    <a className="rules-download" href="/docs/reglamento-oficial-liga-efootball.md" download>DESCARGAR REGLAMENTO EN MARKDOWN</a>
     <MatchRules/><Sanctions/><Divisions/><Transfers/><Prizes/>
   </article></main>;
 }
