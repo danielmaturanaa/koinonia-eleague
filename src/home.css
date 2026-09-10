@@ -34,8 +34,8 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .brand { position: absolute; z-index: 1; top: 4px; left: 50%; width: 560px; height: 150px; padding: 0; overflow: hidden; border: 0; background: transparent; transform: translateX(-50%); }
 .brand-logo { position: absolute; top: 50%; left: 0; display: block; width: 100%; height: auto; transform: translateY(-50%); }
 .header-emblems { position: absolute; z-index: 2; top: 34px; display: grid; grid-template-columns: repeat(6, 60px); gap: 4px; align-items: center; }
-.header-emblems-left { left: 4px; }
-.header-emblems-right { right: 4px; }
+.header-emblems-left { left: calc(50% - 670px); }
+.header-emblems-right { right: auto; left: calc(50% + 290px); }
 .header-team-button { display: grid; width: 60px; height: 80px; place-items: center; padding: 3px; border: 0; border-bottom: 4px solid #71bce4; color: #fff; background: #041d58cc url('/paper-grain.svg'); filter: drop-shadow(3px 4px #0008); transition: background 120ms ease, transform 120ms ease; }
 .header-team-button:hover { z-index: 2; background-color: #a90020; transform: translateY(-4px) scale(1.05); }
 .header-team-button .team-mark { width: 54px; height: 54px; flex-basis: 54px; object-fit: contain; font-size: 40px; }
