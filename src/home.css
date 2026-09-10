@@ -53,10 +53,10 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .home-composition { display: grid; grid-template-columns: 280px var(--center-panel-width) 342px; justify-content: center; gap: 14px; position: relative; margin: 0 8px; align-items: start; }
 .home-composition > * { min-width: 0; }
 .center-stage { display: grid; width: var(--center-panel-width); min-width: 0; gap: 11px; justify-items: center; }
-.press-start-prompt { display: grid; grid-template-columns: 108px minmax(0, 350px) 108px; width: min(590px, 100%); min-height: 74px; align-items: center; justify-content: center; gap: 9px; filter: drop-shadow(5px 6px 0 #00102ecc); }
+.press-start-prompt { display: grid; grid-template-columns: 132px minmax(0, 390px) 132px; width: min(680px, 100%); min-height: 96px; align-items: center; justify-content: center; gap: 12px; filter: drop-shadow(5px 6px 0 #00102ecc); }
 .press-start-prompt img { display: block; width: 100%; height: auto; object-fit: contain; image-rendering: pixelated; }
-.press-start-controller { max-height: 72px; }
-.konami-code { max-height: 76px; }
+.press-start-controller { max-height: 92px; }
+.konami-code { max-height: 110px; }
 .left-rail { display: grid; min-width: 0; gap: 12px; align-content: start; }
 .left-rail .music-player h2 { font-size: 15px; }
 .left-rail .music-player h2 small { font-size: 9px; }
