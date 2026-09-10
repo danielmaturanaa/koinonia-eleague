@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
-import { teamBalance } from '../../utils/teamPresentation.js';
+import { teamBalance, teamCoachName } from '../../utils/teamPresentation.js';
 import { FormFeedback } from './FormFeedback.jsx';
 import { useApiMutation } from './useApiMutation.js';
 
@@ -28,6 +28,17 @@ function PresidentForm({ team, onChanged }) {
   const mutation = useApiMutation((body, signal) => endpoints.updatePresident(president.id, body, signal), { onSuccess: onChanged });
   if (!president?.id) return <p className="admin-empty">ESTE EQUIPO NO TIENE UN PRESIDENTE EDITABLE ASIGNADO.</p>;
   return <form className="admin-form" onSubmit={event => { event.preventDefault(); mutation.execute(form); }}><label>NOMBRE DEL PRESIDENTE<input required value={form.name} onChange={event => setForm(current => ({ ...current, name: event.target.value }))}/></label><label>URL DE LA FOTO<input type="url" value={form.imageUrl} onChange={event => setForm(current => ({ ...current, imageUrl: event.target.value }))}/></label><MediaImageField label="SUBIR FOTO DEL PRESIDENTE" entityType="president" entityId={president.id} onUploaded={imageUrl => setForm(current => ({ ...current, imageUrl }))}/><button className="action-button" disabled={mutation.loading}>GUARDAR PRESIDENTE</button><FormFeedback mutation={mutation}/></form>;
+}
+
+function CoachForm({ team, onChanged }) {
+  const coachId = team.coach?.id ?? team.manager?.id ?? team.coachId ?? team.managerId;
+  const presentedName = teamCoachName(team);
+  const [name, setName] = useState(presentedName === 'No informado' ? '' : presentedName);
+  useEffect(() => setName(presentedName === 'No informado' ? '' : presentedName), [coachId, presentedName]);
+  const mutation = useApiMutation((body, signal) => coachId
+    ? endpoints.updateCoach(coachId, body, signal)
+    : endpoints.createCoach({ ...body, teamId: team.id }, signal), { onSuccess: onChanged });
+  return <form className="admin-form" onSubmit={event => { event.preventDefault(); mutation.execute({ name: name.trim() }); }}><label>NOMBRE DEL DT<input required value={name} onChange={event => setName(event.target.value)} placeholder="DIRECTOR TÉCNICO"/></label><button className="action-button" disabled={!name.trim() || mutation.loading}>{coachId ? 'GUARDAR DT' : 'CREAR DT'}</button><FormFeedback mutation={mutation}/></form>;
 }
 
 function BudgetForm({ team, onChanged }) {
@@ -71,6 +82,6 @@ function OrderEditor({ team, squad, onChanged }) {
 
 export function TeamAdminPanel({ team, squad, onChanged }) {
   const [tab, setTab] = useState('profile');
-  const tabs = [['profile','PERFIL'],['president','PRESIDENTE'],['budget','PRESUPUESTO'],['squad','PLANTEL'],['order','ORDEN']];
-  return <section className="team-admin"><header><p>GESTIÓN PÚBLICA DEL EQUIPO</p><nav>{tabs.map(([value, label]) => <button className={tab === value ? 'active' : ''} onClick={() => setTab(value)} key={value}>{label}</button>)}</nav></header>{tab === 'profile' && <ProfileForm team={team} onChanged={onChanged}/>} {tab === 'president' && <PresidentForm team={team} onChanged={onChanged}/>} {tab === 'budget' && <BudgetForm team={team} onChanged={onChanged}/>} {tab === 'squad' && <SquadEditor team={team} squad={squad} onChanged={onChanged}/>} {tab === 'order' && <OrderEditor team={team} squad={squad} onChanged={onChanged}/>}</section>;
+  const tabs = [['profile','PERFIL'],['president','PRESIDENTE'],['coach','DT'],['budget','PRESUPUESTO'],['squad','PLANTEL'],['order','ORDEN']];
+  return <section className="team-admin"><header><p>GESTIÓN PÚBLICA DEL EQUIPO</p><nav>{tabs.map(([value, label]) => <button className={tab === value ? 'active' : ''} onClick={() => setTab(value)} key={value}>{label}</button>)}</nav></header>{tab === 'profile' && <ProfileForm team={team} onChanged={onChanged}/>} {tab === 'president' && <PresidentForm team={team} onChanged={onChanged}/>} {tab === 'coach' && <CoachForm team={team} onChanged={onChanged}/>} {tab === 'budget' && <BudgetForm team={team} onChanged={onChanged}/>} {tab === 'squad' && <SquadEditor team={team} squad={squad} onChanged={onChanged}/>} {tab === 'order' && <OrderEditor team={team} squad={squad} onChanged={onChanged}/>}</section>;
 }

@@ -53,7 +53,8 @@ for (const [scores, expected] of matchCases) {
   assert.deepEqual(first, second, `${expected.type}.${expected.subtype} debe ser determinista`);
   assert.equal(first.type, expected.type);
   assert.equal(first.subtype, expected.subtype);
-  assert.deepEqual(Object.keys(first), ['id', 'type', 'subtype', 'label', 'headline', 'body']);
+  assert.deepEqual(Object.keys(first), ['id', 'type', 'subtype', 'label', 'headline', 'body', 'image']);
+  assert.equal(first.image.id.startsWith(`${expected.type}-${expected.subtype}-`), true);
 }
 
 const transferBase = {

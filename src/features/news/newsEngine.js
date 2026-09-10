@@ -1,4 +1,8 @@
 import { newsTemplates } from './newsTemplates.js';
+import { getNewsImage } from './newsImageSelector.js';
+import { deterministicItem, hashString } from './deterministic.js';
+
+export { deterministicItem, hashString } from './deterministic.js';
 
 const categories = {
   victory: new Set(['narrow', 'normal', 'big']),
@@ -10,21 +14,6 @@ const categories = {
 
 const hasValue = value => value !== undefined && value !== null && value !== '';
 const numericScore = value => hasValue(value) && Number.isFinite(Number(value)) ? Number(value) : null;
-
-export function hashString(value) {
-  const text = String(value ?? '');
-  let hash = 2166136261;
-  for (let index = 0; index < text.length; index += 1) {
-    hash ^= text.charCodeAt(index);
-    hash = Math.imul(hash, 16777619);
-  }
-  return hash >>> 0;
-}
-
-export function deterministicItem(items, seed, offset = 0) {
-  if (!Array.isArray(items) || !items.length) return null;
-  return items[hashString(`${String(seed)}:${offset}`) % items.length];
-}
 
 export function fillTemplate(text, values) {
   return text.replace(/\{(\w+)\}/g, (placeholder, key) => hasValue(values[key]) ? String(values[key]) : placeholder);
@@ -94,5 +83,6 @@ export function generateNews(event) {
   const body = selectText(templates.bodies, event, event.id, 3);
   if (!label || !headline || !body) return null;
 
-  return { id: event.id, type, subtype, label, headline, body };
+  const image = getNewsImage({ id: event.id, type, subtype });
+  return { id: event.id, type, subtype, label, headline, body, image };
 }

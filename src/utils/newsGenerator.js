@@ -5,14 +5,6 @@ export { classifyMatchResult, deterministicItem, fillTemplate, generateNews, has
 const value = (...candidates) => candidates.find(candidate => candidate !== undefined && candidate !== null && candidate !== '');
 const teamName = team => team?.name ?? team?.teamName;
 
-const imageByCategory = {
-  'victory.narrow': 'narrow-victory', 'victory.normal': 'victory', 'victory.big': 'big-victory',
-  'defeat.narrow': 'defeat', 'defeat.normal': 'defeat', 'defeat.big': 'big-defeat',
-  'draw.goalless': 'draw', 'draw.normal': 'draw', 'draw.crazy': 'crazy-draw',
-  'transfer.arrival': 'transfer', 'transfer.departure': 'transfer', 'transfer.move': 'transfer',
-  'sanction.player': 'sanction', 'sanction.club': 'sanction',
-};
-
 function decorate(news, { sourceType, date, original }) {
   if (!news) return null;
   return {
@@ -20,7 +12,6 @@ function decorate(news, { sourceType, date, original }) {
     id: `${sourceType}-${news.id}`,
     eventId: news.id,
     sourceType,
-    image: imageByCategory[`${news.type}.${news.subtype}`],
     date: date ?? null,
     original,
   };

@@ -1,5 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getDominantColors } from '../utils/dominantColors.js';
+import { resolveNewsParticipants } from '../features/news/newsParticipants.js';
+import { RecolorableNewsScene } from './RecolorableNewsScene.jsx';
 import { TeamMark } from './TeamMark.jsx';
 
 const fallbackPalettes = {
@@ -19,49 +21,37 @@ const contextOf = item => {
 };
 
 const contextLabels = { victory: 'VICTORIA', defeat: 'DERROTA', draw: 'EMPATE', sanction: 'SANCIÓN', transfer: 'FICHAJE', upcoming: 'PRÓXIMO' };
-const teamId = team => team?.id ?? team?.teamId ?? team?.team_id;
-
 export function NewsArtwork({ item, teams = [] }) {
   const context = contextOf(item);
-  const index = useMemo(() => new Map(teams.map(team => [team.id, team])), [teams]);
-  const homeTeam = item.original?.homeTeam;
-  const awayTeam = item.original?.awayTeam;
   const homeScore = Number(item.original?.homeScore);
   const awayScore = Number(item.original?.awayScore);
-  const hasResult = item.sourceType === 'match'
-    && item.original?.homeScore !== null && item.original?.awayScore !== null
-    && Number.isFinite(homeScore) && Number.isFinite(awayScore);
-  const matchPrimary = hasResult && awayScore > homeScore ? awayTeam : homeTeam;
-  const matchSecondary = matchPrimary === awayTeam ? homeTeam : awayTeam;
-  const rawPrimary = item.sourceType === 'match' ? matchPrimary
-    : item.sourceType === 'transfer' ? item.original?.toTeam ?? item.original?.destinationTeam
-      : item.original?.team ?? item.original?.player?.team ?? item.original?.redCard?.team;
-  const rawSecondary = item.sourceType === 'match' ? matchSecondary
-    : item.sourceType === 'transfer' ? item.original?.fromTeam ?? item.original?.originTeam : null;
-  const primary = { ...rawPrimary, ...(index.get(teamId(rawPrimary)) ?? {}) };
-  const secondary = rawSecondary ? { ...rawSecondary, ...(index.get(teamId(rawSecondary)) ?? {}) } : null;
+  const { team: primary, opponent: secondary, primaryIsAway } = useMemo(
+    () => resolveNewsParticipants(item, teams),
+    [item, teams],
+  );
   const fallback = fallbackPalettes[context];
   const [colors, setColors] = useState(fallback);
 
   useEffect(() => {
     let active = true;
     setColors(fallback);
-    if (primary.imageUrl) getDominantColors(primary.imageUrl, 3)
+    if (primary?.imageUrl) getDominantColors(primary.imageUrl, 3)
       .then(result => { if (active && result.length) setColors([...result, ...fallback].slice(0, 3)); })
       .catch(() => {});
     return () => { active = false; };
-  }, [primary.imageUrl, context]);
+  }, [primary?.imageUrl, context]);
 
   const score = item.sourceType === 'match' && item.type !== 'upcoming'
-    ? matchPrimary === awayTeam ? `${awayScore} : ${homeScore}` : `${homeScore} : ${awayScore}`
+    ? primaryIsAway ? `${awayScore} : ${homeScore}` : `${homeScore} : ${awayScore}`
     : null;
   const style = { '--news-primary': colors[0], '--news-secondary': colors[1], '--news-accent': colors[2] };
-  return <div className={`news-artwork news-artwork-${context}`} style={style} aria-label={`Gráfica ${contextLabels[context]} de ${primary.name ?? 'Koinonia e-League'}`}>
+  return <div className={`news-artwork news-artwork-${context}`} style={style} aria-label={`Gráfica ${contextLabels[context]} de ${primary?.name ?? 'Koinonia e-League'}`}>
+    <RecolorableNewsScene scene={item.image} team={primary} opponent={secondary} alt="" className="news-artwork-scene"/>
     <span className="news-artwork-grid"/>
     <span className="news-artwork-context">{contextLabels[context]}</span>
-    <TeamMark team={primary} className="news-artwork-primary"/>
+    <TeamMark team={primary ?? {}} className="news-artwork-primary"/>
     {secondary && <TeamMark team={secondary} className="news-artwork-secondary"/>}
     {score && <strong>{score}</strong>}
-    <small>{primary.name ?? 'KOINONIA e-LEAGUE'}</small>
+    <small>{primary?.name ?? 'KOINONIA e-LEAGUE'}</small>
   </div>;
 }

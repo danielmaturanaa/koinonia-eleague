@@ -4,6 +4,9 @@ import { Icon } from './Icon.jsx';
 
 export function Navigation({ route, navigate }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const activeItemPath = navigationItems
+    .filter(item => item.path === '/' ? route.path === '/' : route.path === item.path || route.path.startsWith(`${item.path}/`))
+    .sort((left, right) => right.path.length - left.path.length)[0]?.path;
 
   useEffect(() => setMenuOpen(false), [route.path]);
 
@@ -18,9 +21,7 @@ export function Navigation({ route, navigate }) {
       <b>MENÚ</b>
     </button>
     <nav id="league-navigation" className={menuOpen ? 'mobile-open' : ''} aria-label="Menú de la liga">{navigationItems.map(item => {
-    const active = item.path === '/'
-      ? route.path === '/'
-      : route.path === item.path || route.path.startsWith(`${item.path}/`);
+    const active = item.path === activeItemPath;
     return <div className={`nav-box ${active ? 'selected' : ''} ${item.children ? 'with-children' : ''}`} key={item.label}>
       <button className="nav-primary" aria-current={active ? 'page' : undefined} onClick={() => goTo(item.path)}>
         <Icon type={item.icon}/><span>{item.label}</span>

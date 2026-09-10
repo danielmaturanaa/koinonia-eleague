@@ -11,6 +11,7 @@ import { MarketPage } from '../features/public/MarketPage.jsx';
 import { MatchesPage } from '../features/public/MatchesPage.jsx';
 import { NewsPage } from '../features/public/NewsPage.jsx';
 import { PlayersPage } from '../features/public/PlayersPage.jsx';
+import { RulesPage } from '../features/public/RulesPage.jsx';
 import { RankingsPage, TournamentsPage } from '../features/public/TournamentsPage.jsx';
 import { TeamsDirectoryPage } from '../features/public/TeamsDirectoryPage.jsx';
 import { useRoute } from './useRoute.js';
@@ -38,9 +39,9 @@ export function App() {
   } else if (route.path === '/partidos' || route.path === '/partidos/jugados' || route.path === '/partidos/pendientes') {
     page = <MatchesPage key={route.path} mode={route.path.endsWith('jugados') ? 'played' : route.path.endsWith('pendientes') ? 'pending' : 'all'} teams={league.teams}/>;
   } else if (route.path === '/clasificacion') {
-    page = <TournamentsPage classificationOnly teams={league.teams}/>;
+    page = <TournamentsPage classificationOnly teams={league.teams} navigate={navigate}/>;
   } else if (route.path === '/clasificacion/rankings') {
-    page = <RankingsPage teams={league.teams}/>;
+    page = <RankingsPage teams={league.teams} navigate={navigate}/>;
   } else if (route.path === '/equipos/jugadores') {
     page = <PlayersPage teams={league.teams}/>;
   } else if (route.path.startsWith('/equipos/')) {
@@ -54,6 +55,8 @@ export function App() {
     page = <TournamentsPage teams={league.teams}/>;
   } else if (route.path === '/noticias') {
     page = <NewsPage teams={league.teams}/>;
+  } else if (route.path === '/reglas') {
+    page = <RulesPage/>;
   } else {
     page = <SectionPage path={route.path}/>;
   }

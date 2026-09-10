@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "dimensions": { "width": 1900, "height": 828, "aspectRatio": 2.294686 },
+  "palette": {
+    "primary": { "default": "#D62D1E", "referenceLightness": 0.44 },
+    "secondary": { "default": "#10244A", "referenceLightness": 0.14 },
+    "accent": { "default": "#E6B83F", "referenceLightness": 0.58 }
+  },
+  "rendering": {
+    "algorithm": "hsl-lightness-preserving",
+    "lightnessStrength": 0.82,
+    "imageRendering": "pixelated"
+  },
+  "files": {
+    "base": "base.png",
+    "primary": "mask-primary.png",
+    "secondary": "mask-secondary.png",
+    "accent": "mask-accent.png"
+  },
+  "scenes": [
+    { "id": "victory-normal-01", "event": "victory", "category": "normal", "label": "Victoria normal" },
+    { "id": "victory-narrow-01", "event": "victory", "category": "narrow", "label": "Victoria estrecha" },
+    { "id": "victory-big-01", "event": "victory", "category": "big", "label": "Victoria amplia" },
+    { "id": "defeat-normal-01", "event": "defeat", "category": "normal", "label": "Derrota normal" },
+    { "id": "defeat-narrow-01", "event": "defeat", "category": "narrow", "label": "Derrota estrecha" },
+    { "id": "defeat-big-01", "event": "defeat", "category": "big", "label": "Derrota amplia" },
+    { "id": "draw-goalless-01", "event": "draw", "category": "goalless", "label": "Empate sin goles" },
+    { "id": "draw-normal-01", "event": "draw", "category": "normal", "label": "Empate normal" },
+    { "id": "draw-crazy-01", "event": "draw", "category": "crazy", "label": "Empate alocado" },
+    { "id": "transfer-arrival-01", "event": "transfer", "category": "arrival", "label": "Llegada" },
+    { "id": "transfer-departure-01", "event": "transfer", "category": "departure", "label": "Salida" },
+    { "id": "transfer-move-01", "event": "transfer", "category": "move", "label": "Cambio de club" },
+    { "id": "sanction-player-01", "event": "sanction", "category": "player", "label": "Sanción de jugador" }
+  ]
+}

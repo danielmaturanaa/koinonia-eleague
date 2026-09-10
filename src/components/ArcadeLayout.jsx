@@ -13,6 +13,14 @@ function HeaderEmblems({ teams, side, navigate }) {
   return <div className={`header-emblems header-emblems-${side}`} aria-label={`Emblemas de equipos, lado ${side === 'left' ? 'izquierdo' : 'derecho'}`}>{teams.map(team => <button className="header-team-button" type="button" key={team.id} title={team.name} aria-label={`Abrir equipo ${team.name}`} onClick={() => navigate(`/equipos/${encodeURIComponent(team.id)}`)}><TeamMark team={team}/></button>)}</div>;
 }
 
+function PressStartPrompt() {
+  return <div className="press-start-prompt" role="img" aria-label="Código Konami entre dos mandos de SNES">
+    <img className="press-start-controller" src="/snes-controller.png" alt=""/>
+    <img className="konami-code" src="/konami-code.png" alt="Código Konami: arriba, arriba, abajo, abajo, izquierda, derecha, izquierda, derecha, B, A, Start"/>
+    <img className="press-start-controller" src="/snes-controller.png" alt=""/>
+  </div>;
+}
+
 export function ArcadeLayout({ route, navigate, children, sidebar, error, dismissError, headerTeams = [] }) {
   const [viewport, setViewport] = useState({ width: DESIGN_WIDTH, scale: 1 });
   useLayoutEffect(() => {
@@ -40,7 +48,7 @@ export function ArcadeLayout({ route, navigate, children, sidebar, error, dismis
         <HeaderEmblems teams={visibleTeams.slice(splitAt)} side="right" navigate={navigate}/>
         <ApiStatus/>
       </header>
-      <div className="home-composition"><div className="left-rail"><Navigation route={route} navigate={navigate}/><MusicPlayer tracks={leaguePlaylist}/></div>{children}{sidebar}</div>
+      <div className="home-composition"><div className="left-rail"><Navigation route={route} navigate={navigate}/><MusicPlayer tracks={leaguePlaylist}/></div><div className="center-stage">{children}<PressStartPrompt/></div>{sidebar}</div>
       {error && <div className="preview-notice" role="status">{error}<button onClick={dismissError} aria-label="Cerrar aviso">×</button></div>}
     </div>
   </div>;

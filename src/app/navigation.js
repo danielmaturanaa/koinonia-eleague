@@ -1,28 +1,14 @@
 export const navigationItems = [
   { label: 'Inicio', icon: 'ball', path: '/' },
   { label: 'Partidos', icon: 'pitch', path: '/partidos' },
-  {
-    label: 'Clasificación', icon: 'chart', path: '/clasificacion',
-    children: [
-      { label: 'Torneo', path: '/clasificacion' },
-      { label: 'Rankings', path: '/clasificacion/rankings' },
-    ],
-  },
-  {
-    label: 'Equipos', icon: 'shirt', path: '/equipos',
-    children: [
-      { label: 'Plantillas', path: '/equipos/plantillas' },
-      { label: 'Presupuestos', path: '/equipos/presupuestos' },
-      { label: 'Presidente', path: '/equipos/presidentes' },
-      { label: 'DT', path: '/equipos/directores-tecnicos' },
-      { label: 'Emblemas', path: '/equipos/emblemas' },
-      { label: 'Selecciones', path: '/equipos/selecciones' },
-      { label: 'Jugadores', path: '/equipos/jugadores' },
-    ],
-  },
-  { label: 'Transferencias', icon: 'arrows', path: '/transferencias' },
+  { label: 'Clasificación', icon: 'chart', path: '/clasificacion' },
   { label: 'Torneos', icon: 'cup', path: '/torneos' },
+  { label: 'Equipos', icon: 'shirt', path: '/equipos' },
+  { label: 'Transferencias', icon: 'arrows', path: '/transferencias' },
+  { label: 'Jugadores', icon: 'player', path: '/equipos/jugadores' },
+  { label: 'Selecciones', icon: 'globe', path: '/equipos/selecciones' },
   { label: 'Noticias', icon: 'news', path: '/noticias' },
+  { label: 'Reglas', icon: 'book', path: '/reglas' },
 ];
 
 export const sectionContent = {
@@ -42,4 +28,5 @@ export const sectionContent = {
   '/sanciones': ['SANCIONES', 'Expulsiones y suspensiones registradas en las actas.'],
   '/torneos': ['TORNEOS', 'Ligas, copas, grupos, llaves y movimientos divisionales.'],
   '/noticias': ['ACTIVIDAD DE LA LIGA', 'Novedades generadas por la actividad oficial de Koinonia e-League.'],
+  '/reglas': ['REGLAS DEL TORNEO', 'Reglamento oficial, condiciones de competencia y criterios deportivos de Koinonia e-League.'],
 };
