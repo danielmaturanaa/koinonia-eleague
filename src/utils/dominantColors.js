@@ -80,8 +80,17 @@ async function extractDominantColors(src, maxColors) {
   const populations = centroids.map((_, index) => assignments.filter(cluster => cluster === index).length);
   const sorted = centroids.map((color, index) => ({ color, population: populations[index] }))
     .sort((a, b) => b.population - a.population);
+  const isClubColor = ({ color: [red, green, blue] }) => {
+    const chroma = Math.max(red, green, blue) - Math.min(red, green, blue);
+    const brightness = (red + green + blue) / 3;
+    return chroma >= 40 && brightness >= 28 && brightness <= 235;
+  };
+  const prioritized = [
+    ...sorted.filter(isClubColor),
+    ...sorted.filter(color => !isClubColor(color)),
+  ];
   const result = [];
-  for (const { color } of sorted) {
+  for (const { color } of prioritized) {
     if (!result.some(existing => colorDistance(existing, color) < 45)) result.push(color);
     if (result.length === maxColors) break;
   }

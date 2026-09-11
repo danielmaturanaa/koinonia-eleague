@@ -61,6 +61,6 @@ export function App() {
     page = <SectionPage path={route.path}/>;
   }
 
-  const sidebar = <MatchSidebar completed={completed} upcoming={upcoming} tournaments={activeTournaments} standingsByTournament={league.standingsByTournament} resolveTeam={resolveTeam} loading={state.loading}/>;
+  const sidebar = <MatchSidebar completed={completed} upcoming={upcoming} tournaments={activeTournaments} resolveTeam={resolveTeam} loading={state.loading}/>;
   return <ArcadeLayout route={route} navigate={navigate} sidebar={sidebar} error={state.error} dismissError={dismissError} headerTeams={league.teams}>{page}</ArcadeLayout>;
 }

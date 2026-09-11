@@ -1,10 +1,8 @@
 import { useLayoutEffect, useState } from 'react';
 import { ApiStatus } from './ApiStatus.jsx';
-import { MusicPlayer } from './MusicPlayer.jsx';
 import { Navigation } from './Navigation.jsx';
 import { TeamMark } from './TeamMark.jsx';
 import { TransparentLogo } from './TransparentLogo.jsx';
-import { leaguePlaylist } from '../app/playlist.js';
 
 const DESIGN_HEIGHT = 1024;
 const DESIGN_WIDTH = Math.round(DESIGN_HEIGHT * 4 / 3);
@@ -48,7 +46,7 @@ export function ArcadeLayout({ route, navigate, children, sidebar, error, dismis
         <HeaderEmblems teams={visibleTeams.slice(splitAt)} side="right" navigate={navigate}/>
         <ApiStatus/>
       </header>
-      <div className="home-composition"><div className="left-rail"><Navigation route={route} navigate={navigate}/><MusicPlayer tracks={leaguePlaylist}/></div><div className="center-stage">{children}<PressStartPrompt/></div>{sidebar}</div>
+      <div className="home-composition"><div className="left-rail"><Navigation route={route} navigate={navigate}/></div><div className="center-stage">{children}<PressStartPrompt/></div>{sidebar}</div>
       {error && <div className="preview-notice" role="status">{error}<button onClick={dismissError} aria-label="Cerrar aviso">×</button></div>}
     </div>
   </div>;

@@ -7,22 +7,26 @@ const gp = value => typeof value === 'number' ? value.toLocaleString('es-CL') : 
 
 function PlayerRow({ player }) {
   const flagMatch = player.name?.match(/^(\p{Regional_Indicator}{2})\s*/u);
-  const flag = flagMatch?.[1] ?? '';
   const name = flagMatch ? player.name.slice(flagMatch[0].length) : player.name;
-  const countryCode = flag ? [...flag].map(character => String.fromCharCode(character.codePointAt(0) - 127397)).join('') : '';
-  const suppliedCountry = player.country?.name ?? player.nationality?.name ?? player.countryName ?? (typeof player.nationality === 'string' ? player.nationality : '');
-  const country = suppliedCountry || (countryCode ? new Intl.DisplayNames(['es'], { type: 'region' }).of(countryCode) : '—');
-  return <div className="roster-row"><b>{String(player.squadOrder ?? '—').padStart(2, '0')}</b><span>{name}</span><span className="player-country">{flag} {country}</span><small>{player.position ?? '—'}</small><strong>{gp(player.gpValue)} GP</strong></div>;
+  return <div className="roster-row"><b>{String(player.squadOrder ?? '—').padStart(2, '0')}</b><span>{name}</span><small>{player.position ?? '—'}</small><strong>{gp(player.gpValue)} GP</strong></div>;
 }
 
 function RosterHeader() {
-  return <div className="roster-columns" aria-hidden="true"><b>NÚMERO</b><b>NOMBRE</b><b>PAÍS</b><b>POSICIÓN</b><b>VALOR MERCADO</b></div>;
+  return <div className="roster-columns" aria-hidden="true"><b>NÚMERO</b><b>NOMBRE</b><b>POSICIÓN</b><b>VALOR MERCADO</b></div>;
 }
 
 const firstText = (...values) => values.find(value => typeof value === 'string' && value.trim());
 
 function presidentPhoto(team) {
   return firstText(team.president?.imageUrl, team.president?.photoUrl, team.president?.avatarUrl, team.president?.pictureUrl, team.presidentImageUrl, team.presidentPhotoUrl);
+}
+
+function coachPhoto(team) {
+  return firstText(team.coach?.imageUrl, team.coach?.photoUrl, team.coach?.avatarUrl, team.manager?.imageUrl, team.coachImageUrl, team.managerImageUrl);
+}
+
+function PersonPhoto({ photo, name }) {
+  return photo ? <img src={photo} alt={`Foto de ${name}`}/> : <div className="president-photo-placeholder" aria-label={`Foto de ${name} no publicada`}><b>{name.split(/\s+/).map(part => part[0]).join('').slice(0, 2).toUpperCase() || '—'}</b><small>FOTO NO PUBLICADA</small></div>;
 }
 
 function clubHonours(team, history) {
@@ -48,6 +52,8 @@ export function TeamDetailPage({ team, squad, standings, matches = [], history =
   const record = rank ? standings[rank - 1] : null;
   const photo = team ? presidentPhoto(team) : '';
   const presidentName = team?.president?.name ?? team?.presidentName ?? 'Sin asignar';
+  const coachName = teamCoachName(team);
+  const managerPhoto = team ? coachPhoto(team) : '';
   const honours = team ? clubHonours(team, history) : [];
   const balance = teamBalance(team);
 
@@ -55,7 +61,7 @@ export function TeamDetailPage({ team, squad, standings, matches = [], history =
     {loading || !team ? <div className="arcade-state">CARGANDO FICHA...</div> : <>
       <header className="club-header"><TeamMark team={team} className="club-crest"/><div><p>{team.kind === 'national_team' ? 'SELECCIÓN' : 'CLUB'} · {team.currentDivision ?? 'LIGA DE TRANSICIÓN'}</p><h1>{team.name}</h1><span>PRESIDENTE: {team.president?.name ?? team.presidentName ?? 'SIN ASIGNAR'}</span></div><div className="club-rank"><small>LUGAR EN LA LIGA</small><b>{rank || '—'}°</b></div></header>
       <div className="club-stats"><span>SALDO DISPONIBLE <b>{balance === null ? '—' : `${gp(balance)} GP`}</b></span><span>VALOR PLANTEL <b>{gp(team.squadValue)} GP</b></span><span>PROMEDIO <b>{gp(team.averageValue)} GP</b></span><span>JUGADORES <b>{team.playerCount ?? squad.length}</b></span><span>PARTIDOS <b>{record?.played ?? '—'}</b></span></div>
-      <div className="club-columns"><section className="club-info"><h2>PRESIDENTE</h2><div className="president-card">{photo ? <img src={photo} alt={`Foto de ${presidentName}`}/> : <div className="president-photo-placeholder" aria-label={`Foto de ${presidentName} no publicada`}><b>{presidentName.split(/\s+/).map(part => part[0]).join('').slice(0, 2).toUpperCase() || '—'}</b><small>FOTO NO PUBLICADA</small></div>}<p><b>{presidentName}</b></p></div><h2>PERFIL DEL CLUB</h2><dl><div><dt>DIRECTOR TÉCNICO</dt><dd>{teamCoachName(team)}</dd></div><div><dt>SALDO / PRESUPUESTO</dt><dd>{balance === null ? 'No informado' : `${gp(balance)} GP`}</dd></div><div><dt>PARTIDOS REGISTRADOS</dt><dd>{matches.length}</dd></div></dl></section>
+      <div className="club-columns"><section className="club-info"><h2>PRESIDENTE</h2><div className="president-card"><PersonPhoto photo={photo} name={presidentName}/><p><b>{presidentName}</b></p></div><h2>DIRECTOR TÉCNICO</h2><div className="president-card coach-card"><PersonPhoto photo={managerPhoto} name={coachName}/><p><b>{coachName}</b></p></div><h2>PERFIL DEL CLUB</h2><dl><div><dt>SALDO / PRESUPUESTO</dt><dd>{balance === null ? 'No informado' : `${gp(balance)} GP`}</dd></div><div><dt>PARTIDOS REGISTRADOS</dt><dd>{matches.length}</dd></div></dl></section>
         <section className="roster-panel"><h2>PLANTEL TITULAR <small>{starters.length} / 11</small></h2><RosterHeader/><div className="roster-list">{starters.length ? starters.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay titulares definidos.</p>}</div><h2>SUPLENTES <small>{substitutes.length}</small></h2><RosterHeader/><div className="roster-list substitutes">{substitutes.length ? substitutes.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay suplentes registrados.</p>}</div></section>
       </div>
       <div className="club-lower-sections"><section className="club-lower-panel honours-panel"><h2>PALMARÉS</h2><div className="honours-list">{honours.length ? honours.map(item => <article key={item.id}><span aria-hidden="true">★</span><b>{item.name}</b>{item.season && <small>{item.season}</small>}</article>) : <p className="empty-copy">AÚN NO HAY TÍTULOS REGISTRADOS.</p>}</div></section></div>

@@ -1,5 +1,6 @@
-import { useEffect, useRef } from 'react';
-import { applyAvailableMasks, fallbackSceneSrc, getSceneBaseSrc, getSceneColorLayers } from '../features/news/newsSceneRenderer.js';
+import { useEffect, useRef, useState } from 'react';
+import { applyAvailableMasks, getSceneBaseSrc, getSceneColorLayers } from '../features/news/newsSceneRenderer.js';
+import { getDominantColors } from '../utils/dominantColors.js';
 
 const loadOptionalImage = src => new Promise(resolve => {
   const image = new Image();
@@ -13,14 +14,39 @@ async function loadSceneBase(scene) {
   const sceneSrc = getSceneBaseSrc(scene);
   const requested = sceneSrc ? await loadOptionalImage(sceneSrc) : null;
   if (requested) return { image: requested, fallback: false };
-  return { image: await loadOptionalImage(fallbackSceneSrc), fallback: true };
+  return { image: null, fallback: true };
+}
+
+const hasConfiguredColors = team => Boolean(
+  team?.primaryColor
+  || team?.colors?.primary
+  || team?.colors?.shirt
+  || team?.kitColors?.primary
+  || team?.kitColors?.shirt,
+);
+
+async function resolveTeamColors(team) {
+  if (!team?.imageUrl || hasConfiguredColors(team)) return team;
+  try {
+    const palette = await getDominantColors(team.imageUrl, 3);
+    if (!palette.length) return team;
+    const [primary, secondary = primary, accent = secondary] = palette;
+    return {
+      ...team,
+      colors: { primary, secondary, accent, shirt: primary, shorts: secondary, socks: accent },
+    };
+  } catch {
+    return team;
+  }
 }
 
 export function RecolorableNewsScene({ scene, team, opponent, alt = '', className = '' }) {
   const canvasRef = useRef(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let active = true;
+    setReady(false);
     const render = async () => {
       const canvas = canvasRef.current;
       const { image: base, fallback } = await loadSceneBase(scene);
@@ -35,8 +61,16 @@ export function RecolorableNewsScene({ scene, team, opponent, alt = '', classNam
       context.clearRect(0, 0, canvas.width, canvas.height);
       context.drawImage(base, 0, 0, canvas.width, canvas.height);
 
-      if (fallback || !scene?.recolorable) return;
-      const layers = getSceneColorLayers(scene, team, opponent);
+      if (fallback || !scene?.recolorable) {
+        if (active) setReady(true);
+        return;
+      }
+      const [coloredTeam, coloredOpponent] = await Promise.all([
+        resolveTeamColors(team),
+        resolveTeamColors(opponent),
+      ]);
+      if (!active) return;
+      const layers = getSceneColorLayers(scene, coloredTeam, coloredOpponent);
       let basePixels;
       try {
         basePixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
@@ -63,6 +97,7 @@ export function RecolorableNewsScene({ scene, team, opponent, alt = '', classNam
       if (!active) return;
       const workingPixels = applyAvailableMasks(basePixels, availableMasks);
       context.putImageData(new ImageData(workingPixels, canvas.width, canvas.height), 0, 0);
+      setReady(true);
     };
 
     render().catch(() => {});
@@ -73,8 +108,9 @@ export function RecolorableNewsScene({ scene, team, opponent, alt = '', classNam
     : scene?.focalPoint === 'right' ? 'right center' : 'center';
   return <canvas
     ref={canvasRef}
-    className={`recolorable-news-scene ${className}`}
+    className={`recolorable-news-scene ${ready ? 'is-ready' : 'is-loading'} ${className}`}
     style={{ objectPosition }}
+    aria-busy={!ready}
     role={alt ? 'img' : undefined}
     aria-label={alt || undefined}
     aria-hidden={alt ? undefined : true}
