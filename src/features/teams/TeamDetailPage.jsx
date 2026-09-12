@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { TeamMark } from '../../components/TeamMark.jsx';
-import { teamBalance, teamCoachName } from '../../utils/teamPresentation.js';
+import { teamBalance, teamCoachName, teamCoachPhoto } from '../../utils/teamPresentation.js';
 import { TeamAdminPanel } from '../admin/TeamAdminPanel.jsx';
 
 const gp = value => typeof value === 'number' ? value.toLocaleString('es-CL') : '—';
@@ -19,10 +19,6 @@ const firstText = (...values) => values.find(value => typeof value === 'string' 
 
 function presidentPhoto(team) {
   return firstText(team.president?.imageUrl, team.president?.photoUrl, team.president?.avatarUrl, team.president?.pictureUrl, team.presidentImageUrl, team.presidentPhotoUrl);
-}
-
-function coachPhoto(team) {
-  return firstText(team.coach?.imageUrl, team.coach?.photoUrl, team.coach?.avatarUrl, team.manager?.imageUrl, team.coachImageUrl, team.managerImageUrl);
 }
 
 function PersonPhoto({ photo, name }) {
@@ -53,7 +49,7 @@ export function TeamDetailPage({ team, squad, standings, matches = [], history =
   const photo = team ? presidentPhoto(team) : '';
   const presidentName = team?.president?.name ?? team?.presidentName ?? 'Sin asignar';
   const coachName = teamCoachName(team);
-  const managerPhoto = team ? coachPhoto(team) : '';
+  const managerPhoto = team ? teamCoachPhoto(team) : '';
   const honours = team ? clubHonours(team, history) : [];
   const balance = teamBalance(team);
 

@@ -5,6 +5,11 @@ const coachesByClub = {
   'forestyle fc': 'Mikel Arteta',
   'real potente cf': 'Frank Lampard',
   'real potente fc': 'Frank Lampard',
+  'porlacheetah fc': 'Hansi Flick',
+};
+
+const coachPhotosByClub = {
+  'porlacheetah fc': 'https://res.cloudinary.com/edu-devjs/image/upload/v1789186607/cheeto/k9ovgyjr9nlcvfrh2neb.jpg',
 };
 
 const normalizeClubName = value => String(value ?? '')
@@ -21,6 +26,17 @@ export function teamCoachName(team) {
     ?? team?.managerName
     ?? coachesByClub[normalizeClubName(team?.name)]
     ?? 'No informado';
+}
+
+export function teamCoachPhoto(team) {
+  return team?.coach?.imageUrl
+    ?? team?.coach?.photoUrl
+    ?? team?.coach?.avatarUrl
+    ?? team?.manager?.imageUrl
+    ?? team?.coachImageUrl
+    ?? team?.managerImageUrl
+    ?? coachPhotosByClub[normalizeClubName(team?.name)]
+    ?? '';
 }
 
 export function teamBalance(team) {

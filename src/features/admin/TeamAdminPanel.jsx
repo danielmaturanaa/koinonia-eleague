@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
-import { teamBalance, teamCoachName } from '../../utils/teamPresentation.js';
+import { teamBalance, teamCoachName, teamCoachPhoto } from '../../utils/teamPresentation.js';
 import { FormFeedback } from './FormFeedback.jsx';
 import { useApiMutation } from './useApiMutation.js';
 
@@ -33,12 +33,19 @@ function PresidentForm({ team, onChanged }) {
 function CoachForm({ team, onChanged }) {
   const coachId = team.coach?.id ?? team.manager?.id ?? team.coachId ?? team.managerId;
   const presentedName = teamCoachName(team);
-  const [name, setName] = useState(presentedName === 'No informado' ? '' : presentedName);
-  useEffect(() => setName(presentedName === 'No informado' ? '' : presentedName), [coachId, presentedName]);
+  const presentedPhoto = teamCoachPhoto(team);
+  const [form, setForm] = useState({
+    name: presentedName === 'No informado' ? '' : presentedName,
+    imageUrl: presentedPhoto,
+  });
+  useEffect(() => setForm({
+    name: presentedName === 'No informado' ? '' : presentedName,
+    imageUrl: presentedPhoto,
+  }), [coachId, presentedName, presentedPhoto]);
   const mutation = useApiMutation((body, signal) => coachId
     ? endpoints.updateCoach(coachId, body, signal)
     : endpoints.createCoach({ ...body, teamId: team.id }, signal), { onSuccess: onChanged });
-  return <form className="admin-form" onSubmit={event => { event.preventDefault(); mutation.execute({ name: name.trim() }); }}><label>NOMBRE DEL DT<input required value={name} onChange={event => setName(event.target.value)} placeholder="DIRECTOR TÉCNICO"/></label><button className="action-button" disabled={!name.trim() || mutation.loading}>{coachId ? 'GUARDAR DT' : 'CREAR DT'}</button><FormFeedback mutation={mutation}/></form>;
+  return <form className="admin-form" onSubmit={event => { event.preventDefault(); mutation.execute({ name: form.name.trim(), imageUrl: form.imageUrl }); }}><label>NOMBRE DEL DT<input required value={form.name} onChange={event => setForm(current => ({ ...current, name: event.target.value }))} placeholder="DIRECTOR TÉCNICO"/></label><label>URL DE LA FOTO<input type="url" value={form.imageUrl} onChange={event => setForm(current => ({ ...current, imageUrl: event.target.value }))}/></label><MediaImageField label="SUBIR FOTO DEL DT" entityType="coach" entityId={coachId} onUploaded={imageUrl => setForm(current => ({ ...current, imageUrl }))}/><button className="action-button" disabled={!form.name.trim() || mutation.loading}>{coachId ? 'GUARDAR DT' : 'CREAR DT'}</button><FormFeedback mutation={mutation}/></form>;
 }
 
 function BudgetForm({ team, onChanged }) {
