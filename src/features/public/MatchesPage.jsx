@@ -9,7 +9,11 @@ import { useApiQuery } from './useApiQuery.js';
 
 const labels = { pending: 'PENDIENTE', live: 'EN VIVO', finished: 'FINALIZADO', cancelled: 'CANCELADO' };
 const goalPlayerName = goal => goal?.player?.name ?? goal?.playerName ?? goal?.player_name ?? 'Gol sin jugador';
-const goalTeamName = goal => goal?.scoringTeam?.name ?? goal?.team?.name ?? goal?.teamName ?? goal?.team_name ?? '';
+const goalTeamId = goal => goal?.scoringTeam?.id ?? goal?.team?.id ?? goal?.teamId ?? goal?.team_id ?? '';
+
+function GoalColumn({ team, goals, side }) {
+  return <section className={`goal-team-column goal-team-${side}`}><h4>{team?.name ?? (side === 'home' ? 'LOCAL' : 'VISITA')}</h4>{goals.length ? goals.map(goal => <p key={goal.id}><b>{goal.minute ? `${goal.minute}'` : '—'}</b><span>{goalPlayerName(goal)}</span></p>) : <p className="goal-team-empty">Sin goles</p>}</section>;
+}
 
 function CreateMatchForm({ tournaments, teams, onChanged }) {
   const [form, setForm] = useState({ tournamentId: '', homeTeamId: '', awayTeamId: '', stage: '', groupLabel: '', roundNumber: '' });
@@ -28,7 +32,10 @@ function MatchDetail({ matchId, onChanged, resolveTeam }) {
   const detail = useApiQuery(signal => matchId ? endpoints.match(matchId, signal) : Promise.resolve({ data: null }), [matchId]);
   if (!matchId) return <aside className="detail-card"><p>SELECCIONA UN PARTIDO PARA ABRIR EL ACTA.</p></aside>;
   const refresh = () => { detail.retry(); onChanged(); };
-  return <aside className="detail-card match-detail"><DataState query={detail}/>{detail.data && <><div className="match-detail-kicker"><small>{detail.data.tournament?.name} · {detail.data.stage ?? 'FECHA'} {detail.data.roundNumber ?? ''}</small><button onClick={() => setShowAdmin(value => !value)}>{showAdmin ? 'CERRAR ACTA' : '⚙ GESTIONAR ACTA'}</button></div><div className="match-detail-score"><span><TeamMark team={resolveTeam(detail.data.homeTeam)}/><b>{detail.data.homeTeam?.name}</b></span><strong>{detail.data.homeScore ?? '–'} : {detail.data.awayScore ?? '–'}</strong><span><TeamMark team={resolveTeam(detail.data.awayTeam)}/><b>{detail.data.awayTeam?.name}</b></span></div>{showAdmin && <MatchAdminPanel key={detail.data.id} match={detail.data} onChanged={refresh}/>}<h3>ACTA DE GOLES</h3><div className="goal-list">{detail.data.goals?.length ? detail.data.goals.map(goal => <p key={goal.id}><b>{goal.minute ? `${goal.minute}'` : '—'}</b> {goalPlayerName(goal)} <small>{goalTeamName(goal)}</small></p>) : <p>Sin goles registrados.</p>}</div></>}</aside>;
+  const goals = detail.data?.goals ?? [];
+  const homeGoals = goals.filter(goal => goalTeamId(goal) === detail.data?.homeTeam?.id);
+  const awayGoals = goals.filter(goal => goalTeamId(goal) === detail.data?.awayTeam?.id);
+  return <aside className="detail-card match-detail"><DataState query={detail}/>{detail.data && <><div className="match-detail-kicker"><small>{detail.data.tournament?.name} · {detail.data.stage ?? 'FECHA'} {detail.data.roundNumber ?? ''}</small><button onClick={() => setShowAdmin(value => !value)}>{showAdmin ? 'CERRAR ACTA' : '⚙ GESTIONAR ACTA'}</button></div><div className="match-detail-score"><span><TeamMark team={resolveTeam(detail.data.homeTeam)}/><b>{detail.data.homeTeam?.name}</b></span><strong>{detail.data.homeScore ?? '–'} : {detail.data.awayScore ?? '–'}</strong><span><TeamMark team={resolveTeam(detail.data.awayTeam)}/><b>{detail.data.awayTeam?.name}</b></span></div>{showAdmin && <MatchAdminPanel key={detail.data.id} match={detail.data} onChanged={refresh}/>}<h3>ACTA DE GOLES</h3><div className="goal-list goal-list-by-team"><GoalColumn team={detail.data.homeTeam} goals={homeGoals} side="home"/><GoalColumn team={detail.data.awayTeam} goals={awayGoals} side="away"/></div></>}</aside>;
 }
 
 export function MatchesPage({ mode = 'all', teams }) {
