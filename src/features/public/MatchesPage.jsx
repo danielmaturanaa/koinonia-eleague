@@ -8,6 +8,8 @@ import { DataState, PageHeader, Pagination } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
 
 const labels = { pending: 'PENDIENTE', live: 'EN VIVO', finished: 'FINALIZADO', cancelled: 'CANCELADO' };
+const goalPlayerName = goal => goal?.player?.name ?? goal?.playerName ?? goal?.player_name ?? 'Gol sin jugador';
+const goalTeamName = goal => goal?.scoringTeam?.name ?? goal?.team?.name ?? goal?.teamName ?? goal?.team_name ?? '';
 
 function CreateMatchForm({ tournaments, teams, onChanged }) {
   const [form, setForm] = useState({ tournamentId: '', homeTeamId: '', awayTeamId: '', stage: '', groupLabel: '', roundNumber: '' });
@@ -26,7 +28,7 @@ function MatchDetail({ matchId, onChanged, resolveTeam }) {
   const detail = useApiQuery(signal => matchId ? endpoints.match(matchId, signal) : Promise.resolve({ data: null }), [matchId]);
   if (!matchId) return <aside className="detail-card"><p>SELECCIONA UN PARTIDO PARA ABRIR EL ACTA.</p></aside>;
   const refresh = () => { detail.retry(); onChanged(); };
-  return <aside className="detail-card match-detail"><DataState query={detail}/>{detail.data && <><div className="match-detail-kicker"><small>{detail.data.tournament?.name} · {detail.data.stage ?? 'FECHA'} {detail.data.roundNumber ?? ''}</small><button onClick={() => setShowAdmin(value => !value)}>{showAdmin ? 'CERRAR ACTA' : '⚙ GESTIONAR ACTA'}</button></div><div className="match-detail-score"><span><TeamMark team={resolveTeam(detail.data.homeTeam)}/><b>{detail.data.homeTeam?.name}</b></span><strong>{detail.data.homeScore ?? '–'} : {detail.data.awayScore ?? '–'}</strong><span><TeamMark team={resolveTeam(detail.data.awayTeam)}/><b>{detail.data.awayTeam?.name}</b></span></div>{showAdmin && <MatchAdminPanel key={detail.data.id} match={detail.data} onChanged={refresh}/>}<h3>ACTA DE GOLES</h3><div className="goal-list">{detail.data.goals?.length ? detail.data.goals.map(goal => <p key={goal.id}><b>{goal.minute ? `${goal.minute}'` : '—'}</b> {goal.player?.name ?? 'Gol sin jugador'} <small>{goal.scoringTeam?.name ?? ''}</small></p>) : <p>Sin goles registrados.</p>}</div></>}</aside>;
+  return <aside className="detail-card match-detail"><DataState query={detail}/>{detail.data && <><div className="match-detail-kicker"><small>{detail.data.tournament?.name} · {detail.data.stage ?? 'FECHA'} {detail.data.roundNumber ?? ''}</small><button onClick={() => setShowAdmin(value => !value)}>{showAdmin ? 'CERRAR ACTA' : '⚙ GESTIONAR ACTA'}</button></div><div className="match-detail-score"><span><TeamMark team={resolveTeam(detail.data.homeTeam)}/><b>{detail.data.homeTeam?.name}</b></span><strong>{detail.data.homeScore ?? '–'} : {detail.data.awayScore ?? '–'}</strong><span><TeamMark team={resolveTeam(detail.data.awayTeam)}/><b>{detail.data.awayTeam?.name}</b></span></div>{showAdmin && <MatchAdminPanel key={detail.data.id} match={detail.data} onChanged={refresh}/>}<h3>ACTA DE GOLES</h3><div className="goal-list">{detail.data.goals?.length ? detail.data.goals.map(goal => <p key={goal.id}><b>{goal.minute ? `${goal.minute}'` : '—'}</b> {goalPlayerName(goal)} <small>{goalTeamName(goal)}</small></p>) : <p>Sin goles registrados.</p>}</div></>}</aside>;
 }
 
 export function MatchesPage({ mode = 'all', teams }) {
