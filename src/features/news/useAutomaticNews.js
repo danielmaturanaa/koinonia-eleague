@@ -1,35 +1,43 @@
 import { useEffect, useMemo } from 'react';
 import { endpoints } from '../../api/endpoints.js';
-import { generateMatchNews, generateSanctionNews, generateTransferNews } from '../../utils/newsGenerator.js';
+import { generateLiveMatchNews, generateMatchNews, generateSanctionNews, generateTransferNews } from '../../utils/newsGenerator.js';
 import { useApiQuery } from '../public/useApiQuery.js';
 
 const list = value => Array.isArray(value) ? value : [];
 const isSanction = item => /red|card|sanction|susp|expuls|tarjeta/i.test(`${item?.type ?? ''} ${item?.message ?? ''} ${item?.description ?? ''}`);
 
-export function useAutomaticNews(refreshInterval = 60000) {
+export function useAutomaticNews(refreshInterval = 30000) {
+  const liveMatches = useApiQuery(async signal => {
+    const response = await endpoints.matches({ status: 'live', page: 1, pageSize: 100 }, signal);
+    const summaries = list(response?.data);
+    const details = await Promise.all(summaries.map(match => endpoints.match(match.id, signal)));
+    return { data: details.map(detail => detail?.data ?? detail).filter(Boolean) };
+  });
   const finishedMatches = useApiQuery(signal => endpoints.matches({ status: 'finished', page: 1, pageSize: 100 }, signal));
   const transfers = useApiQuery(signal => endpoints.transfers({ page: 1, pageSize: 100 }, signal));
   const activity = useApiQuery(signal => endpoints.activity({ page: 1, pageSize: 100 }, signal));
-  const queries = [finishedMatches, transfers, activity];
+  const queries = [liveMatches, finishedMatches, transfers, activity];
 
   useEffect(() => {
     if (!refreshInterval) return undefined;
     const timer = window.setInterval(() => queries.forEach(query => query.retry()), refreshInterval);
     return () => window.clearInterval(timer);
-  }, [refreshInterval, finishedMatches.retry, transfers.retry, activity.retry]);
+  }, [refreshInterval, liveMatches.retry, finishedMatches.retry, transfers.retry, activity.retry]);
 
   const news = useMemo(() => {
     const generated = [
+      ...list(liveMatches.data).map(generateLiveMatchNews),
       ...list(finishedMatches.data).map(generateMatchNews),
       ...list(transfers.data).map(generateTransferNews),
       ...list(activity.data).filter(isSanction).map(generateSanctionNews),
     ].filter(Boolean);
     const unique = [...new Map(generated.map(item => [item.id, item])).values()];
     return unique.sort((left, right) => {
+      if (Boolean(left.live) !== Boolean(right.live)) return left.live ? -1 : 1;
       const dateDifference = (Date.parse(right.date) || 0) - (Date.parse(left.date) || 0);
       return dateDifference || left.id.localeCompare(right.id);
     });
-  }, [finishedMatches.data, transfers.data, activity.data]);
+  }, [liveMatches.data, finishedMatches.data, transfers.data, activity.data]);
 
   return {
     news,

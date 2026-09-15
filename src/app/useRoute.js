@@ -8,8 +8,9 @@ function currentPath() {
 
 function parseRoute(path) {
   if (path === '/resultados') return { name: 'section', path: '/partidos' };
+  if (path === '/clasificacion/rankings') return { name: 'section', path: '/equipos/rankings' };
   const teamMatch = path.match(/^\/equipos\/([^/]+)$/);
-  const reservedTeamSections = new Set(['plantillas', 'presupuestos', 'presidentes', 'directores-tecnicos', 'emblemas', 'selecciones', 'jugadores']);
+  const reservedTeamSections = new Set(['plantillas', 'presupuestos', 'presidentes', 'directores-tecnicos', 'emblemas', 'selecciones', 'jugadores', 'rankings']);
   if (teamMatch && !reservedTeamSections.has(teamMatch[1])) {
     return { name: 'team', path, teamId: decodeURIComponent(teamMatch[1]) };
   }

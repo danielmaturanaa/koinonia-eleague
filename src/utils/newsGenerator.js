@@ -53,6 +53,34 @@ export function generateMatchNews(match) {
   });
 }
 
+export function generateLiveMatchNews(match) {
+  if (!match?.id || match.status !== 'live' || !teamName(match.homeTeam) || !teamName(match.awayTeam)) return null;
+  const homeScore = Number(match.homeScore ?? 0);
+  const awayScore = Number(match.awayScore ?? 0);
+  const groups = new Map();
+  for (const goal of match.goals ?? []) {
+    const club = value(goal.teamName, goal.team?.name, goal.scoringTeam?.name, 'Equipo no informado');
+    const player = value(goal.playerName, goal.player?.name, 'Gol sin jugador');
+    groups.set(club, [...(groups.get(club) ?? []), player]);
+  }
+  const goals = [...groups.entries()].map(([club, players]) => `${club}: ${players.join(', ')}`).join('; ');
+  const visual = generateMatchNews(match);
+  return {
+    id: `live-match-${match.id}`,
+    eventId: match.id,
+    sourceType: 'match',
+    type: 'live',
+    subtype: 'match',
+    label: 'PARTIDO EN VIVO',
+    headline: `${teamName(match.homeTeam)} ${homeScore} - ${awayScore} ${teamName(match.awayTeam)}`,
+    body: goals ? `Marcador en directo. Goles — ${goals}.` : 'El partido está en juego y todavía no hay goleadores registrados en el acta.',
+    image: visual?.image ?? null,
+    date: value(match.startedAt, match.updatedAt, match.createdAt),
+    original: match,
+    live: true,
+  };
+}
+
 export function normalizeTransferEvent(transfer, subtype = 'move') {
   const player = value(transfer?.player?.name, transfer?.playerName);
   const origin = value(teamName(transfer?.fromTeam), teamName(transfer?.originTeam), transfer?.fromTeamName);

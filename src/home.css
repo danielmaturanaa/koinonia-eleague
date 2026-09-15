@@ -421,6 +421,8 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .classification-workspace .standings-workspace-panel { max-height: none; overflow: visible; }
 .classification-workspace .standings-workspace-panel .table-scroll { overflow: visible; }
 .classification-workspace .workspace-columns { grid-template-columns: minmax(0, 1fr); }
+.classification-content-tabs { margin-top: 0; }
+.scorers-workspace-panel { width: 100%; }
 .classification-workspace .league-table th, .classification-workspace .league-table td { padding-top: 3px; padding-bottom: 3px; }
 .workspace-panel h3 small { font-size: 11px; }
 .table-scroll { overflow: auto; }

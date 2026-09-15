@@ -33,14 +33,14 @@ export function App() {
   if (route.name === 'home') {
     page = <HomePage tournament={tournament} lead={upcoming[0]} teams={league.teams}/>;
   } else if (route.name === 'teams') {
-    page = <TeamsPage teams={league.teams} loading={state.loading} onChoose={id => navigate(`/equipos/${encodeURIComponent(id)}`)} onChanged={refresh}/>;
+    page = <TeamsPage teams={league.teams} loading={state.loading} onChoose={id => navigate(`/equipos/${encodeURIComponent(id)}`)} onChanged={refresh} navigate={navigate}/>;
   } else if (route.name === 'team') {
     page = <TeamDetailPage team={teamDetail} squad={squad} standings={league.standings} matches={teamMatches} history={teamHistory} historyError={teamHistoryError} loading={state.loadingTeam} onBack={() => navigate('/equipos')} onChanged={refresh}/>;
   } else if (route.path === '/partidos' || route.path === '/partidos/jugados' || route.path === '/partidos/pendientes') {
     page = <MatchesPage key={route.path} mode={route.path.endsWith('jugados') ? 'played' : route.path.endsWith('pendientes') ? 'pending' : 'all'} teams={league.teams}/>;
   } else if (route.path === '/clasificacion') {
-    page = <TournamentsPage classificationOnly teams={league.teams} navigate={navigate}/>;
-  } else if (route.path === '/clasificacion/rankings') {
+    page = <TournamentsPage classificationOnly teams={league.teams}/>;
+  } else if (route.path === '/equipos/rankings') {
     page = <RankingsPage teams={league.teams} navigate={navigate}/>;
   } else if (route.path === '/equipos/jugadores') {
     page = <PlayersPage teams={league.teams}/>;
