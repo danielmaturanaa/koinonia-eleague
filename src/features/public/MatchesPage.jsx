@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { MatchQrCode } from '../../components/MatchQrCode.jsx';
 import { Scoreboard } from '../../components/Scoreboard.jsx';
@@ -70,12 +70,12 @@ function MultiSlot({ index, teamId, matchId, matches, teams, onSelectTeam, onSel
   </div>;
 }
 
-function MatchDetail({ matchId, onChanged, onBack, resolveTeam, teams, navigate }) {
+function MatchDetail({ matchId, onChanged, onBack, resolveTeam, teams }) {
   const [panel, setPanel] = useState(null);
   const detail = useApiQuery(signal => matchId ? endpoints.match(matchId, signal) : Promise.resolve({ data: null }), [matchId]);
   const refresh = () => { detail.retry(); onChanged(); };
   const togglePanel = value => setPanel(current => current === value ? null : value);
-  return <aside className="detail-card match-detail match-detail-full"><div className="match-detail-navigation"><button onClick={onBack}>← VOLVER A PARTIDOS</button></div>{(!detail.data || detail.error) && <DataState query={detail}/>} {detail.data && <><div className="match-detail-kicker"><small>{detail.data.tournament?.name} · {detail.data.stage ?? 'FECHA'} {detail.data.roundNumber ?? ''}</small><span className="match-detail-actions"><button className={`match-detail-marcador-btn ${panel === 'scoreboard' ? 'active' : ''}`} onClick={() => togglePanel('scoreboard')}>🎮 MARCADOR</button><button className={panel === 'qr' ? 'active' : ''} onClick={() => togglePanel('qr')}>📱 QR DEL PARTIDO</button><button className={panel === 'acta' ? 'active' : ''} onClick={() => togglePanel('acta')}>⚙ GESTIONAR ACTA</button></span></div>{panel === 'qr' && <MatchQrCode matchId={detail.data.id}/>}{panel === 'scoreboard' ? <><button className="scoreboard-fullscreen-link" onClick={() => navigate?.(`/marcador/${encodeURIComponent(detail.data.id)}`)}>⛶ PANTALLA COMPLETA</button><Scoreboard key={detail.data.id} matchId={detail.data.id} mode="manage" density="full" teams={teams}/></> : <div className="match-detail-score"><span><TeamMark team={resolveTeam(detail.data.homeTeam)}/><b>{detail.data.homeTeam?.name}</b></span><strong>{detail.data.homeScore ?? '–'} : {detail.data.awayScore ?? '–'}</strong><span><TeamMark team={resolveTeam(detail.data.awayTeam)}/><b>{detail.data.awayTeam?.name}</b></span></div>}{panel === 'acta' && <MatchAdminPanel key={detail.data.id} match={detail.data} onChanged={refresh}/>}</>}</aside>;
+  return <aside className="detail-card match-detail match-detail-full"><div className="match-detail-navigation"><button onClick={onBack}>← VOLVER A PARTIDOS</button></div>{(!detail.data || detail.error) && <DataState query={detail}/>} {detail.data && <><div className="match-detail-kicker"><small>{detail.data.tournament?.name} · {detail.data.stage ?? 'FECHA'} {detail.data.roundNumber ?? ''}</small><span className="match-detail-actions"><button className={`match-detail-marcador-btn ${panel === 'scoreboard' ? 'active' : ''}`} onClick={() => togglePanel('scoreboard')}>🎮 MARCADOR</button><button className={panel === 'qr' ? 'active' : ''} onClick={() => togglePanel('qr')}>📱 QR DEL PARTIDO</button><button className={panel === 'acta' ? 'active' : ''} onClick={() => togglePanel('acta')}>⚙ GESTIONAR ACTA</button></span></div>{panel === 'qr' && <MatchQrCode matchId={detail.data.id}/>}{panel === 'scoreboard' ? <Scoreboard key={detail.data.id} matchId={detail.data.id} mode="manage" density="full" teams={teams}/> : <div className="match-detail-score"><span><TeamMark team={resolveTeam(detail.data.homeTeam)}/><b>{detail.data.homeTeam?.name}</b></span><strong>{detail.data.homeScore ?? '–'} : {detail.data.awayScore ?? '–'}</strong><span><TeamMark team={resolveTeam(detail.data.awayTeam)}/><b>{detail.data.awayTeam?.name}</b></span></div>}{panel === 'acta' && <MatchAdminPanel key={detail.data.id} match={detail.data} onChanged={refresh}/>}</>}</aside>;
 }
 
 export function MatchesPage({ mode = 'all', teams, navigate, initialMatchId = null }) {
@@ -84,6 +84,8 @@ export function MatchesPage({ mode = 'all', teams, navigate, initialMatchId = nu
   const [selectedId, setSelectedId] = useState(initialMatchId);
   const [showMulti, setShowMulti] = useState(false);
   const [multiSlots, setMultiSlots] = useState(loadMultiSlots);
+  const [multiFullscreen, setMultiFullscreen] = useState(false);
+  const multiGridRef = useRef(null);
   const tournaments = useApiQuery(signal => endpoints.tournaments({ status: 'active', page: 1, pageSize: 100 }, signal));
   const matches = useApiQuery(signal => endpoints.matches({ ...filters, activeOnly: 1, pageSize: 20 }, signal), Object.values(filters));
   const multiMatchesQuery = useApiQuery(signal => showMulti ? endpoints.matches({ activeOnly: 1, pageSize: 100, page: 1 }, signal) : Promise.resolve({ data: [] }), [showMulti]);
@@ -93,6 +95,12 @@ export function MatchesPage({ mode = 'all', teams, navigate, initialMatchId = nu
   const rows = Array.isArray(matches.data) ? matches.data : [];
 
   useEffect(() => saveMultiSlots(multiSlots), [multiSlots]);
+
+  useEffect(() => {
+    const onFullscreenChange = () => setMultiFullscreen(Boolean(document.fullscreenElement));
+    document.addEventListener('fullscreenchange', onFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', onFullscreenChange);
+  }, []);
 
   useEffect(() => {
     if (!showMulti) return undefined;
@@ -148,6 +156,10 @@ export function MatchesPage({ mode = 'all', teams, navigate, initialMatchId = nu
     if (selectedId) backToList();
     setShowMulti(value => !value);
   };
+  const toggleMultiFullscreen = () => {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else multiGridRef.current?.requestFullscreen?.();
+  };
   const selectMultiTeam = (index, teamId) => setMultiSlots(current => current.map((slot, slotIndex) => slotIndex === index ? { teamId, matchId: null } : slot));
   const selectMultiMatch = (index, matchId) => setMultiSlots(current => current.map((slot, slotIndex) => slotIndex === index ? { ...slot, matchId } : slot));
   const clearMultiSlot = index => setMultiSlots(current => compactMultiSlots(current.map((slot, slotIndex) => slotIndex === index ? { ...MULTI_EMPTY_SLOT } : slot)));
@@ -156,15 +168,15 @@ export function MatchesPage({ mode = 'all', teams, navigate, initialMatchId = nu
   const refresh = () => matches.retry();
   return <main className="newspaper data-page"><section className="data-paper"><PageHeader kicker="CALENDARIO Y ACTAS" title={title}><button className={`page-action ${showMulti ? 'active' : ''}`} onClick={toggleMulti}>{showMulti ? 'CERRAR MULTIPARTIDO' : '🎮 MULTIPARTIDO'}</button></PageHeader>
     {showMulti ? <>
-      <p className="multi-inline-help">LAS CASILLAS VACÍAS SE LLENAN SOLAS CON PARTIDOS EN VIVO. TAMBIÉN PUEDES ELEGIR UN EQUIPO Y UNO DE SUS PARTIDOS A MANO.</p>
-      <div className="multi-grid">
+      <p className="multi-inline-help">LAS CASILLAS VACÍAS SE LLENAN SOLAS CON PARTIDOS EN VIVO. TAMBIÉN PUEDES ELEGIR UN EQUIPO Y UNO DE SUS PARTIDOS A MANO.<button type="button" className="multi-fullscreen-button" onClick={toggleMultiFullscreen}>{multiFullscreen ? '✕ SALIR DE PANTALLA COMPLETA' : '⛶ PANTALLA COMPLETA'}</button></p>
+      <div className="multi-grid" ref={multiGridRef}>
         {multiSlots.map((slot, index) => <MultiSlot key={index} index={index} teamId={slot.teamId} matchId={slot.matchId} matches={multiMatches} teams={teams} onSelectTeam={selectMultiTeam} onSelectMatch={selectMultiMatch} onClear={clearMultiSlot}/>)}
       </div>
     </> : <>
       <TeamChipBar teams={teams} value={filters.team} onChange={selectTeamFilter}/>
       <div className="filter-bar"><select name="tournament" value={filters.tournament} onChange={change} aria-label="Torneo"><option value="">TORNEOS ACTIVOS</option>{(tournaments.data ?? []).map(item => <option value={item.id} key={item.id}>{item.name}</option>)}</select><select name="status" value={filters.status} onChange={change} aria-label="Estado"><option value="">TODOS LOS ESTADOS</option>{Object.entries(labels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></div>
       {!selectedId && <DataState query={matches}/>} {selectedId
-        ? <MatchDetail key={selectedId} matchId={selectedId} onChanged={refresh} onBack={backToList} resolveTeam={resolveTeam} teams={teams} navigate={navigate}/>
+        ? <MatchDetail key={selectedId} matchId={selectedId} onChanged={refresh} onBack={backToList} resolveTeam={resolveTeam} teams={teams}/>
         : !matches.loading && !matches.error && <div className="data-list matches-full-list">{rows.map(match => <button className="match-card" key={match.id} onClick={() => selectMatch(match.id)}><small>{match.tournament?.name ?? 'TORNEO'} · {match.groupLabel ? `GRUPO ${match.groupLabel}` : `FECHA ${match.roundNumber ?? '—'}`}</small><span><TeamMark team={resolveTeam(match.homeTeam)}/><b>{match.homeTeam?.name}</b><strong>{match.homeScore ?? '–'} : {match.awayScore ?? '–'}</strong><b>{match.awayTeam?.name}</b><TeamMark team={resolveTeam(match.awayTeam)}/></span><i className={`status status-${match.status}`}>{labels[match.status] ?? match.status}</i></button>)}</div>}
       {!selectedId && <Pagination pagination={matches.pagination} page={filters.page} onPage={page => setFilters(current => ({ ...current, page }))}/>}
     </>}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { teamBalance, teamCoachName, teamCoachPhoto } from '../../utils/teamPresentation.js';
 import { FormFeedback } from './FormFeedback.jsx';
@@ -104,6 +104,106 @@ export function SquadEditor({ team, squad, onChanged }) {
   </div>;
   if (!squad.length) return <p className="admin-empty">NO HAY JUGADORES ASIGNADOS A ESTE EQUIPO.</p>;
   return <div className="squad-board"><p className="squad-help">ARRASTRA DESDE EL NÚMERO DE UN JUGADOR Y SUÉLTALO SOBRE OTRO PARA INTERCAMBIARLOS. LOS PUESTOS 1 A 11 SON TITULARES.</p><div className="squad-board-columns"><section><h3>TITULARES <small>11 PUESTOS</small></h3>{listHeader}{Array.from({ length: 11 }, (_, index) => ordered[index] ? playerRow(ordered[index], index) : <div className="squad-empty-slot" key={index} onDragOver={event => event.preventDefault()} onDrop={event => dropAt(event, index)}><b>{index + 1}</b><span>ARRASTRA UN JUGADOR AQUÍ</span></div>)}</section><section className="substitutes-drop-zone" onDragOver={event => event.preventDefault()} onDrop={event => dropAt(event, ordered.length)}><h3>SUPLENTES <small>{Math.max(ordered.length - 11, 0)}</small></h3>{listHeader}{ordered.slice(11).map((player, offset) => playerRow(player, offset + 11))}{ordered.length <= 11 && <div className="squad-empty-slot"><span>ARRASTRA AQUÍ PARA MOVER A SUPLENTES</span></div>}</section></div><button className="action-button squad-save-button" disabled={!ordered.length || mutation.loading} onClick={() => mutation.execute(ordered)}>GUARDAR PLANTEL COMPLETO</button><FormFeedback mutation={mutation}/></div>;
+}
+
+const FLAG_REGEX = /^(\p{Regional_Indicator}{2})\s*/u;
+function splitPlayerName(name) {
+  const match = name?.match(FLAG_REGEX);
+  const flag = match ? match[1] : '';
+  const rest = (match ? name.slice(match[0].length) : (name ?? '')).trim();
+  return { flag, name: rest };
+}
+
+const isStarterPlayer = player => typeof player?.isStarter === 'boolean' ? player.isStarter : player?.section === 'starters';
+const bandFor = position => {
+  if (['DC', 'ED', 'EI'].includes(position)) return 'att';
+  if (['MO', 'MC'].includes(position)) return 'mid';
+  if (['LD', 'DEC', 'LI'].includes(position)) return 'def';
+  return position === 'PT' ? 'gk' : 'mid';
+};
+const BAND_Y = { att: 14, mid: 42, def: 68, gk: 90 };
+
+function defaultFormationPositions(starters) {
+  const byBand = { att: [], mid: [], def: [], gk: [] };
+  starters.forEach(player => byBand[bandFor(player.position)].push(player));
+  const positions = {};
+  Object.entries(byBand).forEach(([band, players]) => {
+    players.forEach((player, index) => {
+      positions[player.id] = { x: (100 / (players.length + 1)) * (index + 1), y: BAND_Y[band] };
+    });
+  });
+  return positions;
+}
+
+function FormationMarker({ player, x, y, selected, onSelect, onDrag, onDragEnd }) {
+  const ref = useRef(null);
+  const start = useRef(null);
+  const moved = useRef(false);
+  const handleDown = event => {
+    start.current = { x: event.clientX, y: event.clientY };
+    moved.current = false;
+    ref.current?.setPointerCapture(event.pointerId);
+  };
+  const handleMove = event => {
+    if (!start.current) return;
+    const pitch = ref.current?.closest('.formation-pitch');
+    if (!pitch) return;
+    if (Math.hypot(event.clientX - start.current.x, event.clientY - start.current.y) > 5) moved.current = true;
+    if (!moved.current) return;
+    const rect = pitch.getBoundingClientRect();
+    const px = Math.min(97, Math.max(3, ((event.clientX - rect.left) / rect.width) * 100));
+    const py = Math.min(96, Math.max(4, ((event.clientY - rect.top) / rect.height) * 100));
+    onDrag(player.id, px, py);
+  };
+  const handleUp = () => {
+    if (moved.current) onDragEnd(player.id);
+    else onSelect(player.id);
+    start.current = null;
+    moved.current = false;
+  };
+  const { flag, name } = splitPlayerName(player.name);
+  return <button type="button" ref={element => { ref.current = element; }} className={`formation-marker${selected ? ' selected' : ''}`} style={{ left: `${x}%`, top: `${y}%` }}
+    onPointerDown={handleDown} onPointerMove={handleMove} onPointerUp={handleUp} aria-label={`${selected ? 'Deseleccionar' : 'Seleccionar o arrastrar a'} ${name}`}>
+    <span className="club-pitch-number">{player.jerseyNumber ?? '–'}{flag && <i className="club-pitch-flag">{flag}</i>}</span>
+    <span className="club-pitch-name">{name.split(/\s+/).pop() || name}</span>
+  </button>;
+}
+
+export function FormationEditor({ team, squad, onChanged }) {
+  const starters = squad.filter(isStarterPlayer);
+  const substitutes = squad.filter(player => !isStarterPlayer(player));
+  const [selected, setSelected] = useState(null);
+  const [localPositions, setLocalPositions] = useState({});
+  useEffect(() => setLocalPositions({}), [squad]);
+  const defaults = defaultFormationPositions(starters);
+  const positionOf = player => localPositions[player.id]
+    ?? (player.pitchX != null && player.pitchY != null ? { x: player.pitchX, y: player.pitchY } : defaults[player.id])
+    ?? { x: 50, y: 50 };
+
+  const saveMutation = useApiMutation((body, signal) => endpoints.updateSquadMember(team.id, body.playerId, { pitchX: body.x, pitchY: body.y }, signal), { onSuccess: onChanged });
+  const swapMutation = useApiMutation((substituteId, signal) => endpoints.swapSquadMembers(team.id, selected, substituteId, signal), { onSuccess: () => { setSelected(null); onChanged(); } });
+
+  const handleDrag = (playerId, x, y) => setLocalPositions(current => ({ ...current, [playerId]: { x, y } }));
+  const handleDragEnd = playerId => {
+    const position = localPositions[playerId];
+    if (position) saveMutation.execute({ playerId, x: position.x, y: position.y });
+  };
+  const handleSelect = playerId => setSelected(current => current === playerId ? null : playerId);
+  const handleSwap = substituteId => { if (selected) swapMutation.execute(substituteId); };
+
+  if (!starters.length) return <p className="admin-empty">NO HAY TITULARES DEFINIDOS.</p>;
+
+  return <div className="formation-editor">
+    <p className="squad-help">ARRASTRA A UN TITULAR PARA UBICARLO EN LA CANCHA. TÓCALO PARA SELECCIONARLO Y LUEGO TOCA UN SUPLENTE PARA QUE ENTRE EN SU LUGAR.</p>
+    <div className="formation-pitch club-pitch">
+      {starters.map(player => { const { x, y } = positionOf(player); return <FormationMarker key={player.id} player={player} x={x} y={y} selected={selected === player.id} onSelect={handleSelect} onDrag={handleDrag} onDragEnd={handleDragEnd}/>; })}
+    </div>
+    <div className="formation-bench">
+      <h3>BANCA <small>{substitutes.length}</small></h3>
+      {substitutes.length ? <div className="formation-bench-list">{substitutes.map(player => { const { name } = splitPlayerName(player.name); return <button type="button" key={player.id} className="formation-bench-player" disabled={!selected || swapMutation.loading} onClick={() => handleSwap(player.id)}><b>{player.jerseyNumber ?? '–'}</b><span>{name}</span><small>{player.position ?? '—'}</small></button>; })}</div> : <p className="empty-copy">SIN SUPLENTES.</p>}
+    </div>
+    <FormFeedback mutation={selected ? swapMutation : saveMutation}/>
+  </div>;
 }
 
 export function TeamAdminPanel({ team, squad, onChanged }) {
