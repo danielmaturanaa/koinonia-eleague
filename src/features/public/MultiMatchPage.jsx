@@ -6,7 +6,6 @@ import { useApiQuery } from './useApiQuery.js';
 const SLOT_COUNT = 4;
 const STORAGE_KEY = 'koinonia-multipartido';
 const EMPTY_SLOT = { teamId: null, matchId: null, mode: 'view' };
-const statusPriority = status => status === 'live' ? 0 : 1;
 
 function loadStoredSlots() {
   try {
@@ -35,13 +34,14 @@ function TeamPicker({ teams, value, onChange }) {
 function MatchPicker({ teamId, matches, value, onChange }) {
   const teamMatches = matches
     .filter(match => match.homeTeam?.id === teamId || match.awayTeam?.id === teamId)
-    .sort((a, b) => statusPriority(a.status) - statusPriority(b.status));
+    .sort((a, b) => (a.roundNumber ?? Infinity) - (b.roundNumber ?? Infinity));
   return <select className="multi-slot-picker" value={value ?? ''} onChange={event => onChange(event.target.value || null)}>
     <option value="">{teamMatches.length ? '— ELEGIR PARTIDO —' : 'SIN PARTIDOS PENDIENTES'}</option>
     {teamMatches.map(match => {
       const isHome = match.homeTeam?.id === teamId;
       const rival = isHome ? match.awayTeam?.name : match.homeTeam?.name;
-      return <option key={match.id} value={match.id}>{isHome ? 'LOCAL' : 'VISITA'} vs {rival} · {match.status === 'live' ? 'EN VIVO' : 'PENDIENTE'}</option>;
+      const roundLabel = match.groupLabel ? `GRUPO ${match.groupLabel}` : `FECHA ${match.roundNumber ?? '—'}`;
+      return <option key={match.id} value={match.id}>{roundLabel} · {isHome ? 'LOCAL' : 'VISITA'} vs {rival} · {match.status === 'live' ? 'EN VIVO' : 'PENDIENTE'}</option>;
     })}
   </select>;
 }
