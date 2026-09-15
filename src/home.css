@@ -397,6 +397,14 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .match-detail { max-height: 485px; overflow: auto; }
 .match-detail-kicker { display: flex; align-items: center; justify-content: space-between; gap: 5px; color: #a0001d; font: 500 12px/1 'Oswald', sans-serif; }
 .match-detail-kicker button { padding: 5px 7px; border: 2px solid #ffd42a; color: #fff; background: #a90020; font: 500 10px/1 'Oswald', sans-serif; }
+.match-detail-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px; }
+.match-qr-panel { display: grid; justify-items: center; gap: 8px; margin: 10px 0; padding: 12px; border: 2px solid #10285b; background: #e1d6bd; text-align: center; }
+.match-qr-panel > p { max-width: 260px; color: #062764; font: 500 11px/1.3 'Oswald', sans-serif; }
+.match-qr-image { width: 180px; height: 180px; border: 3px solid #fff5da; box-shadow: 3px 3px #07194a; image-rendering: pixelated; }
+.match-qr-loading { display: grid; place-content: center; color: #062764; font: 500 10px/1 'Oswald', sans-serif; background: #f5ecd7; }
+.match-qr-link { display: grid; gap: 6px; width: 100%; max-width: 320px; }
+.match-qr-link code { display: block; overflow-wrap: anywhere; padding: 6px 8px; border: 1px solid #10285b; background: #fff5da; font: 500 10px/1.3 monospace; }
+.match-qr-link button { padding: 7px 9px; border: 2px solid #072a63; color: #fff; background: #062764; font: 500 11px/1 'Oswald', sans-serif; }
 .match-detail-score { display: grid; grid-template-columns: 1fr 65px 1fr; align-items: center; gap: 6px; margin: 20px 0; }
 .match-detail-score span { display: grid; justify-items: center; gap: 5px; text-align: center; }
 .match-detail-score .team-mark { width: 64px; height: 64px; }
@@ -635,7 +643,8 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .club-tab-panel { height: 430px; min-height: 0; padding: 9px; border: 3px double #625d4e; background: #f5ecd7 url('/paper-grain.svg'); overflow: hidden; }
 .club-person-tab { display: grid; grid-template-columns: minmax(0, 1fr) 235px; align-items: start; gap: 12px; min-height: 435px; }
 .club-person-tab .president-card { align-content: start; width: 100%; height: 100%; margin: 0; }
-.club-person-tab .president-card > img, .club-person-tab .president-photo-placeholder { width: min(100%, 420px); height: 350px; }
+.club-person-tab .president-card > img, .club-person-tab .president-photo-placeholder { width: min(100%, 230px); height: 256px; }
+.club-person-tab .coach-card > img, .club-person-tab .coach-card .president-photo-placeholder { width: min(100%, 190px); height: 212px; }
 .club-person-tab .president-card > p b { font-size: 20px; }
 .club-page .club-paper-president, .club-page .club-paper-coach { overflow-y: hidden; }
 .club-paper-president .club-tab-panel, .club-paper-coach .club-tab-panel { min-height: 0; }
@@ -780,7 +789,8 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
   .club-detail-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .club-person-tab { grid-template-columns: 1fr; min-height: 0; }
   .club-page .club-paper-president, .club-page .club-paper-coach { overflow-y: visible; }
-  .club-person-tab .president-card > img, .club-person-tab .president-photo-placeholder { height: 320px; }
+  .club-person-tab .president-card > img, .club-person-tab .president-photo-placeholder { width: min(100%, 230px); height: 256px; }
+  .club-person-tab .coach-card > img, .club-person-tab .coach-card .president-photo-placeholder { width: min(100%, 190px); height: 212px; }
   .club-budget-tab { margin-top: 0; }
   .club-anthem-editor { grid-template-columns: 1fr; }
   .club-anthem-editor > .action-button { grid-column: auto; }

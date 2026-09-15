@@ -37,7 +37,10 @@ export function App() {
   } else if (route.name === 'team') {
     page = <TeamDetailPage team={teamDetail} squad={squad} standings={league.standings} matches={teamMatches} history={teamHistory} historyError={teamHistoryError} loading={state.loadingTeam} onBack={() => navigate('/equipos')} onChanged={refresh}/>;
   } else if (route.path === '/partidos' || route.path === '/partidos/jugados' || route.path === '/partidos/pendientes') {
-    page = <MatchesPage key={route.path} mode={route.path.endsWith('jugados') ? 'played' : route.path.endsWith('pendientes') ? 'pending' : 'all'} teams={league.teams}/>;
+    const matchesMode = route.path.endsWith('jugados') ? 'played' : route.path.endsWith('pendientes') ? 'pending' : 'all';
+    page = <MatchesPage key={matchesMode} mode={matchesMode} teams={league.teams} navigate={navigate}/>;
+  } else if (route.name === 'match') {
+    page = <MatchesPage key="all" mode="all" teams={league.teams} navigate={navigate} initialMatchId={route.matchId}/>;
   } else if (route.path === '/clasificacion') {
     page = <TournamentsPage classificationOnly teams={league.teams}/>;
   } else if (route.path === '/equipos/rankings') {

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
+import { MatchQrCode } from '../../components/MatchQrCode.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { MatchAdminPanel } from '../admin/MatchAdminPanel.jsx';
@@ -29,37 +30,40 @@ function CreateMatchForm({ tournaments, teams, onChanged }) {
 
 function MatchDetail({ matchId, onChanged, onBack, resolveTeam }) {
   const [showAdmin, setShowAdmin] = useState(true);
+  const [showQr, setShowQr] = useState(false);
   const detail = useApiQuery(signal => matchId ? endpoints.match(matchId, signal) : Promise.resolve({ data: null }), [matchId]);
   const refresh = () => { detail.retry(); onChanged(); };
   const goals = detail.data?.goals ?? [];
   const homeGoals = goals.filter(goal => goalTeamId(goal) === detail.data?.homeTeam?.id);
   const awayGoals = goals.filter(goal => goalTeamId(goal) === detail.data?.awayTeam?.id);
-  return <aside className="detail-card match-detail match-detail-full"><div className="match-detail-navigation"><button onClick={onBack}>← VOLVER A PARTIDOS</button></div>{(!detail.data || detail.error) && <DataState query={detail}/>} {detail.data && <><div className="match-detail-kicker"><small>{detail.data.tournament?.name} · {detail.data.stage ?? 'FECHA'} {detail.data.roundNumber ?? ''}</small><button onClick={() => setShowAdmin(value => !value)}>{showAdmin ? 'OCULTAR GESTIÓN' : '⚙ GESTIONAR ACTA'}</button></div><div className="match-detail-score"><span><TeamMark team={resolveTeam(detail.data.homeTeam)}/><b>{detail.data.homeTeam?.name}</b></span><strong>{detail.data.homeScore ?? '–'} : {detail.data.awayScore ?? '–'}</strong><span><TeamMark team={resolveTeam(detail.data.awayTeam)}/><b>{detail.data.awayTeam?.name}</b></span></div>{showAdmin && <MatchAdminPanel key={detail.data.id} match={detail.data} onChanged={refresh}/>}<h3>ACTA DE GOLES</h3><div className="goal-list goal-list-by-team"><GoalColumn team={detail.data.homeTeam} goals={homeGoals} side="home"/><GoalColumn team={detail.data.awayTeam} goals={awayGoals} side="away"/></div></>}</aside>;
+  return <aside className="detail-card match-detail match-detail-full"><div className="match-detail-navigation"><button onClick={onBack}>← VOLVER A PARTIDOS</button></div>{(!detail.data || detail.error) && <DataState query={detail}/>} {detail.data && <><div className="match-detail-kicker"><small>{detail.data.tournament?.name} · {detail.data.stage ?? 'FECHA'} {detail.data.roundNumber ?? ''}</small><span className="match-detail-actions"><button onClick={() => setShowQr(value => !value)}>{showQr ? 'OCULTAR QR' : '📱 QR DEL PARTIDO'}</button><button onClick={() => setShowAdmin(value => !value)}>{showAdmin ? 'OCULTAR GESTIÓN' : '⚙ GESTIONAR ACTA'}</button></span></div>{showQr && <MatchQrCode matchId={detail.data.id}/>}<div className="match-detail-score"><span><TeamMark team={resolveTeam(detail.data.homeTeam)}/><b>{detail.data.homeTeam?.name}</b></span><strong>{detail.data.homeScore ?? '–'} : {detail.data.awayScore ?? '–'}</strong><span><TeamMark team={resolveTeam(detail.data.awayTeam)}/><b>{detail.data.awayTeam?.name}</b></span></div>{showAdmin && <MatchAdminPanel key={detail.data.id} match={detail.data} onChanged={refresh}/>}<h3>ACTA DE GOLES</h3><div className="goal-list goal-list-by-team"><GoalColumn team={detail.data.homeTeam} goals={homeGoals} side="home"/><GoalColumn team={detail.data.awayTeam} goals={awayGoals} side="away"/></div></>}</aside>;
 }
 
-export function MatchesPage({ mode = 'all', teams }) {
+export function MatchesPage({ mode = 'all', teams, navigate, initialMatchId = null }) {
   const initialStatus = mode === 'played' ? 'finished' : mode === 'pending' ? 'pending' : '';
   const [filters, setFilters] = useState({ tournament: '', team: '', status: initialStatus, page: 1 });
-  const [selectedId, setSelectedId] = useState(null);
+  const [selectedId, setSelectedId] = useState(initialMatchId);
   const [showCreate, setShowCreate] = useState(false);
   const tournaments = useApiQuery(signal => endpoints.tournaments({ page: 1, pageSize: 100 }, signal));
   const matches = useApiQuery(signal => endpoints.matches({ ...filters, pageSize: 20 }, signal), Object.values(filters));
   const teamIndex = useMemo(() => new Map(teams.map(team => [team.id, team])), [teams]);
   const resolveTeam = team => ({ ...team, ...(teamIndex.get(team?.id ?? team?.team_id) ?? {}) });
   const rows = Array.isArray(matches.data) ? matches.data : [];
+  const selectMatch = id => { setSelectedId(id); navigate?.(`/partidos/${encodeURIComponent(id)}`); };
+  const backToList = () => { setSelectedId(null); navigate?.('/partidos'); };
   const change = event => {
-    setSelectedId(null);
+    if (selectedId) backToList();
     setFilters(current => ({ ...current, [event.target.name]: event.target.value, page: 1 }));
   };
   const title = mode === 'pending' ? 'PRÓXIMOS PARTIDOS' : mode === 'played' ? 'PARTIDOS JUGADOS' : 'CENTRO DE PARTIDOS';
 
   const refresh = () => matches.retry();
   return <main className="newspaper data-page"><section className="data-paper"><PageHeader kicker="CALENDARIO Y ACTAS" title={title}><button className="page-action" onClick={() => setShowCreate(value => !value)}>{showCreate ? 'CERRAR ALTA' : '+ CREAR PARTIDO'}</button></PageHeader>
-    {showCreate && <CreateMatchForm tournaments={tournaments.data ?? []} teams={teams} onChanged={refresh}/>} 
+    {showCreate && <CreateMatchForm tournaments={tournaments.data ?? []} teams={teams} onChanged={refresh}/>}
     <div className="filter-bar"><select name="tournament" value={filters.tournament} onChange={change} aria-label="Torneo"><option value="">TODOS LOS TORNEOS</option>{(tournaments.data ?? []).map(item => <option value={item.id} key={item.id}>{item.name}</option>)}</select><select name="team" value={filters.team} onChange={change} aria-label="Equipo"><option value="">TODOS LOS EQUIPOS</option>{teams.map(team => <option value={team.id} key={team.id}>{team.name}</option>)}</select><select name="status" value={filters.status} onChange={change} aria-label="Estado"><option value="">TODOS LOS ESTADOS</option>{Object.entries(labels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></div>
     {!selectedId && <DataState query={matches}/>} {selectedId
-      ? <MatchDetail key={selectedId} matchId={selectedId} onChanged={refresh} onBack={() => setSelectedId(null)} resolveTeam={resolveTeam}/>
-      : !matches.loading && !matches.error && <div className="data-list matches-full-list">{rows.map(match => <button className="match-card" key={match.id} onClick={() => setSelectedId(match.id)}><small>{match.tournament?.name ?? 'TORNEO'} · {match.groupLabel ? `GRUPO ${match.groupLabel}` : `FECHA ${match.roundNumber ?? '—'}`}</small><span><TeamMark team={resolveTeam(match.homeTeam)}/><b>{match.homeTeam?.name}</b><strong>{match.homeScore ?? '–'} : {match.awayScore ?? '–'}</strong><b>{match.awayTeam?.name}</b><TeamMark team={resolveTeam(match.awayTeam)}/></span><i className={`status status-${match.status}`}>{labels[match.status] ?? match.status}</i></button>)}</div>}
+      ? <MatchDetail key={selectedId} matchId={selectedId} onChanged={refresh} onBack={backToList} resolveTeam={resolveTeam}/>
+      : !matches.loading && !matches.error && <div className="data-list matches-full-list">{rows.map(match => <button className="match-card" key={match.id} onClick={() => selectMatch(match.id)}><small>{match.tournament?.name ?? 'TORNEO'} · {match.groupLabel ? `GRUPO ${match.groupLabel}` : `FECHA ${match.roundNumber ?? '—'}`}</small><span><TeamMark team={resolveTeam(match.homeTeam)}/><b>{match.homeTeam?.name}</b><strong>{match.homeScore ?? '–'} : {match.awayScore ?? '–'}</strong><b>{match.awayTeam?.name}</b><TeamMark team={resolveTeam(match.awayTeam)}/></span><i className={`status status-${match.status}`}>{labels[match.status] ?? match.status}</i></button>)}</div>}
     {!selectedId && <Pagination pagination={matches.pagination} page={filters.page} onPage={page => setFilters(current => ({ ...current, page }))}/>}
   </section></main>;
 }
