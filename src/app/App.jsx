@@ -15,7 +15,6 @@ import { RulesPage } from '../features/public/RulesPage.jsx';
 import { RankingsPage, TournamentsPage } from '../features/public/TournamentsPage.jsx';
 import { TeamsDirectoryPage } from '../features/public/TeamsDirectoryPage.jsx';
 import { MatchScoreboardPage } from '../features/public/MatchScoreboardPage.jsx';
-import { MultiMatchPage } from '../features/public/MultiMatchPage.jsx';
 import { useRoute } from './useRoute.js';
 
 const list = value => Array.isArray(value) ? value : [];
@@ -33,10 +32,6 @@ export function App() {
 
   if (route.name === 'scoreboard') {
     return <MatchScoreboardPage matchId={route.matchId} onBack={() => navigate('/partidos')}/>;
-  }
-
-  if (route.name === 'multi') {
-    return <MultiMatchPage onBack={() => navigate('/partidos')}/>;
   }
 
   let page;

@@ -1,17 +1,36 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { MatchQrCode } from '../../components/MatchQrCode.jsx';
 import { Scoreboard } from '../../components/Scoreboard.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
-import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { MatchAdminPanel } from '../admin/MatchAdminPanel.jsx';
-import { useApiMutation } from '../admin/useApiMutation.js';
 import { DataState, PageHeader, Pagination } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
 
 const labels = { pending: 'PENDIENTE', live: 'EN VIVO', finished: 'FINALIZADO', cancelled: 'CANCELADO' };
 const goalPlayerName = goal => goal?.player?.name ?? goal?.playerName ?? goal?.player_name ?? 'Gol sin jugador';
 const goalTeamId = goal => goal?.scoringTeam?.id ?? goal?.team?.id ?? goal?.teamId ?? goal?.team_id ?? '';
+
+const MULTI_SLOT_COUNT = 4;
+const MULTI_STORAGE_KEY = 'koinonia-multipartido';
+const MULTI_EMPTY_SLOT = { teamId: null, matchId: null, mode: 'view' };
+
+function loadMultiSlots() {
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(MULTI_STORAGE_KEY) ?? '[]');
+    return Array.from({ length: MULTI_SLOT_COUNT }, (_, index) => ({ ...MULTI_EMPTY_SLOT, ...stored[index] }));
+  } catch {
+    return Array.from({ length: MULTI_SLOT_COUNT }, () => ({ ...MULTI_EMPTY_SLOT }));
+  }
+}
+
+function saveMultiSlots(slots) {
+  try {
+    window.localStorage.setItem(MULTI_STORAGE_KEY, JSON.stringify(slots));
+  } catch {
+    // el navegador no permite guardar preferencias locales; no es crítico.
+  }
+}
 
 function GoalColumn({ team, goals, side }) {
   return <section className={`goal-team-column goal-team-${side}`}><h4>{team?.name ?? (side === 'home' ? 'LOCAL' : 'VISITA')}</h4>{goals.length ? goals.map(goal => <p key={goal.id}><b>{goal.minute ? `${goal.minute}'` : '—'}</b><span>{goalPlayerName(goal)}{goal.isOwnGoal ? ' (autogol)' : ''}</span></p>) : <p className="goal-team-empty">Sin goles</p>}</section>;
@@ -24,16 +43,41 @@ function TeamChipBar({ teams, value, onChange }) {
   </div>;
 }
 
-function CreateMatchForm({ tournaments, teams, onChanged }) {
-  const [form, setForm] = useState({ tournamentId: '', homeTeamId: '', awayTeamId: '', stage: '', groupLabel: '', roundNumber: '' });
-  const mutation = useApiMutation((body, signal) => endpoints.createMatch(body, signal), { onSuccess: onChanged });
-  const change = event => setForm(current => ({ ...current, [event.target.name]: event.target.value }));
-  const submit = event => {
-    event.preventDefault();
-    const body = { tournamentId: form.tournamentId, homeTeamId: form.homeTeamId, awayTeamId: form.awayTeamId, ...(form.stage.trim() ? { stage: form.stage.trim() } : {}), ...(form.groupLabel.trim() ? { groupLabel: form.groupLabel.trim().toUpperCase() } : {}), ...(form.roundNumber ? { roundNumber: Number(form.roundNumber) } : {}) };
-    if (window.confirm('¿CREAR ESTE PARTIDO EN EL CALENDARIO OFICIAL?')) mutation.execute(body);
-  };
-  return <form className="admin-form create-match-form" onSubmit={submit}><label>TORNEO<select required name="tournamentId" value={form.tournamentId} onChange={change}><option value="">SELECCIONAR</option>{tournaments.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label><label>LOCAL<select required name="homeTeamId" value={form.homeTeamId} onChange={change}><option value="">SELECCIONAR</option>{teams.map(team => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label><label>VISITA<select required name="awayTeamId" value={form.awayTeamId} onChange={change}><option value="">SELECCIONAR</option>{teams.filter(team => team.id !== form.homeTeamId).map(team => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label><label>ETAPA OPCIONAL<input name="stage" value={form.stage} onChange={change} placeholder="groups, semifinal..."/></label><label>GRUPO OPCIONAL<input name="groupLabel" maxLength="4" value={form.groupLabel} onChange={change}/></label><label>RONDA OPCIONAL<input name="roundNumber" type="number" min="1" step="1" value={form.roundNumber} onChange={change}/></label><button className="action-button" disabled={!form.tournamentId || !form.homeTeamId || !form.awayTeamId || mutation.loading}>CREAR PARTIDO</button><FormFeedback mutation={mutation}/></form>;
+function MultiTeamPicker({ teams, value, onChange }) {
+  return <select className="multi-slot-picker" value={value ?? ''} onChange={event => onChange(event.target.value || null)}>
+    <option value="">— EQUIPO DE REFERENCIA —</option>
+    {[...teams].sort((a, b) => a.name.localeCompare(b.name, 'es')).map(team => <option key={team.id} value={team.id}>{team.name}</option>)}
+  </select>;
+}
+
+function MultiMatchPicker({ teamId, matches, value, onChange }) {
+  const teamMatches = matches
+    .filter(match => match.homeTeam?.id === teamId || match.awayTeam?.id === teamId)
+    .sort((a, b) => (a.roundNumber ?? Infinity) - (b.roundNumber ?? Infinity));
+  return <select className="multi-slot-picker" value={value ?? ''} onChange={event => onChange(event.target.value || null)}>
+    <option value="">{teamMatches.length ? '— ELEGIR PARTIDO —' : 'SIN PARTIDOS PENDIENTES'}</option>
+    {teamMatches.map(match => {
+      const isHome = match.homeTeam?.id === teamId;
+      const rival = isHome ? match.awayTeam?.name : match.homeTeam?.name;
+      const roundLabel = match.groupLabel ? `GRUPO ${match.groupLabel}` : `FECHA ${match.roundNumber ?? '—'}`;
+      return <option key={match.id} value={match.id}>{roundLabel} · {isHome ? 'LOCAL' : 'VISITA'} vs {rival} · {match.status === 'live' ? 'EN VIVO' : 'PENDIENTE'}</option>;
+    })}
+  </select>;
+}
+
+function MultiSlot({ index, teamId, matchId, mode, matches, teams, onSelectTeam, onSelectMatch, onModeChange, onClear }) {
+  return <div className="multi-slot">
+    <div className="multi-slot-bar">
+      <MultiTeamPicker teams={teams} value={teamId} onChange={id => onSelectTeam(index, id)}/>
+      {teamId && <MultiMatchPicker teamId={teamId} matches={matches} value={matchId} onChange={id => onSelectMatch(index, id)}/>}
+      {matchId && <div className="scoreboard-mode-toggle multi-slot-toggle">
+        <button className={mode === 'view' ? 'active' : ''} onClick={() => onModeChange(index, 'view')}>VER</button>
+        <button className={mode === 'manage' ? 'active' : ''} onClick={() => onModeChange(index, 'manage')}>GESTIONAR</button>
+      </div>}
+      {teamId && <button className="multi-slot-clear" onClick={() => onClear(index)}>QUITAR</button>}
+    </div>
+    {matchId ? <Scoreboard matchId={matchId} mode={mode} density="tile" teams={teams}/> : <div className="scoreboard scoreboard-tile scoreboard-empty">{teamId ? 'ELIGE UNO DE SUS PARTIDOS PENDIENTES.' : 'ELIGE UN EQUIPO DE REFERENCIA PARA ESTA CASILLA.'}</div>}
+  </div>;
 }
 
 function MatchDetail({ matchId, onChanged, onBack, resolveTeam, teams }) {
@@ -51,12 +95,18 @@ export function MatchesPage({ mode = 'all', teams, navigate, initialMatchId = nu
   const initialStatus = mode === 'played' ? 'finished' : mode === 'pending' ? 'pending' : '';
   const [filters, setFilters] = useState({ tournament: '', team: '', status: initialStatus, page: 1 });
   const [selectedId, setSelectedId] = useState(initialMatchId);
-  const [showCreate, setShowCreate] = useState(false);
+  const [showMulti, setShowMulti] = useState(false);
+  const [multiSlots, setMultiSlots] = useState(loadMultiSlots);
   const tournaments = useApiQuery(signal => endpoints.tournaments({ status: 'active', page: 1, pageSize: 100 }, signal));
   const matches = useApiQuery(signal => endpoints.matches({ ...filters, activeOnly: 1, pageSize: 20 }, signal), Object.values(filters));
+  const multiMatchesQuery = useApiQuery(signal => showMulti ? endpoints.matches({ activeOnly: 1, pageSize: 100, page: 1 }, signal) : Promise.resolve({ data: [] }), [showMulti]);
+  const multiMatches = useMemo(() => (Array.isArray(multiMatchesQuery.data) ? multiMatchesQuery.data : []).filter(match => match.status === 'pending' || match.status === 'live'), [multiMatchesQuery.data]);
   const teamIndex = useMemo(() => new Map(teams.map(team => [team.id, team])), [teams]);
   const resolveTeam = team => ({ ...team, ...(teamIndex.get(team?.id ?? team?.team_id) ?? {}) });
   const rows = Array.isArray(matches.data) ? matches.data : [];
+
+  useEffect(() => saveMultiSlots(multiSlots), [multiSlots]);
+
   const selectMatch = id => { setSelectedId(id); navigate?.(`/partidos/${encodeURIComponent(id)}`); };
   const backToList = () => { setSelectedId(null); navigate?.('/partidos'); };
   const change = event => {
@@ -67,16 +117,30 @@ export function MatchesPage({ mode = 'all', teams, navigate, initialMatchId = nu
     if (selectedId) backToList();
     setFilters(current => ({ ...current, team: teamId, page: 1 }));
   };
+  const toggleMulti = () => {
+    if (selectedId) backToList();
+    setShowMulti(value => !value);
+  };
+  const selectMultiTeam = (index, teamId) => setMultiSlots(current => current.map((slot, slotIndex) => slotIndex === index ? { teamId, matchId: null, mode: slot.mode } : slot));
+  const selectMultiMatch = (index, matchId) => setMultiSlots(current => current.map((slot, slotIndex) => slotIndex === index ? { ...slot, matchId } : slot));
+  const setMultiMode = (index, mode) => setMultiSlots(current => current.map((slot, slotIndex) => slotIndex === index ? { ...slot, mode } : slot));
+  const clearMultiSlot = index => setMultiSlots(current => current.map((slot, slotIndex) => slotIndex === index ? { ...MULTI_EMPTY_SLOT } : slot));
   const title = mode === 'pending' ? 'PRÓXIMOS PARTIDOS' : mode === 'played' ? 'PARTIDOS JUGADOS' : 'CENTRO DE PARTIDOS';
 
   const refresh = () => matches.retry();
-  return <main className="newspaper data-page"><section className="data-paper"><PageHeader kicker="CALENDARIO Y ACTAS" title={title}><button className="page-action" onClick={() => setShowCreate(value => !value)}>{showCreate ? 'CERRAR ALTA' : '+ CREAR PARTIDO'}</button></PageHeader>
-    {showCreate && <CreateMatchForm tournaments={tournaments.data ?? []} teams={teams} onChanged={refresh}/>}
-    <TeamChipBar teams={teams} value={filters.team} onChange={selectTeamFilter}/>
-    <div className="filter-bar"><select name="tournament" value={filters.tournament} onChange={change} aria-label="Torneo"><option value="">TORNEOS ACTIVOS</option>{(tournaments.data ?? []).map(item => <option value={item.id} key={item.id}>{item.name}</option>)}</select><select name="status" value={filters.status} onChange={change} aria-label="Estado"><option value="">TODOS LOS ESTADOS</option>{Object.entries(labels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></div>
-    {!selectedId && <DataState query={matches}/>} {selectedId
-      ? <MatchDetail key={selectedId} matchId={selectedId} onChanged={refresh} onBack={backToList} resolveTeam={resolveTeam} teams={teams}/>
-      : !matches.loading && !matches.error && <div className="data-list matches-full-list">{rows.map(match => <button className="match-card" key={match.id} onClick={() => selectMatch(match.id)}><small>{match.tournament?.name ?? 'TORNEO'} · {match.groupLabel ? `GRUPO ${match.groupLabel}` : `FECHA ${match.roundNumber ?? '—'}`}</small><span><TeamMark team={resolveTeam(match.homeTeam)}/><b>{match.homeTeam?.name}</b><strong>{match.homeScore ?? '–'} : {match.awayScore ?? '–'}</strong><b>{match.awayTeam?.name}</b><TeamMark team={resolveTeam(match.awayTeam)}/></span><i className={`status status-${match.status}`}>{labels[match.status] ?? match.status}</i></button>)}</div>}
-    {!selectedId && <Pagination pagination={matches.pagination} page={filters.page} onPage={page => setFilters(current => ({ ...current, page }))}/>}
+  return <main className="newspaper data-page"><section className="data-paper"><PageHeader kicker="CALENDARIO Y ACTAS" title={title}><button className={`page-action ${showMulti ? 'active' : ''}`} onClick={toggleMulti}>{showMulti ? 'CERRAR MULTIPARTIDO' : '🎮 MULTIPARTIDO'}</button></PageHeader>
+    {showMulti ? <>
+      <p className="multi-inline-help">ELIGE UN EQUIPO POR CASILLA Y LUEGO UNO DE SUS PARTIDOS PENDIENTES O EN VIVO.</p>
+      <div className="multi-grid">
+        {multiSlots.map((slot, index) => <MultiSlot key={index} index={index} teamId={slot.teamId} matchId={slot.matchId} mode={slot.mode} matches={multiMatches} teams={teams} onSelectTeam={selectMultiTeam} onSelectMatch={selectMultiMatch} onModeChange={setMultiMode} onClear={clearMultiSlot}/>)}
+      </div>
+    </> : <>
+      <TeamChipBar teams={teams} value={filters.team} onChange={selectTeamFilter}/>
+      <div className="filter-bar"><select name="tournament" value={filters.tournament} onChange={change} aria-label="Torneo"><option value="">TORNEOS ACTIVOS</option>{(tournaments.data ?? []).map(item => <option value={item.id} key={item.id}>{item.name}</option>)}</select><select name="status" value={filters.status} onChange={change} aria-label="Estado"><option value="">TODOS LOS ESTADOS</option>{Object.entries(labels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></div>
+      {!selectedId && <DataState query={matches}/>} {selectedId
+        ? <MatchDetail key={selectedId} matchId={selectedId} onChanged={refresh} onBack={backToList} resolveTeam={resolveTeam} teams={teams}/>
+        : !matches.loading && !matches.error && <div className="data-list matches-full-list">{rows.map(match => <button className="match-card" key={match.id} onClick={() => selectMatch(match.id)}><small>{match.tournament?.name ?? 'TORNEO'} · {match.groupLabel ? `GRUPO ${match.groupLabel}` : `FECHA ${match.roundNumber ?? '—'}`}</small><span><TeamMark team={resolveTeam(match.homeTeam)}/><b>{match.homeTeam?.name}</b><strong>{match.homeScore ?? '–'} : {match.awayScore ?? '–'}</strong><b>{match.awayTeam?.name}</b><TeamMark team={resolveTeam(match.awayTeam)}/></span><i className={`status status-${match.status}`}>{labels[match.status] ?? match.status}</i></button>)}</div>}
+      {!selectedId && <Pagination pagination={matches.pagination} page={filters.page} onPage={page => setFilters(current => ({ ...current, page }))}/>}
+    </>}
   </section></main>;
 }
