@@ -32,6 +32,7 @@ export const endpoints = {
   freeAgents: (query, signal) => get('/market/free-agents', query, signal),
   createTeam: (body, signal) => apiClient.post('/teams', body, { actor: 'web', signal }),
   updateTeam: (teamId, body, signal) => apiClient.patch(`/teams/${teamId}`, body, { actor: 'web', signal }),
+  updateTeamHistory: (teamId, body, signal) => apiClient.patch(`/teams/${teamId}/history`, body, { actor: 'web', signal }),
   updatePresident: (presidentId, body, signal) => apiClient.patch(`/presidents/${presidentId}`, body, { actor: 'web', signal }),
   createCoach: (body, signal) => apiClient.post('/coaches', body, { actor: 'web', signal }),
   updateCoach: (coachId, body, signal) => apiClient.patch(`/coaches/${coachId}`, body, { actor: 'web', signal }),
@@ -44,6 +45,13 @@ export const endpoints = {
     return apiClient.post('/media/images', body, { actor: 'web', signal });
   },
   deleteImage: (assetId, signal) => apiClient.delete(`/media/images/${assetId}`, {}, { actor: 'web', signal }),
+  uploadAudio: (file, { entityType, entityId } = {}, signal) => {
+    const body = new FormData();
+    body.append('file', file);
+    if (entityType) body.append('entityType', entityType);
+    if (entityId) body.append('entityId', entityId);
+    return apiClient.post('/media/audio', body, { actor: 'web', signal, timeoutMs: 60000 });
+  },
   creditTeam: (teamId, body, signal) => apiClient.post(`/teams/${teamId}/credit`, body, { actor: 'web', signal }),
   debitTeam: (teamId, body, signal) => apiClient.post(`/teams/${teamId}/debit`, body, { actor: 'web', signal }),
   linkTeamDiscord: (teamId, body, signal) => apiClient.post(`/teams/${teamId}/link-discord`, body, { actor: 'web', signal }),

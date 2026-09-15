@@ -87,3 +87,7 @@ const EMPTY_HISTORY = {
 };
 
 export const clubHistoryFor = teamId => CLUB_HISTORY[teamId] ?? EMPTY_HISTORY;
+
+// Reseñas escritas antes de que la API admitiera guardarlas: sirven como borrador
+// inicial en el editor para el club que ya tenía contenido, sin inventarle texto al resto.
+export const legacyHistoryFor = teamId => CLUB_HISTORY[teamId] ?? null;
