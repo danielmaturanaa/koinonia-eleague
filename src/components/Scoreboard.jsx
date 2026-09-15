@@ -2,14 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { endpoints } from '../api/endpoints.js';
 import { useApiMutation } from '../features/admin/useApiMutation.js';
 import { useApiQuery } from '../features/public/useApiQuery.js';
+import { goalPlayerName, goalTeamId, groupGoals } from '../utils/goals.js';
 import { TeamMark } from './TeamMark.jsx';
 
 const STATUS_LABEL = { pending: 'POR JUGAR', live: 'EN VIVO', finished: 'FINAL', cancelled: 'CANCELADO' };
 const LIVE_POLL_MS = 12000;
 const positionOrder = ['DC', 'EI', 'ED', 'MO', 'MC', 'LI', 'LD', 'DEC', 'PT'];
 
-const goalPlayerName = goal => goal?.player?.name ?? goal?.playerName ?? goal?.player_name ?? 'gol sin jugador';
-const goalTeamId = goal => goal?.scoringTeam?.id ?? goal?.team?.id ?? goal?.teamId ?? goal?.team_id ?? '';
 const isStarter = player => {
   if (typeof player?.isStarter === 'boolean') return player.isStarter;
   if (player?.section) return player.section === 'starters';
@@ -179,7 +178,28 @@ function useScoreFlash(value) {
   return flashing;
 }
 
-export function Scoreboard({ matchId, mode = 'view', density = 'tile', onOpen, teams = [] }) {
+function useFinishedNotifier(status, onFinished) {
+  const previous = useRef(undefined);
+  useEffect(() => {
+    if (status === undefined) return;
+    if (previous.current !== undefined && previous.current !== 'finished' && status === 'finished') onFinished?.();
+    previous.current = status;
+  }, [status, onFinished]);
+}
+
+function ScoreboardActa({ match }) {
+  const goals = match.goals ?? [];
+  const homeGoals = groupGoals(goals.filter(goal => goalTeamId(goal) === match.homeTeam?.id));
+  const awayGoals = groupGoals(goals.filter(goal => goalTeamId(goal) === match.awayTeam?.id));
+  if (!homeGoals.length && !awayGoals.length) return null;
+  const column = entries => entries.map(entry => <p key={entry.key}><b>{'⚽'.repeat(entry.count)}</b> {entry.name}{entry.ownGoal ? ' (autogol)' : ''}</p>);
+  return <div className="scoreboard-acta">
+    <div className="scoreboard-acta-team">{column(homeGoals)}</div>
+    <div className="scoreboard-acta-team">{column(awayGoals)}</div>
+  </div>;
+}
+
+export function Scoreboard({ matchId, mode = 'view', density = 'tile', onOpen, onFinished, teams = [] }) {
   const detail = useApiQuery(signal => matchId ? endpoints.match(matchId, signal) : Promise.resolve({ data: null }), [matchId]);
   const match = detail.data;
   const teamIndex = new Map(teams.map(team => [team.id, team]));
@@ -193,12 +213,9 @@ export function Scoreboard({ matchId, mode = 'view', density = 'tile', onOpen, t
 
   const homeFlash = useScoreFlash(match ? (match.homeScore ?? 0) : undefined);
   const awayFlash = useScoreFlash(match ? (match.awayScore ?? 0) : undefined);
+  useFinishedNotifier(match?.status, onFinished);
 
   if (!match) return <article className={`scoreboard scoreboard-${density} scoreboard-loading`}>{detail.error ? <p>NO SE PUDO CARGAR EL PARTIDO.</p> : <p>CARGANDO CARTUCHO...</p>}</article>;
-
-  const goals = match.goals ?? [];
-  const lastGoal = goals.length ? goals[goals.length - 1] : null;
-  const lastGoalTeamName = lastGoal ? (goalTeamId(lastGoal) === match.homeTeam?.id ? match.homeTeam?.name : match.awayTeam?.name) : '';
 
   return <article className={`scoreboard scoreboard-${density} scoreboard-status-${match.status}`}>
     <header className="scoreboard-bezel" onClick={onOpen} role={onOpen ? 'button' : undefined} tabIndex={onOpen ? 0 : undefined}>
@@ -215,7 +232,7 @@ export function Scoreboard({ matchId, mode = 'view', density = 'tile', onOpen, t
       </div>
       <div className="scoreboard-team scoreboard-team-away"><TeamMark team={resolveTeam(match.awayTeam)}/><b>{match.awayTeam?.name}</b></div>
     </div>
-    {lastGoal && <p className="scoreboard-ticker">⚽ {goalPlayerName(lastGoal)}{lastGoal.isOwnGoal ? ' (autogol)' : ''} ({lastGoalTeamName})</p>}
+    <ScoreboardActa match={match}/>
     {mode === 'manage' && <ScoreboardControls match={match} onChanged={detail.retry} compact={density === 'tile'}/>}
   </article>;
 }

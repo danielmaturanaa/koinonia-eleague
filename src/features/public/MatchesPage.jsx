@@ -8,8 +8,6 @@ import { DataState, PageHeader, Pagination } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
 
 const labels = { pending: 'PENDIENTE', live: 'EN VIVO', finished: 'FINALIZADO', cancelled: 'CANCELADO' };
-const goalPlayerName = goal => goal?.player?.name ?? goal?.playerName ?? goal?.player_name ?? 'Gol sin jugador';
-const goalTeamId = goal => goal?.scoringTeam?.id ?? goal?.team?.id ?? goal?.teamId ?? goal?.team_id ?? '';
 
 const MULTI_SLOT_COUNT = 4;
 const MULTI_STORAGE_KEY = 'koinonia-multipartido';
@@ -30,22 +28,6 @@ function saveMultiSlots(slots) {
   } catch {
     // el navegador no permite guardar preferencias locales; no es crítico.
   }
-}
-
-function groupGoals(goals) {
-  const groups = [];
-  for (const goal of goals) {
-    const key = `${goal.playerId ?? goalPlayerName(goal)}::${goal.isOwnGoal ? 1 : 0}`;
-    const existing = groups.find(entry => entry.key === key);
-    if (existing) existing.count += 1;
-    else groups.push({ key, count: 1, name: goalPlayerName(goal), ownGoal: Boolean(goal.isOwnGoal) });
-  }
-  return groups;
-}
-
-function GoalColumn({ team, goals, side }) {
-  const grouped = groupGoals(goals);
-  return <section className={`goal-team-column goal-team-${side}`}><h4>{team?.name ?? (side === 'home' ? 'LOCAL' : 'VISITA')}</h4>{grouped.length ? grouped.map(entry => <p key={entry.key}><b>{'⚽'.repeat(entry.count)}</b><span>{entry.name}{entry.ownGoal ? ' (autogol)' : ''}</span></p>) : <p className="goal-team-empty">Sin goles</p>}</section>;
 }
 
 function TeamChipBar({ teams, value, onChange }) {
@@ -88,7 +70,7 @@ function MultiSlot({ index, teamId, matchId, mode, matches, teams, onSelectTeam,
       </div>}
       {teamId && <button className="multi-slot-clear" onClick={() => onClear(index)}>QUITAR</button>}
     </div>
-    {matchId ? <Scoreboard matchId={matchId} mode={mode} density="tile" teams={teams}/> : <div className="scoreboard scoreboard-tile scoreboard-empty">{teamId ? 'ELIGE UNO DE SUS PARTIDOS PENDIENTES.' : 'ELIGE UN EQUIPO DE REFERENCIA PARA ESTA CASILLA.'}</div>}
+    {matchId ? <Scoreboard matchId={matchId} mode={mode} density="tile" teams={teams} onFinished={() => onClear(index)}/> : <div className="scoreboard scoreboard-tile scoreboard-empty">{teamId ? 'ELIGE UNO DE SUS PARTIDOS PENDIENTES.' : 'ELIGE UN EQUIPO DE REFERENCIA PARA ESTA CASILLA.'}</div>}
   </div>;
 }
 
@@ -96,11 +78,8 @@ function MatchDetail({ matchId, onChanged, onBack, resolveTeam, teams }) {
   const [panel, setPanel] = useState('acta');
   const detail = useApiQuery(signal => matchId ? endpoints.match(matchId, signal) : Promise.resolve({ data: null }), [matchId]);
   const refresh = () => { detail.retry(); onChanged(); };
-  const goals = detail.data?.goals ?? [];
-  const homeGoals = goals.filter(goal => goalTeamId(goal) === detail.data?.homeTeam?.id);
-  const awayGoals = goals.filter(goal => goalTeamId(goal) === detail.data?.awayTeam?.id);
   const togglePanel = value => setPanel(current => current === value ? null : value);
-  return <aside className="detail-card match-detail match-detail-full"><div className="match-detail-navigation"><button onClick={onBack}>← VOLVER A PARTIDOS</button></div>{(!detail.data || detail.error) && <DataState query={detail}/>} {detail.data && <><div className="match-detail-kicker"><small>{detail.data.tournament?.name} · {detail.data.stage ?? 'FECHA'} {detail.data.roundNumber ?? ''}</small><span className="match-detail-actions"><button className={panel === 'scoreboard' ? 'active' : ''} onClick={() => togglePanel('scoreboard')}>🎮 MODO MARCADOR</button><button className={panel === 'qr' ? 'active' : ''} onClick={() => togglePanel('qr')}>📱 QR DEL PARTIDO</button><button className={panel === 'acta' ? 'active' : ''} onClick={() => togglePanel('acta')}>⚙ GESTIONAR ACTA</button></span></div>{panel === 'qr' && <MatchQrCode matchId={detail.data.id}/>}{panel === 'scoreboard' ? <Scoreboard key={detail.data.id} matchId={detail.data.id} mode="manage" density="full" teams={teams}/> : <div className="match-detail-score"><span><TeamMark team={resolveTeam(detail.data.homeTeam)}/><b>{detail.data.homeTeam?.name}</b></span><strong>{detail.data.homeScore ?? '–'} : {detail.data.awayScore ?? '–'}</strong><span><TeamMark team={resolveTeam(detail.data.awayTeam)}/><b>{detail.data.awayTeam?.name}</b></span></div>}{panel === 'acta' && <MatchAdminPanel key={detail.data.id} match={detail.data} onChanged={refresh}/>}<h3>ACTA DE GOLES</h3><div className="goal-list goal-list-by-team"><GoalColumn team={detail.data.homeTeam} goals={homeGoals} side="home"/><GoalColumn team={detail.data.awayTeam} goals={awayGoals} side="away"/></div></>}</aside>;
+  return <aside className="detail-card match-detail match-detail-full"><div className="match-detail-navigation"><button onClick={onBack}>← VOLVER A PARTIDOS</button></div>{(!detail.data || detail.error) && <DataState query={detail}/>} {detail.data && <><div className="match-detail-kicker"><small>{detail.data.tournament?.name} · {detail.data.stage ?? 'FECHA'} {detail.data.roundNumber ?? ''}</small><span className="match-detail-actions"><button className={panel === 'scoreboard' ? 'active' : ''} onClick={() => togglePanel('scoreboard')}>🎮 MODO MARCADOR</button><button className={panel === 'qr' ? 'active' : ''} onClick={() => togglePanel('qr')}>📱 QR DEL PARTIDO</button><button className={panel === 'acta' ? 'active' : ''} onClick={() => togglePanel('acta')}>⚙ GESTIONAR ACTA</button></span></div>{panel === 'qr' && <MatchQrCode matchId={detail.data.id}/>}{panel === 'scoreboard' ? <Scoreboard key={detail.data.id} matchId={detail.data.id} mode="manage" density="full" teams={teams}/> : <div className="match-detail-score"><span><TeamMark team={resolveTeam(detail.data.homeTeam)}/><b>{detail.data.homeTeam?.name}</b></span><strong>{detail.data.homeScore ?? '–'} : {detail.data.awayScore ?? '–'}</strong><span><TeamMark team={resolveTeam(detail.data.awayTeam)}/><b>{detail.data.awayTeam?.name}</b></span></div>}{panel === 'acta' && <MatchAdminPanel key={detail.data.id} match={detail.data} onChanged={refresh}/>}</>}</aside>;
 }
 
 export function MatchesPage({ mode = 'all', teams, navigate, initialMatchId = null }) {
