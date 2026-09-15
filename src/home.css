@@ -649,8 +649,8 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .inline-team-editor .admin-form { grid-template-columns: 1fr; gap: 6px; padding: 8px; border: 0; }
 .inline-team-editor .admin-form label { font-size: 10px; }
 .inline-team-editor .media-image-field { padding: 6px; }
-.club-resumen-tab { display: grid; grid-template-columns: 180px 1fr; align-items: start; gap: 10px; height: 100%; min-height: 0; }
-.club-resumen-left { display: grid; grid-template-rows: auto auto auto; gap: 8px; min-height: 0; }
+.club-resumen-tab { display: grid; grid-template-columns: 180px 1fr; grid-template-rows: minmax(0, 1fr); gap: 10px; height: 100%; min-height: 0; }
+.club-resumen-left { align-self: start; display: grid; grid-template-rows: auto auto auto; gap: 8px; min-height: 0; }
 .club-resumen-person { display: grid; justify-items: center; gap: 5px; padding: 8px 6px; border: 2px solid #10285b; background: #e1d6bd; text-align: center; }
 .club-resumen-person > small { color: #a0001d; font: 500 10px/1 'Oswald', sans-serif; letter-spacing: .4px; }
 .club-resumen-person > img, .club-resumen-person > .president-photo-placeholder { width: 112px; height: 112px; border: 3px solid #fff5da; box-shadow: 2px 2px #07194a; object-fit: cover; }
@@ -666,9 +666,9 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .club-resumen-honours-list { display: grid; gap: 3px; margin: 0; padding: 0; list-style: none; overflow-y: auto; }
 .club-resumen-honours-list li { display: flex; align-items: baseline; gap: 4px; font: 500 10px/1.25 'Roboto Condensed', sans-serif; }
 .club-resumen-honours-list li span:first-child { flex: 0 0 auto; color: #c28b00; font-size: 11px; }
-.club-resumen-pitch-section { display: flex; flex-direction: column; width: 100%; max-width: 480px; margin: 0 auto; min-height: 0; border: 2px solid #10285b; background: #e4d9c0; }
-.club-resumen-pitch-section h2 { padding: 6px 8px; color: #fff; background: #062764; font: 500 12px/1 'Oswald', sans-serif; }
-.club-pitch { position: relative; width: 100%; aspect-ratio: 3 / 4; display: flex; flex-direction: column; justify-content: space-around; gap: 8px; padding: 14px 6px; background: repeating-linear-gradient(180deg, #1c7a3e 0 32px, #1a7238 32px 64px); overflow: hidden; }
+.club-resumen-pitch-section { display: flex; flex-direction: column; align-items: center; width: 100%; height: 100%; min-height: 0; border: 2px solid #10285b; background: #e4d9c0; }
+.club-resumen-pitch-section h2 { width: 100%; padding: 6px 8px; color: #fff; background: #062764; font: 500 12px/1 'Oswald', sans-serif; }
+.club-pitch { position: relative; flex: 1 1 0; min-height: 0; width: auto; max-width: 100%; aspect-ratio: 3 / 4; display: flex; flex-direction: column; justify-content: space-around; gap: 8px; padding: 14px 6px; background: repeating-linear-gradient(180deg, #1c7a3e 0 32px, #1a7238 32px 64px); overflow: hidden; }
 .club-pitch::before { content: ''; position: absolute; top: 50%; left: 10px; right: 10px; height: 2px; background: #ffffff80; transform: translateY(-50%); }
 .club-pitch::after { content: ''; position: absolute; top: 50%; left: 50%; width: 62px; height: 62px; border: 2px solid #ffffff80; border-radius: 50%; transform: translate(-50%, -50%); }
 .club-pitch-row { position: relative; z-index: 1; display: flex; justify-content: space-around; flex-wrap: wrap; gap: 10px 4px; }
@@ -678,10 +678,10 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .club-pitch-name { max-width: 74px; overflow: hidden; color: #fff; text-align: center; text-overflow: ellipsis; white-space: nowrap; text-shadow: 1px 1px #00000090; font: 700 11px/1.1 'Oswald', sans-serif; }
 .club-pitch-empty { display: grid; place-content: center; min-height: 200px; background: #1c7a3e; }
 .club-pitch-empty .empty-copy { color: #fff; }
-.club-formation-tab { max-width: 400px; margin: 0 auto; }
-.formation-editor { display: flex; flex-direction: column; gap: 12px; }
-.formation-editor .squad-help { margin: 0; padding: 8px 10px; border: 2px solid #10285b; background: #fffbe8; color: #062764; font: 500 11px/1.4 'Oswald', sans-serif; }
-.formation-pitch { position: relative; width: 100%; aspect-ratio: 3 / 4; border: 2px solid #10285b; background: repeating-linear-gradient(180deg, #1c7a3e 0 32px, #1a7238 32px 64px); overflow: hidden; touch-action: none; }
+.club-formation-tab { height: 100%; min-height: 0; }
+.formation-editor { display: grid; grid-template-columns: minmax(0, 1fr) 210px; grid-template-rows: auto minmax(0, 1fr) auto; grid-template-areas: "help help" "pitch bench" "feedback feedback"; gap: 8px 12px; height: 100%; min-height: 0; }
+.formation-editor .squad-help { grid-area: help; margin: 0; padding: 8px 10px; border: 2px solid #10285b; background: #fffbe8; color: #062764; font: 500 11px/1.4 'Oswald', sans-serif; }
+.formation-pitch { grid-area: pitch; position: relative; justify-self: center; align-self: stretch; height: 100%; width: auto; max-width: 100%; aspect-ratio: 3 / 4; border: 2px solid #10285b; background: repeating-linear-gradient(180deg, #1c7a3e 0 32px, #1a7238 32px 64px); overflow: hidden; touch-action: none; }
 .formation-pitch::before { content: ''; position: absolute; top: 50%; left: 10px; right: 10px; height: 2px; background: #ffffff80; transform: translateY(-50%); }
 .formation-pitch::after { content: ''; position: absolute; top: 50%; left: 50%; width: 62px; height: 62px; border: 2px solid #ffffff80; border-radius: 50%; transform: translate(-50%, -50%); }
 .formation-marker { position: absolute; display: grid; justify-items: center; gap: 3px; transform: translate(-50%, -50%); padding: 0; border: 0; background: none; cursor: grab; touch-action: none; user-select: none; }
@@ -690,10 +690,11 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .formation-marker .club-pitch-flag { position: absolute; right: -5px; bottom: -5px; font-size: 12px; line-height: 1; filter: drop-shadow(0 1px 1px #00000090); }
 .formation-marker .club-pitch-name { max-width: 74px; overflow: hidden; color: #fff; text-align: center; text-overflow: ellipsis; white-space: nowrap; text-shadow: 1px 1px #00000090; font: 700 11px/1.1 'Oswald', sans-serif; pointer-events: none; }
 .formation-marker.selected .club-pitch-number { outline: 3px solid #a90020; outline-offset: 2px; }
-.formation-bench { border: 2px solid #10285b; background: #e4d9c0; }
+.formation-bench { grid-area: bench; display: flex; flex-direction: column; min-height: 0; border: 2px solid #10285b; background: #e4d9c0; }
 .formation-bench h3 { display: flex; justify-content: space-between; padding: 6px 10px; color: #fff; background: #062764; font: 500 12px/1 'Oswald', sans-serif; }
 .formation-bench h3 small { color: var(--yellow); }
-.formation-bench-list { display: flex; flex-direction: column; max-height: 260px; overflow-y: auto; }
+.formation-bench-list { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.formation-editor .form-feedback { grid-area: feedback; }
 .formation-bench-player { display: grid; grid-template-columns: 24px 1fr auto; align-items: center; gap: 8px; padding: 7px 10px; border: 0; border-top: 1px solid #10285b30; background: none; text-align: left; font: 500 12px/1.2 'Oswald', sans-serif; color: #062764; cursor: pointer; }
 .formation-bench-player:disabled { opacity: 0.45; cursor: not-allowed; }
 .formation-bench-player:not(:disabled):hover { background: #ffd42a40; }
@@ -806,6 +807,13 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
   .club-info, .roster-panel { height: auto; max-height: none; }
   .club-lower-sections { grid-template-columns: 1fr; }
   .club-tab-panel { height: auto; min-height: 0; overflow: visible; }
+  .club-resumen-tab { grid-template-rows: none; height: auto; }
+  .club-resumen-pitch-section { height: auto; }
+  .club-pitch { flex: none; width: 100%; max-width: 480px; }
+  .club-formation-tab { height: auto; }
+  .formation-editor { grid-template-columns: 1fr; grid-template-areas: "help" "pitch" "bench" "feedback"; height: auto; }
+  .formation-pitch { justify-self: stretch; align-self: auto; height: auto; width: 100%; max-width: 480px; margin: 0 auto; }
+  .formation-bench-list { flex: none; max-height: 280px; }
   .data-paper { height: auto; min-height: 630px; }
   .market-grid { grid-template-columns: 1fr; }
   .market-panel { min-height: 180px; max-height: 420px; }
