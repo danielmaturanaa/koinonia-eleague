@@ -10,7 +10,12 @@ const positionOrder = ['DC', 'EI', 'ED', 'MO', 'MC', 'LI', 'LD', 'DEC', 'PT'];
 
 const goalPlayerName = goal => goal?.player?.name ?? goal?.playerName ?? goal?.player_name ?? 'gol sin jugador';
 const goalTeamId = goal => goal?.scoringTeam?.id ?? goal?.team?.id ?? goal?.teamId ?? goal?.team_id ?? '';
-const sortPlayers = players => [...players].sort((a, b) => (positionOrder.indexOf(a.position) === -1 ? 99 : positionOrder.indexOf(a.position)) - (positionOrder.indexOf(b.position) === -1 ? 99 : positionOrder.indexOf(b.position)) || (a.squadOrder ?? 999) - (b.squadOrder ?? 999));
+const isStarter = player => {
+  if (typeof player?.isStarter === 'boolean') return player.isStarter;
+  if (player?.section) return player.section === 'starters';
+  return Number(player?.squadOrder) <= 11;
+};
+const comparePlayers = (a, b) => (positionOrder.indexOf(a.position) === -1 ? 99 : positionOrder.indexOf(a.position)) - (positionOrder.indexOf(b.position) === -1 ? 99 : positionOrder.indexOf(b.position)) || (a.squadOrder ?? 999) - (b.squadOrder ?? 999);
 
 function useSquad(teamId) {
   return useApiQuery(signal => teamId ? endpoints.teamSquad(teamId, signal) : Promise.resolve({ data: [] }), [teamId]);
@@ -18,9 +23,14 @@ function useSquad(teamId) {
 
 function PlayerSelect({ teamId, value, onChange, required }) {
   const squad = useSquad(teamId);
+  const players = squad.data ?? [];
+  const starters = players.filter(isStarter).sort(comparePlayers);
+  const substitutes = players.filter(player => !isStarter(player)).sort(comparePlayers);
+  const options = rows => rows.map(player => <option key={player.id} value={player.id}>{player.position ?? 'S/P'} · {player.name}</option>);
   return <select className="scoreboard-select" required={required} value={value} onChange={event => onChange(event.target.value)}>
     <option value="">{required ? 'SELECCIONAR JUGADOR' : 'SIN JUGADOR'}</option>
-    {sortPlayers(squad.data ?? []).map(player => <option key={player.id} value={player.id}>{player.position ?? 'S/P'} · {player.name}</option>)}
+    {starters.length > 0 && <optgroup label="TITULARES">{options(starters)}</optgroup>}
+    {substitutes.length > 0 && <optgroup label="SUPLENTES">{options(substitutes)}</optgroup>}
   </select>;
 }
 
