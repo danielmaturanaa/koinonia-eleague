@@ -98,6 +98,31 @@ export function MatchesPage({ mode = 'all', teams, navigate, initialMatchId = nu
 
   useEffect(() => saveMultiSlots(multiSlots), [multiSlots]);
 
+  useEffect(() => {
+    if (!showMulti) return undefined;
+    const interval = window.setInterval(multiMatchesQuery.retry, 12000);
+    return () => window.clearInterval(interval);
+  }, [showMulti, multiMatchesQuery.retry]);
+
+  useEffect(() => {
+    if (!showMulti) return;
+    const liveMatches = multiMatches.filter(match => match.status === 'live');
+    if (!liveMatches.length) return;
+    setMultiSlots(current => {
+      const usedMatchIds = new Set(current.filter(slot => slot.matchId).map(slot => slot.matchId));
+      const available = liveMatches.filter(match => !usedMatchIds.has(match.id));
+      if (!available.length) return current;
+      let cursor = 0;
+      const next = current.map(slot => {
+        if (slot.matchId || cursor >= available.length) return slot;
+        const match = available[cursor];
+        cursor += 1;
+        return { teamId: match.homeTeam?.id ?? null, matchId: match.id, mode: 'view' };
+      });
+      return cursor === 0 ? current : next;
+    });
+  }, [showMulti, multiMatches]);
+
   const selectMatch = id => { setSelectedId(id); navigate?.(`/partidos/${encodeURIComponent(id)}`); };
   const backToList = () => { setSelectedId(null); navigate?.('/partidos'); };
   const change = event => {
@@ -121,7 +146,7 @@ export function MatchesPage({ mode = 'all', teams, navigate, initialMatchId = nu
   const refresh = () => matches.retry();
   return <main className="newspaper data-page"><section className="data-paper"><PageHeader kicker="CALENDARIO Y ACTAS" title={title}><button className={`page-action ${showMulti ? 'active' : ''}`} onClick={toggleMulti}>{showMulti ? 'CERRAR MULTIPARTIDO' : '🎮 MULTIPARTIDO'}</button></PageHeader>
     {showMulti ? <>
-      <p className="multi-inline-help">ELIGE UN EQUIPO POR CASILLA Y LUEGO UNO DE SUS PARTIDOS PENDIENTES O EN VIVO.</p>
+      <p className="multi-inline-help">LAS CASILLAS VACÍAS SE LLENAN SOLAS CON PARTIDOS EN VIVO. TAMBIÉN PUEDES ELEGIR UN EQUIPO Y UNO DE SUS PARTIDOS A MANO.</p>
       <div className="multi-grid">
         {multiSlots.map((slot, index) => <MultiSlot key={index} index={index} teamId={slot.teamId} matchId={slot.matchId} mode={slot.mode} matches={multiMatches} teams={teams} onSelectTeam={selectMultiTeam} onSelectMatch={selectMultiMatch} onModeChange={setMultiMode} onClear={clearMultiSlot}/>)}
       </div>
