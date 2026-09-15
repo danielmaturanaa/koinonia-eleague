@@ -52,16 +52,43 @@ function publishedHistoryFor(team) {
   };
 }
 
-function ResumenTab({ presidentName, photo, coachName, managerPhoto, honours, topPlayers }) {
+const PITCH_BANDS = [
+  { key: 'att', positions: ['DC', 'ED', 'EI'] },
+  { key: 'mid', positions: ['MO', 'MC'] },
+  { key: 'def', positions: ['LD', 'DEC', 'LI'] },
+  { key: 'gk', positions: ['PT'] },
+];
+
+function PitchPlayer({ player }) {
+  return <div className="club-pitch-player"><span className="club-pitch-number">{player.jerseyNumber ?? '–'}</span><span className="club-pitch-name">{player.name}</span></div>;
+}
+
+function SquadPitch({ starters }) {
+  if (!starters.length) return <div className="club-pitch club-pitch-empty"><p className="empty-copy">NO HAY TITULARES DEFINIDOS.</p></div>;
+  const placed = new Set();
+  const bands = PITCH_BANDS.map(band => {
+    const players = starters.filter(player => band.positions.includes(player.position));
+    players.forEach(player => placed.add(player.id));
+    return { ...band, players };
+  });
+  const rest = starters.filter(player => !placed.has(player.id));
+  return <div className="club-pitch">
+    {bands.map(band => band.players.length > 0 && <div className={`club-pitch-row club-pitch-${band.key}`} key={band.key}>{band.players.map(player => <PitchPlayer player={player} key={player.id}/>)}</div>)}
+    {rest.length > 0 && <div className="club-pitch-row club-pitch-rest">{rest.map(player => <PitchPlayer player={player} key={player.id}/>)}</div>}
+  </div>;
+}
+
+function ResumenTab({ presidentName, photo, coachName, managerPhoto, honours, starters }) {
   return <div className="club-resumen-tab">
-    <div className="club-resumen-people">
-      <div className="club-resumen-person"><PersonPhoto photo={photo} name={presidentName}/><small>PRESIDENTE</small><b>{presidentName}</b></div>
-      <div className="club-resumen-person"><PersonPhoto photo={managerPhoto} name={coachName}/><small>DIRECTOR TÉCNICO</small><b>{coachName}</b></div>
+    <div className="club-resumen-left">
+      <div className="club-resumen-person"><small>PRESIDENTE</small><PersonPhoto photo={photo} name={presidentName}/><b>{presidentName}</b></div>
+      <div className="club-resumen-person"><small>DIRECTOR TÉCNICO</small><PersonPhoto photo={managerPhoto} name={coachName}/><b>{coachName}</b></div>
+      <div className="club-resumen-honours-mini"><small>PALMARÉS</small>{honours.length ? <p><b>{honours.length}</b> TÍTULO{honours.length === 1 ? '' : 'S'}{honours[0] && <span> · {honours[0].name}{honours[0].season ? ` (${honours[0].season})` : ''}</span>}</p> : <p className="empty-copy">SIN TÍTULOS.</p>}</div>
     </div>
-    <div className="club-resumen-columns">
-      <section className="club-resumen-section"><h2>PLANTEL DESTACADO</h2>{topPlayers.length ? <div className="club-resumen-players">{topPlayers.map(player => <div className="club-resumen-player" key={player.id}><b>{player.position ?? '—'}</b><span>{player.name}</span><strong>{gp(player.gpValue)} GP</strong></div>)}</div> : <p className="empty-copy">SIN JUGADORES REGISTRADOS.</p>}</section>
-      <section className="club-resumen-section"><h2>PALMARÉS</h2>{honours.length ? <p className="club-resumen-honours">🏆 <b>{honours.length}</b> TÍTULO{honours.length === 1 ? '' : 'S'}{honours[0] && <small>ÚLTIMO: {honours[0].name}{honours[0].season ? ` · ${honours[0].season}` : ''}</small>}</p> : <p className="empty-copy">AÚN NO HAY TÍTULOS REGISTRADOS.</p>}</section>
-    </div>
+    <section className="club-resumen-pitch-section">
+      <h2>PLANTEL TITULAR</h2>
+      <SquadPitch starters={starters}/>
+    </section>
   </div>;
 }
 
@@ -130,7 +157,6 @@ export function TeamDetailPage({ team, squad, standings, matches = [], history =
   const roster = [...squad].sort((a, b) => (a.squadOrder ?? 999) - (b.squadOrder ?? 999));
   const starters = roster.filter(player => player.section === 'starters' || (!player.section && player.squadOrder <= 11));
   const substitutes = roster.filter(player => player.section === 'substitutes' || (!player.section && player.squadOrder > 11));
-  const topPlayers = [...roster].sort((a, b) => (b.gpValue ?? 0) - (a.gpValue ?? 0)).slice(0, 3);
   const rank = standings.findIndex(row => row.team_id === team?.id) + 1;
   const record = rank ? standings[rank - 1] : null;
   const photo = team ? presidentPhoto(team) : '';
@@ -145,7 +171,7 @@ export function TeamDetailPage({ team, squad, standings, matches = [], history =
       <header className="club-header"><TeamMark team={team} className="club-crest"/><div><p>{team.kind === 'national_team' ? 'SELECCIÓN' : 'CLUB'} · {team.currentDivision ?? 'LIGA DE TRANSICIÓN'}</p><h1>{team.name}</h1><span>PRESIDENTE: {team.president?.name ?? team.presidentName ?? 'SIN ASIGNAR'}</span></div><div className="club-rank"><small>LUGAR EN LA LIGA</small><b>{rank || '—'}°</b></div></header>
       <div className="club-stats"><span>SALDO DISPONIBLE <b>{balance === null ? '—' : `${gp(balance)} GP`}</b></span><span>VALOR PLANTEL <b>{gp(team.squadValue)} GP</b></span><span>PROMEDIO <b>{gp(team.averageValue)} GP</b></span><span>JUGADORES <b>{team.playerCount ?? squad.length}</b></span><span>PARTIDOS <b>{record?.played ?? '—'}</b></span></div>
       <nav className="club-detail-tabs" aria-label="Secciones del club">{[['resumen','RESUMEN'],['president','PRESIDENTE'],['coach','DIRECTOR TÉCNICO'],['squad','PLANTEL'],['budget','PRESUPUESTO'],['honours','PALMARÉS'],['history','HISTORIA'],['club','ESCUDO']].map(([value, label]) => <button className={activeTab === value ? 'active' : ''} onClick={() => setActiveTab(value)} key={value}>{label}</button>)}</nav>
-      <section className="club-tab-panel">{activeTab === 'resumen' && <ResumenTab presidentName={presidentName} photo={photo} coachName={coachName} managerPhoto={managerPhoto} honours={honours} topPlayers={topPlayers}/>}{activeTab === 'club' && <div className="club-person-tab"><div className="president-card club-crest-card"><TeamMark team={team}/><p><b>{team.name}</b></p></div><div className="inline-team-editor"><h2>EDITAR ESCUDO Y NOMBRE</h2><ProfileForm team={team} onChanged={onChanged}/></div></div>}{activeTab === 'president' && <div className="club-person-tab"><div className="president-card"><PersonPhoto photo={photo} name={presidentName}/><p><b>{presidentName}</b></p></div><div className="inline-team-editor"><h2>EDITAR PRESIDENTE Y FOTO</h2><PresidentForm team={team} onChanged={onChanged}/></div></div>}{activeTab === 'coach' && <div className="club-person-tab"><div className="president-card coach-card"><PersonPhoto photo={managerPhoto} name={coachName}/><p><b>{coachName}</b></p></div><div className="inline-team-editor"><h2>EDITAR DIRECTOR TÉCNICO Y FOTO</h2><CoachForm team={team} onChanged={onChanged}/></div></div>}{activeTab === 'squad' && <div className="club-squad-tab"><nav className="club-squad-tabs" aria-label="Secciones del plantel">{[['starters','TITULARES'],['substitutes','SUPLENTES'],['edit','EDITAR PLANTEL']].map(([value, label]) => <button className={squadTab === value ? 'active' : ''} onClick={() => setSquadTab(value)} key={value}>{label}</button>)}</nav>{squadTab === 'starters' && <section className="roster-panel club-tab-roster"><h2>PLANTEL TITULAR <small>{starters.length} / 11</small></h2><RosterHeader/><div className="roster-list">{starters.length ? starters.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay titulares definidos.</p>}</div></section>}{squadTab === 'substitutes' && <section className="roster-panel club-tab-roster"><h2>SUPLENTES <small>{substitutes.length}</small></h2><RosterHeader/><div className="roster-list substitutes">{substitutes.length ? substitutes.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay suplentes registrados.</p>}</div></section>}{squadTab === 'edit' && <div className="club-squad-editor"><SquadEditor team={team} squad={squad} onChanged={onChanged}/></div>}</div>}{activeTab === 'budget' && <div className="club-budget-tab"><h2>PRESUPUESTO DEL CLUB</h2><BudgetForm team={team} onChanged={onChanged}/></div>}{activeTab === 'honours' && <section className="club-lower-panel honours-panel club-tab-honours"><h2>PALMARÉS</h2><div className="honours-list">{honours.length ? honours.map(item => <article key={item.id}><span aria-hidden="true">★</span><b>{item.name}</b>{item.season && <small>{item.season}</small>}</article>) : <p className="empty-copy">AÚN NO HAY TÍTULOS REGISTRADOS.</p>}</div>{historyError && <p className="honours-api-note">NO FUE POSIBLE CONSULTAR EL HISTORIAL DEL CLUB.</p>}</section>}{activeTab === 'history' && <div className="club-history-tab"><nav className="club-history-tabs" aria-label="Contenido histórico del club">{[['review','RESEÑA'],['anthem','HIMNO']].map(([value, label]) => <button className={historyTab === value ? 'active' : ''} onClick={() => setHistoryTab(value)} key={value}>{label}</button>)}</nav>{historyTab === 'review' && <ReviewEditor team={team} onChanged={onChanged}/>}{historyTab === 'anthem' && <AnthemEditor team={team} onChanged={onChanged}/>}</div>}</section>
+      <section className="club-tab-panel">{activeTab === 'resumen' && <ResumenTab presidentName={presidentName} photo={photo} coachName={coachName} managerPhoto={managerPhoto} honours={honours} starters={starters}/>}{activeTab === 'club' && <div className="club-person-tab"><div className="president-card club-crest-card"><TeamMark team={team}/><p><b>{team.name}</b></p></div><div className="inline-team-editor"><h2>EDITAR ESCUDO Y NOMBRE</h2><ProfileForm team={team} onChanged={onChanged}/></div></div>}{activeTab === 'president' && <div className="club-person-tab"><div className="president-card"><PersonPhoto photo={photo} name={presidentName}/><p><b>{presidentName}</b></p></div><div className="inline-team-editor"><h2>EDITAR PRESIDENTE Y FOTO</h2><PresidentForm team={team} onChanged={onChanged}/></div></div>}{activeTab === 'coach' && <div className="club-person-tab"><div className="president-card coach-card"><PersonPhoto photo={managerPhoto} name={coachName}/><p><b>{coachName}</b></p></div><div className="inline-team-editor"><h2>EDITAR DIRECTOR TÉCNICO Y FOTO</h2><CoachForm team={team} onChanged={onChanged}/></div></div>}{activeTab === 'squad' && <div className="club-squad-tab"><nav className="club-squad-tabs" aria-label="Secciones del plantel">{[['starters','TITULARES'],['substitutes','SUPLENTES'],['edit','EDITAR PLANTEL']].map(([value, label]) => <button className={squadTab === value ? 'active' : ''} onClick={() => setSquadTab(value)} key={value}>{label}</button>)}</nav>{squadTab === 'starters' && <section className="roster-panel club-tab-roster"><h2>PLANTEL TITULAR <small>{starters.length} / 11</small></h2><RosterHeader/><div className="roster-list">{starters.length ? starters.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay titulares definidos.</p>}</div></section>}{squadTab === 'substitutes' && <section className="roster-panel club-tab-roster"><h2>SUPLENTES <small>{substitutes.length}</small></h2><RosterHeader/><div className="roster-list substitutes">{substitutes.length ? substitutes.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay suplentes registrados.</p>}</div></section>}{squadTab === 'edit' && <div className="club-squad-editor"><SquadEditor team={team} squad={squad} onChanged={onChanged}/></div>}</div>}{activeTab === 'budget' && <div className="club-budget-tab"><h2>PRESUPUESTO DEL CLUB</h2><BudgetForm team={team} onChanged={onChanged}/></div>}{activeTab === 'honours' && <section className="club-lower-panel honours-panel club-tab-honours"><h2>PALMARÉS</h2><div className="honours-list">{honours.length ? honours.map(item => <article key={item.id}><span aria-hidden="true">★</span><b>{item.name}</b>{item.season && <small>{item.season}</small>}</article>) : <p className="empty-copy">AÚN NO HAY TÍTULOS REGISTRADOS.</p>}</div>{historyError && <p className="honours-api-note">NO FUE POSIBLE CONSULTAR EL HISTORIAL DEL CLUB.</p>}</section>}{activeTab === 'history' && <div className="club-history-tab"><nav className="club-history-tabs" aria-label="Contenido histórico del club">{[['review','RESEÑA'],['anthem','HIMNO']].map(([value, label]) => <button className={historyTab === value ? 'active' : ''} onClick={() => setHistoryTab(value)} key={value}>{label}</button>)}</nav>{historyTab === 'review' && <ReviewEditor team={team} onChanged={onChanged}/>}{historyTab === 'anthem' && <AnthemEditor team={team} onChanged={onChanged}/>}</div>}</section>
       {activeTab === 'history' && <PublishedClubHistory team={team}/>}
     </>}
   </section></main>;
