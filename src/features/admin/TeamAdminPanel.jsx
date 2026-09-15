@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
+import { defaultFormationPositions } from '../../utils/formationPositions.js';
 import { teamBalance, teamCoachName, teamCoachPhoto } from '../../utils/teamPresentation.js';
 import { FormFeedback } from './FormFeedback.jsx';
 import { useApiMutation } from './useApiMutation.js';
@@ -115,25 +116,6 @@ function splitPlayerName(name) {
 }
 
 const isStarterPlayer = player => typeof player?.isStarter === 'boolean' ? player.isStarter : player?.section === 'starters';
-const bandFor = position => {
-  if (['DC', 'ED', 'EI'].includes(position)) return 'att';
-  if (['MO', 'MC'].includes(position)) return 'mid';
-  if (['LD', 'DEC', 'LI'].includes(position)) return 'def';
-  return position === 'PT' ? 'gk' : 'mid';
-};
-const BAND_Y = { att: 14, mid: 42, def: 68, gk: 90 };
-
-function defaultFormationPositions(starters) {
-  const byBand = { att: [], mid: [], def: [], gk: [] };
-  starters.forEach(player => byBand[bandFor(player.position)].push(player));
-  const positions = {};
-  Object.entries(byBand).forEach(([band, players]) => {
-    players.forEach((player, index) => {
-      positions[player.id] = { x: (100 / (players.length + 1)) * (index + 1), y: BAND_Y[band] };
-    });
-  });
-  return positions;
-}
 
 function FormationMarker({ player, x, y, selected, onSelect, onDrag, onDragEnd }) {
   const ref = useRef(null);

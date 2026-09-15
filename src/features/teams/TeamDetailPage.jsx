@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { TeamMark } from '../../components/TeamMark.jsx';
 import { clubHistoryFor, legacyHistoryFor } from '../../data/clubHistory.js';
+import { defaultFormationPositions, pitchPositionFor } from '../../utils/formationPositions.js';
 import { teamBalance, teamCoachName, teamCoachPhoto } from '../../utils/teamPresentation.js';
 import { BudgetForm, CoachForm, FormationEditor, PresidentForm, ProfileForm, SquadEditor } from '../admin/TeamAdminPanel.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
@@ -60,16 +61,9 @@ function publishedHistoryFor(team) {
   };
 }
 
-const PITCH_BANDS = [
-  { key: 'att', positions: ['DC', 'ED', 'EI'] },
-  { key: 'mid', positions: ['MO', 'MC'] },
-  { key: 'def', positions: ['LD', 'DEC', 'LI'] },
-  { key: 'gk', positions: ['PT'] },
-];
-
-function PitchPlayer({ player }) {
+function PitchPlayer({ player, x, y }) {
   const { flag, surname } = splitPlayerName(player.name);
-  return <div className="club-pitch-player">
+  return <div className="club-pitch-player" style={{ left: `${x}%`, top: `${y}%` }}>
     <span className="club-pitch-number">{player.jerseyNumber ?? '–'}{flag && <i className="club-pitch-flag">{flag}</i>}</span>
     <span className="club-pitch-name">{surname}</span>
   </div>;
@@ -77,16 +71,9 @@ function PitchPlayer({ player }) {
 
 function SquadPitch({ starters }) {
   if (!starters.length) return <div className="club-pitch club-pitch-empty"><p className="empty-copy">NO HAY TITULARES DEFINIDOS.</p></div>;
-  const placed = new Set();
-  const bands = PITCH_BANDS.map(band => {
-    const players = starters.filter(player => band.positions.includes(player.position));
-    players.forEach(player => placed.add(player.id));
-    return { ...band, players };
-  });
-  const rest = starters.filter(player => !placed.has(player.id));
+  const defaults = defaultFormationPositions(starters);
   return <div className="club-pitch">
-    {bands.map(band => band.players.length > 0 && <div className={`club-pitch-row club-pitch-${band.key}`} key={band.key}>{band.players.map(player => <PitchPlayer player={player} key={player.id}/>)}</div>)}
-    {rest.length > 0 && <div className="club-pitch-row club-pitch-rest">{rest.map(player => <PitchPlayer player={player} key={player.id}/>)}</div>}
+    {starters.map(player => { const { x, y } = pitchPositionFor(player, defaults); return <PitchPlayer player={player} x={x} y={y} key={player.id}/>; })}
   </div>;
 }
 
