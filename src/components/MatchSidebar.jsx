@@ -1,4 +1,5 @@
 import { TeamMark } from './TeamMark.jsx';
+import { MusicPlayer } from './MusicPlayer.jsx';
 
 function Matches({ rows, title, resolveTeam, loading, showScore }) {
   return <section className="score-panel"><h2>{title}</h2>{rows.length ? rows.map(match =>
@@ -30,9 +31,10 @@ function UpcomingByTournament({ tournaments, upcoming, resolveTeam, loading }) {
     : <p className="league-note">{loading ? 'CARGANDO...' : 'SIN PARTIDOS PENDIENTES.'}</p>}</div></section>;
 }
 
-export function MatchSidebar({ completed, upcoming, tournaments = [], resolveTeam, loading }) {
+export function MatchSidebar({ completed, upcoming, tournaments = [], resolveTeam, loading, playlist = [] }) {
   return <aside className="match-sidebar">
     <Matches rows={completed} title="ÚLTIMOS RESULTADOS" resolveTeam={resolveTeam} loading={loading} showScore/>
     <UpcomingByTournament tournaments={tournaments} upcoming={upcoming} resolveTeam={resolveTeam} loading={loading}/>
+    <MusicPlayer tracks={playlist}/>
   </aside>;
 }
