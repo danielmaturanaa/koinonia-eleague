@@ -105,23 +105,31 @@ export function MatchesPage({ mode = 'all', teams, navigate, initialMatchId = nu
   }, [showMulti, multiMatchesQuery.retry]);
 
   useEffect(() => {
-    if (!showMulti) return;
+    // Espera a que llegue el primer dato real: multiMatches parte en [] mientras
+    // carga, y tomar eso como "no hay nada pendiente/en vivo" vaciaría las casillas
+    // guardadas antes de tiempo.
+    if (!showMulti || multiMatchesQuery.data == null) return;
+    const availableIds = new Set(multiMatches.map(match => match.id));
     const liveMatches = multiMatches.filter(match => match.status === 'live');
-    if (!liveMatches.length) return;
     setMultiSlots(current => {
-      const usedMatchIds = new Set(current.filter(slot => slot.matchId).map(slot => slot.matchId));
+      let changed = false;
+      const cleared = current.map(slot => {
+        if (slot.matchId && !availableIds.has(slot.matchId)) { changed = true; return { ...slot, matchId: null }; }
+        return slot;
+      });
+      const usedMatchIds = new Set(cleared.filter(slot => slot.matchId).map(slot => slot.matchId));
       const available = liveMatches.filter(match => !usedMatchIds.has(match.id));
-      if (!available.length) return current;
       let cursor = 0;
-      const next = current.map(slot => {
+      const filled = cleared.map(slot => {
         if (slot.matchId || cursor >= available.length) return slot;
         const match = available[cursor];
         cursor += 1;
+        changed = true;
         return { teamId: match.homeTeam?.id ?? null, matchId: match.id, mode: 'view' };
       });
-      return cursor === 0 ? current : next;
+      return changed ? filled : current;
     });
-  }, [showMulti, multiMatches]);
+  }, [showMulti, multiMatches, multiMatchesQuery.data]);
 
   const selectMatch = id => { setSelectedId(id); navigate?.(`/partidos/${encodeURIComponent(id)}`); };
   const backToList = () => { setSelectedId(null); navigate?.('/partidos'); };
