@@ -1,6 +1,7 @@
 export const navigationItems = [
   { label: 'Inicio', icon: 'ball', path: '/' },
   { label: 'Partidos', icon: 'pitch', path: '/partidos' },
+  { label: 'Multipartido', icon: 'controller', path: '/multipartido' },
   { label: 'Clasificación', icon: 'chart', path: '/clasificacion' },
   { label: 'Torneos', icon: 'cup', path: '/torneos' },
   { label: 'Equipos', icon: 'shirt', path: '/equipos' },

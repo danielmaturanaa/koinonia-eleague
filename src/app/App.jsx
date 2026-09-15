@@ -14,6 +14,8 @@ import { PlayersPage } from '../features/public/PlayersPage.jsx';
 import { RulesPage } from '../features/public/RulesPage.jsx';
 import { RankingsPage, TournamentsPage } from '../features/public/TournamentsPage.jsx';
 import { TeamsDirectoryPage } from '../features/public/TeamsDirectoryPage.jsx';
+import { MatchScoreboardPage } from '../features/public/MatchScoreboardPage.jsx';
+import { MultiMatchPage } from '../features/public/MultiMatchPage.jsx';
 import { useRoute } from './useRoute.js';
 
 const list = value => Array.isArray(value) ? value : [];
@@ -29,6 +31,10 @@ export function App() {
   const upcoming = league.upcomingMatches.length ? league.upcomingMatches : list(league.home?.upcomingMatches);
   const completed = list(league.home?.recentMatches).slice(0, 5);
 
+  if (route.name === 'scoreboard') {
+    return <MatchScoreboardPage matchId={route.matchId} onBack={() => navigate('/partidos')}/>;
+  }
+
   let page;
   if (route.name === 'home') {
     page = <HomePage tournament={tournament} lead={upcoming[0]} teams={league.teams}/>;
@@ -41,6 +47,8 @@ export function App() {
     page = <MatchesPage key={matchesMode} mode={matchesMode} teams={league.teams} navigate={navigate}/>;
   } else if (route.name === 'match') {
     page = <MatchesPage key="all" mode="all" teams={league.teams} navigate={navigate} initialMatchId={route.matchId}/>;
+  } else if (route.name === 'multi') {
+    page = <MultiMatchPage teams={league.teams}/>;
   } else if (route.path === '/clasificacion') {
     page = <TournamentsPage classificationOnly teams={league.teams}/>;
   } else if (route.path === '/equipos/rankings') {

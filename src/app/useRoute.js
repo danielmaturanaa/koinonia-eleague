@@ -19,6 +19,9 @@ function parseRoute(path) {
   if (matchMatch && !reservedMatchSections.has(matchMatch[1])) {
     return { name: 'match', path, matchId: decodeURIComponent(matchMatch[1]) };
   }
+  const scoreboardMatch = path.match(/^\/marcador\/([^/]+)$/);
+  if (scoreboardMatch) return { name: 'scoreboard', path, matchId: decodeURIComponent(scoreboardMatch[1]) };
+  if (path === '/multipartido') return { name: 'multi', path };
   if (path === '/') return { name: 'home', path };
   if (path === '/equipos') return { name: 'teams', path };
   return { name: 'section', path };
@@ -42,7 +45,11 @@ export function useRoute() {
           ? 'Ficha de equipo'
           : route.name === 'match'
             ? 'Gestión de partido'
-            : sectionContent[route.path]?.[0] ?? 'Koinonia e-League';
+            : route.name === 'scoreboard'
+              ? 'Marcador en vivo'
+              : route.name === 'multi'
+                ? 'Multipartido'
+                : sectionContent[route.path]?.[0] ?? 'Koinonia e-League';
     document.title = `${title} | Koinonia e-League`;
   }, [route]);
 

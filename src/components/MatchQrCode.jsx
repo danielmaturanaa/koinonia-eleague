@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 
 export function matchShareUrl(matchId) {
-  return `${window.location.origin}${window.location.pathname}#/partidos/${encodeURIComponent(matchId)}`;
+  return `${window.location.origin}${window.location.pathname}#/marcador/${encodeURIComponent(matchId)}`;
 }
 
 export function MatchQrCode({ matchId }) {
