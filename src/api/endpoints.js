@@ -82,6 +82,7 @@ export const endpoints = {
   finishMatch: (matchId, signal) => apiClient.post(`/matches/${matchId}/finish`, {}, { actor: 'web', signal }),
   cancelMatch: (matchId, signal) => apiClient.post(`/matches/${matchId}/cancel`, {}, { actor: 'web', signal }),
   reopenMatch: (matchId, signal) => apiClient.post(`/matches/${matchId}/reopen`, {}, { actor: 'web', signal }),
+  resetMatch: (matchId, signal) => apiClient.post(`/matches/${matchId}/reset`, {}, { actor: 'web', signal }),
   setMatchResult: (matchId, body, signal) => apiClient.post(`/matches/${matchId}/result`, body, { actor: 'web', signal }),
   addMatchGoal: (matchId, body, signal) => apiClient.post(`/matches/${matchId}/goals`, body, { actor: 'web', signal }),
   deleteMatchGoal: (matchId, goalId, signal) => apiClient.delete(`/matches/${matchId}/goals/${goalId}`, {}, { actor: 'web', signal }),

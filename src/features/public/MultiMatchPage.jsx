@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { Scoreboard } from '../../components/Scoreboard.jsx';
-import { PageHeader } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
 
 const SLOT_COUNT = 4;
@@ -46,9 +45,11 @@ function Slot({ index, matchId, mode, matches, teams, onSelect, onModeChange, on
   </div>;
 }
 
-export function MultiMatchPage({ teams = [] }) {
+export function MultiMatchPage({ onBack }) {
   const [slots, setSlots] = useState(() => loadStoredSlots().map(entry => entry ?? { matchId: null, mode: 'view' }));
   const matches = useApiQuery(signal => endpoints.matches({ pageSize: 50, page: 1 }, signal));
+  const teamsQuery = useApiQuery(signal => endpoints.teams({ pageSize: 100 }, signal));
+  const teams = Array.isArray(teamsQuery.data) ? teamsQuery.data : [];
   const rows = useMemo(() => (Array.isArray(matches.data) ? matches.data : []).filter(match => match.status !== 'cancelled').sort((a, b) => statusPriority(a.status) - statusPriority(b.status)), [matches.data]);
 
   useEffect(() => saveStoredSlots(slots), [slots]);
@@ -57,11 +58,13 @@ export function MultiMatchPage({ teams = [] }) {
   const setMode = (index, mode) => setSlots(current => current.map((slot, slotIndex) => slotIndex === index ? { ...slot, mode } : slot));
   const clearSlot = index => setSlots(current => current.map((slot, slotIndex) => slotIndex === index ? { matchId: null, mode: 'view' } : slot));
 
-  return <main className="newspaper data-page"><section className="data-paper">
-    <PageHeader kicker="HASTA 4 PARTIDOS A LA VEZ" title="MULTIPARTIDO"/>
-    <p className="multi-help">ELIGE UN PARTIDO POR CASILLA. GESTIONA GOLES Y TARJETAS SIN SALIR DE LA GRILLA.</p>
+  return <main className="multi-page">
+    <div className="multi-page-bar">
+      <button className="scoreboard-back" onClick={onBack}>← PARTIDOS</button>
+      <div className="multi-page-title"><h1>MULTIPARTIDO</h1><p>HASTA 4 PARTIDOS A LA VEZ · ELIGE, MIRA Y GESTIONA SIN SALIR DE LA GRILLA</p></div>
+    </div>
     <div className="multi-grid">
       {slots.map((slot, index) => <Slot key={index} index={index} matchId={slot.matchId} mode={slot.mode} matches={rows} teams={teams} onSelect={selectMatch} onModeChange={setMode} onClear={clearSlot}/>)}
     </div>
-  </section></main>;
+  </main>;
 }

@@ -75,8 +75,12 @@ function ScoreboardControls({ match, onChanged }) {
     <button className="scoreboard-btn-text" disabled={status.loading} onClick={() => runStatus('cancel', 'CANCELAR')}>CANCELAR</button>
   </div>;
 
-  if (match.status === 'finished' || match.status === 'cancelled') return <div className="scoreboard-controls scoreboard-controls-closed">
-    <button className="scoreboard-btn-text" disabled={status.loading} onClick={() => runStatus('reopen', 'REABRIR')}>↺ REABRIR PARTIDO</button>
+  if (match.status === 'finished') return <div className="scoreboard-controls scoreboard-controls-closed">
+    <button className="scoreboard-btn-text" disabled={status.loading} onClick={() => runStatus('reopen', 'REABRIR')}>↺ REABRIR PARTIDO (VUELVE A EN VIVO)</button>
+  </div>;
+
+  if (match.status === 'cancelled') return <div className="scoreboard-controls scoreboard-controls-closed">
+    <button className="scoreboard-btn-text" disabled={status.loading} onClick={() => runStatus('reset', 'VOLVER A PENDIENTE')}>↺ VOLVER A PENDIENTE</button>
   </div>;
 
   if (match.status !== 'live') return null;

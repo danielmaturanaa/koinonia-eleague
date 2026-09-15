@@ -930,9 +930,12 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .scoreboard-page .scoreboard-full .scoreboard-btn { padding: 20px 8px; font-size: 16px; }
 .scoreboard-page .scoreboard-full .scoreboard-btn-start { padding: 24px; font-size: 19px; }
 
-/* Multipartido (grilla de escritorio, hasta 4 casillas) */
-.multi-help { margin: 4px 0 12px; color: #4a4636; font: 500 12px/1.4 'Oswald', sans-serif; }
-.multi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+/* Multipartido: página independiente, fuera del cabinet escalado (igual criterio que .scoreboard-page). */
+.multi-page { min-height: 100dvh; padding: max(14px, env(safe-area-inset-top, 0px)) 16px max(14px, env(safe-area-inset-bottom, 0px)); background: var(--navy) url('/stadium-background-v2.jpeg') center / cover no-repeat; }
+.multi-page-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 14px; max-width: 1100px; margin: 0 auto 16px; }
+.multi-page-title h1 { color: #fff; font: 400 30px/1 'Anton', sans-serif; letter-spacing: .5px; }
+.multi-page-title p { margin-top: 4px; color: #b9c9ef; font: 500 11px/1.4 'Oswald', sans-serif; }
+.multi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; max-width: 1100px; margin: 0 auto; }
 .multi-slot { display: grid; gap: 6px; }
 .multi-slot-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
 .multi-slot-picker { flex: 1 1 160px; min-width: 0; padding: 7px 6px; border: 2px solid #10285b; color: #11120e; background: #eee4cc; font: 500 11px/1 'Oswald', sans-serif; }
