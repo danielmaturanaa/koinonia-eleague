@@ -33,12 +33,16 @@ function PlayerOptions({ players }) {
 
 function StatusPanel({ match, onChanged }) {
   const mutation = useApiMutation((operation, signal) => endpoints[`${operation}Match`](match.id, signal), { onSuccess: onChanged });
-  const operations = match.status === 'pending' ? [['start','INICIAR'],['cancel','CANCELAR']] : match.status === 'live' ? [['finish','FINALIZAR'],['cancel','CANCELAR']] : match.status === 'cancelled' ? [['reset','VOLVER A PENDIENTE']] : [['reopen','REABRIR']];
+  const operations = match.status === 'pending' ? [['start','INICIAR'],['cancel','CANCELAR']]
+    : match.status === 'live' ? [['finish','FINALIZAR'],['cancel','CANCELAR'],['reset','REVERTIR']]
+    : match.status === 'cancelled' ? [['reset','REVERTIR']]
+    : [['reopen','REABRIR']];
   const run = operation => {
     const label = operations.find(item => item[0] === operation)?.[1] ?? operation;
-    if (window.confirm(`¿${label} ESTE PARTIDO?`)) mutation.execute(operation);
+    const message = operation === 'reset' ? '¿REVERTIR ESTE PARTIDO A PENDIENTE 0-0? SE BORRARÁN LOS GOLES Y TARJETAS REGISTRADOS.' : `¿${label} ESTE PARTIDO?`;
+    if (window.confirm(message)) mutation.execute(operation);
   };
-  return <section className="match-admin-section"><p>ESTADO ACTUAL: <b>{String(match.status).toUpperCase()}</b></p><div className="admin-action-grid status-actions">{operations.map(([operation, label]) => <button className={`action-button ${operation === 'cancel' ? 'danger' : ''}`} disabled={mutation.loading} key={operation} onClick={() => run(operation)}>{label} PARTIDO</button>)}</div><FormFeedback mutation={mutation}/></section>;
+  return <section className="match-admin-section"><p>ESTADO ACTUAL: <b>{String(match.status).toUpperCase()}</b></p><div className="admin-action-grid status-actions">{operations.map(([operation, label]) => <button className={`action-button ${operation === 'cancel' || operation === 'reset' ? 'danger' : ''}`} disabled={mutation.loading} key={operation} onClick={() => run(operation)}>{label} PARTIDO</button>)}</div><FormFeedback mutation={mutation}/></section>;
 }
 
 function ResultPanel({ match, onChanged }) {

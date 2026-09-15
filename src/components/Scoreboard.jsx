@@ -65,14 +65,15 @@ function RedCardPopover({ match, onClose, onChanged }) {
   </form>;
 }
 
-function ScoreboardControls({ match, onChanged }) {
+function ScoreboardControls({ match, onChanged, compact }) {
   const [popover, setPopover] = useState(null);
   const status = useApiMutation((operation, signal) => endpoints[`${operation}Match`](match.id, signal), { onSuccess: onChanged });
-  const runStatus = (operation, label) => { if (window.confirm(`¿${label} ESTE PARTIDO?`)) status.execute(operation); };
+  const runStatus = (operation, label, confirmMessage) => { if (window.confirm(confirmMessage ?? `¿${label} ESTE PARTIDO?`)) status.execute(operation); };
+  const revertButton = <button className="scoreboard-btn-text scoreboard-btn-revert" disabled={status.loading} onClick={() => runStatus('reset', 'REVERTIR', '¿REVERTIR ESTE PARTIDO A PENDIENTE 0-0? SE BORRARÁN LOS GOLES Y TARJETAS REGISTRADOS.')}>↺ REVERTIR A PENDIENTE (0-0)</button>;
 
   if (match.status === 'pending') return <div className="scoreboard-controls scoreboard-controls-pending">
     <button className="scoreboard-btn scoreboard-btn-start" disabled={status.loading} onClick={() => runStatus('start', 'INICIAR')}>▶ INICIAR PARTIDO</button>
-    <button className="scoreboard-btn-text" disabled={status.loading} onClick={() => runStatus('cancel', 'CANCELAR')}>CANCELAR</button>
+    {!compact && <button className="scoreboard-btn-text" disabled={status.loading} onClick={() => runStatus('cancel', 'CANCELAR')}>CANCELAR</button>}
   </div>;
 
   if (match.status === 'finished') return <div className="scoreboard-controls scoreboard-controls-closed">
@@ -80,7 +81,7 @@ function ScoreboardControls({ match, onChanged }) {
   </div>;
 
   if (match.status === 'cancelled') return <div className="scoreboard-controls scoreboard-controls-closed">
-    <button className="scoreboard-btn-text" disabled={status.loading} onClick={() => runStatus('reset', 'VOLVER A PENDIENTE')}>↺ VOLVER A PENDIENTE</button>
+    {revertButton}
   </div>;
 
   if (match.status !== 'live') return null;
@@ -89,12 +90,15 @@ function ScoreboardControls({ match, onChanged }) {
     {popover === 'home' && <GoalPopover match={match} teamId={match.homeTeam?.id} teamName={match.homeTeam?.name} onClose={() => setPopover(null)} onChanged={onChanged}/>}
     {popover === 'away' && <GoalPopover match={match} teamId={match.awayTeam?.id} teamName={match.awayTeam?.name} onClose={() => setPopover(null)} onChanged={onChanged}/>}
     {popover === 'card' && <RedCardPopover match={match} onClose={() => setPopover(null)} onChanged={onChanged}/>}
-    {!popover && <div className="scoreboard-pad">
-      <button className="scoreboard-btn scoreboard-btn-goal" onClick={() => setPopover('home')}>GOL LOCAL</button>
-      <button className="scoreboard-btn scoreboard-btn-goal" onClick={() => setPopover('away')}>GOL VISITA</button>
-      <button className="scoreboard-btn scoreboard-btn-card" onClick={() => setPopover('card')}>ROJA</button>
-      <button className="scoreboard-btn scoreboard-btn-finish" disabled={status.loading} onClick={() => runStatus('finish', 'FINALIZAR')}>FINALIZAR</button>
-    </div>}
+    {!popover && <>
+      <div className="scoreboard-pad">
+        <button className="scoreboard-btn scoreboard-btn-goal" onClick={() => setPopover('home')}>GOL LOCAL</button>
+        <button className="scoreboard-btn scoreboard-btn-goal" onClick={() => setPopover('away')}>GOL VISITA</button>
+        <button className="scoreboard-btn scoreboard-btn-card" onClick={() => setPopover('card')}>ROJA</button>
+        <button className="scoreboard-btn scoreboard-btn-finish" disabled={status.loading} onClick={() => runStatus('finish', 'FINALIZAR')}>FINALIZAR</button>
+      </div>
+      <div className="scoreboard-secondary-actions">{revertButton}</div>
+    </>}
   </div>;
 }
 
@@ -152,6 +156,6 @@ export function Scoreboard({ matchId, mode = 'view', density = 'tile', onOpen, t
       <div className="scoreboard-team scoreboard-team-away"><TeamMark team={resolveTeam(match.awayTeam)}/><b>{match.awayTeam?.name}</b></div>
     </div>
     {lastGoal && <p className="scoreboard-ticker">⚽ {lastGoal.minute ? `${lastGoal.minute}' ` : ''}{goalPlayerName(lastGoal)} ({lastGoalTeamName})</p>}
-    {mode === 'manage' && <ScoreboardControls match={match} onChanged={detail.retry}/>}
+    {mode === 'manage' && <ScoreboardControls match={match} onChanged={detail.retry} compact={density === 'tile'}/>}
   </article>;
 }
