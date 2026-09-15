@@ -32,8 +32,20 @@ function saveMultiSlots(slots) {
   }
 }
 
+function groupGoals(goals) {
+  const groups = [];
+  for (const goal of goals) {
+    const key = `${goal.playerId ?? goalPlayerName(goal)}::${goal.isOwnGoal ? 1 : 0}`;
+    const existing = groups.find(entry => entry.key === key);
+    if (existing) existing.count += 1;
+    else groups.push({ key, count: 1, name: goalPlayerName(goal), ownGoal: Boolean(goal.isOwnGoal) });
+  }
+  return groups;
+}
+
 function GoalColumn({ team, goals, side }) {
-  return <section className={`goal-team-column goal-team-${side}`}><h4>{team?.name ?? (side === 'home' ? 'LOCAL' : 'VISITA')}</h4>{goals.length ? goals.map(goal => <p key={goal.id}><b>{goal.minute ? `${goal.minute}'` : '—'}</b><span>{goalPlayerName(goal)}{goal.isOwnGoal ? ' (autogol)' : ''}</span></p>) : <p className="goal-team-empty">Sin goles</p>}</section>;
+  const grouped = groupGoals(goals);
+  return <section className={`goal-team-column goal-team-${side}`}><h4>{team?.name ?? (side === 'home' ? 'LOCAL' : 'VISITA')}</h4>{grouped.length ? grouped.map(entry => <p key={entry.key}><b>{'⚽'.repeat(entry.count)}</b><span>{entry.name}{entry.ownGoal ? ' (autogol)' : ''}</span></p>) : <p className="goal-team-empty">Sin goles</p>}</section>;
 }
 
 function TeamChipBar({ teams, value, onChange }) {

@@ -104,6 +104,21 @@ function GoalList({ match, onClose, onChanged }) {
   </div>;
 }
 
+function RedCardList({ match, onClose, onChanged }) {
+  const mutation = useApiMutation((redCardId, signal) => endpoints.deleteMatchRedCard(match.id, redCardId, signal), { onSuccess: onChanged });
+  const redCards = match.redCards ?? [];
+  const remove = card => { if (window.confirm('¿ANULAR ESTA TARJETA ROJA? SE LEVANTA LA SUSPENSIÓN ASOCIADA.')) mutation.execute(card.id); };
+  return <div className="scoreboard-popover scoreboard-popover-danger scoreboard-goal-list-popover">
+    <p>TARJETAS ROJAS DEL PARTIDO</p>
+    {redCards.length ? <div className="scoreboard-goal-list">{redCards.map(card => <div className="scoreboard-goal-row" key={card.id}>
+      <span>🟥 {card.playerName} · {card.teamName}</span>
+      <button type="button" className="scoreboard-goal-remove" disabled={mutation.loading} onClick={() => remove(card)}>✕ ANULAR</button>
+    </div>)}</div> : <p className="scoreboard-player-empty">SIN TARJETAS ROJAS REGISTRADAS.</p>}
+    <button type="button" className="scoreboard-btn-text" onClick={onClose}>CERRAR</button>
+    {mutation.error && <p className="scoreboard-popover-error">{mutation.error.message}</p>}
+  </div>;
+}
+
 function ScoreboardControls({ match, onChanged, compact }) {
   const [popover, setPopover] = useState(null);
   const status = useApiMutation((operation, signal) => endpoints[`${operation}Match`](match.id, signal), { onSuccess: onChanged });
@@ -111,6 +126,8 @@ function ScoreboardControls({ match, onChanged, compact }) {
   const revertButton = <button className="scoreboard-btn-text scoreboard-btn-revert" disabled={status.loading} onClick={() => runStatus('reset', 'REVERTIR', '¿REVERTIR ESTE PARTIDO A PENDIENTE 0-0? SE BORRARÁN LOS GOLES Y TARJETAS REGISTRADOS.')}>↺ REVERTIR A PENDIENTE (0-0)</button>;
   const goalsCount = match.goals?.length ?? 0;
   const goalsButton = <button className="scoreboard-btn-text" disabled={status.loading} onClick={() => setPopover('goals')}>📋 VER/ANULAR GOLES{goalsCount ? ` (${goalsCount})` : ''}</button>;
+  const redCardsCount = match.redCards?.length ?? 0;
+  const redCardsButton = <button className="scoreboard-btn-text" disabled={status.loading} onClick={() => setPopover('redcards')}>🟥 VER/ANULAR ROJAS{redCardsCount ? ` (${redCardsCount})` : ''}</button>;
 
   if (match.status === 'pending') return <div className="scoreboard-controls scoreboard-controls-pending">
     <button className="scoreboard-btn scoreboard-btn-start" disabled={status.loading} onClick={() => runStatus('start', 'INICIAR')}>▶ INICIAR PARTIDO</button>
@@ -132,6 +149,7 @@ function ScoreboardControls({ match, onChanged, compact }) {
     {popover === 'away' && <GoalPopover match={match} teamId={match.awayTeam?.id} teamName={match.awayTeam?.name} onClose={() => setPopover(null)} onChanged={onChanged}/>}
     {popover === 'card' && <RedCardPopover match={match} onClose={() => setPopover(null)} onChanged={onChanged}/>}
     {popover === 'goals' && <GoalList match={match} onClose={() => setPopover(null)} onChanged={onChanged}/>}
+    {popover === 'redcards' && <RedCardList match={match} onClose={() => setPopover(null)} onChanged={onChanged}/>}
     {!popover && <>
       <div className="scoreboard-pad">
         <button className="scoreboard-btn scoreboard-btn-goal" onClick={() => setPopover('home')}>GOL LOCAL</button>
@@ -139,7 +157,7 @@ function ScoreboardControls({ match, onChanged, compact }) {
         <button className="scoreboard-btn scoreboard-btn-card" onClick={() => setPopover('card')}>ROJA</button>
         <button className="scoreboard-btn scoreboard-btn-finish" disabled={status.loading} onClick={() => runStatus('finish', 'FINALIZAR')}>FINALIZAR</button>
       </div>
-      <div className="scoreboard-secondary-actions">{goalsButton}{revertButton}</div>
+      <div className="scoreboard-secondary-actions">{goalsButton}{redCardsButton}{revertButton}</div>
     </>}
   </div>;
 }

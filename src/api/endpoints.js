@@ -95,5 +95,6 @@ export const endpoints = {
   addMatchGoal: (matchId, body, signal) => apiClient.post(`/matches/${matchId}/goals`, body, { actor: 'web', signal }),
   deleteMatchGoal: (matchId, goalId, signal) => apiClient.delete(`/matches/${matchId}/goals/${goalId}`, {}, { actor: 'web', signal }),
   addMatchRedCard: (matchId, body, signal) => apiClient.post(`/matches/${matchId}/red-cards`, body, { actor: 'web', signal }),
+  deleteMatchRedCard: (matchId, redCardId, signal) => apiClient.delete(`/matches/${matchId}/red-cards/${redCardId}`, {}, { actor: 'web', signal }),
   setMatchWinner: (matchId, body, signal) => apiClient.post(`/matches/${matchId}/winner`, body, { actor: 'web', signal }),
 };
