@@ -650,6 +650,21 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .club-detail-tabs button { min-width: 0; padding: 8px 5px; border: 2px solid #72b4e3; color: #fff; background: #062764; font: 500 12px/1 'Oswald', sans-serif; }
 .club-detail-tabs button.active { color: #111; border-color: #fff2a0; background: #ffd42a; }
 .club-tab-panel { height: 430px; min-height: 0; margin-bottom: 12px; padding: 9px; border: 3px double #625d4e; background: #f5ecd7 url('/paper-grain.svg'); overflow: hidden; }
+.club-resumen-tab { display: grid; grid-template-columns: minmax(180px,.75fr) minmax(0,1.25fr); gap: 12px; height: 100%; min-height: 0; }
+.club-resumen-left { display: grid; grid-template-rows: auto auto minmax(0,1fr); gap: 8px; min-width: 0; }
+.club-resumen-person, .club-resumen-honours-mini { display: grid; gap: 5px; padding: 8px; border: 2px solid #10285b; background: #fff9e8; min-width: 0; }
+.club-resumen-person small, .club-resumen-honours-mini small { color: #8c0019; font: 700 11px/1 'Oswald', sans-serif; }
+.club-resumen-person img, .club-resumen-person .president-photo-placeholder { width: 100%; height: 130px; object-fit: cover; }
+.club-resumen-person b { color: #062764; font: 600 17px/1.1 'Roboto Condensed',sans-serif; overflow-wrap: anywhere; }
+.club-resumen-honours-count { color: #062764; font: 700 18px/1 'Oswald',sans-serif; }
+.club-resumen-honours-list { margin: 0; padding-left: 18px; overflow-y: auto; font: 500 13px/1.2 'Roboto Condensed',sans-serif; }
+.club-resumen-pitch-section { display: grid; grid-template-rows: auto minmax(0,1fr); min-width: 0; }
+.club-resumen-pitch-section h2 { color: #8c0019; font: 600 16px/1 'Oswald',sans-serif; }
+.club-pitch { position: relative; min-height: 0; background: #198c3a; border: 3px solid #f6f0da; overflow: hidden; }
+.club-pitch-player { position: absolute; transform: translate(-50%,-50%); display: grid; justify-items: center; max-width: 90px; color: #fff; text-align: center; font: 600 11px/1 'Roboto Condensed',sans-serif; }
+.club-pitch-number { display: grid; place-items: center; width: 25px; height: 25px; border-radius: 50%; color: #111; background: #ffd42a; font-weight: 700; }
+.club-pitch-name { max-width: 90px; overflow-wrap: anywhere; }
+@media (max-width: 700px) { .club-resumen-tab { grid-template-columns: 1fr; height: auto; } .club-resumen-pitch-section { min-height: 360px; } }
 .club-person-tab { display: grid; grid-template-columns: minmax(0, 1fr); align-items: start; gap: 12px; min-height: 0; }
 .club-person-tab .president-card { align-content: start; justify-self: center; width: min(100%, 330px); height: auto; margin: 0; }
 .club-person-tab .president-card > img, .club-person-tab .president-photo-placeholder { width: min(100%, 230px); height: 256px; }
