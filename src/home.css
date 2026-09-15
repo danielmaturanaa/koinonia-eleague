@@ -422,7 +422,15 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .classification-workspace .standings-workspace-panel .table-scroll { overflow: visible; }
 .classification-workspace .workspace-columns { grid-template-columns: minmax(0, 1fr); }
 .classification-content-tabs { margin-top: 0; }
-.scorers-workspace-panel { width: 100%; }
+.scorers-workspace-panel { width: 100%; max-width: 100%; min-width: 0; }
+.classification-workspace .scorers-workspace-panel { max-height: none; overflow: hidden; }
+.scorers-list { width: 100%; max-height: 310px; overflow-x: hidden; overflow-y: auto; scrollbar-gutter: stable; }
+@media (min-width: 901px) {
+  .data-paper:has(.classification-workspace .scorers-workspace-panel) { overflow: hidden; }
+}
+.scorers-workspace-panel .ranking-row { width: 100%; max-width: 100%; min-width: 0; grid-template-columns: 32px minmax(0, 1fr) 54px; align-items: center; overflow: hidden; }
+.scorers-workspace-panel .ranking-row span { min-width: 0; overflow-wrap: anywhere; }
+.scorers-workspace-panel .ranking-row strong { min-width: 0; text-align: right; }
 .classification-workspace .league-table th, .classification-workspace .league-table td { padding-top: 3px; padding-bottom: 3px; }
 .workspace-panel h3 small { font-size: 11px; }
 .table-scroll { overflow: auto; }
