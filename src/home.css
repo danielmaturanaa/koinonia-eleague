@@ -403,6 +403,8 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .match-detail-kicker { display: flex; align-items: center; justify-content: space-between; gap: 5px; color: #a0001d; font: 500 12px/1 'Oswald', sans-serif; }
 .match-detail-kicker button { padding: 5px 7px; border: 2px solid #ffd42a; color: #fff; background: #a90020; font: 500 10px/1 'Oswald', sans-serif; }
 .match-detail-kicker button.active { color: #111; background: var(--yellow); }
+.match-detail-marcador-btn { color: #111 !important; background: var(--yellow) !important; font-weight: 700 !important; letter-spacing: .4px; }
+.match-detail-marcador-btn.active { background: #ffe066 !important; }
 .scoreboard-fullscreen-link { display: block; width: 100%; margin: 0 0 8px; padding: 8px; border: 2px solid #72b4e3; color: #fff9e8; background: #062764; font: 600 12px/1 'Oswald', sans-serif; text-align: center; }
 .scoreboard-fullscreen-link:hover { border-color: var(--yellow); }
 .match-detail-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 5px; }
@@ -614,23 +616,14 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .admin-empty.compact { padding: 10px; }
 .create-match-form { margin-bottom: 10px; grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; }
 .match-admin { position: relative; z-index: 1; margin: 0 0 10px; border: 3px solid #10285b; background: #e4d9c0; }
-.match-admin > nav { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 3px; padding: 5px; background: #062764; }
+.match-admin > nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 3px; padding: 5px; background: #062764; }
 .match-admin > nav button { min-width: 0; padding: 6px 2px; border: 1px solid #72b4e3; color: #fff; background: #062764; font: 500 9px/1 'Oswald', sans-serif; }
 .match-admin > nav button.active { color: #111; background: #ffd42a; }
 .match-admin-section { display: grid; gap: 7px; padding: 8px; }
 .match-admin-section > p { font: 500 11px/1.15 'Oswald', sans-serif; }
 .match-admin-section > p b { color: #a0001d; }
-.match-result-form { grid-template-columns: 1fr 20px 1fr; align-items: end; }
-.match-result-form > b { align-self: center; text-align: center; }
-.match-result-form > .action-button { grid-column: 1 / -1; }
-.match-event-form { grid-template-columns: 1fr 1.4fr .65fr; }
-.match-event-form > .action-button { grid-column: 1 / -1; }
-.checkbox-field { display: flex !important; align-items: center; gap: 6px !important; }
-.checkbox-field input { width: 16px; height: 16px; accent-color: #a90020; }
-.match-winner-form { grid-template-columns: 1fr 1.35fr; }
-.match-winner-form > .action-button, .match-winner-form > .form-feedback { grid-column: 1 / -1; }
-.event-admin-list { display: grid; gap: 3px; max-height: 125px; overflow: auto; }
-.event-admin-list article { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 5px; padding: 4px 6px; border-bottom: 1px solid #aa9e86; background: #eee4cc; font: 500 11px/1 'Roboto Condensed', sans-serif; }
+.match-sanction-form > .action-button { grid-column: 1 / -1; }
+.match-sanction-hint { grid-column: 1 / -1; margin: 0; color: #4a3a1f; font: 500 10px/1.3 'Oswald', sans-serif; }
 .event-admin-list article button { padding: 4px 6px; border: 1px solid #ffd42a; color: #fff; background: #a90020; font: 500 9px/1 'Oswald', sans-serif; }
 .status-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 .club-detail-tabs { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin: 10px 0 8px; padding: 5px; border: 3px solid #10285b; background: #062764; }
@@ -828,8 +821,7 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
   .timeline article { grid-template-columns: 1fr; gap: 5px; }
   .fixture-grid { grid-template-columns: 1fr; }
   .data-page-header h1 { font-size: 38px; }
-  .admin-form, .national-form, .player-create-form, .tournament-create-form, .compact-form, .create-match-form, .match-result-form, .match-event-form, .match-winner-form { grid-template-columns: 1fr; }
-  .match-result-form > .action-button, .match-event-form > .action-button { grid-column: auto; }
+  .admin-form, .national-form, .player-create-form, .tournament-create-form, .compact-form, .match-sanction-form { grid-template-columns: 1fr; }
   .page-action { position: static; margin-top: 8px; }
   .workspace-heading-actions { align-items: end; flex-direction: column; }
   .draw-team-list, .division-team-list, .admin-action-grid { grid-template-columns: 1fr; }
