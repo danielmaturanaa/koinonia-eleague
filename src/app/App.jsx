@@ -3,6 +3,7 @@ import { ArcadeLayout } from '../components/ArcadeLayout.jsx';
 import { MatchSidebar } from '../components/MatchSidebar.jsx';
 import { HomePage } from '../features/home/HomePage.jsx';
 import { useLeagueData } from '../features/league/useLeagueData.js';
+import { leaguePlaylist } from './playlist.js';
 import { SectionPage } from '../features/shared/SectionPage.jsx';
 import { TeamDetailPage } from '../features/teams/TeamDetailPage.jsx';
 import { TeamsPage } from '../features/teams/TeamsPage.jsx';
@@ -24,6 +25,12 @@ export function App() {
   const { route, navigate } = useRoute();
   const { league, teamDetail, squad, teamMatches, teamHistory, teamHistoryError, state, refresh, dismissError } = useLeagueData(route.teamId);
   const indexedTeams = useMemo(() => new Map(league.teams.map(team => [team.id, team])), [league.teams]);
+  const playlist = useMemo(() => {
+    const anthems = league.teams
+      .filter(team => team.anthemUrl?.trim())
+      .map(team => ({ title: `Himno de ${team.name}`, artist: 'HIMNO OFICIAL', src: team.anthemUrl }));
+    return [...leaguePlaylist, ...anthems];
+  }, [league.teams]);
   const resolveTeam = team => ({ ...team, ...(indexedTeams.get(team?.id ?? team?.team_id) ?? {}) });
   const activeTournaments = [...list(league.home?.activeTournaments)].sort((a, b) => tournamentPriority(a) - tournamentPriority(b) || (a.name ?? '').localeCompare(b.name ?? '', 'es'));
   const tournament = activeTournaments.find(item => item.format === 'league') ?? activeTournaments[0];
@@ -69,6 +76,6 @@ export function App() {
     page = <SectionPage path={route.path}/>;
   }
 
-  const sidebar = <MatchSidebar completed={completed} upcoming={upcoming} tournaments={activeTournaments} resolveTeam={resolveTeam} loading={state.loading}/>;
+  const sidebar = <MatchSidebar completed={completed} upcoming={upcoming} tournaments={activeTournaments} resolveTeam={resolveTeam} loading={state.loading} playlist={playlist}/>;
   return <ArcadeLayout route={route} navigate={navigate} sidebar={sidebar} error={state.error} dismissError={dismissError} headerTeams={league.teams}>{page}</ArcadeLayout>;
 }
