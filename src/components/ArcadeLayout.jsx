@@ -1,5 +1,6 @@
 import { useLayoutEffect, useState } from 'react';
 import { ApiStatus } from './ApiStatus.jsx';
+import { MusicPlayer } from './MusicPlayer.jsx';
 import { Navigation } from './Navigation.jsx';
 import { TeamMark } from './TeamMark.jsx';
 import { TransparentLogo } from './TransparentLogo.jsx';
@@ -19,7 +20,7 @@ function PressStartPrompt() {
   </div>;
 }
 
-export function ArcadeLayout({ route, navigate, children, sidebar, error, dismissError, headerTeams = [] }) {
+export function ArcadeLayout({ route, navigate, children, sidebar, error, dismissError, headerTeams = [], playlist = [] }) {
   const [viewport, setViewport] = useState({ width: DESIGN_WIDTH, scale: 1 });
   useLayoutEffect(() => {
     const resize = () => {
@@ -45,7 +46,7 @@ export function ArcadeLayout({ route, navigate, children, sidebar, error, dismis
         </button>
         <HeaderEmblems teams={visibleTeams.slice(splitAt)} side="right" navigate={navigate}/>
       </header>
-      <div className="home-composition"><div className="left-rail"><Navigation route={route} navigate={navigate}/></div><div className="center-stage">{children}{route.name === 'home' && <PressStartPrompt/>}</div>{sidebar}</div>
+      <div className="home-composition"><div className="left-rail"><Navigation route={route} navigate={navigate}/><MusicPlayer tracks={playlist}/></div><div className="center-stage">{children}{route.name === 'home' && <PressStartPrompt/>}</div>{sidebar}</div>
       <ApiStatus/>
       {error && <div className="preview-notice" role="status">{error}<button onClick={dismissError} aria-label="Cerrar aviso">×</button></div>}
     </div>
