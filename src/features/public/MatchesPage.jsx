@@ -39,7 +39,7 @@ function GoalColumn({ team, goals, side }) {
 function TeamChipBar({ teams, value, onChange }) {
   return <div className="team-chip-bar" role="group" aria-label="Filtrar por equipo">
     <button className={`team-chip ${value === '' ? 'active' : ''}`} onClick={() => onChange('')}>TODOS</button>
-    {[...teams].sort((a, b) => a.name.localeCompare(b.name, 'es')).map(team => <button className={`team-chip ${value === team.id ? 'active' : ''}`} key={team.id} title={team.name} onClick={() => onChange(team.id)}><TeamMark team={team}/><span>{team.name}</span></button>)}
+    {[...teams].sort((a, b) => a.name.localeCompare(b.name, 'es')).map(team => <button className={`team-chip ${value === team.id ? 'active' : ''}`} key={team.id} title={team.name} aria-label={team.name} onClick={() => onChange(team.id)}><TeamMark team={team}/></button>)}
   </div>;
 }
 
