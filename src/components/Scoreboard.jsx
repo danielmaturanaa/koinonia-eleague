@@ -34,21 +34,42 @@ function PlayerSelect({ teamId, value, onChange, required }) {
 }
 
 function GoalPopover({ match, teamId, teamName, onClose, onChanged }) {
-  const rivalTeamId = teamId === match.homeTeam?.id ? match.awayTeam?.id : match.homeTeam?.id;
-  const rivalTeamName = teamId === match.homeTeam?.id ? match.awayTeam?.name : match.homeTeam?.name;
-  const [ownGoal, setOwnGoal] = useState(false);
   const [playerId, setPlayerId] = useState('');
   const mutation = useApiMutation((body, signal) => endpoints.addMatchGoal(match.id, body, signal), { onSuccess: () => { onChanged(); onClose(); } });
-  const toggleOwnGoal = value => { setOwnGoal(value); setPlayerId(''); };
   const submit = event => {
     event.preventDefault();
-    mutation.execute({ scoringTeamId: teamId, ownGoal, ...(playerId ? { playerId } : {}) });
+    mutation.execute({ scoringTeamId: teamId, ...(playerId ? { playerId } : {}) });
   };
   return <form className="scoreboard-popover" onSubmit={submit}>
     <p>GOL DE {teamName?.toUpperCase()}</p>
-    <label className="scoreboard-own-goal"><input type="checkbox" checked={ownGoal} disabled={mutation.loading} onChange={event => toggleOwnGoal(event.target.checked)}/> AUTOGOL DE {rivalTeamName?.toUpperCase()}</label>
-    <PlayerSelect teamId={ownGoal ? rivalTeamId : teamId} value={playerId} onChange={setPlayerId} required={ownGoal}/>
-    <div className="scoreboard-popover-actions"><button type="button" onClick={onClose} disabled={mutation.loading}>CANCELAR</button><button type="submit" className="scoreboard-confirm" disabled={mutation.loading || (ownGoal && !playerId)}>¡GOL!</button></div>
+    <PlayerSelect teamId={teamId} value={playerId} onChange={setPlayerId}/>
+    <div className="scoreboard-popover-actions"><button type="button" onClick={onClose} disabled={mutation.loading}>CANCELAR</button><button type="submit" className="scoreboard-confirm" disabled={mutation.loading}>¡GOL!</button></div>
+    {mutation.error && <p className="scoreboard-popover-error">{mutation.error.message}</p>}
+  </form>;
+}
+
+function OwnGoalPopover({ match, onClose, onChanged }) {
+  const homeId = match.homeTeam?.id;
+  const awayId = match.awayTeam?.id;
+  const [scoringTeamId, setScoringTeamId] = useState(homeId);
+  const [playerId, setPlayerId] = useState('');
+  const rivalTeamId = scoringTeamId === homeId ? awayId : homeId;
+  const rivalTeamName = scoringTeamId === homeId ? match.awayTeam?.name : match.homeTeam?.name;
+  const mutation = useApiMutation((body, signal) => endpoints.addMatchGoal(match.id, body, signal), { onSuccess: () => { onChanged(); onClose(); } });
+  const chooseTeam = value => { setScoringTeamId(value); setPlayerId(''); };
+  const submit = event => {
+    event.preventDefault();
+    mutation.execute({ scoringTeamId, ownGoal: true, playerId });
+  };
+  return <form className="scoreboard-popover scoreboard-popover-danger" onSubmit={submit}>
+    <p>AUTOGOL · ¿A FAVOR DE QUIÉN?</p>
+    <div className="scoreboard-team-toggle">
+      <button type="button" className={scoringTeamId === homeId ? 'active' : ''} onClick={() => chooseTeam(homeId)}>{match.homeTeam?.name}</button>
+      <button type="button" className={scoringTeamId === awayId ? 'active' : ''} onClick={() => chooseTeam(awayId)}>{match.awayTeam?.name}</button>
+    </div>
+    <p className="scoreboard-popover-hint">LO MARCÓ UN JUGADOR DE {rivalTeamName?.toUpperCase()}</p>
+    <PlayerSelect teamId={rivalTeamId} value={playerId} onChange={setPlayerId} required/>
+    <div className="scoreboard-popover-actions"><button type="button" onClick={onClose} disabled={mutation.loading}>CANCELAR</button><button type="submit" className="scoreboard-confirm scoreboard-confirm-danger" disabled={!playerId || mutation.loading}>¡AUTOGOL!</button></div>
     {mutation.error && <p className="scoreboard-popover-error">{mutation.error.message}</p>}
   </form>;
 }
@@ -136,6 +157,7 @@ function ScoreboardControls({ match, onChanged, compact }) {
   return <div className="scoreboard-controls">
     {popover === 'home' && <GoalPopover match={match} teamId={match.homeTeam?.id} teamName={match.homeTeam?.name} onClose={() => setPopover(null)} onChanged={onChanged}/>}
     {popover === 'away' && <GoalPopover match={match} teamId={match.awayTeam?.id} teamName={match.awayTeam?.name} onClose={() => setPopover(null)} onChanged={onChanged}/>}
+    {popover === 'owngoal' && <OwnGoalPopover match={match} onClose={() => setPopover(null)} onChanged={onChanged}/>}
     {popover === 'card' && <RedCardPopover match={match} onClose={() => setPopover(null)} onChanged={onChanged}/>}
     {popover === 'goals' && <GoalList match={match} onClose={() => setPopover(null)} onChanged={onChanged}/>}
     {popover === 'redcards' && <RedCardList match={match} onClose={() => setPopover(null)} onChanged={onChanged}/>}
@@ -143,9 +165,10 @@ function ScoreboardControls({ match, onChanged, compact }) {
       <div className="scoreboard-pad">
         <button className="scoreboard-btn scoreboard-btn-goal" onClick={() => setPopover('home')}>GOL LOCAL</button>
         <button className="scoreboard-btn scoreboard-btn-goal" onClick={() => setPopover('away')}>GOL VISITA</button>
+        <button className="scoreboard-btn scoreboard-btn-owngoal" onClick={() => setPopover('owngoal')}>AUTOGOL</button>
         <button className="scoreboard-btn scoreboard-btn-card" onClick={() => setPopover('card')}>ROJA</button>
-        <button className="scoreboard-btn scoreboard-btn-finish" disabled={status.loading} onClick={() => runStatus('finish', 'FINALIZAR')}>FINALIZAR</button>
       </div>
+      <button className="scoreboard-btn scoreboard-btn-finish" disabled={status.loading} onClick={() => runStatus('finish', 'FINALIZAR')}>FINALIZAR</button>
       <div className="scoreboard-secondary-actions">{goalsButton}{redCardsButton}{revertButton}</div>
     </>}
   </div>;

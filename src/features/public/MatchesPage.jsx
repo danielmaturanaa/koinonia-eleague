@@ -100,29 +100,36 @@ export function MatchesPage({ mode = 'all', teams, navigate, initialMatchId = nu
     return () => window.clearInterval(interval);
   }, [showMulti, multiMatchesQuery.retry]);
 
+  // Compacta las casillas con partido hacia el frente (si el partido 1 termina, el 2
+  // pasa a ser el 1, sin huecos en medio) y rellena las que queden vacías con partidos
+  // en vivo disponibles. Se usa tanto en el refresco automático como al quitar/terminar
+  // una casilla a mano, para que la grilla se reordene al instante.
+  const compactMultiSlots = list => {
+    const active = list.filter(slot => slot.matchId);
+    const inactive = list.filter(slot => !slot.matchId);
+    const packed = [...active, ...inactive].slice(0, MULTI_SLOT_COUNT);
+    while (packed.length < MULTI_SLOT_COUNT) packed.push({ ...MULTI_EMPTY_SLOT });
+    const usedMatchIds = new Set(packed.filter(slot => slot.matchId).map(slot => slot.matchId));
+    const available = multiMatches.filter(match => match.status === 'live' && !usedMatchIds.has(match.id));
+    let cursor = 0;
+    return packed.map(slot => {
+      if (slot.matchId || cursor >= available.length) return slot;
+      const match = available[cursor];
+      cursor += 1;
+      return { teamId: match.homeTeam?.id ?? null, matchId: match.id };
+    });
+  };
+
   useEffect(() => {
     // Espera a que llegue el primer dato real: multiMatches parte en [] mientras
     // carga, y tomar eso como "no hay nada pendiente/en vivo" vaciaría las casillas
     // guardadas antes de tiempo.
     if (!showMulti || multiMatchesQuery.data == null) return;
     const availableIds = new Set(multiMatches.map(match => match.id));
-    const liveMatches = multiMatches.filter(match => match.status === 'live');
     setMultiSlots(current => {
-      let changed = false;
-      const cleared = current.map(slot => {
-        if (slot.matchId && !availableIds.has(slot.matchId)) { changed = true; return { ...slot, matchId: null }; }
-        return slot;
-      });
-      const usedMatchIds = new Set(cleared.filter(slot => slot.matchId).map(slot => slot.matchId));
-      const available = liveMatches.filter(match => !usedMatchIds.has(match.id));
-      let cursor = 0;
-      const filled = cleared.map(slot => {
-        if (slot.matchId || cursor >= available.length) return slot;
-        const match = available[cursor];
-        cursor += 1;
-        changed = true;
-        return { teamId: match.homeTeam?.id ?? null, matchId: match.id };
-      });
+      const withValidMatches = current.map(slot => (slot.matchId && !availableIds.has(slot.matchId)) ? { ...slot, matchId: null } : slot);
+      const filled = compactMultiSlots(withValidMatches);
+      const changed = filled.some((slot, index) => slot.matchId !== current[index]?.matchId || slot.teamId !== current[index]?.teamId);
       return changed ? filled : current;
     });
   }, [showMulti, multiMatches, multiMatchesQuery.data]);
@@ -143,7 +150,7 @@ export function MatchesPage({ mode = 'all', teams, navigate, initialMatchId = nu
   };
   const selectMultiTeam = (index, teamId) => setMultiSlots(current => current.map((slot, slotIndex) => slotIndex === index ? { teamId, matchId: null } : slot));
   const selectMultiMatch = (index, matchId) => setMultiSlots(current => current.map((slot, slotIndex) => slotIndex === index ? { ...slot, matchId } : slot));
-  const clearMultiSlot = index => setMultiSlots(current => current.map((slot, slotIndex) => slotIndex === index ? { ...MULTI_EMPTY_SLOT } : slot));
+  const clearMultiSlot = index => setMultiSlots(current => compactMultiSlots(current.map((slot, slotIndex) => slotIndex === index ? { ...MULTI_EMPTY_SLOT } : slot)));
   const title = mode === 'pending' ? 'PRÓXIMOS PARTIDOS' : mode === 'played' ? 'PARTIDOS JUGADOS' : 'CENTRO DE PARTIDOS';
 
   const refresh = () => matches.retry();

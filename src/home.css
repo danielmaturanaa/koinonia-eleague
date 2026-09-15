@@ -879,7 +879,9 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .scoreboard-btn-goal:hover { background: #164aa8; }
 .scoreboard-btn-card { border-top-color: #7a1424; background: #5c0e1c; }
 .scoreboard-btn-card:hover { background: #7a1424; }
-.scoreboard-btn-finish { border-top-color: #8a6a06; color: #111; background: var(--yellow); }
+.scoreboard-btn-owngoal { border-top-color: #2f1a47; background: #4a2a6b; }
+.scoreboard-btn-owngoal:hover { background: #613788; }
+.scoreboard-btn-finish { width: 100%; margin-top: 2px; border-top-color: #8a6a06; color: #111; background: var(--yellow); }
 .scoreboard-btn-finish:hover { background: #ffe066; }
 .scoreboard-btn-start { grid-column: 1 / -1; padding: 16px; color: #111; background: #64e329; font: 700 15px/1 'Oswald', sans-serif; }
 .scoreboard-controls-pending, .scoreboard-controls-closed { display: grid; gap: 6px; padding: 10px; }
@@ -894,6 +896,7 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .scoreboard-popover { display: grid; gap: 8px; padding: 12px 10px; }
 .scoreboard-popover > p { color: #fff; font: 600 13px/1.1 'Oswald', sans-serif; letter-spacing: .3px; }
 .scoreboard-popover-danger > p { color: #ff8f9c; }
+.scoreboard-popover p.scoreboard-popover-hint { color: #b9c9ef; font: 500 10px/1.2 'Oswald', sans-serif; letter-spacing: 0; }
 .scoreboard-select, .scoreboard-minute { width: 100%; padding: 9px 8px; border: 2px solid #274b8f; color: #fff; background: #041d58; font: 500 13px/1 'Oswald', sans-serif; }
 .scoreboard-minute::placeholder { color: #6f86bd; }
 .scoreboard-own-goal { display: flex; align-items: center; gap: 7px; padding: 7px 8px; border: 2px solid #274b8f; color: #b9c9ef; background: #041d58; font: 500 11px/1.2 'Oswald', sans-serif; }
