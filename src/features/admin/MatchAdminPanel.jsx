@@ -6,6 +6,30 @@ import { useApiMutation } from './useApiMutation.js';
 
 const teamId = team => team?.id ?? '';
 const goalPlayerName = goal => goal?.player?.name ?? goal?.playerName ?? goal?.player_name ?? 'Gol sin jugador';
+const positionOrder = ['PT', 'LD', 'DEC', 'LI', 'MC', 'MO', 'ED', 'EI', 'DC'];
+
+const isStarter = player => {
+  if (typeof player?.isStarter === 'boolean') return player.isStarter;
+  if (player?.section) return player.section === 'starters';
+  return Number(player?.squadOrder) <= 11;
+};
+const comparePlayers = (left, right) => {
+  const normalizedPositionDifference = (positionOrder.includes(left.position) ? positionOrder.indexOf(left.position) : positionOrder.length)
+    - (positionOrder.includes(right.position) ? positionOrder.indexOf(right.position) : positionOrder.length);
+  if (normalizedPositionDifference !== 0) return normalizedPositionDifference;
+  const squadDifference = (left.squadOrder ?? 999) - (right.squadOrder ?? 999);
+  return squadDifference || String(left.name ?? '').localeCompare(String(right.name ?? ''), 'es');
+};
+
+function PlayerOptions({ players }) {
+  const starters = players.filter(isStarter).sort(comparePlayers);
+  const substitutes = players.filter(player => !isStarter(player)).sort(comparePlayers);
+  const options = rows => rows.map(player => <option key={player.id} value={player.id}>{player.position ?? 'S/P'} · {player.name}</option>);
+  return <>
+    {starters.length > 0 && <optgroup label="TITULARES">{options(starters)}</optgroup>}
+    {substitutes.length > 0 && <optgroup label="SUPLENTES">{options(substitutes)}</optgroup>}
+  </>;
+}
 
 function StatusPanel({ match, onChanged }) {
   const mutation = useApiMutation((operation, signal) => endpoints[`${operation}Match`](match.id, signal), { onSuccess: onChanged });
@@ -29,7 +53,7 @@ function ResultPanel({ match, onChanged }) {
 }
 
 function useTeamPlayers(selectedTeamId) {
-  return useApiQuery(signal => selectedTeamId ? endpoints.players({ teamId: selectedTeamId, page: 1, pageSize: 100 }, signal) : Promise.resolve({ data: [] }), [selectedTeamId]);
+  return useApiQuery(signal => selectedTeamId ? endpoints.teamSquad(selectedTeamId, signal) : Promise.resolve({ data: [] }), [selectedTeamId]);
 }
 
 function GoalDeleteButton({ matchId, goal, onChanged }) {
@@ -48,7 +72,7 @@ function GoalsPanel({ match, onChanged }) {
     event.preventDefault();
     mutation.execute({ scoringTeamId: form.scoringTeamId, ...(form.playerId ? { playerId: form.playerId } : {}), ...(form.minute ? { minute: Number(form.minute) } : {}) });
   };
-  return <section className="match-admin-section"><form className="admin-form match-event-form" onSubmit={submit}><label>EQUIPO<select required value={form.scoringTeamId} onChange={event => setForm(current => ({ ...current, scoringTeamId: event.target.value, playerId: '' }))}><option value={homeId}>{match.homeTeam?.name}</option><option value={awayId}>{match.awayTeam?.name}</option></select></label><label>JUGADOR OPCIONAL<select value={form.playerId} onChange={event => setForm(current => ({ ...current, playerId: event.target.value }))}><option value="">GOL SIN JUGADOR</option>{(players.data ?? []).map(player => <option key={player.id} value={player.id}>{player.name}</option>)}</select></label><label>MINUTO OPCIONAL<input type="number" min="0" max="130" step="1" value={form.minute} onChange={event => setForm(current => ({ ...current, minute: event.target.value }))}/></label><button className="action-button" disabled={mutation.loading}>AGREGAR GOL</button><FormFeedback mutation={mutation}/></form><div className="event-admin-list">{match.goals?.length ? match.goals.map(goal => <article key={goal.id}><span><b>{goal.minute ? `${goal.minute}'` : '—'}</b> {goalPlayerName(goal)}</span><GoalDeleteButton matchId={match.id} goal={goal} onChanged={onChanged}/></article>) : <p>SIN GOLES REGISTRADOS.</p>}</div></section>;
+  return <section className="match-admin-section"><form className="admin-form match-event-form" onSubmit={submit}><label>EQUIPO<select required value={form.scoringTeamId} onChange={event => setForm(current => ({ ...current, scoringTeamId: event.target.value, playerId: '' }))}><option value={homeId}>{match.homeTeam?.name}</option><option value={awayId}>{match.awayTeam?.name}</option></select></label><label>JUGADOR OPCIONAL<select value={form.playerId} onChange={event => setForm(current => ({ ...current, playerId: event.target.value }))}><option value="">GOL SIN JUGADOR</option><PlayerOptions players={players.data ?? []}/></select></label><label>MINUTO OPCIONAL<input type="number" min="0" max="130" step="1" value={form.minute} onChange={event => setForm(current => ({ ...current, minute: event.target.value }))}/></label><button className="action-button" disabled={mutation.loading}>AGREGAR GOL</button><FormFeedback mutation={mutation}/></form><div className="event-admin-list">{match.goals?.length ? match.goals.map(goal => <article key={goal.id}><span><b>{goal.minute ? `${goal.minute}'` : '—'}</b> {goalPlayerName(goal)}</span><GoalDeleteButton matchId={match.id} goal={goal} onChanged={onChanged}/></article>) : <p>SIN GOLES REGISTRADOS.</p>}</div></section>;
 }
 
 function RedCardsPanel({ match, onChanged }) {
@@ -61,7 +85,7 @@ function RedCardsPanel({ match, onChanged }) {
     event.preventDefault();
     if (window.confirm('¿REGISTRAR ESTA TARJETA ROJA Y LA SUSPENSIÓN ASOCIADA?')) mutation.execute({ teamId: form.teamId, playerId: form.playerId, ...(form.minute ? { minute: Number(form.minute) } : {}) });
   };
-  return <section className="match-admin-section"><form className="admin-form match-event-form" onSubmit={submit}><label>EQUIPO<select value={form.teamId} onChange={event => setForm({ teamId: event.target.value, playerId: '', minute: form.minute })}><option value={homeId}>{match.homeTeam?.name}</option><option value={awayId}>{match.awayTeam?.name}</option></select></label><label>JUGADOR<select required value={form.playerId} onChange={event => setForm(current => ({ ...current, playerId: event.target.value }))}><option value="">SELECCIONAR</option>{(players.data ?? []).map(player => <option key={player.id} value={player.id}>{player.name}</option>)}</select></label><label>MINUTO OPCIONAL<input type="number" min="0" max="130" step="1" value={form.minute} onChange={event => setForm(current => ({ ...current, minute: event.target.value }))}/></label><button className="action-button danger" disabled={!form.playerId || mutation.loading}>REGISTRAR ROJA</button><FormFeedback mutation={mutation}/></form><p>LAS ROJAS SOLO SON VÁLIDAS CON EL PARTIDO EN VIVO.</p></section>;
+  return <section className="match-admin-section"><form className="admin-form match-event-form" onSubmit={submit}><label>EQUIPO<select value={form.teamId} onChange={event => setForm({ teamId: event.target.value, playerId: '', minute: form.minute })}><option value={homeId}>{match.homeTeam?.name}</option><option value={awayId}>{match.awayTeam?.name}</option></select></label><label>JUGADOR<select required value={form.playerId} onChange={event => setForm(current => ({ ...current, playerId: event.target.value }))}><option value="">SELECCIONAR</option><PlayerOptions players={players.data ?? []}/></select></label><label>MINUTO OPCIONAL<input type="number" min="0" max="130" step="1" value={form.minute} onChange={event => setForm(current => ({ ...current, minute: event.target.value }))}/></label><button className="action-button danger" disabled={!form.playerId || mutation.loading}>REGISTRAR ROJA</button><FormFeedback mutation={mutation}/></form><p>LAS ROJAS SOLO SON VÁLIDAS CON EL PARTIDO EN VIVO.</p></section>;
 }
 
 function WinnerPanel({ match, onChanged }) {
