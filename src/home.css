@@ -631,7 +631,7 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .event-admin-list article { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 5px; padding: 4px 6px; border-bottom: 1px solid #aa9e86; background: #eee4cc; font: 500 11px/1 'Roboto Condensed', sans-serif; }
 .event-admin-list article button { padding: 4px 6px; border: 1px solid #ffd42a; color: #fff; background: #a90020; font: 500 9px/1 'Oswald', sans-serif; }
 .status-actions { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-.club-detail-tabs { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 4px; margin: 10px 0 8px; padding: 5px; border: 3px solid #10285b; background: #062764; }
+.club-detail-tabs { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; margin: 10px 0 8px; padding: 5px; border: 3px solid #10285b; background: #062764; }
 .club-detail-tabs button { min-width: 0; padding: 8px 5px; border: 2px solid #72b4e3; color: #fff; background: #062764; font: 500 12px/1 'Oswald', sans-serif; }
 .club-detail-tabs button.active { color: #111; border-color: #fff2a0; background: #ffd42a; }
 .club-tab-panel { height: 430px; min-height: 0; padding: 9px; border: 3px double #625d4e; background: #f5ecd7 url('/paper-grain.svg'); overflow: hidden; }

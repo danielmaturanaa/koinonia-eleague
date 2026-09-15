@@ -13,7 +13,7 @@ function MediaImageField({ label, entityType, entityId, onUploaded }) {
   return <div className="media-image-field"><label>{label}<input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" disabled={upload.loading} onChange={event => { const file = event.target.files?.[0]; if (file) upload.execute(file); }}/></label><small>JPG, PNG, WEBP, GIF O AVIF · MÁXIMO 5 MB</small><FormFeedback mutation={upload}/></div>;
 }
 
-function ProfileForm({ team, onChanged }) {
+export function ProfileForm({ team, onChanged }) {
   const [form, setForm] = useState({ name: team.name ?? '', imageUrl: team.imageUrl ?? '' });
   useEffect(() => setForm({ name: team.name ?? '', imageUrl: team.imageUrl ?? '' }), [team]);
   const mutation = useApiMutation((body, signal) => endpoints.updateTeam(team.id, body, signal), { onSuccess: onChanged });
