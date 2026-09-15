@@ -4,8 +4,6 @@ export const navigationItems = [
   { label: 'Clasificación', icon: 'chart', path: '/clasificacion' },
   { label: 'Torneos', icon: 'cup', path: '/torneos' },
   { label: 'Equipos', icon: 'shirt', path: '/equipos' },
-  { label: 'Transferencias', icon: 'arrows', path: '/transferencias' },
-  { label: 'Jugadores', icon: 'player', path: '/equipos/jugadores' },
   { label: 'Selecciones', icon: 'globe', path: '/equipos/selecciones' },
   { label: 'Noticias', icon: 'news', path: '/noticias' },
   { label: 'Reglas', icon: 'book', path: '/reglas' },

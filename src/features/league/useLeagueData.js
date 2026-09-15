@@ -58,7 +58,7 @@ export function useLeagueData(teamId) {
     Promise.all([
       getData(`/teams/${teamId}`, { signal: controller.signal }),
       getData(`/teams/${teamId}/squad`, { signal: controller.signal }),
-      getData(`/teams/${teamId}/matches`, { signal: controller.signal }),
+      getData(`/teams/${teamId}/matches`, { query: { page: 1, pageSize: 100 }, signal: controller.signal }),
       getData(`/history/team/${teamId}`, { signal: controller.signal })
         .then(data => ({ data: list(data), error: null }))
         .catch(error => ({ data: [], error })),

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { defaultFormationPositions } from '../../utils/formationPositions.js';
 import { teamBalance, teamCoachName, teamCoachPhoto } from '../../utils/teamPresentation.js';
+import { readPersonProfile, savePersonProfile } from '../../utils/personProfile.js';
 import { FormFeedback } from './FormFeedback.jsx';
 import { useApiMutation } from './useApiMutation.js';
 
@@ -22,31 +23,52 @@ export function ProfileForm({ team, onChanged }) {
   return <form className="admin-form" onSubmit={submit}><label>NOMBRE<input required value={form.name} onChange={event => setForm(current => ({ ...current, name: event.target.value }))}/></label><MediaImageField label="SUBIR NUEVO EMBLEMA" entityType="team" entityId={team.id} onUploaded={imageUrl => setForm(current => ({ ...current, imageUrl }))}/><button className="action-button" disabled={mutation.loading}>GUARDAR PERFIL</button><FormFeedback mutation={mutation}/></form>;
 }
 
-export function PresidentForm({ team, onChanged }) {
+export function PresidentForm({ team, onChanged, onSaved }) {
   const president = team.president;
-  const [form, setForm] = useState({ name: president?.name ?? team.presidentName ?? '', imageUrl: president?.imageUrl ?? '' });
-  useEffect(() => setForm({ name: president?.name ?? team.presidentName ?? '', imageUrl: president?.imageUrl ?? '' }), [president?.id, president?.name, president?.imageUrl, team.presidentName]);
-  const mutation = useApiMutation((body, signal) => endpoints.updatePresident(president.id, body, signal), { onSuccess: onChanged });
+  const metadata = readPersonProfile('president', president);
+  const [form, setForm] = useState({ name: president?.name ?? team.presidentName ?? '', imageUrl: president?.imageUrl ?? '', age: metadata.age, country: metadata.country });
+  useEffect(() => {
+    const nextMetadata = readPersonProfile('president', president);
+    setForm({ name: president?.name ?? team.presidentName ?? '', imageUrl: president?.imageUrl ?? '', age: nextMetadata.age, country: nextMetadata.country });
+  }, [president?.id, president?.name, president?.imageUrl, team.presidentName]);
+  const mutation = useApiMutation((body, signal) => endpoints.updatePresident(president.id, body, signal), { onSuccess: result => {
+    savePersonProfile('president', president.id, form);
+    onChanged?.(result);
+    onSaved?.();
+  } });
   if (!president?.id) return <p className="admin-empty">ESTE EQUIPO NO TIENE UN PRESIDENTE EDITABLE ASIGNADO.</p>;
-  return <form className="admin-form" onSubmit={event => { event.preventDefault(); mutation.execute(form); }}><label>NOMBRE DEL PRESIDENTE<input required value={form.name} onChange={event => setForm(current => ({ ...current, name: event.target.value }))}/></label><MediaImageField label="SUBIR FOTO DEL PRESIDENTE" entityType="president" entityId={president.id} onUploaded={imageUrl => setForm(current => ({ ...current, imageUrl }))}/><button className="action-button" disabled={mutation.loading}>GUARDAR PRESIDENTE</button><FormFeedback mutation={mutation}/></form>;
+  return <form className="admin-form person-editor-form" onSubmit={event => { event.preventDefault(); mutation.execute({ name: form.name, imageUrl: form.imageUrl }); }}><label>NOMBRE DEL PRESIDENTE<input required value={form.name} onChange={event => setForm(current => ({ ...current, name: event.target.value }))}/></label><label>EDAD<input type="number" min="1" max="120" value={form.age} onChange={event => setForm(current => ({ ...current, age: event.target.value }))}/></label><label>PAÍS<input value={form.country} onChange={event => setForm(current => ({ ...current, country: event.target.value }))} placeholder="PAÍS"/></label><MediaImageField label="SUBIR FOTO DEL PRESIDENTE" entityType="president" entityId={president.id} onUploaded={imageUrl => setForm(current => ({ ...current, imageUrl }))}/><button className="action-button" disabled={mutation.loading}>GUARDAR PRESIDENTE</button><FormFeedback mutation={mutation}/></form>;
 }
 
-export function CoachForm({ team, onChanged }) {
+export function CoachForm({ team, onChanged, onSaved }) {
   const coachId = team.coach?.id ?? team.manager?.id ?? team.coachId ?? team.managerId;
+  const coach = team.coach ?? team.manager ?? (coachId ? { id: coachId } : null);
   const presentedName = teamCoachName(team);
   const presentedPhoto = teamCoachPhoto(team);
+  const metadata = readPersonProfile('coach', coach);
   const [form, setForm] = useState({
     name: presentedName === 'No informado' ? '' : presentedName,
     imageUrl: presentedPhoto,
+    age: metadata.age,
+    country: metadata.country,
   });
-  useEffect(() => setForm({
-    name: presentedName === 'No informado' ? '' : presentedName,
-    imageUrl: presentedPhoto,
-  }), [coachId, presentedName, presentedPhoto]);
+  useEffect(() => {
+    const nextMetadata = readPersonProfile('coach', coach);
+    setForm({
+      name: presentedName === 'No informado' ? '' : presentedName,
+      imageUrl: presentedPhoto,
+      age: nextMetadata.age,
+      country: nextMetadata.country,
+    });
+  }, [coachId, presentedName, presentedPhoto]);
   const mutation = useApiMutation((body, signal) => coachId
     ? endpoints.updateCoach(coachId, body, signal)
-    : endpoints.createCoach({ ...body, teamId: team.id }, signal), { onSuccess: onChanged });
-  return <form className="admin-form" onSubmit={event => { event.preventDefault(); mutation.execute({ name: form.name.trim(), imageUrl: form.imageUrl }); }}><label>NOMBRE DEL DT<input required value={form.name} onChange={event => setForm(current => ({ ...current, name: event.target.value }))} placeholder="DIRECTOR TÉCNICO"/></label><MediaImageField label="SUBIR FOTO DEL DT" entityType="coach" entityId={coachId} onUploaded={imageUrl => setForm(current => ({ ...current, imageUrl }))}/><button className="action-button" disabled={!form.name.trim() || mutation.loading}>GUARDAR DT</button><FormFeedback mutation={mutation}/></form>;
+    : endpoints.createCoach({ ...body, teamId: team.id }, signal), { onSuccess: result => {
+      savePersonProfile('coach', coachId ?? result?.data?.id ?? result?.id, form);
+      onChanged?.(result);
+      onSaved?.();
+    } });
+  return <form className="admin-form person-editor-form" onSubmit={event => { event.preventDefault(); mutation.execute({ name: form.name.trim(), imageUrl: form.imageUrl }); }}><label>NOMBRE DEL DT<input required value={form.name} onChange={event => setForm(current => ({ ...current, name: event.target.value }))} placeholder="DIRECTOR TÉCNICO"/></label><label>EDAD<input type="number" min="1" max="120" value={form.age} onChange={event => setForm(current => ({ ...current, age: event.target.value }))}/></label><label>PAÍS<input value={form.country} onChange={event => setForm(current => ({ ...current, country: event.target.value }))} placeholder="PAÍS"/></label><MediaImageField label="SUBIR FOTO DEL DT" entityType="coach" entityId={coachId} onUploaded={imageUrl => setForm(current => ({ ...current, imageUrl }))}/><button className="action-button" disabled={!form.name.trim() || mutation.loading}>GUARDAR DT</button><FormFeedback mutation={mutation}/></form>;
 }
 
 function TeamProfileEditor({ team, onChanged }) {
