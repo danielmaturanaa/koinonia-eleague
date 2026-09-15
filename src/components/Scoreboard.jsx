@@ -86,7 +86,7 @@ function ScoreboardControls({ match, onChanged, compact }) {
 
   if (match.status === 'pending') return <div className="scoreboard-controls scoreboard-controls-pending">
     <button className="scoreboard-btn scoreboard-btn-start" disabled={status.loading} onClick={() => runStatus('start', 'INICIAR')}>▶ INICIAR PARTIDO</button>
-    {!compact && <button className="scoreboard-btn-text" disabled={status.loading} onClick={() => runStatus('cancel', 'CANCELAR')}>CANCELAR</button>}
+    {!compact && <button className="scoreboard-btn-text scoreboard-btn-cancel" disabled={status.loading} onClick={() => runStatus('cancel', 'CANCELAR', '¿CANCELAR ESTE PARTIDO? QUEDARÁ ANULADO, NO SE JUGARÁ.')}>✕ CANCELAR PARTIDO (NO SE JUGARÁ)</button>}
   </div>;
 
   if (match.status === 'finished') return <div className="scoreboard-controls scoreboard-controls-closed">

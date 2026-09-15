@@ -899,6 +899,8 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .scoreboard-secondary-actions { padding: 6px 2px 2px; border-top: 1px solid #10285b; }
 .scoreboard-btn-revert { width: 100%; border-color: #5c0e1c; color: #d98a94; font-size: 10px; }
 .scoreboard-btn-revert:hover { color: #fff; border-color: #a90020; background: #5c0e1c; }
+.scoreboard-btn-cancel { border-color: #5c0e1c; color: #d98a94; }
+.scoreboard-btn-cancel:hover { color: #fff; border-color: #a90020; background: #5c0e1c; }
 
 .scoreboard-popover { display: grid; gap: 8px; padding: 12px 10px; }
 .scoreboard-popover > p { color: #fff; font: 600 13px/1.1 'Oswald', sans-serif; letter-spacing: .3px; }
