@@ -6,7 +6,7 @@ import { useApiMutation } from './useApiMutation.js';
 
 const teamId = team => team?.id ?? '';
 const goalPlayerName = goal => goal?.player?.name ?? goal?.playerName ?? goal?.player_name ?? 'Gol sin jugador';
-const positionOrder = ['PT', 'LD', 'DEC', 'LI', 'MC', 'MO', 'ED', 'EI', 'DC'];
+const positionOrder = ['DC', 'EI', 'ED', 'MO', 'MC', 'LI', 'LD', 'DEC', 'PT'];
 
 const isStarter = player => {
   if (typeof player?.isStarter === 'boolean') return player.isStarter;
