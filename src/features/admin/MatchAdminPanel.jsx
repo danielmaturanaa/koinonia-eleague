@@ -69,14 +69,15 @@ function GoalDeleteButton({ matchId, goal, onChanged }) {
 function GoalsPanel({ match, onChanged }) {
   const homeId = teamId(match.homeTeam);
   const awayId = teamId(match.awayTeam);
-  const [form, setForm] = useState({ scoringTeamId: homeId, playerId: '', minute: '' });
-  const players = useTeamPlayers(form.scoringTeamId);
+  const [form, setForm] = useState({ scoringTeamId: homeId, playerId: '', ownGoal: false });
+  const rosterTeamId = form.ownGoal ? (form.scoringTeamId === homeId ? awayId : homeId) : form.scoringTeamId;
+  const players = useTeamPlayers(rosterTeamId);
   const mutation = useApiMutation((body, signal) => endpoints.addMatchGoal(match.id, body, signal), { onSuccess: onChanged });
   const submit = event => {
     event.preventDefault();
-    mutation.execute({ scoringTeamId: form.scoringTeamId, ...(form.playerId ? { playerId: form.playerId } : {}), ...(form.minute ? { minute: Number(form.minute) } : {}) });
+    mutation.execute({ scoringTeamId: form.scoringTeamId, ownGoal: form.ownGoal, ...(form.playerId ? { playerId: form.playerId } : {}) });
   };
-  return <section className="match-admin-section"><form className="admin-form match-event-form" onSubmit={submit}><label>EQUIPO<select required value={form.scoringTeamId} onChange={event => setForm(current => ({ ...current, scoringTeamId: event.target.value, playerId: '' }))}><option value={homeId}>{match.homeTeam?.name}</option><option value={awayId}>{match.awayTeam?.name}</option></select></label><label>JUGADOR OPCIONAL<select value={form.playerId} onChange={event => setForm(current => ({ ...current, playerId: event.target.value }))}><option value="">GOL SIN JUGADOR</option><PlayerOptions players={players.data ?? []}/></select></label><label>MINUTO OPCIONAL<input type="number" min="0" max="130" step="1" value={form.minute} onChange={event => setForm(current => ({ ...current, minute: event.target.value }))}/></label><button className="action-button" disabled={mutation.loading}>AGREGAR GOL</button><FormFeedback mutation={mutation}/></form><div className="event-admin-list">{match.goals?.length ? match.goals.map(goal => <article key={goal.id}><span><b>{goal.minute ? `${goal.minute}'` : '—'}</b> {goalPlayerName(goal)}</span><GoalDeleteButton matchId={match.id} goal={goal} onChanged={onChanged}/></article>) : <p>SIN GOLES REGISTRADOS.</p>}</div></section>;
+  return <section className="match-admin-section"><form className="admin-form match-event-form" onSubmit={submit}><label>EQUIPO<select required value={form.scoringTeamId} onChange={event => setForm(current => ({ ...current, scoringTeamId: event.target.value, playerId: '' }))}><option value={homeId}>{match.homeTeam?.name}</option><option value={awayId}>{match.awayTeam?.name}</option></select></label><label className="checkbox-field"><input type="checkbox" checked={form.ownGoal} onChange={event => setForm(current => ({ ...current, ownGoal: event.target.checked, playerId: '' }))}/> AUTOGOL DEL EQUIPO RIVAL</label><label>{form.ownGoal ? 'JUGADOR QUE LO MARCÓ' : 'JUGADOR OPCIONAL'}<select required={form.ownGoal} value={form.playerId} onChange={event => setForm(current => ({ ...current, playerId: event.target.value }))}><option value="">{form.ownGoal ? 'SELECCIONAR JUGADOR' : 'GOL SIN JUGADOR'}</option><PlayerOptions players={players.data ?? []}/></select></label><button className="action-button" disabled={mutation.loading || (form.ownGoal && !form.playerId)}>AGREGAR GOL</button><FormFeedback mutation={mutation}/></form><div className="event-admin-list">{match.goals?.length ? match.goals.map(goal => <article key={goal.id}><span>{goalPlayerName(goal)}{goal.isOwnGoal ? ' (autogol)' : ''}</span><GoalDeleteButton matchId={match.id} goal={goal} onChanged={onChanged}/></article>) : <p>SIN GOLES REGISTRADOS.</p>}</div></section>;
 }
 
 function RedCardsPanel({ match, onChanged }) {

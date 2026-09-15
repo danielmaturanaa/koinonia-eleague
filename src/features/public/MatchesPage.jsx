@@ -14,7 +14,14 @@ const goalPlayerName = goal => goal?.player?.name ?? goal?.playerName ?? goal?.p
 const goalTeamId = goal => goal?.scoringTeam?.id ?? goal?.team?.id ?? goal?.teamId ?? goal?.team_id ?? '';
 
 function GoalColumn({ team, goals, side }) {
-  return <section className={`goal-team-column goal-team-${side}`}><h4>{team?.name ?? (side === 'home' ? 'LOCAL' : 'VISITA')}</h4>{goals.length ? goals.map(goal => <p key={goal.id}><b>{goal.minute ? `${goal.minute}'` : '—'}</b><span>{goalPlayerName(goal)}</span></p>) : <p className="goal-team-empty">Sin goles</p>}</section>;
+  return <section className={`goal-team-column goal-team-${side}`}><h4>{team?.name ?? (side === 'home' ? 'LOCAL' : 'VISITA')}</h4>{goals.length ? goals.map(goal => <p key={goal.id}><b>{goal.minute ? `${goal.minute}'` : '—'}</b><span>{goalPlayerName(goal)}{goal.isOwnGoal ? ' (autogol)' : ''}</span></p>) : <p className="goal-team-empty">Sin goles</p>}</section>;
+}
+
+function TeamChipBar({ teams, value, onChange }) {
+  return <div className="team-chip-bar" role="group" aria-label="Filtrar por equipo">
+    <button className={`team-chip ${value === '' ? 'active' : ''}`} onClick={() => onChange('')}>TODOS</button>
+    {[...teams].sort((a, b) => a.name.localeCompare(b.name, 'es')).map(team => <button className={`team-chip ${value === team.id ? 'active' : ''}`} key={team.id} title={team.name} onClick={() => onChange(team.id)}><TeamMark team={team}/><span>{team.name}</span></button>)}
+  </div>;
 }
 
 function CreateMatchForm({ tournaments, teams, onChanged }) {
@@ -45,8 +52,8 @@ export function MatchesPage({ mode = 'all', teams, navigate, initialMatchId = nu
   const [filters, setFilters] = useState({ tournament: '', team: '', status: initialStatus, page: 1 });
   const [selectedId, setSelectedId] = useState(initialMatchId);
   const [showCreate, setShowCreate] = useState(false);
-  const tournaments = useApiQuery(signal => endpoints.tournaments({ page: 1, pageSize: 100 }, signal));
-  const matches = useApiQuery(signal => endpoints.matches({ ...filters, pageSize: 20 }, signal), Object.values(filters));
+  const tournaments = useApiQuery(signal => endpoints.tournaments({ status: 'active', page: 1, pageSize: 100 }, signal));
+  const matches = useApiQuery(signal => endpoints.matches({ ...filters, activeOnly: 1, pageSize: 20 }, signal), Object.values(filters));
   const teamIndex = useMemo(() => new Map(teams.map(team => [team.id, team])), [teams]);
   const resolveTeam = team => ({ ...team, ...(teamIndex.get(team?.id ?? team?.team_id) ?? {}) });
   const rows = Array.isArray(matches.data) ? matches.data : [];
@@ -56,12 +63,17 @@ export function MatchesPage({ mode = 'all', teams, navigate, initialMatchId = nu
     if (selectedId) backToList();
     setFilters(current => ({ ...current, [event.target.name]: event.target.value, page: 1 }));
   };
+  const selectTeamFilter = teamId => {
+    if (selectedId) backToList();
+    setFilters(current => ({ ...current, team: teamId, page: 1 }));
+  };
   const title = mode === 'pending' ? 'PRÓXIMOS PARTIDOS' : mode === 'played' ? 'PARTIDOS JUGADOS' : 'CENTRO DE PARTIDOS';
 
   const refresh = () => matches.retry();
   return <main className="newspaper data-page"><section className="data-paper"><PageHeader kicker="CALENDARIO Y ACTAS" title={title}><button className="page-action" onClick={() => setShowCreate(value => !value)}>{showCreate ? 'CERRAR ALTA' : '+ CREAR PARTIDO'}</button></PageHeader>
     {showCreate && <CreateMatchForm tournaments={tournaments.data ?? []} teams={teams} onChanged={refresh}/>}
-    <div className="filter-bar"><select name="tournament" value={filters.tournament} onChange={change} aria-label="Torneo"><option value="">TODOS LOS TORNEOS</option>{(tournaments.data ?? []).map(item => <option value={item.id} key={item.id}>{item.name}</option>)}</select><select name="team" value={filters.team} onChange={change} aria-label="Equipo"><option value="">TODOS LOS EQUIPOS</option>{teams.map(team => <option value={team.id} key={team.id}>{team.name}</option>)}</select><select name="status" value={filters.status} onChange={change} aria-label="Estado"><option value="">TODOS LOS ESTADOS</option>{Object.entries(labels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></div>
+    <TeamChipBar teams={teams} value={filters.team} onChange={selectTeamFilter}/>
+    <div className="filter-bar"><select name="tournament" value={filters.tournament} onChange={change} aria-label="Torneo"><option value="">TORNEOS ACTIVOS</option>{(tournaments.data ?? []).map(item => <option value={item.id} key={item.id}>{item.name}</option>)}</select><select name="status" value={filters.status} onChange={change} aria-label="Estado"><option value="">TODOS LOS ESTADOS</option>{Object.entries(labels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></div>
     {!selectedId && <DataState query={matches}/>} {selectedId
       ? <MatchDetail key={selectedId} matchId={selectedId} onChanged={refresh} onBack={backToList} resolveTeam={resolveTeam} teams={teams}/>
       : !matches.loading && !matches.error && <div className="data-list matches-full-list">{rows.map(match => <button className="match-card" key={match.id} onClick={() => selectMatch(match.id)}><small>{match.tournament?.name ?? 'TORNEO'} · {match.groupLabel ? `GRUPO ${match.groupLabel}` : `FECHA ${match.roundNumber ?? '—'}`}</small><span><TeamMark team={resolveTeam(match.homeTeam)}/><b>{match.homeTeam?.name}</b><strong>{match.homeScore ?? '–'} : {match.awayScore ?? '–'}</strong><b>{match.awayTeam?.name}</b><TeamMark team={resolveTeam(match.awayTeam)}/></span><i className={`status status-${match.status}`}>{labels[match.status] ?? match.status}</i></button>)}</div>}

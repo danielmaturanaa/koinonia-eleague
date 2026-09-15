@@ -63,7 +63,7 @@ function Slot({ index, teamId, matchId, mode, matches, teams, onSelectTeam, onSe
 
 export function MultiMatchPage({ onBack }) {
   const [slots, setSlots] = useState(loadStoredSlots);
-  const matchesQuery = useApiQuery(signal => endpoints.matches({ pageSize: 100, page: 1 }, signal));
+  const matchesQuery = useApiQuery(signal => endpoints.matches({ activeOnly: 1, pageSize: 100, page: 1 }, signal));
   const teamsQuery = useApiQuery(signal => endpoints.teams({ pageSize: 100 }, signal));
   const teams = Array.isArray(teamsQuery.data) ? teamsQuery.data : [];
   const matches = useMemo(() => (Array.isArray(matchesQuery.data) ? matchesQuery.data : []).filter(match => match.status === 'pending' || match.status === 'live'), [matchesQuery.data]);

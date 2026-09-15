@@ -35,18 +35,21 @@ function PlayerSelect({ teamId, value, onChange, required }) {
 }
 
 function GoalPopover({ match, teamId, teamName, onClose, onChanged }) {
+  const rivalTeamId = teamId === match.homeTeam?.id ? match.awayTeam?.id : match.homeTeam?.id;
+  const rivalTeamName = teamId === match.homeTeam?.id ? match.awayTeam?.name : match.homeTeam?.name;
+  const [ownGoal, setOwnGoal] = useState(false);
   const [playerId, setPlayerId] = useState('');
-  const [minute, setMinute] = useState('');
   const mutation = useApiMutation((body, signal) => endpoints.addMatchGoal(match.id, body, signal), { onSuccess: () => { onChanged(); onClose(); } });
+  const toggleOwnGoal = value => { setOwnGoal(value); setPlayerId(''); };
   const submit = event => {
     event.preventDefault();
-    mutation.execute({ scoringTeamId: teamId, ...(playerId ? { playerId } : {}), ...(minute ? { minute: Number(minute) } : {}) });
+    mutation.execute({ scoringTeamId: teamId, ownGoal, ...(playerId ? { playerId } : {}) });
   };
   return <form className="scoreboard-popover" onSubmit={submit}>
     <p>GOL DE {teamName?.toUpperCase()}</p>
-    <PlayerSelect teamId={teamId} value={playerId} onChange={setPlayerId}/>
-    <input className="scoreboard-minute" type="number" min="0" max="130" step="1" placeholder="MIN." value={minute} onChange={event => setMinute(event.target.value)}/>
-    <div className="scoreboard-popover-actions"><button type="button" onClick={onClose} disabled={mutation.loading}>CANCELAR</button><button type="submit" className="scoreboard-confirm" disabled={mutation.loading}>¡GOL!</button></div>
+    <label className="scoreboard-own-goal"><input type="checkbox" checked={ownGoal} onChange={event => toggleOwnGoal(event.target.checked)}/> AUTOGOL DE {rivalTeamName?.toUpperCase()}</label>
+    <PlayerSelect teamId={ownGoal ? rivalTeamId : teamId} value={playerId} onChange={setPlayerId} required={ownGoal}/>
+    <div className="scoreboard-popover-actions"><button type="button" onClick={onClose} disabled={mutation.loading}>CANCELAR</button><button type="submit" className="scoreboard-confirm" disabled={mutation.loading || (ownGoal && !playerId)}>¡GOL!</button></div>
     {mutation.error && <p className="scoreboard-popover-error">{mutation.error.message}</p>}
   </form>;
 }
@@ -165,7 +168,7 @@ export function Scoreboard({ matchId, mode = 'view', density = 'tile', onOpen, t
       </div>
       <div className="scoreboard-team scoreboard-team-away"><TeamMark team={resolveTeam(match.awayTeam)}/><b>{match.awayTeam?.name}</b></div>
     </div>
-    {lastGoal && <p className="scoreboard-ticker">⚽ {lastGoal.minute ? `${lastGoal.minute}' ` : ''}{goalPlayerName(lastGoal)} ({lastGoalTeamName})</p>}
+    {lastGoal && <p className="scoreboard-ticker">⚽ {goalPlayerName(lastGoal)}{lastGoal.isOwnGoal ? ' (autogol)' : ''} ({lastGoalTeamName})</p>}
     {mode === 'manage' && <ScoreboardControls match={match} onChanged={detail.retry} compact={density === 'tile'}/>}
   </article>;
 }
