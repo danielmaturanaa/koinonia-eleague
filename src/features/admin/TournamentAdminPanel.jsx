@@ -1,5 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
+import { DataState } from '../public/DataStates.jsx';
+import { useApiQuery } from '../public/useApiQuery.js';
 import { FormFeedback } from './FormFeedback.jsx';
 import { useApiMutation } from './useApiMutation.js';
 
@@ -9,13 +11,36 @@ function MutationAction({ action, label, confirmText, onChanged, danger = false 
   return <div className="mutation-action"><button className={`action-button ${danger ? 'danger' : ''}`} disabled={mutation.loading} onClick={run}>{label}</button><FormFeedback mutation={mutation}/></div>;
 }
 
+function TournamentAwardsPanel({ tournament, onChanged }) {
+  const standings = useApiQuery(signal => endpoints.standings(tournament.id, {}, signal), [tournament.id]);
+  const rows = Array.isArray(standings.data) ? standings.data : [];
+  const [amounts, setAmounts] = useState({});
+  useEffect(() => setAmounts({}), [tournament.id]);
+  const grants = rows.map((row, index) => ({ row, position: index + 1, amount: Number(amounts[row.team_id] ?? 0) })).filter(item => item.amount > 0);
+  const total = grants.reduce((sum, item) => sum + item.amount, 0);
+  const mutation = useApiMutation(async signal => {
+    for (const grant of grants) {
+      await endpoints.creditTeam(grant.row.team_id, {
+        amount: grant.amount,
+        reason: `Premio ${tournament.name} · Puesto ${grant.position}`,
+      }, signal);
+    }
+    return { data: { awardedTeams: grants.length, total } };
+  }, { onSuccess: () => { setAmounts({}); onChanged?.(); } });
+  const save = () => {
+    if (!grants.length) return;
+    if (window.confirm(`¿OTORGAR ${total.toLocaleString('es-CL')} GP EN PREMIOS A ${grants.length} CLUBES? ESTA OPERACIÓN MODIFICARÁ SUS PRESUPUESTOS.`)) mutation.execute();
+  };
+  return <section className="tournament-awards"><header><div><h3>CLASIFICACIÓN FINAL Y PREMIOS</h3><p>INGRESA EL PREMIO DE CADA CLUB. LOS MONTOS SE ACREDITARÁN CON UN ÚNICO GUARDADO.</p></div><b>{total.toLocaleString('es-CL')} GP</b></header><DataState query={standings}/>{rows.length > 0 && <div className="tournament-awards-table"><table><thead><tr><th>CLUB</th><th>PTS</th><th>PREMIO GP</th></tr></thead><tbody>{rows.map(row => <tr key={row.team_id}><td>{row.name}</td><td><b>{row.points}</b></td><td><input aria-label={`Premio para ${row.name}`} type="number" min="0" step="1" value={amounts[row.team_id] ?? ''} onChange={event => setAmounts(current => ({ ...current, [row.team_id]: event.target.value }))} placeholder="0"/></td></tr>)}</tbody></table></div>}<button className="action-button tournament-awards-save" disabled={!grants.length || mutation.loading} onClick={save}>GUARDAR Y OTORGAR PREMIOS</button><FormFeedback mutation={mutation}/></section>;
+}
+
 function StatusPanel({ tournament, onChanged, onDeleted }) {
   const [status, setStatus] = useState(tournament.status === 'completed' ? 'completed' : 'active');
   const update = useApiMutation((value, signal) => endpoints.updateTournamentStatus(tournament.id, value, signal), { onSuccess: onChanged });
   const remove = useApiMutation(signal => endpoints.deleteTournament(tournament.id, signal), { onSuccess: onDeleted });
   const save = () => { if (window.confirm(`¿CAMBIAR EL ESTADO DE ${tournament.name} A ${status.toUpperCase()}?`)) update.execute(status); };
   const deleteTournament = () => { if (window.confirm(`¿ELIMINAR DEFINITIVAMENTE ${tournament.name} Y SUS DATOS RELACIONADOS?`)) remove.execute(); };
-  return <section className="tournament-admin-section"><p>ESTADO ACTUAL: <b>{String(tournament.status).toUpperCase()}</b></p><div className="admin-form compact-form"><label>NUEVO ESTADO<select value={status} onChange={event => setStatus(event.target.value)}><option value="active">ACTIVO</option><option value="completed">COMPLETADO</option></select></label><button className="action-button" disabled={update.loading} onClick={save}>ACTUALIZAR ESTADO</button><button className="action-button danger" disabled={remove.loading} onClick={deleteTournament}>ELIMINAR TORNEO</button><FormFeedback mutation={update.error || update.success ? update : remove}/></div></section>;
+  return <section className="tournament-admin-section"><p>ESTADO ACTUAL: <b>{String(tournament.status).toUpperCase()}</b></p><div className="admin-form compact-form"><label>NUEVO ESTADO<select value={status} onChange={event => setStatus(event.target.value)}><option value="active">ACTIVO</option><option value="completed">COMPLETADO</option></select></label><button className="action-button" disabled={update.loading} onClick={save}>ACTUALIZAR ESTADO</button><button className="action-button danger" disabled={remove.loading} onClick={deleteTournament}>ELIMINAR TORNEO</button><FormFeedback mutation={update.error || update.success ? update : remove}/></div>{tournament.status === 'completed' && <TournamentAwardsPanel tournament={tournament} onChanged={onChanged}/>}</section>;
 }
 
 function ParticipationPanel({ tournament, teams, onChanged }) {

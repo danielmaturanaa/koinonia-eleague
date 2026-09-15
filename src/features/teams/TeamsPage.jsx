@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { TeamMark } from '../../components/TeamMark.jsx';
-import { TeamsSectionTabs } from '../../components/TeamsSectionTabs.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
 
@@ -15,7 +14,7 @@ export function TeamsPage({ teams, loading, onChoose, onChanged, navigate }) {
   const change = event => setForm(current => ({ ...current, [event.target.name]: event.target.value }));
   return <main className="newspaper teams-page"><section className={`team-list-paper ${showForm ? 'with-form' : ''}`}>
     <header className="team-page-header"><p>BASE DE DATOS DE LA LIGA</p><h1>SELECCIÓN DE EQUIPOS</h1><span>{teams.length} EQUIPOS REGISTRADOS</span><button className="admin-toggle" onClick={() => setShowForm(value => !value)}>{showForm ? 'CERRAR' : '+ CREAR EQUIPO'}</button></header>
-    {navigate && <TeamsSectionTabs current="clubs" navigate={navigate}/>} {showForm && <form className="admin-form create-team-form" onSubmit={submit}><label>NOMBRE<input required name="name" value={form.name} onChange={change}/></label><label>PRESIDENTE<input name="presidentName" value={form.presidentName} onChange={change}/></label><label>EMBLEMA URL<input type="url" name="imageUrl" value={form.imageUrl} onChange={change}/></label><label>TIPO<select name="kind" value={form.kind} onChange={change}><option value="club">CLUB</option><option value="national_team">SELECCIÓN</option></select></label><button className="action-button" disabled={mutation.loading}>{mutation.loading ? 'CREANDO...' : 'CREAR EQUIPO'}</button><FormFeedback mutation={mutation}/></form>}
+    {showForm && <form className="admin-form create-team-form" onSubmit={submit}><label>NOMBRE<input required name="name" value={form.name} onChange={change}/></label><label>PRESIDENTE<input name="presidentName" value={form.presidentName} onChange={change}/></label><label>EMBLEMA URL<input type="url" name="imageUrl" value={form.imageUrl} onChange={change}/></label><label>TIPO<select name="kind" value={form.kind} onChange={change}><option value="club">CLUB</option><option value="national_team">SELECCIÓN</option></select></label><button className="action-button" disabled={mutation.loading}>{mutation.loading ? 'CREANDO...' : 'CREAR EQUIPO'}</button><FormFeedback mutation={mutation}/></form>}
     {loading ? <div className="arcade-state">CARGANDO EQUIPOS...</div> : <div className="team-grid">{teams.map(team =>
       <button className="team-choice" key={team.id} onClick={() => onChoose(team.id)}><TeamMark team={team}/><b className={team.name.length > 23 ? 'long-team-name' : ''}>{team.name}</b></button>)}</div>}
   </section></main>;

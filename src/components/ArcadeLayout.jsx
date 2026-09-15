@@ -44,9 +44,9 @@ export function ArcadeLayout({ route, navigate, children, sidebar, error, dismis
           <TransparentLogo className="brand-logo" src="/koinonia-eleague-logo.png" label="Koinonia e-League"/>
         </button>
         <HeaderEmblems teams={visibleTeams.slice(splitAt)} side="right" navigate={navigate}/>
-        <ApiStatus/>
       </header>
       <div className="home-composition"><div className="left-rail"><Navigation route={route} navigate={navigate}/></div><div className="center-stage">{children}<PressStartPrompt/></div>{sidebar}</div>
+      <ApiStatus/>
       {error && <div className="preview-notice" role="status">{error}<button onClick={dismissError} aria-label="Cerrar aviso">×</button></div>}
     </div>
   </div>;
