@@ -503,6 +503,19 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .scorers-workspace-panel .ranking-row strong { min-width: 0; text-align: right; }
 .classification-workspace .league-table th, .classification-workspace .league-table td { padding-top: 2px; padding-bottom: 3px; }
 @media (min-width: 901px) {
+  .club-history-tab { position: relative; grid-template-rows: auto minmax(0, 1fr) auto; min-height: 0; height: 100%; overflow: hidden; padding-bottom: 52px; }
+  .club-paper-history .club-tab-panel { overflow: hidden; }
+  .club-history-published { min-height: 0; height: auto; max-height: none; overflow: visible; }
+  .club-history-published:has(.published-review) { align-self: stretch; height: 100%; max-height: none; overflow: hidden; }
+  .club-history-published:has(.published-anthem) { align-self: stretch; height: 100%; max-height: none; overflow: hidden; }
+  .club-history-tab .history-edit-trigger { position: absolute; right: 0; bottom: 10px; left: 0; width: 100%; }
+  .published-review { min-height: 0; overflow-y: auto; overflow-x: hidden; font-size: 14px; line-height: 1.2; }
+  /* El formulario de edición mantiene visible su cabecera y permite
+     desplazarse internamente cuando el contenido es más extenso. */
+  .club-history-edit[open] { min-height: 0; max-height: none; overflow: visible; }
+  .club-history-edit[open] > form { min-height: 0; }
+  .published-anthem { min-height: 0; }
+  .published-anthem .anthem-lyrics-scroll { min-height: 0; overflow-y: auto; overflow-x: hidden; }
   .lead-columns { max-height: 270px; overflow: hidden; }
   .lead-copy { max-height: 270px; padding-bottom: 4px; overflow: hidden; }
   .lead-copy p { display: -webkit-box; max-height: 180px; overflow: hidden; font-size: 20px; line-height: 1.02; -webkit-box-orient: vertical; -webkit-line-clamp: 9; }
@@ -731,6 +744,12 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .person-modal > header button { width: 30px; height: 30px; border: 2px solid #fff; color: #fff; background: #a90020; font: 700 22px/1 sans-serif; }
 .person-modal .person-editor-form { grid-template-columns: repeat(2, minmax(0, 1fr)); padding: 14px; border: 0; }
 .person-modal .media-image-field, .person-modal .person-editor-form > .action-button, .person-modal .person-editor-form > .form-feedback { grid-column: 1 / -1; }
+.person-modal .club-review-editor { display: grid; grid-template-rows: minmax(0, 1fr) auto auto; height: min(640px, calc(100vh - 120px)); min-height: 0; padding: 14px; }
+.person-modal .club-review-editor label { display: grid; grid-template-rows: auto minmax(0, 1fr); min-height: 0; }
+.person-modal .club-review-editor textarea { min-height: 0; height: 100%; resize: vertical; }
+.person-modal .club-anthem-editor { height: min(640px, calc(100vh - 120px)); min-height: 0; padding: 14px; }
+.person-modal .club-anthem-editor > label { min-height: 0; grid-template-rows: auto minmax(0, 1fr); }
+.person-modal .club-anthem-editor textarea { min-height: 0; height: 100%; }
 .club-resumen-tab { display: grid; grid-template-columns: 180px 1fr; grid-template-rows: minmax(0, 1fr); gap: 10px; height: 100%; min-height: 0; }
 .club-resumen-left { align-self: start; display: grid; grid-template-rows: auto auto auto; gap: 8px; min-height: 0; }
 .club-resumen-person { display: grid; justify-items: center; gap: 5px; padding: 8px 6px; border: 2px solid #10285b; background: #e1d6bd; text-align: center; }
@@ -836,16 +855,17 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .club-history-edit > form { padding: 10px; min-height: 210px; }
 .club-history-edit > .title-form { min-height: 0; }
 .club-history-published { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: 8px; width: 100%; min-height: 0; box-sizing: border-box; padding: 9px; border: 3px double #625d4e; background: #f5ecd7 url('/paper-grain.svg'); overflow: hidden; }
-.published-review { width: 100%; min-width: 0; min-height: 0; box-sizing: border-box; margin: 0; padding: 14px; border: 2px solid #10285b; background: #fff9e8; overflow-y: auto; overflow-x: hidden; scrollbar-gutter: stable; }
+.published-review { width: 100%; min-width: 0; min-height: 0; box-sizing: border-box; margin: 0; padding: 10px; border: 2px solid #10285b; background: #fff9e8; overflow-y: auto; overflow-x: hidden; scrollbar-gutter: stable; }
 .published-review h2, .published-anthem h2 { margin-bottom: 10px; color: #8c0019; font: 600 16px/1 'Oswald', sans-serif; }
 .published-review p { white-space: pre-line; font: 500 17px/1.45 'Roboto Condensed', sans-serif; }
+.club-history-tab .history-edit-trigger { justify-self: stretch; width: 100%; min-height: 31px; height: 31px; padding: 5px 12px; }
 .published-anthem { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); gap: 10px; width: 100%; min-width: 0; min-height: 0; overflow: hidden; }
 .published-anthem > aside, .published-anthem > article { width: 100%; min-width: 0; min-height: 0; box-sizing: border-box; margin: 0; padding: 10px; border: 2px solid #10285b; background: #fff9e8; overflow: hidden; }
-.published-anthem > article { display: flex; flex-direction: column; }
+.published-anthem > article { display: block; }
 .published-anthem audio { width: 100%; }
 .published-anthem .empty-copy { padding: 18px 6px; color: #8c0019; background: #e4d9c0; text-align: center; font: 600 11px/1.25 'Oswald', sans-serif; }
-.anthem-lyrics-columns { flex: 1 1 auto; width: 100%; min-width: 0; min-height: 0; box-sizing: border-box; columns: 1; overflow-y: scroll; overflow-x: hidden; scrollbar-gutter: stable; font: 500 15px/1.35 'Roboto Condensed', sans-serif; margin: 0; padding: 0 8px 0 0; }
-.anthem-lyrics-columns p { break-inside: avoid; margin: 0 0 8px; white-space: pre-line; }
+.anthem-lyrics-scroll { width: 100%; height: calc(100% - 30px); min-width: 0; min-height: 0; box-sizing: border-box; overflow-y: scroll; overflow-x: hidden; scrollbar-gutter: stable; font: 500 15px/1.35 'Roboto Condensed', sans-serif; margin: 0; padding: 0 8px 0 0; }
+.anthem-lyrics-scroll p { margin: 0 0 8px; white-space: pre-line; }
 .club-tab-honours { min-height: 410px; }
 .honours-api-note { margin-top: 10px; color: #8c0019; font: 600 11px/1.2 'Oswald', sans-serif; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -1023,9 +1043,10 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
   .club-budget-tab { margin-top: 0; }
   .club-anthem-editor { grid-template-columns: 1fr; }
   .club-anthem-editor > .action-button { grid-column: auto; }
-  .club-history-published { height: auto; overflow: visible; }
+  .club-history-published { height: 430px; max-height: 55vh; overflow: hidden; }
+  .published-review { min-height: 0; overflow-y: auto; overflow-x: hidden; }
   .published-anthem { grid-template-columns: 1fr; }
-  .anthem-lyrics-columns { flex: none; height: 240px; max-height: 240px; columns: auto; overflow-y: scroll; font-size: 13px; line-height: 1.3; }
+  .anthem-lyrics-scroll { height: 240px; max-height: 240px; overflow-y: scroll; font-size: 13px; line-height: 1.3; }
   .team-page-header p, .team-page-header h1 { grid-column: 1 / -1; }
   .team-page-header h1 { margin-bottom: 0; font-size: 38px; }
   .team-page-header span { position: static; align-self: center; justify-self: start; font-size: 12px; }
