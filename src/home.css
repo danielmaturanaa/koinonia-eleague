@@ -91,7 +91,7 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .lead-story h2 .headline-result { font-size: 66px; letter-spacing: 2.4px; color: #cb0524; text-shadow: 1px 1px #9a0019; transform: scaleX(1.35); }
 .lead-story h2.automatic-news-headline { display: grid; width: 100%; min-width: 0; height: 142px; min-height: 142px; max-height: 142px; grid-template-rows: auto minmax(0, 1fr); align-content: center; gap: 7px; overflow: hidden; padding: 4px 3px 5px; }
 .lead-story h2.automatic-news-headline .headline-team { width: fit-content; max-width: 100%; padding: 2px 8px; overflow: hidden; border-left: 6px solid #a90020; color: #11120e; background: #ded2b8; font: 700 clamp(22px, 1.7vw, 28px)/1 'Oswald', sans-serif; letter-spacing: .4px; text-overflow: ellipsis; white-space: nowrap; transform: none; }
-.lead-story h2.automatic-news-headline .headline-result { display: block; width: 100%; max-width: 100%; height: 100%; min-height: 0; padding: 5px 4px 2px 0; overflow: hidden; border-top: 2px solid #575141; color: #cb0524; font: 400 34px/.92 'Anton', Impact, sans-serif; letter-spacing: .4px; text-shadow: 1px 1px #9a0019; white-space: normal; overflow-wrap: anywhere; transform: none; }
+.lead-story h2.automatic-news-headline .headline-result { display: block; width: 100%; max-width: 100%; height: 100%; min-height: 0; padding: 6px 4px 2px 0; overflow: hidden; border-top: 2px solid #575141; color: #cb0524; font: 400 34px/1.03 'Anton', Impact, sans-serif; letter-spacing: .4px; text-shadow: 1px 1px #9a0019; white-space: normal; overflow-wrap: anywhere; transform: none; }
 .lead-columns { display: grid; grid-template-columns: var(--lead-copy-width) minmax(0, 1fr); align-items: stretch; gap: 10px; }
 .lead-copy { display: flex; min-height: 0; flex-direction: column; align-self: stretch; }
 .lead-copy p { font: 500 24px/.98 'Roboto Condensed', Arial, sans-serif; padding-top: 0; }
@@ -848,7 +848,7 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
   .newspaper-header h1 > span { transform: skew(-3deg); }
   .lead-story h2 { font-size: clamp(38px, 9vw, 63px); }
   .lead-story h2.automatic-news-headline { height: auto; min-height: 124px; max-height: none; }
-  .lead-story h2.automatic-news-headline .headline-result { height: auto; }
+  .lead-story h2.automatic-news-headline .headline-result { height: auto; line-height: 1.08; }
   .lead-story h2 .headline-result { font-size: clamp(40px, 9.4vw, 66px); transform: scaleX(1.1); }
   .lead-story h2 .headline-team { transform: scaleX(1.08); }
   .team-list-paper, .club-paper, .section-paper { height: auto; min-height: 630px; }
@@ -864,6 +864,11 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
   .formation-editor { grid-template-columns: 1fr; grid-template-areas: "help" "pitch" "bench" "feedback"; height: auto; }
   .formation-pitch { justify-self: stretch; align-self: auto; height: auto; width: 100%; max-width: 480px; margin: 0 auto; }
   .formation-bench-list { flex: none; max-height: 280px; }
+  .tournament-tabs { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); overflow: visible; }
+  .tournament-tabs button { width: 100%; min-width: 0; }
+  .tournament-workspace > header { align-items: stretch; flex-direction: column; gap: 8px; }
+  .tournament-admin > nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); overflow: visible; }
+  .tournament-admin > nav button { min-width: 0; white-space: normal; }
   .data-paper { height: auto; min-height: 630px; }
   .market-grid { grid-template-columns: 1fr; }
   .market-panel { min-height: 180px; max-height: 420px; }
@@ -884,6 +889,8 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
   .newspaper-header h1 > span, .lead-story h2 .headline-team, .lead-story h2 .headline-result { width: auto; white-space: normal; transform: none; }
   .edition-date { position: static; width: max-content; margin: 8px 0 0 auto; }
   .lead-story h2 { overflow-wrap: anywhere; }
+  .lead-story h2.automatic-news-headline { min-height: 138px; gap: 8px; }
+  .lead-story h2.automatic-news-headline .headline-result { font-size: clamp(28px, 8vw, 38px); line-height: 1.1; }
   .lead-copy blockquote { width: auto; }
   .lead-photo { height: auto; background-position: 63% 43%; }
   .lead-winner-crest { width: 70px; height: 70px; }
@@ -891,9 +898,71 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
   .press-start-prompt { grid-template-columns: 64px minmax(0, 1fr) 64px; width: min(340px, 92vw); min-height: 70px; margin-top: -12px; gap: 5px; }
   .secondary-stories { height: auto; }
   .small-story { min-height: 195px; }
-  .team-page-header { padding-bottom: 40px; }
+  .team-page-header { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 7px; padding-bottom: 10px; }
   .club-detail-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .club-squad-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .club-resumen-tab { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; height: auto; }
+  .club-resumen-left { display: contents; }
+  .club-resumen-person { align-content: start; padding: 6px; }
+  .club-resumen-person img, .club-resumen-person .president-photo-placeholder { height: 92px; }
+  .club-resumen-person b { font-size: 13px; line-height: 1.05; }
+  .club-resumen-honours-mini { grid-column: 1 / -1; min-height: 105px; order: 3; }
+  .club-resumen-pitch-section { grid-column: 1 / -1; min-height: 360px; order: 2; }
+  .club-pitch-player { max-width: 64px; font-size: 9px; }
+  .club-pitch-name { max-width: 64px; }
+  .club-pitch-number { width: 21px; height: 21px; }
+  .club-upcoming-list article > div { grid-template-columns: minmax(0, 1fr) 46px minmax(0, 1fr); gap: 10px; }
+  .club-upcoming-team-name { display: none; }
+  .club-upcoming-list article span { justify-content: center; }
+  .club-upcoming-list article span:last-child { justify-content: center; }
+  .club-upcoming-list .team-mark { width: 56px; height: 56px; flex-basis: 56px; }
+  .classification-workspace .league-table .optional-stat,
+  .classification-workspace .league-table th:nth-child(4),
+  .classification-workspace .league-table td:nth-child(4),
+  .classification-workspace .league-table th:nth-child(5),
+  .classification-workspace .league-table td:nth-child(5),
+  .classification-workspace .league-table th:nth-child(6),
+  .classification-workspace .league-table td:nth-child(6) { display: none; }
+  .classification-workspace .league-table { width: 100%; max-width: 100%; table-layout: fixed; }
+  .classification-workspace .league-table col:nth-child(4),
+  .classification-workspace .league-table col:nth-child(5),
+  .classification-workspace .league-table col:nth-child(6),
+  .classification-workspace .league-table col:nth-child(7),
+  .classification-workspace .league-table col:nth-child(8),
+  .classification-workspace .league-table col:nth-child(9) { display: none; }
+  .classification-workspace .league-table .rank-column { width: 30px; }
+  .classification-workspace .league-table .team-column { width: 60%; }
+  .classification-workspace .league-table col:nth-child(2) { width: 60%; }
+  .classification-workspace .league-table col:nth-child(3) { width: 42px; }
+  .classification-workspace .league-table col:nth-child(10) { width: 48px; }
+  .classification-workspace .table-scroll { overflow-x: hidden; }
+  .classification-workspace .league-table th, .classification-workspace .league-table td { padding-right: 3px; padding-left: 3px; }
+  .classification-workspace .league-table td:nth-child(2) { display: table-cell; width: 60%; min-width: 0; max-width: none; overflow: hidden; font-size: 14px; line-height: 1.1; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+  .classification-workspace .league-table th:nth-child(2) { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .classification-workspace .league-table td:nth-child(2) .team-mark { display: inline-block; vertical-align: middle; margin-right: 4px; }
+  .classification-workspace { width: 100%; min-width: 0; overflow-x: hidden; }
+  .classification-workspace .workspace-panel,
+  .classification-workspace .standings-workspace-panel,
+  .classification-workspace .scorers-workspace-panel { width: 100%; min-width: 0; }
+  .classification-workspace .classification-content-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .classification-workspace .classification-content-tabs button { min-width: 0; padding: 5px 3px; font-size: 12px; line-height: 1.1; white-space: normal; }
+  /* En pantallas estrechas, convertir cada fila en una cuadrícula estable para
+     que Equipo conserve espacio y nunca se superponga con PJ o PTS. */
+  .classification-workspace .league-table { display: block; table-layout: auto; }
+  .classification-workspace .league-table colgroup { display: none; }
+  .classification-workspace .league-table thead,
+  .classification-workspace .league-table tbody { display: contents; }
+  .classification-workspace .league-table tr { display: grid; grid-template-columns: 30px minmax(0, 1fr) 42px 48px; align-items: center; width: 100%; }
+  .classification-workspace .league-table th,
+  .classification-workspace .league-table td { min-width: 0; }
+  .classification-workspace .league-table th:nth-child(1),
+  .classification-workspace .league-table td:nth-child(1) { grid-column: 1; }
+  .classification-workspace .league-table th:nth-child(2),
+  .classification-workspace .league-table td:nth-child(2) { display: flex; align-items: center; gap: 5px; grid-column: 2; width: auto; max-width: none; }
+  .classification-workspace .league-table th:nth-child(3),
+  .classification-workspace .league-table td:nth-child(3) { grid-column: 3; }
+  .classification-workspace .league-table th:nth-child(10),
+  .classification-workspace .league-table td:nth-child(10) { grid-column: 4; }
   .club-person-profile { grid-template-columns: 1fr; height: auto; }
   .club-person-profile .president-card { height: auto; }
   .club-person-profile .president-card > img, .club-person-profile .president-photo-placeholder { height: 256px; }
@@ -908,8 +977,10 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
   .club-history-published { height: auto; overflow: visible; }
   .published-anthem { grid-template-columns: 1fr; }
   .anthem-lyrics-columns { flex: none; height: 240px; max-height: 240px; columns: auto; overflow-y: scroll; font-size: 13px; line-height: 1.3; }
-  .team-page-header h1 { font-size: 38px; }
-  .team-page-header span { left: 8px; right: auto; }
+  .team-page-header p, .team-page-header h1 { grid-column: 1 / -1; }
+  .team-page-header h1 { margin-bottom: 0; font-size: 38px; }
+  .team-page-header span { position: static; align-self: center; justify-self: start; font-size: 12px; }
+  .team-page-header .admin-toggle { position: static; align-self: center; justify-self: end; padding: 6px 8px; font-size: 12px; white-space: nowrap; }
   .club-header { grid-template-columns: 72px minmax(0, 1fr); align-items: center; gap: 10px; min-height: 0; padding: 10px; overflow: hidden; }
   .club-header > div:not(.club-rank) { min-width: 0; }
   .club-crest { width: 68px; height: 68px; }
@@ -932,6 +1003,10 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
   .section-paper h1 { font-size: 44px; }
   .section-paper > p:not(.section-kicker) { font-size: 19px; }
   .filter-bar, .workspace-columns, .split-view, .directory-grid, .crest-gallery { display: grid; grid-template-columns: 1fr; }
+  .classification-view-tabs { grid-template-columns: 1fr; }
+  .tournament-tabs { grid-template-columns: 1fr; }
+  .tournament-workspace > header h2 { font-size: 23px; overflow-wrap: anywhere; }
+  .tournament-admin > nav { grid-template-columns: 1fr; }
   .matches-split { grid-template-columns: 1fr; }
   .matches-full-list { grid-template-columns: 1fr; }
   .matches-full-list .match-card { min-height: 96px; padding: 8px; }

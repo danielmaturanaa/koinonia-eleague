@@ -44,7 +44,7 @@ function ClubUpcomingMatches({ matches, teams }) {
     <header><h2>PRÓXIMOS PARTIDOS</h2><small>{upcoming.length} PROGRAMADOS</small></header>
     <div className="club-upcoming-list">{upcoming.length ? upcoming.map(match => <article key={match.id}>
       <small>{match.tournament?.name ?? 'TORNEO'} · {match.groupLabel ? `GRUPO ${match.groupLabel}` : `JORNADA ${match.roundNumber ?? '—'}`}</small>
-      <div><span><TeamMark team={resolveTeam(match.homeTeam)}/><b>{match.homeTeam?.name ?? 'LOCAL'}</b></span><strong>VS</strong><span><b>{match.awayTeam?.name ?? 'VISITA'}</b><TeamMark team={resolveTeam(match.awayTeam)}/></span></div>
+      <div><span><TeamMark team={resolveTeam(match.homeTeam)}/><b className="club-upcoming-team-name">{match.homeTeam?.name ?? 'LOCAL'}</b></span><strong>VS</strong><span><b className="club-upcoming-team-name">{match.awayTeam?.name ?? 'VISITA'}</b><TeamMark team={resolveTeam(match.awayTeam)}/></span></div>
     </article>) : <p className="empty-copy">NO HAY PRÓXIMOS PARTIDOS PROGRAMADOS PARA ESTE CLUB.</p>}</div>
   </section>;
 }
