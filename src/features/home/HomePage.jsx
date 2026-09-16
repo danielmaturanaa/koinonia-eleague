@@ -5,6 +5,7 @@ import { NewsArtwork } from '../../components/NewsArtwork.jsx';
 import { RecolorableNewsScene } from '../../components/RecolorableNewsScene.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
 import { resolveNewsParticipants } from '../news/newsParticipants.js';
+import { resolveScenePalette } from '../news/newsSceneRenderer.js';
 
 function FittedHeadline({ children }) {
   const headlineRef = useRef(null);
@@ -42,11 +43,12 @@ export function HomePage({ tournament, lead, teams = [] }) {
   const { news, loading } = useAutomaticNews();
   const latest = news[0];
   const { team: newsTeam, opponent: newsOpponent } = resolveNewsParticipants(latest, teams);
+  const heroPalette = latest?.image ? resolveScenePalette(newsTeam, newsOpponent) : null;
   const fallbackHeadline = lead ? `${lead.homeTeam.name} VS ${lead.awayTeam.name}` : 'LA LIGA EN PREPARACIÓN';
   const fallbackBody = lead ? `La fecha ${lead.roundNumber ?? 'actual'} enfrentará a ${lead.homeTeam.name} y ${lead.awayTeam.name}.` : 'La liga aún no tiene partidos próximos publicados.';
   return <main className="newspaper"><section className="main-edition">
     <header className="newspaper-header"><h1><span>KOINONIA <em>e-LEAGUE</em> NEWS</span></h1><p>FÚTBOL VIRTUAL. PASIÓN REAL.</p><div className="edition-date">ÚLTIMA HORA<br/><time>{latest?.date ? formatDate(latest.date) : tournament?.name ?? 'CARGANDO LIGA'}</time></div></header>
-    <article className="lead-story"><h2 className="automatic-news-headline"><span className="headline-team">{latest?.label ?? (loading ? 'ACTUALIZANDO' : 'KOINONIA e-LEAGUE')}</span><FittedHeadline>{latest?.headline ?? fallbackHeadline}</FittedHeadline></h2><div className="lead-columns"><div className="lead-copy"><p>{latest?.body ?? fallbackBody}</p><blockquote>“Fútbol como antes,<br/>amigos como siempre.”</blockquote></div><figure className="lead-photo" role="img" aria-label="Portada deportiva de Koinonia e-League">{latest?.image && <RecolorableNewsScene scene={latest.image} team={newsTeam} opponent={newsOpponent} alt="" className="lead-news-scene"/>}{latest?.sourceType === 'match' && ['victory', 'defeat'].includes(latest?.type) && newsTeam && <span className="lead-winner-crest" title={`Ganador: ${newsTeam.name}`}><TeamMark team={newsTeam}/></span>}</figure></div></article>
+    <article className="lead-story"><h2 className="automatic-news-headline"><span className="headline-team">{latest?.label ?? (loading ? 'ACTUALIZANDO' : 'KOINONIA e-LEAGUE')}</span><FittedHeadline>{latest?.headline ?? fallbackHeadline}</FittedHeadline></h2><div className="lead-columns"><div className="lead-copy"><p>{latest?.body ?? fallbackBody}</p><blockquote>“Fútbol como antes,<br/>amigos como siempre.”</blockquote></div><figure className="lead-photo" style={heroPalette ? { '--news-primary': heroPalette.primary, '--news-secondary': heroPalette.secondary, '--news-accent': heroPalette.accent } : undefined} role="img" aria-label="Portada deportiva de Koinonia e-League">{latest?.image && <RecolorableNewsScene scene={latest.image} team={newsTeam} opponent={newsOpponent} alt="" className="lead-news-scene"/>}{latest?.sourceType === 'match' && ['victory', 'defeat'].includes(latest?.type) && newsTeam && <span className="lead-winner-crest" title={`Ganador: ${newsTeam.name}`}><TeamMark team={newsTeam}/></span>}</figure></div></article>
   </section><section className="secondary-stories">
     <SecondaryNews item={news[1]} teams={teams}/><SecondaryNews item={news[2]} teams={teams}/><SecondaryNews item={news[3]} teams={teams}/>
   </section></main>;

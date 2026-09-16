@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { TeamMark } from '../../components/TeamMark.jsx';
-import { clubHistoryFor, legacyHistoryFor } from '../../data/clubHistory.js';
 import { defaultFormationPositions, pitchPositionFor } from '../../utils/formationPositions.js';
 import { teamBalance, teamCoachName, teamCoachPhoto } from '../../utils/teamPresentation.js';
 import { readPersonProfile } from '../../utils/personProfile.js';
@@ -88,11 +87,10 @@ function clubHonours(team, history) {
 }
 
 function publishedHistoryFor(team) {
-  const fallback = clubHistoryFor(team?.id);
   return {
-    review: team?.review?.trim() || fallback.review,
-    anthemLyrics: team?.anthemLyrics?.trim() || fallback.anthemLyrics,
-    anthemUrl: team?.anthemUrl?.trim() || fallback.anthemUrl,
+    review: team?.review?.trim() || 'RESEÑA HISTÓRICA PENDIENTE DE PUBLICACIÓN.',
+    anthemLyrics: team?.anthemLyrics?.trim() || 'LETRA DEL HIMNO PENDIENTE DE PUBLICACIÓN.',
+    anthemUrl: team?.anthemUrl?.trim() || '',
   };
 }
 
@@ -152,7 +150,7 @@ function TitleDeleteButton({ team, titleId, onChanged }) {
 }
 
 function ReviewEditor({ team, onChanged }) {
-  const initialReview = team?.review ?? legacyHistoryFor(team?.id)?.review ?? '';
+  const initialReview = team?.review ?? '';
   const [review, setReview] = useState(initialReview);
   useEffect(() => setReview(initialReview), [team?.id, initialReview]);
   const mutation = useApiMutation((body, signal) => endpoints.updateTeamHistory(team.id, body, signal), { onSuccess: onChanged });
@@ -165,9 +163,8 @@ function ReviewEditor({ team, onChanged }) {
 }
 
 function AnthemEditor({ team, onChanged }) {
-  const legacy = legacyHistoryFor(team?.id);
-  const initialLyrics = team?.anthemLyrics ?? legacy?.anthemLyrics ?? '';
-  const initialUrl = team?.anthemUrl ?? legacy?.anthemUrl ?? '';
+  const initialLyrics = team?.anthemLyrics ?? '';
+  const initialUrl = team?.anthemUrl ?? '';
   const [anthemLyrics, setAnthemLyrics] = useState(initialLyrics);
   const [anthemUrl, setAnthemUrl] = useState(initialUrl);
   const [preview, setPreview] = useState('');

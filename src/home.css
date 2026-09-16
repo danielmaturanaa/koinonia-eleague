@@ -96,8 +96,8 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .lead-copy { display: flex; min-height: 0; flex-direction: column; align-self: stretch; }
 .lead-copy p { font: 500 24px/.98 'Roboto Condensed', Arial, sans-serif; padding-top: 0; }
 .lead-copy blockquote { position: relative; width: 205px; margin-top: auto; padding-top: 8px; font: italic 600 19px/1.08 'Oswald', sans-serif; letter-spacing: .15px; }
-.lead-photo { position: relative; display: grid; width: 100%; height: auto; aspect-ratio: var(--lead-news-image-ratio); place-items: center; overflow: hidden; border: 1px solid #796852; background: #111827; }
-.lead-photo .lead-news-scene { width: 100%; height: 100%; object-fit: cover; object-position: center !important; background: #111827; }
+.lead-photo { position: relative; display: grid; width: 100%; height: auto; aspect-ratio: var(--lead-news-image-ratio); place-items: center; overflow: hidden; border: 1px solid #796852; background: linear-gradient(135deg, var(--news-primary, #111827), color-mix(in srgb, var(--news-secondary, #111827) 78%, #000)); }
+.lead-photo .lead-news-scene { width: 100%; height: 100%; object-fit: cover; object-position: center !important; background: transparent; }
 .lead-winner-crest { position: absolute; z-index: 3; left: 10px; bottom: 10px; display: grid; width: 82px; height: 82px; place-items: center; filter: drop-shadow(4px 5px 1px #000b); }
 .lead-winner-crest .team-mark { width: 66px; height: 66px; flex-basis: 66px; font-size: 48px; }
 .secondary-stories { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-auto-rows: var(--minor-news-height); gap: 10px; margin-top: 8px; height: var(--minor-news-height); overflow: hidden; }
@@ -689,19 +689,19 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .club-resumen-tab { display: grid; grid-template-columns: 180px 1fr; grid-template-rows: minmax(0, 1fr); gap: 10px; height: 100%; min-height: 0; }
 .club-resumen-left { align-self: start; display: grid; grid-template-rows: auto auto auto; gap: 8px; min-height: 0; }
 .club-resumen-person { display: grid; justify-items: center; gap: 5px; padding: 8px 6px; border: 2px solid #10285b; background: #e1d6bd; text-align: center; }
-.club-resumen-person > small { color: #a0001d; font: 700 13px/1 'Oswald', sans-serif; letter-spacing: .6px; }
+.club-resumen-person > small { color: #a0001d; font: 700 16px/1 'Oswald', sans-serif; letter-spacing: .6px; }
 .club-resumen-person > img, .club-resumen-person > .president-photo-placeholder { width: 112px; height: 112px; border: 3px solid #fff5da; box-shadow: 2px 2px #07194a; object-fit: cover; }
 .club-resumen-person > .president-photo-placeholder { display: grid; place-content: center; }
 .club-resumen-person > .president-photo-placeholder b { font-size: 28px; }
 .club-resumen-person > .president-photo-placeholder small { display: none; }
 .club-resumen-person > b { overflow-wrap: anywhere; font: 600 14px/1.2 'Roboto Condensed', sans-serif; }
 .club-resumen-honours-mini { display: grid; align-content: start; gap: 4px; min-height: 0; padding: 8px; border: 2px solid #10285b; background: #e4d9c0; overflow: hidden; }
-.club-resumen-honours-mini > small { color: #a0001d; font: 700 13px/1 'Oswald', sans-serif; letter-spacing: .6px; }
-.club-resumen-honours-mini p { margin: 0; font: 500 10px/1.3 'Oswald', sans-serif; }
-.club-resumen-honours-mini p.empty-copy { font-size: 10px; }
-.club-resumen-honours-count { color: #063172; font: 600 11px/1 'Oswald', sans-serif; }
+.club-resumen-honours-mini > small { color: #a0001d; font: 700 16px/1 'Oswald', sans-serif; letter-spacing: .6px; }
+.club-resumen-honours-mini p { margin: 0; font: 500 12px/1.3 'Oswald', sans-serif; }
+.club-resumen-honours-mini p.empty-copy { font-size: 12px; }
+.club-resumen-honours-count { color: #063172; font: 600 13px/1 'Oswald', sans-serif; }
 .club-resumen-honours-list { display: grid; gap: 3px; margin: 0; padding: 0; list-style: none; overflow-y: auto; }
-.club-resumen-honours-list li { display: flex; align-items: baseline; gap: 4px; font: 500 10px/1.25 'Roboto Condensed', sans-serif; }
+.club-resumen-honours-list li { display: flex; align-items: baseline; gap: 4px; font: 500 12px/1.25 'Roboto Condensed', sans-serif; }
 .club-resumen-honours-list li span:first-child { flex: 0 0 auto; color: #c28b00; font-size: 15px; text-shadow: .5px .5px #7a5400; }
 .club-resumen-pitch-section { display: flex; flex-direction: column; width: fit-content; max-width: 100%; justify-self: center; align-self: start; min-height: 0; border: 2px solid #10285b; background: #e4d9c0; }
 .club-resumen-pitch-section h2 { padding: 6px 8px; color: #fff; background: #062764; font: 500 12px/1 'Oswald', sans-serif; }
