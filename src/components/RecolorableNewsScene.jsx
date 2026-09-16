@@ -83,7 +83,7 @@ export function RecolorableNewsScene({ scene, team, opponent, alt = '', classNam
         maskContext.imageSmoothingEnabled = false;
         maskContext.drawImage(mask, 0, 0);
         const maskPixels = maskContext.getImageData(0, 0, canvas.width, canvas.height).data;
-        availableMasks.push({ pixels: maskPixels, color: layer.color });
+        availableMasks.push({ pixels: maskPixels, color: layer.color, options: layer.options });
       }
 
       if (!active) return;
