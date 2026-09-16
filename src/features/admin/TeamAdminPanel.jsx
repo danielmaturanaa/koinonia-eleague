@@ -3,6 +3,7 @@ import { endpoints } from '../../api/endpoints.js';
 import { defaultFormationPositions } from '../../utils/formationPositions.js';
 import { teamBalance, teamCoachName, teamCoachPhoto } from '../../utils/teamPresentation.js';
 import { readPersonProfile, savePersonProfile } from '../../utils/personProfile.js';
+import { fallbackKitColors } from '../news/newsSceneRenderer.js';
 import { FormFeedback } from './FormFeedback.jsx';
 import { useApiMutation } from './useApiMutation.js';
 
@@ -15,12 +16,48 @@ function MediaImageField({ label, entityType, entityId, onUploaded }) {
   return <div className="media-image-field"><label>{label}<input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" disabled={upload.loading} onChange={event => { const file = event.target.files?.[0]; if (file) upload.execute(file); }}/></label><small>JPG, PNG, WEBP, GIF O AVIF · MÁXIMO 5 MB</small><FormFeedback mutation={upload}/></div>;
 }
 
+function ColorPickerField({ label, value, onChange }) {
+  const supportsEyeDropper = typeof window !== 'undefined' && 'EyeDropper' in window;
+  const pickFromScreen = async () => {
+    try {
+      const result = await new window.EyeDropper().open();
+      if (result?.sRGBHex) onChange(result.sRGBHex.toUpperCase());
+    } catch {
+      // usuario canceló la pipeta
+    }
+  };
+  return <label className="color-picker-field">
+    {label}
+    <span className="color-picker-controls">
+      <input type="color" value={value} onChange={event => onChange(event.target.value.toUpperCase())}/>
+      <input type="text" value={value} maxLength={7} onChange={event => onChange(event.target.value.toUpperCase())}/>
+      {supportsEyeDropper && <button type="button" className="color-eyedropper-button" onClick={pickFromScreen} aria-label={`Elegir ${label.toLowerCase()} con pipeta`} title="Elegir color con pipeta">💧</button>}
+    </span>
+  </label>;
+}
+
 export function ProfileForm({ team, onChanged, onSaved }) {
-  const [form, setForm] = useState({ name: team.name ?? '', imageUrl: team.imageUrl ?? '' });
-  useEffect(() => setForm({ name: team.name ?? '', imageUrl: team.imageUrl ?? '' }), [team]);
+  const buildForm = source => ({
+    name: source.name ?? '',
+    imageUrl: source.imageUrl ?? '',
+    colors: {
+      primary: source.colors?.primary ?? fallbackKitColors.team.shirt,
+      secondary: source.colors?.secondary ?? fallbackKitColors.team.shorts,
+    },
+  });
+  const [form, setForm] = useState(() => buildForm(team));
+  useEffect(() => setForm(buildForm(team)), [team]);
   const mutation = useApiMutation((body, signal) => endpoints.updateTeam(team.id, body, signal), { onSuccess: result => { onChanged?.(result); onSaved?.(); } });
   const submit = event => { event.preventDefault(); mutation.execute(form); };
-  return <form className="admin-form" onSubmit={submit}><label>NOMBRE<input required value={form.name} onChange={event => setForm(current => ({ ...current, name: event.target.value }))}/></label><MediaImageField label="SUBIR NUEVO EMBLEMA" entityType="team" entityId={team.id} onUploaded={imageUrl => setForm(current => ({ ...current, imageUrl }))}/><button className="action-button" disabled={mutation.loading}>GUARDAR PERFIL</button><FormFeedback mutation={mutation}/></form>;
+  const setColor = (key, color) => setForm(current => ({ ...current, colors: { ...current.colors, [key]: color } }));
+  return <form className="admin-form" onSubmit={submit}>
+    <label>NOMBRE<input required value={form.name} onChange={event => setForm(current => ({ ...current, name: event.target.value }))}/></label>
+    <MediaImageField label="SUBIR NUEVO EMBLEMA" entityType="team" entityId={team.id} onUploaded={imageUrl => setForm(current => ({ ...current, imageUrl }))}/>
+    <ColorPickerField label="COLOR PRIMARIO" value={form.colors.primary} onChange={color => setColor('primary', color)}/>
+    <ColorPickerField label="COLOR SECUNDARIO" value={form.colors.secondary} onChange={color => setColor('secondary', color)}/>
+    <button className="action-button" disabled={mutation.loading}>GUARDAR PERFIL</button>
+    <FormFeedback mutation={mutation}/>
+  </form>;
 }
 
 export function PresidentForm({ team, onChanged, onSaved }) {
@@ -169,7 +206,7 @@ function FormationMarker({ player, x, y, selected, onSelect, onDrag, onDragEnd }
   return <button type="button" ref={element => { ref.current = element; }} className={`formation-marker${selected ? ' selected' : ''}`} style={{ left: `${x}%`, top: `${y}%` }}
     onPointerDown={handleDown} onPointerMove={handleMove} onPointerUp={handleUp} aria-label={`${selected ? 'Deseleccionar' : 'Seleccionar o arrastrar a'} ${name}`}>
     <span className="club-pitch-number">{player.jerseyNumber ?? '–'}{flag && <i className="club-pitch-flag">{flag}</i>}</span>
-    <span className="club-pitch-name">{name.split(/\s+/).pop() || name}</span>
+    <span className="club-pitch-name">{name}</span>
   </button>;
 }
 
