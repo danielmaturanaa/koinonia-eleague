@@ -1,4 +1,5 @@
 import { classifyMatchResult, deterministicItem, fillTemplate, generateNews, hashString } from '../features/news/newsEngine.js';
+import { buildMatchStoryAngle } from '../features/news/newsStoryAngles.js';
 
 export { classifyMatchResult, deterministicItem, fillTemplate, generateNews, hashString };
 
@@ -43,10 +44,18 @@ export function classifyMatch(match) {
   return normalized ? classifyMatchResult(normalized) : null;
 }
 
-export function generateMatchNews(match) {
+export function generateMatchNews(match, context = {}) {
   const event = normalizeMatchEvent(match);
   const news = event ? generateNews(event) : null;
-  return decorate(news, {
+
+  if (!news) return null;
+
+  return decorate({
+    ...news,
+    body: news.body,
+    body2: buildMatchStoryAngle(match, context)?.text ?? null,
+    storyAngle: buildMatchStoryAngle(match, context)?.key ?? null,
+  }, {
     sourceType: 'match',
     date: value(match?.finishedAt, match?.startedAt, match?.scheduledAt, match?.createdAt),
     original: match,

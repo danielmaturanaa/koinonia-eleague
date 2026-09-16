@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { newsTemplates } from '../src/features/news/newsTemplates.js';
 import { classifyMatchResult, generateNews } from '../src/features/news/newsEngine.js';
 import { generateMatchNews, generateSanctionNews, generateTransferNews } from '../src/utils/newsGenerator.js';
+import { buildMatchStoryAngle, buildMatchStorySuffix, getMatchStoryFacts } from '../src/features/news/newsStoryAngles.js';
 
 const expectedStructure = {
   victory: ['narrow', 'normal', 'big'],
@@ -100,11 +101,43 @@ assert.deepEqual(generateNews(stringIdEvent), generateNews(structuredClone(strin
 const apiMatch = generateMatchNews({
   id: 'api-match', homeTeam: { name: 'Club A' }, awayTeam: { name: 'Club B' }, homeScore: 4, awayScore: 2,
   tournament: { name: 'Liga 2026' }, roundNumber: 3, finishedAt: '2026-09-08T10:00:00Z',
+  goals: [
+    { player: { name: 'Juan Pérez' }, scoringTeam: { name: 'Club A' } },
+    { player: { name: 'Juan Pérez' }, scoringTeam: { name: 'Club A' } },
+    { player: { name: 'Diego Soto' }, scoringTeam: { name: 'Club A' } },
+    { player: { name: 'Carlos Díaz' }, scoringTeam: { name: 'Club B' } },
+  ],
+  redCards: [{ playerName: 'Luis Gómez', teamName: 'Club B' }],
 });
 assert.equal(apiMatch.id, 'match-api-match');
 assert.equal(apiMatch.type, 'victory');
 assert.equal(apiMatch.subtype, 'normal');
 assert.equal(apiMatch.sourceType, 'match');
+assert.doesNotMatch(apiMatch.body, /Goleadores:|Expulsados:/);
+assert.ok(apiMatch.body2);
+assert.ok(apiMatch.storyAngle);
+
+const storyFacts = getMatchStoryFacts({
+  goals: [{ playerName: 'Sin Equipo', teamName: 'Club A', isOwnGoal: true }],
+  redCards: [{ player: { name: 'Jugador Rojo' }, team: { name: 'Club B' } }],
+});
+assert.equal(storyFacts.scorerCount, 1);
+assert.equal(storyFacts.redCardCount, 1);
+assert.equal(buildMatchStorySuffix({
+  goals: [{ playerName: 'Jugador', teamName: 'Club A' }],
+  redCards: [{ playerName: 'Expulsado', teamName: 'Club B' }],
+}), 'Goleadores: Club A: Jugador. Expulsados: Expulsado (Club B).');
+const streakAngleMatch = {
+  id: 'streak-match', homeTeam: { id: 'a', name: 'Club A' }, awayTeam: { id: 'b', name: 'Club B' },
+  homeScore: 2, awayScore: 1, finishedAt: '2026-09-10T10:00:00Z',
+};
+const streakContext = { matches: [
+  { id: 'previous-1', homeTeam: { id: 'a' }, awayTeam: { id: 'b' }, homeScore: 2, awayScore: 0, finishedAt: '2026-09-09T10:00:00Z' },
+  { id: 'previous-2', homeTeam: { id: 'b' }, awayTeam: { id: 'a' }, homeScore: 0, awayScore: 1, finishedAt: '2026-09-08T10:00:00Z' },
+] };
+const selectedStreakAngle = buildMatchStoryAngle(streakAngleMatch, streakContext);
+assert.ok(['streak', 'tournament', 'moment', 'rivalry', 'result'].includes(selectedStreakAngle.key));
+assert.deepEqual(selectedStreakAngle, buildMatchStoryAngle(streakAngleMatch, streakContext));
 
 for (const subtype of ['arrival', 'departure', 'move']) {
   const transfer = generateTransferNews({

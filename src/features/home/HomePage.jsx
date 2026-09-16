@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { useAutomaticNews } from '../news/useAutomaticNews.js';
 import { formatDate } from '../public/DataStates.jsx';
 import { NewsArtwork } from '../../components/NewsArtwork.jsx';
@@ -34,12 +34,23 @@ function FittedHeadline({ children }) {
   return <span ref={headlineRef} className="headline-result">{children}</span>;
 }
 
-function SecondaryNews({ item, teams }) {
+function NewsModal({ item, teams, onClose }) {
+  if (!item) return null;
+  const match = item.sourceType === 'match' ? item.original : null;
+  const goals = match?.goals ?? [];
+  const cards = match?.redCards ?? [];
+  const teamGoals = team => goals.filter(goal => (goal.teamId ?? goal.scoringTeamId ?? goal.scoringTeam?.id ?? goal.team?.id) === team?.id);
+  const GoalColumn = ({ label, team }) => <div className="news-acta-team"><small>{label}</small><strong>{team?.name ?? 'EQUIPO'}</strong><ul>{teamGoals(team).length ? teamGoals(team).map((goal, i) => <li key={goal.id ?? i}>⚽ {goal.playerName ?? goal.player?.name ?? 'Gol sin jugador'}</li>) : <li className="news-acta-empty">Sin goles registrados</li>}</ul></div>;
+  return <div className="news-detail-backdrop" role="presentation" onClick={onClose}><article className="news-detail-modal" role="dialog" aria-modal="true" onClick={event => event.stopPropagation()}><button className="news-detail-close" onClick={onClose} aria-label="Cerrar noticia">×</button><NewsArtwork item={item} teams={teams}/><time>{item.date ? formatDate(item.date) : 'FECHA NO PUBLICADA'}</time><h2>{item.headline}</h2><p>{item.body}</p>{item.body2 && <p className="news-story-angle">{item.body2}</p>}{match && <section className="news-match-acta"><h3>ACTA DEL PARTIDO</h3><GoalColumn label="LOCAL" team={match.homeTeam}/><GoalColumn label="VISITA" team={match.awayTeam}/>{cards.length > 0 && <p>🟥 Sancionados: {cards.map(card => card.playerName ?? card.player?.name ?? 'Jugador').join(', ')}</p>}</section>}</article></div>;
+}
+
+function SecondaryNews({ item, teams, onOpen }) {
   if (!item) return <article className="small-story automatic-small-story"><h3>ACTUALIZACIÓN</h3><h4>ESPERANDO NUEVAS NOTICIAS</h4><p>La portada se actualizará cuando la API publique un nuevo evento.</p></article>;
-  return <article className={`small-story automatic-small-story news-${item.type}-${item.subtype}`} data-image={item.image?.id ?? ''}><h3>{item.label}</h3><div className="secondary-news-content"><NewsArtwork item={item} teams={teams}/><div><time>{item.date ? formatDate(item.date) : 'FECHA NO PUBLICADA'}</time><h4>{item.headline}</h4><p>{item.body}</p></div></div></article>;
+  return <article className={`small-story automatic-small-story news-${item.type}-${item.subtype}`} data-image={item.image?.id ?? ''}><h3>{item.label}</h3><div className="secondary-news-content"><NewsArtwork item={item} teams={teams}/><div><time>{item.date ? formatDate(item.date) : 'FECHA NO PUBLICADA'}</time><h4>{item.headline}</h4><p>{item.body}</p><button className="news-read-more" onClick={() => onOpen(item)}>LEER NOTICIA COMPLETA</button></div></div></article>;
 }
 
 export function HomePage({ tournament, lead, teams = [] }) {
+  const [selectedNews, setSelectedNews] = useState(null);
   const { news, loading } = useAutomaticNews();
   const latest = news[0];
   const { team: newsTeam, opponent: newsOpponent } = resolveNewsParticipants(latest, teams);
@@ -48,8 +59,8 @@ export function HomePage({ tournament, lead, teams = [] }) {
   const fallbackBody = lead ? `La fecha ${lead.roundNumber ?? 'actual'} enfrentará a ${lead.homeTeam.name} y ${lead.awayTeam.name}.` : 'La liga aún no tiene partidos próximos publicados.';
   return <main className="newspaper"><section className="main-edition">
     <header className="newspaper-header"><h1><span>KOINONIA <em>e-LEAGUE</em> NEWS</span></h1><p>FÚTBOL VIRTUAL. PASIÓN REAL.</p><div className="edition-date">ÚLTIMA HORA<br/><time>{latest?.date ? formatDate(latest.date) : tournament?.name ?? 'CARGANDO LIGA'}</time></div></header>
-    <article className="lead-story"><h2 className="automatic-news-headline"><span className="headline-team">{latest?.label ?? (loading ? 'ACTUALIZANDO' : 'KOINONIA e-LEAGUE')}</span><FittedHeadline>{latest?.headline ?? fallbackHeadline}</FittedHeadline></h2><div className="lead-columns"><div className="lead-copy"><p>{latest?.body ?? fallbackBody}</p><blockquote>“Fútbol como antes,<br/>amigos como siempre.”</blockquote></div><figure className="lead-photo" style={{ '--news-primary': heroPalette.primary, '--news-secondary': heroPalette.secondary, '--news-accent': heroPalette.accent }} role="img" aria-label="Portada deportiva de Koinonia e-League">{latest?.image && <RecolorableNewsScene scene={latest.image} team={newsTeam} opponent={newsOpponent} alt="" className="lead-news-scene"/>}{latest?.sourceType === 'match' && ['victory', 'defeat'].includes(latest?.type) && newsTeam && <span className="lead-winner-crest" title={`Ganador: ${newsTeam.name}`}><TeamMark team={newsTeam}/></span>}</figure></div></article>
+    <article className="lead-story"><h2 className="automatic-news-headline"><span className="headline-team">{latest?.label ?? (loading ? 'ACTUALIZANDO' : 'KOINONIA e-LEAGUE')}</span><FittedHeadline>{latest?.headline ?? fallbackHeadline}</FittedHeadline></h2><div className="lead-columns"><div className="lead-copy"><p>{latest?.body ?? fallbackBody}</p><button className="news-read-more lead-read-more" onClick={() => latest && setSelectedNews(latest)}>LEER NOTICIA COMPLETA</button><blockquote>“Fútbol como antes,<br/>amigos como siempre.”</blockquote></div><figure className="lead-photo" style={{ '--news-primary': heroPalette.primary, '--news-secondary': heroPalette.secondary, '--news-accent': heroPalette.accent }} role="img" aria-label="Portada deportiva de Koinonia e-League">{latest?.image && <RecolorableNewsScene scene={latest.image} team={newsTeam} opponent={newsOpponent} alt="" className="lead-news-scene"/>}{latest?.sourceType === 'match' && ['victory', 'defeat'].includes(latest?.type) && newsTeam && <span className="lead-winner-crest" title={`Ganador: ${newsTeam.name}`}><TeamMark team={newsTeam}/></span>}</figure></div></article>
   </section><section className="secondary-stories">
-    <SecondaryNews item={news[1]} teams={teams}/><SecondaryNews item={news[2]} teams={teams}/><SecondaryNews item={news[3]} teams={teams}/>
-  </section></main>;
+    <SecondaryNews item={news[1]} teams={teams} onOpen={setSelectedNews}/><SecondaryNews item={news[2]} teams={teams} onOpen={setSelectedNews}/><SecondaryNews item={news[3]} teams={teams} onOpen={setSelectedNews}/>
+  </section><NewsModal item={selectedNews} teams={teams} onClose={() => setSelectedNews(null)}/></main>;
 }

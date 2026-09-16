@@ -6,14 +6,16 @@ import { useApiQuery } from '../public/useApiQuery.js';
 const list = value => Array.isArray(value) ? value : [];
 const isSanction = item => /red|card|sanction|susp|expuls|tarjeta/i.test(`${item?.type ?? ''} ${item?.message ?? ''} ${item?.description ?? ''}`);
 
+const loadMatchDetails = async (status, signal) => {
+  const response = await endpoints.matches({ status, page: 1, pageSize: 100 }, signal);
+  const summaries = list(response?.data);
+  const details = await Promise.all(summaries.map(match => endpoints.match(match.id, signal)));
+  return { data: details.map(detail => detail?.data ?? detail).filter(Boolean) };
+};
+
 export function useAutomaticNews(refreshInterval = 30000) {
-  const liveMatches = useApiQuery(async signal => {
-    const response = await endpoints.matches({ status: 'live', page: 1, pageSize: 100 }, signal);
-    const summaries = list(response?.data);
-    const details = await Promise.all(summaries.map(match => endpoints.match(match.id, signal)));
-    return { data: details.map(detail => detail?.data ?? detail).filter(Boolean) };
-  });
-  const finishedMatches = useApiQuery(signal => endpoints.matches({ status: 'finished', page: 1, pageSize: 100 }, signal));
+  const liveMatches = useApiQuery(signal => loadMatchDetails('live', signal));
+  const finishedMatches = useApiQuery(signal => loadMatchDetails('finished', signal));
   const transfers = useApiQuery(signal => endpoints.transfers({ page: 1, pageSize: 100 }, signal));
   const activity = useApiQuery(signal => endpoints.activity({ page: 1, pageSize: 100 }, signal));
   const queries = [liveMatches, finishedMatches, transfers, activity];
@@ -27,7 +29,7 @@ export function useAutomaticNews(refreshInterval = 30000) {
   const news = useMemo(() => {
     const generated = [
       ...list(liveMatches.data).map(generateLiveMatchNews),
-      ...list(finishedMatches.data).map(generateMatchNews),
+      ...list(finishedMatches.data).map(match => generateMatchNews(match, { matches: list(finishedMatches.data) })),
       ...list(transfers.data).map(generateTransferNews),
       ...list(activity.data).filter(isSanction).map(generateSanctionNews),
     ].filter(Boolean);
