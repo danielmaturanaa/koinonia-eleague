@@ -857,7 +857,7 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
   .football-world::before { position: fixed; background-position: center top; background-size: auto 100vh; opacity: .72; }
   .game-header { height: 135px; overflow: hidden; }
   .header-emblems { display: none; }
-  .api-status { left: 10px; right: auto; bottom: 10px; transform: none; }
+  .api-status { left: auto; right: 8px; top: 86px; bottom: auto; transform: none; }
   .brand { left: 50%; top: 2px; width: 480px; height: 125px; max-width: 88vw; transform: translateX(-50%); }
   .home-composition { grid-template-columns: minmax(0, 1fr); justify-content: stretch; gap: 14px; margin: 0 12px; height: auto; }
   .center-stage { width: 100%; height: auto; }

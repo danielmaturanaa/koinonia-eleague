@@ -13,7 +13,7 @@ const loadMatchDetails = async (status, signal) => {
   return { data: details.map(detail => detail?.data ?? detail).filter(Boolean) };
 };
 
-export function useAutomaticNews(refreshInterval = 30000) {
+export function useAutomaticNews(refreshInterval = 600000) {
   const liveMatches = useApiQuery(signal => loadMatchDetails('live', signal));
   const finishedMatches = useApiQuery(signal => loadMatchDetails('finished', signal));
   const transfers = useApiQuery(signal => endpoints.transfers({ page: 1, pageSize: 100 }, signal));

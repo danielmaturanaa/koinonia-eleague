@@ -5,7 +5,7 @@ export function MusicPlayer({ tracks = [] }) {
   const [trackIndex, setTrackIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [autoplayBlocked, setAutoplayBlocked] = useState(false);
-  const [volume, setVolume] = useState(0.65);
+  const [volume, setVolume] = useState(0.35);
   const volumeId = useId();
   const track = tracks[trackIndex];
 
