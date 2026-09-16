@@ -1043,6 +1043,9 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
   .club-budget-tab { margin-top: 0; }
   .club-anthem-editor { grid-template-columns: 1fr; }
   .club-anthem-editor > .action-button { grid-column: auto; }
+  .person-modal .club-anthem-editor { grid-template-rows: auto minmax(280px, 1fr) auto auto; height: calc(100vh - 120px); }
+  .person-modal .club-anthem-audio { align-self: start; }
+  .person-modal .club-anthem-editor > label { min-height: 280px; }
   .club-history-published { height: 430px; max-height: 55vh; overflow: hidden; }
   .published-review { min-height: 0; overflow-y: auto; overflow-x: hidden; }
   .published-anthem { grid-template-columns: 1fr; }
