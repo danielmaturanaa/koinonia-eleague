@@ -948,7 +948,7 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
   .classification-workspace .classification-content-tabs button { min-width: 0; padding: 5px 3px; font-size: 12px; line-height: 1.1; white-space: normal; }
   /* En pantallas estrechas, convertir cada fila en una cuadrícula estable para
      que Equipo conserve espacio y nunca se superponga con PJ o PTS. */
-  .classification-workspace .league-table { display: block; table-layout: auto; }
+  .classification-workspace .league-table { display: block; width: 100%; table-layout: fixed; border-collapse: collapse; font: inherit; }
   .classification-workspace .league-table colgroup { display: none; }
   .classification-workspace .league-table thead,
   .classification-workspace .league-table tbody { display: contents; }
@@ -963,6 +963,10 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
   .classification-workspace .league-table td:nth-child(3) { grid-column: 3; }
   .classification-workspace .league-table th:nth-child(10),
   .classification-workspace .league-table td:nth-child(10) { grid-column: 4; }
+  .match-detail { max-height: none; overflow: visible; }
+  .match-detail-kicker { align-items: flex-start; flex-direction: column; }
+  .match-detail-actions { width: 100%; justify-content: stretch; }
+  .match-detail-actions button { flex: 1 1 0; min-width: 0; font-size: 10px; }
   .club-person-profile { grid-template-columns: 1fr; height: auto; }
   .club-person-profile .president-card { height: auto; }
   .club-person-profile .president-card > img, .club-person-profile .president-photo-placeholder { height: 256px; }

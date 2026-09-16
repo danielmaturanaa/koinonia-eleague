@@ -71,7 +71,7 @@ function MultiSlot({ index, teamId, matchId, matches, teams, onSelectTeam, onSel
 }
 
 function MatchDetail({ matchId, onChanged, onBack, resolveTeam, teams }) {
-  const [panel, setPanel] = useState(null);
+  const [panel, setPanel] = useState(() => window.matchMedia?.('(max-width: 560px)').matches ? 'scoreboard' : null);
   const detail = useApiQuery(signal => matchId ? endpoints.match(matchId, signal) : Promise.resolve({ data: null }), [matchId]);
   const refresh = () => { detail.retry(); onChanged(); };
   const togglePanel = value => setPanel(current => current === value ? null : value);
