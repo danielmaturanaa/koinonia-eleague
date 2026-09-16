@@ -1,4 +1,4 @@
-import { useLayoutEffect, useState } from 'react';
+import { useLayoutEffect, useRef, useState } from 'react';
 import { ApiStatus } from './ApiStatus.jsx';
 import { MusicPlayer } from './MusicPlayer.jsx';
 import { Navigation } from './Navigation.jsx';
@@ -22,6 +22,8 @@ function PressStartPrompt() {
 
 export function ArcadeLayout({ route, navigate, children, sidebar, error, dismissError, headerTeams = [], playlist = [] }) {
   const [viewport, setViewport] = useState({ width: DESIGN_WIDTH, scale: 1 });
+  const [newspaperHeight, setNewspaperHeight] = useState(0);
+  const centerStageRef = useRef(null);
   useLayoutEffect(() => {
     const resize = () => {
       const designWidth = Math.max(DESIGN_WIDTH, Math.round(DESIGN_HEIGHT * window.innerWidth / window.innerHeight));
@@ -33,6 +35,23 @@ export function ArcadeLayout({ route, navigate, children, sidebar, error, dismis
     window.addEventListener('resize', resize);
     return () => window.removeEventListener('resize', resize);
   }, []);
+
+  useLayoutEffect(() => {
+    if (route.name !== 'home') {
+      setNewspaperHeight(0);
+      return undefined;
+    }
+    const newspaper = centerStageRef.current?.querySelector('main.newspaper');
+    if (!newspaper) return undefined;
+    const updateHeight = () => {
+      const nextHeight = newspaper.offsetHeight;
+      setNewspaperHeight(current => current === nextHeight ? current : nextHeight);
+    };
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(newspaper);
+    return () => observer.disconnect();
+  }, [route.name, children]);
 
   const visibleTeams = headerTeams.slice(0, 12);
   const splitAt = Math.ceil(visibleTeams.length / 2);
@@ -46,7 +65,7 @@ export function ArcadeLayout({ route, navigate, children, sidebar, error, dismis
         </button>
         <HeaderEmblems teams={visibleTeams.slice(splitAt)} side="right" navigate={navigate}/>
       </header>
-      <div className="home-composition"><div className="left-rail"><Navigation route={route} navigate={navigate}/><MusicPlayer tracks={playlist}/></div><div className="center-stage">{children}{route.name === 'home' && <PressStartPrompt/>}</div>{sidebar}</div>
+      <div className="home-composition"><div className="left-rail" style={route.name === 'home' && newspaperHeight ? { '--aligned-newspaper-height': `${newspaperHeight}px` } : undefined}><Navigation route={route} navigate={navigate}/><MusicPlayer tracks={playlist}/></div><div className="center-stage" ref={centerStageRef}>{children}{route.name === 'home' && <PressStartPrompt/>}</div>{sidebar}</div>
       <ApiStatus/>
       {error && <div className="preview-notice" role="status">{error}<button onClick={dismissError} aria-label="Cerrar aviso">×</button></div>}
     </div>

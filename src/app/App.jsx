@@ -35,7 +35,7 @@ export function App() {
   const activeTournaments = [...list(league.home?.activeTournaments)].sort((a, b) => tournamentPriority(a) - tournamentPriority(b) || (a.name ?? '').localeCompare(b.name ?? '', 'es'));
   const tournament = activeTournaments.find(item => item.format === 'league') ?? activeTournaments[0];
   const upcoming = league.upcomingMatches.length ? league.upcomingMatches : list(league.home?.upcomingMatches);
-  const completed = list(league.home?.recentMatches).slice(0, 5);
+  const completed = list(league.home?.recentMatches).slice(0, 7);
 
   if (route.name === 'scoreboard') {
     return <MatchScoreboardPage matchId={route.matchId} onBack={() => navigate('/partidos')}/>;

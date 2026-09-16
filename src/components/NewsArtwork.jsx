@@ -26,10 +26,14 @@ export function NewsArtwork({ item, teams = [] }) {
   const context = contextOf(item);
   const homeScore = Number(item.original?.homeScore);
   const awayScore = Number(item.original?.awayScore);
-  const { team: primary, opponent: secondary, primaryIsAway } = useMemo(
+  const { team: primary, opponent: secondary } = useMemo(
     () => resolveNewsParticipants(item, teams),
     [item, teams],
   );
+  const teamIndex = useMemo(() => new Map(teams.map(team => [team.id ?? team.teamId ?? team.team_id, team])), [teams]);
+  const resolveDisplayTeam = candidate => candidate ? { ...candidate, ...(teamIndex.get(candidate.id ?? candidate.teamId ?? candidate.team_id) ?? {}) } : null;
+  const homeTeam = item.sourceType === 'match' ? resolveDisplayTeam(item.original?.homeTeam) : primary;
+  const awayTeam = item.sourceType === 'match' ? resolveDisplayTeam(item.original?.awayTeam) : secondary;
   const fallback = fallbackPalettes[context];
   const [colors, setColors] = useState(fallback);
 
@@ -48,16 +52,14 @@ export function NewsArtwork({ item, teams = [] }) {
   }, [primary, secondary, context, fallback]);
 
   const score = item.sourceType === 'match' && item.type !== 'upcoming'
-    ? primaryIsAway ? `${awayScore} : ${homeScore}` : `${homeScore} : ${awayScore}`
+    ? `${homeScore} : ${awayScore}`
     : null;
   const style = { '--news-primary': colors[0], '--news-secondary': colors[1], '--news-accent': colors[2] };
   return <div className={`news-artwork news-artwork-${context}`} style={style} aria-label={`Gráfica ${contextLabels[context]} de ${primary?.name ?? 'Koinonia e-League'}`}>
     <RecolorableNewsScene scene={item.image} team={primary} opponent={secondary} alt="" className="news-artwork-scene"/>
     <span className="news-artwork-grid"/>
     <span className="news-artwork-context">{contextLabels[context]}</span>
-    <TeamMark team={primary ?? {}} className="news-artwork-primary"/>
-    {secondary && <TeamMark team={secondary} className="news-artwork-secondary"/>}
-    {score && <strong>{score}</strong>}
+    {score ? <div className="news-artwork-scoreline"><TeamMark team={homeTeam ?? {}} className="news-artwork-primary"/><strong>{score}</strong>{awayTeam && <TeamMark team={awayTeam} className="news-artwork-secondary"/>}</div> : <><TeamMark team={homeTeam ?? {}} className="news-artwork-primary"/>{awayTeam && <TeamMark team={awayTeam} className="news-artwork-secondary"/>}</>}
     <small>{primary?.name ?? 'KOINONIA e-LEAGUE'}</small>
   </div>;
 }
