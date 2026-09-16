@@ -11,11 +11,12 @@ export function resolveKitColors(source, fallback = fallbackKitColors.team) {
   const colors = source?.colors ?? source?.kitColors ?? source?.kit?.colors ?? source ?? {};
   const primary = source?.primaryColor ?? colors.primary;
   const secondary = source?.secondaryColor ?? colors.secondary;
+  const tertiary = source?.tertiaryColor ?? colors.tertiary;
   const pick = (candidate, backup) => validHex(candidate) ? candidate.toUpperCase() : backup;
   return {
     shirt: pick(colors.shirt ?? colors.jersey ?? primary, fallback.shirt),
     shorts: pick(colors.shorts ?? secondary, fallback.shorts),
-    socks: pick(colors.socks ?? primary, fallback.socks),
+    socks: pick(colors.socks ?? tertiary ?? primary, fallback.socks),
   };
 }
 
@@ -26,8 +27,8 @@ export function resolveScenePalette(team, opponent) {
   return {
     primary: teamKit.shirt,
     secondary: opponent ? opponentKit.shirt : teamKit.shorts,
-    accent: validHex(teamColors.accent ?? team?.accentColor)
-      ? (teamColors.accent ?? team.accentColor).toUpperCase()
+    accent: validHex(teamColors.tertiary ?? teamColors.accent ?? team?.accentColor)
+      ? (teamColors.tertiary ?? teamColors.accent ?? team.accentColor).toUpperCase()
       : teamKit.socks,
   };
 }

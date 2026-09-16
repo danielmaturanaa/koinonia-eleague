@@ -43,6 +43,7 @@ export function ProfileForm({ team, onChanged, onSaved }) {
     colors: {
       primary: source.colors?.primary ?? fallbackKitColors.team.shirt,
       secondary: source.colors?.secondary ?? fallbackKitColors.team.shorts,
+      tertiary: source.colors?.tertiary ?? fallbackKitColors.team.socks,
     },
   });
   const [form, setForm] = useState(() => buildForm(team));
@@ -53,8 +54,13 @@ export function ProfileForm({ team, onChanged, onSaved }) {
   return <form className="admin-form" onSubmit={submit}>
     <label>NOMBRE<input required value={form.name} onChange={event => setForm(current => ({ ...current, name: event.target.value }))}/></label>
     <MediaImageField label="SUBIR NUEVO EMBLEMA" entityType="team" entityId={team.id} onUploaded={imageUrl => setForm(current => ({ ...current, imageUrl }))}/>
+    {form.imageUrl && <div className="color-pick-preview">
+      <img src={form.imageUrl} alt="Escudo del club, para usar con la pipeta"/>
+      <small>USA LA PIPETA SOBRE ESTE ESCUDO — AQUÍ SE VE A COLOR REAL, SIN EL FONDO OSCURO DEL MODAL</small>
+    </div>}
     <ColorPickerField label="COLOR PRIMARIO" value={form.colors.primary} onChange={color => setColor('primary', color)}/>
     <ColorPickerField label="COLOR SECUNDARIO" value={form.colors.secondary} onChange={color => setColor('secondary', color)}/>
+    <ColorPickerField label="COLOR TERCIARIO" value={form.colors.tertiary} onChange={color => setColor('tertiary', color)}/>
     <button className="action-button" disabled={mutation.loading}>GUARDAR PERFIL</button>
     <FormFeedback mutation={mutation}/>
   </form>;
