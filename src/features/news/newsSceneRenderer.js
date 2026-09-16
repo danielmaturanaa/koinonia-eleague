@@ -7,6 +7,11 @@ export const fallbackKitColors = {
 
 const validHex = value => typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value);
 
+export function hasConfiguredColors(source) {
+  const colors = source?.colors ?? source?.kitColors ?? source?.kit?.colors ?? source ?? {};
+  return Boolean(source?.primaryColor ?? colors.primary ?? colors.shirt);
+}
+
 export function resolveKitColors(source, fallback = fallbackKitColors.team) {
   const colors = source?.colors ?? source?.kitColors ?? source?.kit?.colors ?? source ?? {};
   const primary = source?.primaryColor ?? colors.primary;

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { getDominantColors } from '../utils/dominantColors.js';
+import { hasConfiguredColors, resolveScenePalette } from '../features/news/newsSceneRenderer.js';
 import { resolveNewsParticipants } from '../features/news/newsParticipants.js';
 import { RecolorableNewsScene } from './RecolorableNewsScene.jsx';
 import { TeamMark } from './TeamMark.jsx';
@@ -35,11 +36,16 @@ export function NewsArtwork({ item, teams = [] }) {
   useEffect(() => {
     let active = true;
     setColors(fallback);
+    if (hasConfiguredColors(primary)) {
+      const palette = resolveScenePalette(primary, secondary);
+      setColors([palette.primary, palette.secondary, palette.accent]);
+      return undefined;
+    }
     if (primary?.imageUrl) getDominantColors(primary.imageUrl, 3)
       .then(result => { if (active && result.length) setColors([...result, ...fallback].slice(0, 3)); })
       .catch(() => {});
     return () => { active = false; };
-  }, [primary?.imageUrl, context]);
+  }, [primary, secondary, context, fallback]);
 
   const score = item.sourceType === 'match' && item.type !== 'upcoming'
     ? primaryIsAway ? `${awayScore} : ${homeScore}` : `${homeScore} : ${awayScore}`

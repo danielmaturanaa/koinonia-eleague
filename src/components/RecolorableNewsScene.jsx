@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { applyAvailableMasks, getSceneBaseSrc, getSceneColorLayers } from '../features/news/newsSceneRenderer.js';
+import { applyAvailableMasks, getSceneBaseSrc, getSceneColorLayers, hasConfiguredColors } from '../features/news/newsSceneRenderer.js';
 import { getDominantColors } from '../utils/dominantColors.js';
 
 const loadOptionalImage = src => new Promise(resolve => {
@@ -16,14 +16,6 @@ async function loadSceneBase(scene) {
   if (requested) return { image: requested, fallback: false };
   return { image: null, fallback: true };
 }
-
-const hasConfiguredColors = team => Boolean(
-  team?.primaryColor
-  || team?.colors?.primary
-  || team?.colors?.shirt
-  || team?.kitColors?.primary
-  || team?.kitColors?.shirt,
-);
 
 async function resolveTeamColors(team) {
   if (!team?.imageUrl || hasConfiguredColors(team)) return team;
