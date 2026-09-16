@@ -116,7 +116,7 @@ function ResumenTab({ presidentName, photo, coachName, managerPhoto, honours, st
     <div className="club-resumen-left">
       <div className="club-resumen-person"><small>PRESIDENTE</small><PersonPhoto photo={photo} name={presidentName}/><b>{presidentName}</b></div>
       <div className="club-resumen-person"><small>DIRECTOR TÉCNICO</small><PersonPhoto photo={managerPhoto} name={coachName}/><b>{coachName}</b></div>
-      <div className="club-resumen-honours-mini"><small>PALMARÉS</small><b className="club-resumen-honours-count">{honours.length} TÍTULO{honours.length === 1 ? '' : 'S'}</b>{honours.length ? <ul className="club-resumen-honours-list">{honours.map(item => <li key={item.id}>★ {item.name}{item.season ? ` (${item.season})` : ''}</li>)}</ul> : <p className="empty-copy">SIN TÍTULOS.</p>}</div>
+      <div className="club-resumen-honours-mini"><small>PALMARÉS</small><b className="club-resumen-honours-count">{honours.length} TÍTULO{honours.length === 1 ? '' : 'S'}</b>{honours.length ? <ul className="club-resumen-honours-list">{honours.map(item => <li key={item.id}><span aria-hidden="true">★</span> {item.name}{item.season ? ` (${item.season})` : ''}</li>)}</ul> : <p className="empty-copy">SIN TÍTULOS.</p>}</div>
     </div>
     <section className="club-resumen-pitch-section">
       <h2>PLANTEL TITULAR</h2>
