@@ -9,7 +9,7 @@
     "build": "vite build --configLoader native",
     "preview": "vite preview --configLoader native --host 127.0.0.1 --port 4174",
     "smoke": "node scripts/smoke-api.mjs",
-    "test:news": "node scripts/test-news-generator.mjs && node scripts/test-news-images.mjs && node scripts/test-news-assets.mjs",
+    "test:news": "node scripts/test-news-generator.mjs && node scripts/test-news-images.mjs",
     "check": "pnpm build && pnpm test:news && pnpm smoke"
   },
   "dependencies": {

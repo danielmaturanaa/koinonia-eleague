@@ -9,6 +9,5 @@ export function deterministicImage(images, eventId) {
 export function getNewsImage({ id, type, subtype } = {}) {
   const images = newsImageCatalog[type]?.[subtype];
   if (!Array.isArray(images)) return null;
-  const productionImages = images.filter(image => image.assetFormat === 'palette-v1');
-  return deterministicImage(productionImages.length ? productionImages : images, id);
+  return deterministicImage(images, id);
 }

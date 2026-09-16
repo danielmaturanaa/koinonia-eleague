@@ -30,7 +30,7 @@ for (const [type, subtypes] of Object.entries(expectedStructure)) {
     for (const image of images) {
       assert.equal(typeof image.id, 'string');
       assert.equal(typeof image.scene, 'string');
-      assert.match(image.src, /^\/(news-scenes|assets\/newspaper-scenes)\//);
+      assert.match(image.src, /^\/news-scenes\//);
       assert.equal(image.recolorable, image.colorTargets.length > 0);
       sceneCount += 1;
     }
@@ -39,8 +39,7 @@ for (const [type, subtypes] of Object.entries(expectedStructure)) {
 
 const input = { id: 'uuid-news-37ba206b', type: 'victory', subtype: 'normal' };
 assert.deepEqual(getNewsImage(input), getNewsImage(structuredClone(input)));
-assert.equal(getNewsImage(input).assetFormat, 'palette-v1');
-assert.equal(getSceneBaseSrc(getNewsImage(input)), '/assets/newspaper-scenes/victory-normal-01/base.png');
+assert.match(getSceneBaseSrc(getNewsImage(input)), /^\/news-scenes\/victory\/normal\/[a-z-]+\/scene-base\.png$/);
 assert.equal(getNewsImage({ ...input, type: 'unknown' }), null);
 assert.equal(getNewsImage({ ...input, subtype: 'unknown' }), null);
 assert.equal(deterministicImage([], input.id), null);
@@ -49,7 +48,6 @@ const selectedIds = new Set(Array.from({ length: 100 }, (_, index) =>
   deterministicImage(newsImageCatalog.victory.normal, `event-${index}`)?.id));
 assert.ok(selectedIds.size > 1, 'IDs distintos deben poder distribuirse entre varias escenas');
 
-const productionScene = newsImageCatalog.victory.normal[0];
 const twoTeamScene = newsImageCatalog.victory.normal[1];
 const layers = getSceneColorLayers(
   twoTeamScene,
@@ -75,11 +73,6 @@ assert.deepEqual(alternativePalette, { primary: '#00A651', secondary: '#5B2C83',
 assert.deepEqual(
   resolveScenePalette({ colors: { shirt: '#00A651', shorts: '#FFFFFF', socks: '#F6EB14' } }, null),
   { primary: '#00A651', secondary: '#FFFFFF', accent: '#F6EB14' },
-);
-assert.deepEqual(
-  getSceneColorLayers(productionScene, { colors: { shirt: '#00A651', accent: '#F6EB14' } }, { colors: { shirt: '#5B2C83' } })
-    .map(layer => [layer.part, layer.color]),
-  [['primary', '#00A651'], ['secondary', '#5B2C83'], ['accent', '#F6EB14']],
 );
 
 const base = new Uint8ClampedArray([40, 40, 40, 255, 220, 220, 220, 255]);

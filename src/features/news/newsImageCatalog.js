@@ -1,22 +1,12 @@
-export const productionSceneIds = new Set([
-  'victory-normal-01', 'victory-narrow-01', 'victory-big-01',
-  'defeat-normal-01', 'defeat-narrow-01', 'defeat-big-01',
-  'draw-goalless-01', 'draw-normal-01', 'draw-crazy-01',
-  'transfer-arrival-01', 'transfer-departure-01', 'transfer-move-01',
-  'sanction-player-01',
-]);
-
 const scene = (id, name, src, colorTargets, focalPoint, tags) => {
-  const production = productionSceneIds.has(id);
   return {
     id,
     scene: name,
-    src: production ? `/assets/newspaper-scenes/${id}` : src,
+    src,
     recolorable: colorTargets.length > 0,
     colorTargets,
     focalPoint,
     tags,
-    ...(production ? { assetFormat: 'palette-v1' } : {}),
   };
 };
 
