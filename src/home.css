@@ -605,7 +605,7 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .classification-workspace .standings-workspace-panel { max-height: none; overflow: visible; }
 .classification-workspace .standings-workspace-panel .table-scroll { overflow: visible; }
 .classification-workspace .workspace-columns { grid-template-columns: minmax(0, 1fr); }
-.classification-content-tabs { margin-top: 0; }
+.classification-content-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); margin-top: 0; }
 .scorers-workspace-panel { width: 100%; max-width: 100%; min-width: 0; }
 .classification-workspace .scorers-workspace-panel { max-height: none; overflow: hidden; }
 .scorers-list { width: 100%; max-height: 310px; overflow-x: hidden; overflow-y: auto; scrollbar-gutter: stable; }
@@ -1204,7 +1204,7 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
   .classification-workspace .workspace-panel,
   .classification-workspace .standings-workspace-panel,
   .classification-workspace .scorers-workspace-panel { width: 100%; min-width: 0; }
-  .classification-workspace .classification-content-tabs { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .classification-workspace .classification-content-tabs { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .classification-workspace .classification-content-tabs button { min-width: 0; padding: 5px 3px; font-size: 12px; line-height: 1.1; white-space: normal; }
   /* En pantallas estrechas, convertir cada fila en una cuadrícula estable para
      que Equipo conserve espacio y nunca se superponga con PJ o PTS. */
@@ -1271,7 +1271,7 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
   .section-paper h1 { font-size: 44px; }
   .section-paper > p:not(.section-kicker) { font-size: 19px; }
   .filter-bar, .workspace-columns, .split-view, .directory-grid, .crest-gallery { display: grid; grid-template-columns: 1fr; }
-  .classification-view-tabs { grid-template-columns: 1fr; }
+  .classification-view-tabs:not(.classification-content-tabs) { grid-template-columns: 1fr; }
   .tournament-tabs { grid-template-columns: 1fr; }
   .tournament-workspace > header h2 { font-size: 23px; overflow-wrap: anywhere; }
   .tournament-admin > nav { grid-template-columns: 1fr; }
