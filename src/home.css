@@ -481,7 +481,7 @@ figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 .news-detail-copy { display: grid; gap: 8px; padding: 14px; }
 .news-detail-copy > h2 { color: #063172; font: 400 34px/1.02 'Anton', sans-serif; }
 .news-detail-copy > h3 { color: #a0001d; font: 700 19px/1.12 'Roboto Condensed', sans-serif; }
-.news-detail-copy > p { font: 500 17px/1.28 'Roboto Condensed', sans-serif; }
+.news-detail-copy > p { font: 500 17px/1.28 'Roboto Condensed', sans-serif; white-space: pre-line; }
 .news-card .news-match-acta > b { padding: 0; color: #063172; background: transparent; font: 700 11px/1 'Oswald', sans-serif; }
 @media (min-width: 901px) {
   .news-card { height: auto; min-height: 150px; }
