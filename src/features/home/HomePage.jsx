@@ -32,7 +32,7 @@ function FittedHeadline({ children }) {
 
 function NewsModal({ item, teams, onClose }) {
   if (!item) return null;
-  return <div className="news-detail-backdrop" role="presentation" onClick={onClose}><article className="news-detail-modal" role="dialog" aria-modal="true" onClick={event => event.stopPropagation()}><button className="news-detail-close" onClick={onClose} aria-label="Cerrar noticia">×</button><NewsArtwork item={item} teams={teams}/><time>{item.publishedAt ?? item.date ? formatDate(item.publishedAt ?? item.date) : 'FECHA NO PUBLICADA'}</time><h2>{item.headline}</h2>{item.subtitle && <h3>{item.subtitle}</h3>}<p>{item.body}</p>{item.body2 && <p className="news-story-angle">{item.body2}</p>}</article></div>;
+  return <div className="person-modal-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}><article className="person-modal news-detail-modal" role="dialog" aria-modal="true" aria-label={item.headline}><header><h2>NOTICIA COMPLETA</h2><button type="button" onClick={onClose} aria-label="Cerrar">×</button></header><NewsArtwork item={item} teams={teams}/><div className="news-detail-copy"><time>{item.publishedAt ?? item.date ? formatDate(item.publishedAt ?? item.date) : 'FECHA NO PUBLICADA'}</time><b>{item.label}</b><h2>{item.headline}</h2>{item.subtitle && <h3>{item.subtitle}</h3>}<p>{item.body}</p>{item.body2 && <p className="news-story-angle">{item.body2}</p>}</div></article></div>;
 }
 
 function SecondaryNews({ item, teams, onOpen }) {

@@ -59,7 +59,7 @@ export function NewsArtwork({ item, teams = [] }) {
   return <div className={`news-artwork news-artwork-${context}${hasCover ? ' has-persisted-cover' : ''}`} style={style} aria-label={`Gráfica ${contextLabels[context]} de ${primary?.name ?? 'Koinonia e-League'}`}>
     {item.imageUrl ? <img src={item.imageUrl} alt="" className="news-artwork-scene"/> : <RecolorableNewsScene scene={item.image} team={primary} opponent={secondary} alt="" className="news-artwork-scene"/>}
     {!hasCover && <><span className="news-artwork-grid"/><span className="news-artwork-context">{contextLabels[context]}</span></>}
-    {score ? <div className="news-artwork-scoreline">{!hasCover && <TeamMark team={homeTeam ?? {}} className="news-artwork-primary"/>}<strong>{score}</strong>{!hasCover && awayTeam && <TeamMark team={awayTeam} className="news-artwork-secondary"/>}</div> : !hasCover && <><TeamMark team={homeTeam ?? {}} className="news-artwork-primary"/>{awayTeam && <TeamMark team={awayTeam} className="news-artwork-secondary"/>}</>}
+    {score ? <div className="news-artwork-scoreline">{homeTeam && <TeamMark team={homeTeam} className="news-artwork-primary"/>}<strong>{score}</strong>{awayTeam && <TeamMark team={awayTeam} className="news-artwork-secondary"/>}</div> : !hasCover && <><TeamMark team={homeTeam ?? {}} className="news-artwork-primary"/>{awayTeam && <TeamMark team={awayTeam} className="news-artwork-secondary"/>}</>}
     <small>{primary?.name ?? 'KOINONIA e-LEAGUE'}</small>
   </div>;
 }
