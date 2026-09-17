@@ -82,6 +82,7 @@ function clubHonours(team, history) {
       id: item.id ?? `${item.name ?? item.title ?? 'title'}-${index}`,
       name: item.name ?? item.title ?? item.tournament?.name ?? item.competition?.name ?? item.message ?? 'Título oficial',
       season: item.season ?? item.year ?? item.edition ?? item.wonAt?.slice?.(0, 4) ?? '',
+      sourceType: item.sourceType ?? item.source_type ?? null,
     };
   });
   return rows.filter((item, index) => rows.findIndex(candidate => `${candidate.name}-${candidate.season}` === `${item.name}-${item.season}`) === index);
@@ -239,7 +240,7 @@ export function TeamDetailPage({ team, teams = [], squad, standings, matches = [
   const coachEntity = team?.coach ?? team?.manager ?? ((team?.coachId ?? team?.managerId) ? { id: team.coachId ?? team.managerId } : null);
   const coachProfile = readPersonProfile('coach', coachEntity);
   const honours = team ? clubHonours(team, history) : [];
-  const removableTitleIds = new Set((team?.titles ?? []).map(item => item.id));
+  const removableTitleIds = new Set((team?.titles ?? []).filter(item => !(item.sourceType ?? item.source_type)).map(item => item.id));
   const balance = teamBalance(team);
 
   return <main className="newspaper club-page"><section className={`club-paper club-paper-${activeTab}`}><div className="club-actions"><button className="back-button" onClick={onBack}>← VOLVER A EQUIPOS</button><button className="action-button club-covers-button" onClick={() => setCoversOpen(true)}>▣ PORTADAS</button></div>
