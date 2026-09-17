@@ -37,10 +37,6 @@ export function ArcadeLayout({ route, navigate, children, sidebar, error, dismis
   }, []);
 
   useLayoutEffect(() => {
-    if (route.name !== 'home') {
-      setNewspaperHeight(0);
-      return undefined;
-    }
     const newspaper = centerStageRef.current?.querySelector('main.newspaper');
     if (!newspaper) return undefined;
     const updateHeight = () => {
@@ -65,7 +61,7 @@ export function ArcadeLayout({ route, navigate, children, sidebar, error, dismis
         </button>
         <HeaderEmblems teams={visibleTeams.slice(splitAt)} side="right" navigate={navigate}/>
       </header>
-      <div className="home-composition"><div className="left-rail" style={route.name === 'home' && newspaperHeight ? { '--aligned-newspaper-height': `${newspaperHeight}px` } : undefined}><Navigation route={route} navigate={navigate}/><MusicPlayer tracks={playlist}/></div><div className="center-stage" ref={centerStageRef}>{children}{route.name === 'home' && <PressStartPrompt/>}</div>{sidebar}</div>
+      <div className="home-composition" style={newspaperHeight ? { '--aligned-newspaper-height': `${newspaperHeight}px` } : undefined}><div className="left-rail"><Navigation route={route} navigate={navigate}/><MusicPlayer tracks={playlist}/></div><div className="center-stage" ref={centerStageRef}>{children}<PressStartPrompt/></div>{sidebar}</div>
       <ApiStatus/>
       {error && <div className="preview-notice" role="status">{error}<button onClick={dismissError} aria-label="Cerrar aviso">×</button></div>}
     </div>
