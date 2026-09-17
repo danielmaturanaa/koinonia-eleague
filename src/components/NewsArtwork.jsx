@@ -14,7 +14,7 @@ const fallbackPalettes = {
 const contextOf = item => {
   if (item.type === 'victory' || item.type === 'defeat' || item.type === 'draw') return item.type;
   if (item.sourceType === 'transfer') return 'transfer';
-  if (item.sourceType === 'sanction') return 'sanction';
+  if (item.sourceType === 'sanction' || item.sourceType === 'red_card' || item.type === 'red_card') return 'sanction';
   if (item.type === 'draw' || item.type === 'crazyDraw') return 'draw';
   if (item.type === 'defeat' || item.type === 'bigDefeat') return 'defeat';
   if (item.type === 'upcoming') return 'upcoming';
@@ -56,7 +56,7 @@ export function NewsArtwork({ item, teams = [] }) {
     : null;
   const style = { '--news-primary': colors[0], '--news-secondary': colors[1], '--news-accent': colors[2] };
   return <div className={`news-artwork news-artwork-${context}`} style={style} aria-label={`Gráfica ${contextLabels[context]} de ${primary?.name ?? 'Koinonia e-League'}`}>
-    <RecolorableNewsScene scene={item.image} team={primary} opponent={secondary} alt="" className="news-artwork-scene"/>
+    {item.imageUrl ? <img src={item.imageUrl} alt="" className="news-artwork-scene"/> : <RecolorableNewsScene scene={item.image} team={primary} opponent={secondary} alt="" className="news-artwork-scene"/>}
     <span className="news-artwork-grid"/>
     <span className="news-artwork-context">{contextLabels[context]}</span>
     {score ? <div className="news-artwork-scoreline"><TeamMark team={homeTeam ?? {}} className="news-artwork-primary"/><strong>{score}</strong>{awayTeam && <TeamMark team={awayTeam} className="news-artwork-secondary"/>}</div> : <><TeamMark team={homeTeam ?? {}} className="news-artwork-primary"/>{awayTeam && <TeamMark team={awayTeam} className="news-artwork-secondary"/>}</>}
