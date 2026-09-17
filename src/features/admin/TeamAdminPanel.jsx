@@ -71,12 +71,12 @@ function CustomFieldsEditor({ fields, onChange }) {
   return <fieldset className="custom-fields-editor"><legend>CAMPOS PERSONALIZADOS</legend>{fields.map((field, index) => <div className="custom-field-row" key={field.key || index}><input value={field.label} onChange={event => update(index, 'label', event.target.value)} placeholder="Etiqueta (ej: Apodo)"/><input value={field.value} onChange={event => update(index, 'value', event.target.value)} placeholder="Valor"/><button type="button" onClick={() => onChange(fields.filter((_, current) => current !== index))} aria-label="Quitar campo">×</button></div>)}<button type="button" className="action-button" onClick={() => onChange([...fields, { key: '', label: '', value: '' }])}>+ AGREGAR CAMPO</button></fieldset>;
 }
 
-// La API recibe la clave y etiqueta del campo, sin su valor. Los campos nuevos
-// aún no tienen key, por eso usamos su etiqueta como clave hasta que la API la
-// normalice.
-const customFieldsPayload = fields => fields.map(({ key, label }) => ({
+// La API persiste los tres datos del campo. Los campos nuevos aún no tienen
+// key, por eso usamos su etiqueta como clave hasta que la API la normalice.
+const customFieldsPayload = fields => fields.map(({ key, label, value }) => ({
   key: key || label,
   label,
+  value,
 }));
 
 export function PresidentForm({ team, onChanged, onSaved }) {
