@@ -8,6 +8,7 @@ import { useApiMutation } from '../admin/useApiMutation.js';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 
 const goalName = goal => goal?.player?.name ?? goal?.playerName ?? 'Gol sin jugador';
+const goalMarks = goal => '⚽'.repeat(Math.max(1, Number(goal?.count) || 1));
 const goalTeam = goal => goal?.scoringTeam?.name ?? goal?.team?.name ?? goal?.teamName ?? 'Equipo no informado';
 const cardName = card => card?.player?.name ?? card?.playerName ?? 'Jugador no informado';
 const cardTeam = card => card?.team?.name ?? card?.teamName ?? 'Equipo no informado';
@@ -29,7 +30,7 @@ function MatchActa({ item }) {
   const redCards = item.original?.redCards ?? [];
   const match = item.original;
   const teamGoals = team => goals.filter(goal => (goal.teamId ?? goal.scoringTeamId ?? goal.scoringTeam?.id ?? goal.team?.id) === team?.id);
-  const column = (label, team) => <div className="news-acta-team"><small>{label}</small><strong>{team?.name ?? 'EQUIPO'}</strong><ul>{teamGoals(team).length ? teamGoals(team).map((goal, index) => <li key={goal.id ?? index}>⚽ {goalName(goal)}</li>) : <li className="news-acta-empty">Sin goles registrados</li>}</ul></div>;
+  const column = (label, team) => <div className="news-acta-team"><small>{label}</small><strong>{team?.name ?? 'EQUIPO'}</strong><ul>{teamGoals(team).length ? teamGoals(team).map((goal, index) => <li key={goal.id ?? `${goal.playerId ?? goalName(goal)}-${index}`}>{goalMarks(goal)} {goalName(goal)}</li>) : <li className="news-acta-empty">Sin goles registrados</li>}</ul></div>;
 
   return <div className="news-match-acta">
     <b>ACTA DEL PARTIDO</b>{column('LOCAL', match.homeTeam)}{column('VISITA', match.awayTeam)}
