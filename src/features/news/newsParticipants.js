@@ -16,7 +16,8 @@ export function resolveNewsParticipants(item, teams = []) {
   const matchSecondary = primaryIsAway ? homeTeam : awayTeam;
   const rawTeam = item.sourceType === 'match' ? matchPrimary
     : item.sourceType === 'transfer' ? item.original?.toTeam ?? item.original?.destinationTeam
-      : item.original?.team ?? item.original?.player?.team ?? item.original?.redCard?.team;
+      : item.sourceType === 'league_champion' ? item.original?.champion
+        : item.original?.team ?? item.original?.player?.team ?? item.original?.redCard?.team;
   const rawOpponent = item.sourceType === 'match' ? matchSecondary
     : item.sourceType === 'transfer' ? item.original?.fromTeam ?? item.original?.originTeam : null;
   const merge = candidate => candidate

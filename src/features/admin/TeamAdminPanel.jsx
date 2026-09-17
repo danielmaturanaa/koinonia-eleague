@@ -40,6 +40,7 @@ export function ProfileForm({ team, onChanged, onSaved }) {
   const buildForm = source => ({
     name: source.name ?? '',
     imageUrl: source.imageUrl ?? '',
+    championImageUrl: source.championImageUrl ?? '',
     colors: {
       primary: source.colors?.primary ?? fallbackKitColors.team.shirt,
       secondary: source.colors?.secondary ?? fallbackKitColors.team.shorts,
@@ -54,6 +55,8 @@ export function ProfileForm({ team, onChanged, onSaved }) {
   return <form className="admin-form" onSubmit={submit}>
     <label>NOMBRE<input required value={form.name} onChange={event => setForm(current => ({ ...current, name: event.target.value }))}/></label>
     <MediaImageField label="SUBIR NUEVO EMBLEMA" entityType="team" entityId={team.id} onUploaded={imageUrl => setForm(current => ({ ...current, imageUrl }))}/>
+    <MediaImageField label="SUBIR IMAGEN DE CAMPEÓN" entityType="team" entityId={team.id} onUploaded={championImageUrl => setForm(current => ({ ...current, championImageUrl }))}/>
+    {form.championImageUrl && <div className="color-pick-preview"><img src={form.championImageUrl} alt={`Imagen de campeón de ${team.name}`}/><small>IMAGEN PARA LA NOTICIA CUANDO ESTE EQUIPO ASEGURE EL CAMPEONATO</small><button type="button" className="action-button" onClick={() => setForm(current => ({ ...current, championImageUrl: '' }))}>USAR EMBLEMA DEL EQUIPO</button></div>}
     {form.imageUrl && <div className="color-pick-preview">
       <img src={form.imageUrl} alt="Escudo del club, para usar con la pipeta"/>
       <small>USA LA PIPETA SOBRE ESTE ESCUDO — AQUÍ SE VE A COLOR REAL, SIN EL FONDO OSCURO DEL MODAL</small>

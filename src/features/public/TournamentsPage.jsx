@@ -17,6 +17,21 @@ function GroupStandings({ tournamentId, groupLabel, resolveTeam }) {
   return <section className="workspace-panel"><h4>GRUPO {groupLabel}</h4><DataState query={standings}/>{rows.length > 0 && <StandingsTable rows={rows} resolveTeam={resolveTeam}/>}</section>;
 }
 
+function PlayoffSeriesCard({ series, resolveTeam }) {
+  const stage = series.round === 'semifinal' ? `SEMIFINAL ${series.slot}` : 'FINAL';
+  const home = resolveTeam(series.homeTeam); const away = resolveTeam(series.awayTeam);
+  return <article className={`playoff-series status-${series.status}`}><small>{stage} · {series.matches.length === 1 ? 'PARTIDO ÚNICO' : 'IDA Y VUELTA'}</small><div><span><TeamMark team={home}/>{home.name}</span><b>{series.aggregate.home}</b></div><div><span><TeamMark team={away}/>{away.name}</span><b>{series.aggregate.away}</b></div>{series.status === 'awaiting_tiebreak' && <em>DEFINICIÓN POR PENALES PENDIENTE</em>}{series.winnerTeamId && <strong>CLASIFICA {series.winnerTeamId === home.id ? home.name : away.name}</strong>}<footer>{series.matches.map(match => <span key={match.id}>#{match.leg}: {match.homeScore ?? '–'}-{match.awayScore ?? '–'}</span>)}</footer></article>;
+}
+
+function PlayoffsView({ tournamentId, resolveTeam }) {
+  const playoffs = useApiQuery(signal => endpoints.playoffs(tournamentId, signal), [tournamentId]);
+  const data = playoffs.data;
+  if (!playoffs.loading && !playoffs.error && !data) return <section className="workspace-panel playoff-empty"><h3>PLAYOFFS</h3><p>LA LIGA AÚN NO TIENE UNA FASE FINAL CONFIGURADA.</p></section>;
+  const semis = data?.series?.filter(series => series.round === 'semifinal') ?? [];
+  const final = data?.series?.find(series => series.round === 'final');
+  return <section className="workspace-panel playoff-workspace"><h3>PLAYOFFS</h3><DataState query={playoffs}/>{data && <><p className="playoff-rule">TOP 4 · SEMIFINALES {data.semifinalLegs === 1 ? 'A PARTIDO ÚNICO' : 'IDA Y VUELTA'} · FINAL {data.finalLegs === 1 ? 'A PARTIDO ÚNICO' : 'IDA Y VUELTA'}</p><div className="playoff-bracket"><section><h4>SEMIFINALES</h4>{semis.map(series => <PlayoffSeriesCard key={series.id} series={series} resolveTeam={resolveTeam}/>)}</section><section><h4>FINAL</h4>{final ? <PlayoffSeriesCard series={final} resolveTeam={resolveTeam}/> : <p className="playoff-awaiting">ESPERANDO FINALISTAS</p>}</section></div></>}</section>;
+}
+
 function CreateTournamentForm({ onChanged }) {
   const [form, setForm] = useState({ name: '', format: 'league', competitorKind: 'club' });
   const mutation = useApiMutation((body, signal) => endpoints.createTournament(body, signal), { onSuccess: onChanged });
@@ -42,9 +57,10 @@ function TournamentWorkspace({ tournamentId, classificationOnly, teams, onChange
   const refresh = () => { detail.retry(); standings.retry(); scorers.retry(); onChanged?.(); };
 
   return <section className={`tournament-workspace ${classificationOnly ? 'classification-workspace' : 'management-workspace'}`}><DataState query={detail}/>{detail.data && <><header><div><small>{detail.data.format?.replaceAll('_', ' ')} · {detail.data.competitorKind}</small><h2>{detail.data.name}</h2></div><b className={`status status-${detail.data.status}`}>{detail.data.status}</b></header>{classificationOnly ? <>
-    <nav className="classification-view-tabs classification-content-tabs" aria-label="Datos del torneo"><button className={classificationView === 'standings' ? 'active' : ''} onClick={() => setClassificationView('standings')}>TABLA DE CLASIFICACIÓN</button><button className={classificationView === 'scorers' ? 'active' : ''} onClick={() => setClassificationView('scorers')}>TABLA DE GOLEADORES</button></nav>
+    <nav className="classification-view-tabs classification-content-tabs" aria-label="Datos del torneo"><button className={classificationView === 'standings' ? 'active' : ''} onClick={() => setClassificationView('standings')}>TABLA DE CLASIFICACIÓN</button><button className={classificationView === 'scorers' ? 'active' : ''} onClick={() => setClassificationView('scorers')}>TABLA DE GOLEADORES</button>{detail.data.format === 'league' && <button className={classificationView === 'playoffs' ? 'active' : ''} onClick={() => setClassificationView('playoffs')}>PLAYOFFS</button>}</nav>
     {classificationView === 'standings' && (groupLabels.length > 0 ? <section className="standings-workspace-panel"><h3>CLASIFICACIÓN POR GRUPOS</h3><div className="workspace-columns">{groupLabels.map(groupLabel => <GroupStandings key={groupLabel} tournamentId={tournamentId} groupLabel={groupLabel} resolveTeam={resolveTeam}/>)}</div></section> : <section className="workspace-panel standings-workspace-panel"><h3>TABLA DE CLASIFICACIÓN COMPLETA</h3><DataState query={standings}/>{standingRows.length > 0 && <StandingsTable rows={standingRows} resolveTeam={resolveTeam}/>}</section>)}
     {classificationView === 'scorers' && <section className="workspace-panel scorers-workspace-panel"><h3>TABLA DE GOLEADORES</h3><DataState query={scorers}/><div className="scorers-list">{scorerRows.map((row, index) => <p className="ranking-row" key={row.playerId ?? row.id}><b>{index + 1}</b><span>{row.playerName ?? row.name}</span><strong>{row.goals ?? 0}</strong></p>)}</div></section>}
+    {classificationView === 'playoffs' && <PlayoffsView tournamentId={tournamentId} resolveTeam={resolveTeam}/>}
   </> : <TournamentAdminPanel key={detail.data.id} tournament={detail.data} teams={teams} onChanged={refresh} onDeleted={onDeleted}/>}</>}
   </section>;
 }
