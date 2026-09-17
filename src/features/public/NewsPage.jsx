@@ -7,12 +7,6 @@ import { endpoints } from '../../api/endpoints.js';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 
-const goalName = goal => goal?.player?.name ?? goal?.playerName ?? 'Gol sin jugador';
-const goalMarks = goal => '⚽'.repeat(Math.max(1, Number(goal?.count) || 1));
-const goalTeam = goal => goal?.scoringTeam?.name ?? goal?.team?.name ?? goal?.teamName ?? 'Equipo no informado';
-const cardName = card => card?.player?.name ?? card?.playerName ?? 'Jugador no informado';
-const cardTeam = card => card?.team?.name ?? card?.teamName ?? 'Equipo no informado';
-
 function GenericNewsImagesModal({ onClose }) {
   const images = useApiQuery(signal => endpoints.newsImages(signal));
   const upload = useApiMutation(async ({ context, file }, signal) => {
@@ -24,23 +18,9 @@ function GenericNewsImagesModal({ onClose }) {
   return <div className="person-modal-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}><section className="person-modal news-images-modal" role="dialog" aria-modal="true" aria-label="Imágenes genéricas de noticias"><header><h2>IMÁGENES GENÉRICAS</h2><button type="button" onClick={onClose} aria-label="Cerrar">×</button></header><p>Se usan en empates, tarjetas rojas y traspasos. Las noticias ya publicadas conservan su imagen.</p><div>{rows.map(([context, label]) => { const image = configured.get(context); return <label key={context}><b>{label}</b><span className="news-generic-preview">{image?.imageUrl ? <img src={image.imageUrl} alt={`Imagen genérica de ${label}`}/> : <i>SIN IMAGEN<br/>4:3</i>}</span><input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" disabled={upload.loading} onChange={event => { const file = event.target.files?.[0]; if (file) upload.execute({ context, file }); }}/></label>; })}</div><FormFeedback mutation={upload}/></section></div>;
 }
 
-function MatchActa({ item }) {
-  if (item.sourceType !== 'match') return null;
-  const goals = item.original?.goals ?? [];
-  const redCards = item.original?.redCards ?? [];
-  const match = item.original;
-  const teamGoals = team => goals.filter(goal => (goal.teamId ?? goal.scoringTeamId ?? goal.scoringTeam?.id ?? goal.team?.id) === team?.id);
-  const column = (label, team) => <div className="news-acta-team"><small>{label}</small><strong>{team?.name ?? 'EQUIPO'}</strong><ul>{teamGoals(team).length ? teamGoals(team).map((goal, index) => <li key={goal.id ?? `${goal.playerId ?? goalName(goal)}-${index}`}>{goalMarks(goal)} {goalName(goal)}</li>) : <li className="news-acta-empty">Sin goles registrados</li>}</ul></div>;
-
-  return <div className="news-match-acta">
-    <b>ACTA DEL PARTIDO</b>{column('LOCAL', match.homeTeam)}{column('VISITA', match.awayTeam)}
-    {redCards.length > 0 && <p className="news-acta-red">🟥 Sancionados: {redCards.map(card => `${cardName(card)} · ${cardTeam(card)}`).join(' / ')}</p>}
-  </div>;
-}
-
 function NewsDetailModal({ item, teams, onClose }) {
   if (!item) return null;
-  return <div className="person-modal-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}><article className="person-modal news-detail-modal" role="dialog" aria-modal="true" aria-label={item.headline}><header><h2>NOTICIA COMPLETA</h2><button type="button" onClick={onClose} aria-label="Cerrar">×</button></header><NewsArtwork item={item} teams={teams}/><div className="news-detail-copy"><time>{item.publishedAt ? formatDate(item.publishedAt) : 'FECHA NO PUBLICADA'}</time><b>{item.label}</b><h2>{item.headline}</h2>{item.subtitle && <h3>{item.subtitle}</h3>}<p>{item.body}</p><MatchActa item={item}/></div></article></div>;
+  return <div className="person-modal-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}><article className="person-modal news-detail-modal" role="dialog" aria-modal="true" aria-label={item.headline}><header><h2>NOTICIA COMPLETA</h2><button type="button" onClick={onClose} aria-label="Cerrar">×</button></header><NewsArtwork item={item} teams={teams}/><div className="news-detail-copy"><time>{item.publishedAt ? formatDate(item.publishedAt) : 'FECHA NO PUBLICADA'}</time><b>{item.label}</b><h2>{item.headline}</h2>{item.subtitle && <h3>{item.subtitle}</h3>}<p>{item.body}</p></div></article></div>;
 }
 
 export function NewsPage({ teams = [] }) {

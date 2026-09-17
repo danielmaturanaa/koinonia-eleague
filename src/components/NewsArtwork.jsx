@@ -54,12 +54,12 @@ export function NewsArtwork({ item, teams = [] }) {
   const score = item.sourceType === 'match' && item.type !== 'upcoming'
     ? `${homeScore} : ${awayScore}`
     : null;
+  const hasCover = Boolean(item.imageUrl);
   const style = { '--news-primary': colors[0], '--news-secondary': colors[1], '--news-accent': colors[2] };
-  return <div className={`news-artwork news-artwork-${context}`} style={style} aria-label={`Gráfica ${contextLabels[context]} de ${primary?.name ?? 'Koinonia e-League'}`}>
+  return <div className={`news-artwork news-artwork-${context}${hasCover ? ' has-persisted-cover' : ''}`} style={style} aria-label={`Gráfica ${contextLabels[context]} de ${primary?.name ?? 'Koinonia e-League'}`}>
     {item.imageUrl ? <img src={item.imageUrl} alt="" className="news-artwork-scene"/> : <RecolorableNewsScene scene={item.image} team={primary} opponent={secondary} alt="" className="news-artwork-scene"/>}
-    <span className="news-artwork-grid"/>
-    <span className="news-artwork-context">{contextLabels[context]}</span>
-    {score ? <div className="news-artwork-scoreline"><TeamMark team={homeTeam ?? {}} className="news-artwork-primary"/><strong>{score}</strong>{awayTeam && <TeamMark team={awayTeam} className="news-artwork-secondary"/>}</div> : <><TeamMark team={homeTeam ?? {}} className="news-artwork-primary"/>{awayTeam && <TeamMark team={awayTeam} className="news-artwork-secondary"/>}</>}
+    {!hasCover && <><span className="news-artwork-grid"/><span className="news-artwork-context">{contextLabels[context]}</span></>}
+    {score ? <div className="news-artwork-scoreline">{!hasCover && <TeamMark team={homeTeam ?? {}} className="news-artwork-primary"/>}<strong>{score}</strong>{!hasCover && awayTeam && <TeamMark team={awayTeam} className="news-artwork-secondary"/>}</div> : !hasCover && <><TeamMark team={homeTeam ?? {}} className="news-artwork-primary"/>{awayTeam && <TeamMark team={awayTeam} className="news-artwork-secondary"/>}</>}
     <small>{primary?.name ?? 'KOINONIA e-LEAGUE'}</small>
   </div>;
 }
