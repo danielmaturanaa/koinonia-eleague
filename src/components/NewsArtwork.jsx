@@ -52,7 +52,7 @@ export function NewsArtwork({ item, teams = [] }) {
   }, [primary, secondary, context, fallback]);
 
   const score = item.sourceType === 'match' && item.type !== 'upcoming'
-    ? `${homeScore} : ${awayScore}`
+    ? `${homeScore} - ${awayScore}`
     : null;
   const hasCover = Boolean(item.imageUrl);
   const style = { '--news-primary': colors[0], '--news-secondary': colors[1], '--news-accent': colors[2] };

@@ -32,12 +32,12 @@ function FittedHeadline({ children }) {
 
 function NewsModal({ item, teams, onClose }) {
   if (!item) return null;
-  return <div className="person-modal-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}><article className="person-modal news-detail-modal" role="dialog" aria-modal="true" aria-label={item.headline}><header><h2>NOTICIA COMPLETA</h2><button type="button" onClick={onClose} aria-label="Cerrar">×</button></header><NewsArtwork item={item} teams={teams}/><div className="news-detail-copy"><time>{item.publishedAt ?? item.date ? formatDate(item.publishedAt ?? item.date) : 'FECHA NO PUBLICADA'}</time><b>{item.label}</b><h2>{item.headline}</h2>{item.subtitle && <h3>{item.subtitle}</h3>}<p>{item.body}</p>{item.body2 && <p className="news-story-angle">{item.body2}</p>}</div></article></div>;
+  return <div className="person-modal-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}><article className="person-modal news-detail-modal" role="dialog" aria-modal="true" aria-label={item.headline}><header><h2>NOTICIA COMPLETA</h2><button type="button" onClick={onClose} aria-label="Cerrar">×</button></header><div className="news-detail-copy"><time>{item.publishedAt ?? item.date ? formatDate(item.publishedAt ?? item.date) : 'FECHA NO PUBLICADA'}</time><b>{item.label}</b><h2>{item.headline}</h2><NewsArtwork item={item} teams={teams}/>{item.subtitle && <h3>{item.subtitle}</h3>}<p>{item.body}</p>{item.body2 && <p className="news-story-angle">{item.body2}</p>}</div></article></div>;
 }
 
 function SecondaryNews({ item, teams, onOpen }) {
   if (!item) return <article className="small-story automatic-small-story"><h3>ACTUALIZACIÓN</h3><h4>ESPERANDO NUEVAS NOTICIAS</h4><p>La portada se actualizará cuando la API publique un nuevo evento.</p></article>;
-  return <article className={`small-story automatic-small-story news-${item.type}-${item.subtype}`} data-image={item.image?.id ?? ''}><h3>{item.label}</h3><div className="secondary-news-content"><NewsArtwork item={item} teams={teams}/><div><time>{item.publishedAt ?? item.date ? formatDate(item.publishedAt ?? item.date) : 'FECHA NO PUBLICADA'}</time><h4>{item.headline}</h4><p>{item.subtitle ?? item.body}</p><button className="news-read-more" onClick={() => onOpen(item)}>LEER NOTICIA COMPLETA</button></div></div></article>;
+  return <article className={`small-story automatic-small-story news-${item.type}-${item.subtype}`} data-image={item.image?.id ?? ''}><h3>{item.label}</h3><div className="secondary-news-content"><NewsArtwork item={item} teams={teams}/><div><time>{item.publishedAt ?? item.date ? formatDate(item.publishedAt ?? item.date) : 'FECHA NO PUBLICADA'}</time><h4>{item.headline}</h4><button className="news-read-more" onClick={() => onOpen(item)}>LEER NOTICIA COMPLETA</button></div></div></article>;
 }
 
 export function HomePage({ tournament, lead, teams = [] }) {
