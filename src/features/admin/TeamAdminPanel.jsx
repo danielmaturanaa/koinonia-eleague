@@ -71,6 +71,14 @@ function CustomFieldsEditor({ fields, onChange }) {
   return <fieldset className="custom-fields-editor"><legend>CAMPOS PERSONALIZADOS</legend>{fields.map((field, index) => <div className="custom-field-row" key={field.key || index}><input value={field.label} onChange={event => update(index, 'label', event.target.value)} placeholder="Etiqueta (ej: Apodo)"/><input value={field.value} onChange={event => update(index, 'value', event.target.value)} placeholder="Valor"/><button type="button" onClick={() => onChange(fields.filter((_, current) => current !== index))} aria-label="Quitar campo">×</button></div>)}<button type="button" className="action-button" onClick={() => onChange([...fields, { key: '', label: '', value: '' }])}>+ AGREGAR CAMPO</button></fieldset>;
 }
 
+// La API recibe la clave y etiqueta del campo, sin su valor. Los campos nuevos
+// aún no tienen key, por eso usamos su etiqueta como clave hasta que la API la
+// normalice.
+const customFieldsPayload = fields => fields.map(({ key, label }) => ({
+  key: key || label,
+  label,
+}));
+
 export function PresidentForm({ team, onChanged, onSaved }) {
   const president = team.president;
   const metadata = readPersonProfile('president', president);
@@ -85,7 +93,7 @@ export function PresidentForm({ team, onChanged, onSaved }) {
     onSaved?.();
   } });
   if (!president?.id) return <p className="admin-empty">ESTE EQUIPO NO TIENE UN PRESIDENTE EDITABLE ASIGNADO.</p>;
-  return <form className="admin-form person-editor-form" onSubmit={event => { event.preventDefault(); mutation.execute({ name: form.name, imageUrl: form.imageUrl, age: form.age === '' ? null : Number(form.age), nationality: form.country, customFields: form.customFields }); }}><label>NOMBRE DEL PRESIDENTE<input required value={form.name} onChange={event => setForm(current => ({ ...current, name: event.target.value }))}/></label><label>EDAD<input type="number" min="1" max="120" value={form.age} onChange={event => setForm(current => ({ ...current, age: event.target.value }))}/></label><label>PAÍS<input value={form.country} onChange={event => setForm(current => ({ ...current, country: event.target.value }))} placeholder="PAÍS"/></label><CustomFieldsEditor fields={form.customFields} onChange={customFields => setForm(current => ({ ...current, customFields }))}/><MediaImageField label="SUBIR FOTO DEL PRESIDENTE" entityType="president" entityId={president.id} onUploaded={imageUrl => setForm(current => ({ ...current, imageUrl }))}/><button className="action-button" disabled={mutation.loading}>GUARDAR PRESIDENTE</button><FormFeedback mutation={mutation}/></form>;
+  return <form className="admin-form person-editor-form" onSubmit={event => { event.preventDefault(); mutation.execute({ name: form.name, imageUrl: form.imageUrl, age: form.age === '' ? null : Number(form.age), nationality: form.country, customFields: customFieldsPayload(form.customFields) }); }}><label>NOMBRE DEL PRESIDENTE<input required value={form.name} onChange={event => setForm(current => ({ ...current, name: event.target.value }))}/></label><label>EDAD<input type="number" min="1" max="120" value={form.age} onChange={event => setForm(current => ({ ...current, age: event.target.value }))}/></label><label>PAÍS<input value={form.country} onChange={event => setForm(current => ({ ...current, country: event.target.value }))} placeholder="PAÍS"/></label><CustomFieldsEditor fields={form.customFields} onChange={customFields => setForm(current => ({ ...current, customFields }))}/><MediaImageField label="SUBIR FOTO DEL PRESIDENTE" entityType="president" entityId={president.id} onUploaded={imageUrl => setForm(current => ({ ...current, imageUrl }))}/><button className="action-button" disabled={mutation.loading}>GUARDAR PRESIDENTE</button><FormFeedback mutation={mutation}/></form>;
 }
 
 export function CoachForm({ team, onChanged, onSaved }) {
@@ -116,7 +124,7 @@ export function CoachForm({ team, onChanged, onSaved }) {
       onChanged?.(result);
       onSaved?.();
     } });
-  return <form className="admin-form person-editor-form" onSubmit={event => { event.preventDefault(); mutation.execute({ name: form.name.trim(), imageUrl: form.imageUrl, age: form.age === '' ? null : Number(form.age), nationality: form.country, customFields: form.customFields }); }}><label>NOMBRE DEL DT<input required value={form.name} onChange={event => setForm(current => ({ ...current, name: event.target.value }))} placeholder="DIRECTOR TÉCNICO"/></label><label>EDAD<input type="number" min="1" max="120" value={form.age} onChange={event => setForm(current => ({ ...current, age: event.target.value }))}/></label><label>PAÍS<input value={form.country} onChange={event => setForm(current => ({ ...current, country: event.target.value }))} placeholder="PAÍS"/></label><CustomFieldsEditor fields={form.customFields} onChange={customFields => setForm(current => ({ ...current, customFields }))}/><MediaImageField label="SUBIR FOTO DEL DT" entityType="coach" entityId={coachId} onUploaded={imageUrl => setForm(current => ({ ...current, imageUrl }))}/><button className="action-button" disabled={!form.name.trim() || mutation.loading}>GUARDAR DT</button><FormFeedback mutation={mutation}/></form>;
+  return <form className="admin-form person-editor-form" onSubmit={event => { event.preventDefault(); mutation.execute({ name: form.name.trim(), imageUrl: form.imageUrl, age: form.age === '' ? null : Number(form.age), nationality: form.country, customFields: customFieldsPayload(form.customFields) }); }}><label>NOMBRE DEL DT<input required value={form.name} onChange={event => setForm(current => ({ ...current, name: event.target.value }))} placeholder="DIRECTOR TÉCNICO"/></label><label>EDAD<input type="number" min="1" max="120" value={form.age} onChange={event => setForm(current => ({ ...current, age: event.target.value }))}/></label><label>PAÍS<input value={form.country} onChange={event => setForm(current => ({ ...current, country: event.target.value }))} placeholder="PAÍS"/></label><CustomFieldsEditor fields={form.customFields} onChange={customFields => setForm(current => ({ ...current, customFields }))}/><MediaImageField label="SUBIR FOTO DEL DT" entityType="coach" entityId={coachId} onUploaded={imageUrl => setForm(current => ({ ...current, imageUrl }))}/><button className="action-button" disabled={!form.name.trim() || mutation.loading}>GUARDAR DT</button><FormFeedback mutation={mutation}/></form>;
 }
 
 function TeamProfileEditor({ team, onChanged }) {
