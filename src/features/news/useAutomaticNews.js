@@ -3,7 +3,7 @@ import { endpoints } from '../../api/endpoints.js';
 import { useApiQuery } from '../public/useApiQuery.js';
 
 export function useAutomaticNews(refreshInterval = 600000) {
-  const feed = useApiQuery(signal => endpoints.news(signal));
+  const feed = useApiQuery(signal => endpoints.news(null, signal));
 
   useEffect(() => {
     if (!refreshInterval) return undefined;
