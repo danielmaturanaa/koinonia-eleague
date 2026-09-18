@@ -3,7 +3,7 @@ import { matchRoundLabel } from '../utils/matchPresentation.js';
 
 function Matches({ rows, title, resolveTeam, loading, showScore }) {
   return <section className="score-panel"><h2>{title}</h2>{rows.length ? rows.map(match =>
-    <article className="result-match" key={match.id}>{showScore && <small>{[match.tournament?.name ?? 'TORNEO', (match.roundNumber ?? match.round_number) ? `JORNADA ${match.roundNumber ?? match.round_number}` : null].filter(Boolean).join(' · ')}</small>}<div className="score-line"><TeamMark team={resolveTeam(match.homeTeam)}/><span className="home-name">{match.homeTeam.name}</span>{showScore ? <strong>{match.homeScore} - {match.awayScore}</strong> : <span className="versus">VS</span>}<span className="away-name">{match.awayTeam.name}</span><TeamMark team={resolveTeam(match.awayTeam)}/></div></article>)
+    <article className="result-match" key={match.id}>{showScore && <small>{[match.tournament?.name ?? 'TORNEO', matchRoundLabel(match, { leagueRound: 'JORNADA' })].join(' · ')}</small>}<div className="score-line"><TeamMark team={resolveTeam(match.homeTeam)}/><span className="home-name">{match.homeTeam.name}</span>{showScore ? <strong>{match.homeScore} - {match.awayScore}</strong> : <span className="versus">VS</span>}<span className="away-name">{match.awayTeam.name}</span><TeamMark team={resolveTeam(match.awayTeam)}/></div></article>)
     : <p className="league-note">{loading ? 'CARGANDO...' : 'SIN PARTIDOS PUBLICADOS.'}</p>}</section>;
 }
 
