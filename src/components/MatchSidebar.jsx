@@ -1,4 +1,5 @@
 import { TeamMark } from './TeamMark.jsx';
+import { matchRoundLabel } from '../utils/matchPresentation.js';
 
 function Matches({ rows, title, resolveTeam, loading, showScore }) {
   return <section className="score-panel"><h2>{title}</h2>{rows.length ? rows.map(match =>
@@ -10,9 +11,7 @@ const matchGroup = match => match.groupLabel ?? match.group_label ?? match.group
 
 function UpcomingMatch({ match, resolveTeam }) {
   const tournamentName = match.tournament?.name ?? 'TORNEO';
-  const round = match.roundNumber ?? match.round_number;
-  const group = matchGroup(match);
-  const detail = [tournamentName, round ? `JORNADA ${round}` : null, group ? `GRUPO ${group}` : null].filter(Boolean).join(' · ');
+  const detail = [tournamentName, matchRoundLabel(match, { leagueRound: 'JORNADA' })].join(' · ');
   return <article className="upcoming-match"><small>{detail}</small><div className="score-line"><TeamMark team={resolveTeam(match.homeTeam)}/><span className="home-name">{match.homeTeam.name}</span><span className="versus">VS</span><span className="away-name">{match.awayTeam.name}</span><TeamMark team={resolveTeam(match.awayTeam)}/></div></article>;
 }
 

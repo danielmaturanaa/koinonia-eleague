@@ -4,6 +4,7 @@ import { useApiMutation } from '../features/admin/useApiMutation.js';
 import { useApiQuery } from '../features/public/useApiQuery.js';
 import { goalPlayerName, goalTeamId, groupGoals } from '../utils/goals.js';
 import { TeamMark } from './TeamMark.jsx';
+import { matchRoundLabel } from '../utils/matchPresentation.js';
 
 const STATUS_LABEL = { pending: 'POR JUGAR', live: 'EN VIVO', finished: 'FINAL', cancelled: 'CANCELADO' };
 const LIVE_POLL_MS = 12000;
@@ -233,7 +234,7 @@ export function Scoreboard({ matchId, mode = 'view', density = 'tile', onOpen, o
   return <article className={`scoreboard scoreboard-${density} scoreboard-status-${match.status}`}>
     <header className="scoreboard-bezel" onClick={onOpen} role={onOpen ? 'button' : undefined} tabIndex={onOpen ? 0 : undefined}>
       {match.status === 'live' && <i className="scoreboard-live-dot" aria-hidden="true"/>}
-      <span className="scoreboard-meta">{match.tournament?.name ?? 'TORNEO'} · {match.groupLabel ? `GRUPO ${match.groupLabel}` : `FECHA ${match.roundNumber ?? '—'}`}</span>
+      <span className="scoreboard-meta">{match.tournament?.name ?? 'TORNEO'} · {matchRoundLabel(match)}</span>
       <i className={`scoreboard-tag scoreboard-tag-${match.status}`}>{STATUS_LABEL[match.status] ?? match.status}</i>
     </header>
     <div className="scoreboard-teams">

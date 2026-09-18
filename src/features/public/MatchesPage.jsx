@@ -4,6 +4,7 @@ import { MatchQrCode } from '../../components/MatchQrCode.jsx';
 import { Scoreboard } from '../../components/Scoreboard.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
 import { MatchAdminPanel } from '../admin/MatchAdminPanel.jsx';
+import { matchRoundLabel } from '../../utils/matchPresentation.js';
 import { DataState, PageHeader, Pagination } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
 
@@ -53,7 +54,7 @@ function MultiMatchPicker({ teamId, matches, value, onChange }) {
     {teamMatches.map(match => {
       const isHome = match.homeTeam?.id === teamId;
       const rival = isHome ? match.awayTeam?.name : match.homeTeam?.name;
-      const roundLabel = match.groupLabel ? `GRUPO ${match.groupLabel}` : `FECHA ${match.roundNumber ?? '—'}`;
+      const roundLabel = matchRoundLabel(match);
       return <option key={match.id} value={match.id}>{roundLabel} · {isHome ? 'LOCAL' : 'VISITA'} vs {rival} · {match.status === 'live' ? 'EN VIVO' : 'PENDIENTE'}</option>;
     })}
   </select>;

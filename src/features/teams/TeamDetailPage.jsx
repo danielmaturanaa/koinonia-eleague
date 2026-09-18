@@ -4,6 +4,7 @@ import { TeamMark } from '../../components/TeamMark.jsx';
 import { defaultFormationPositions, pitchPositionFor } from '../../utils/formationPositions.js';
 import { teamBalance, teamCoachName, teamCoachPhoto } from '../../utils/teamPresentation.js';
 import { readPersonProfile } from '../../utils/personProfile.js';
+import { matchRoundLabel } from '../../utils/matchPresentation.js';
 import { BudgetForm, CoachForm, FormationEditor, PresidentForm, ProfileForm, SquadEditor } from '../admin/TeamAdminPanel.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
@@ -44,7 +45,7 @@ function ClubUpcomingMatches({ matches, teams }) {
   return <section className="club-upcoming-tab">
     <header><h2>PRÓXIMOS PARTIDOS</h2><small>{upcoming.length} PROGRAMADOS</small></header>
     <div className="club-upcoming-list">{upcoming.length ? upcoming.map(match => <article key={match.id}>
-      <small>{match.tournament?.name ?? 'TORNEO'} · {match.groupLabel ? `GRUPO ${match.groupLabel}` : `JORNADA ${match.roundNumber ?? '—'}`}</small>
+      <small>{match.tournament?.name ?? 'TORNEO'} · {matchRoundLabel(match, { leagueRound: 'JORNADA' })}</small>
       <div><span><TeamMark team={resolveTeam(match.homeTeam)}/><b className="club-upcoming-team-name">{match.homeTeam?.name ?? 'LOCAL'}</b></span><strong>VS</strong><span><b className="club-upcoming-team-name">{match.awayTeam?.name ?? 'VISITA'}</b><TeamMark team={resolveTeam(match.awayTeam)}/></span></div>
     </article>) : <p className="empty-copy">NO HAY PRÓXIMOS PARTIDOS PROGRAMADOS PARA ESTE CLUB.</p>}</div>
   </section>;
