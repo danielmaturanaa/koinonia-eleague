@@ -84,6 +84,7 @@ export const endpoints = {
   rejectTrade: (tradeId, signal) => apiClient.post(`/market/trades/${tradeId}/reject`, {}, { actor: 'web', signal }),
   createTournament: (body, signal) => apiClient.post('/tournaments', body, { actor: 'web', signal }),
   updateTournamentStatus: (tournamentId, status, signal) => apiClient.patch(`/tournaments/${tournamentId}/status`, { status }, { actor: 'web', signal }),
+  updateTournamentChampionPolicy: (tournamentId, championPolicy, signal) => apiClient.patch(`/tournaments/${tournamentId}/champion-policy`, { championPolicy }, { actor: 'web', signal }),
   deleteTournament: (tournamentId, signal) => apiClient.delete(`/tournaments/${tournamentId}`, { force: true }, { actor: 'web', signal }),
   addTournamentParticipation: (tournamentId, body, signal) => apiClient.post(`/tournaments/${tournamentId}/participations`, body, { actor: 'web', signal }),
   drawTournament: (tournamentId, groups, signal) => apiClient.post(`/tournaments/${tournamentId}/draw`, { groups }, { actor: 'web', signal }),
