@@ -82,12 +82,15 @@ export default async function handler(request, response) {
       headers: {
         'X-API-Key': process.env.API_KEY,
         Accept: 'application/json',
+        ...(request.headers.cookie ? { Cookie: request.headers.cookie } : {}),
         ...(body ? { 'Content-Type': request.headers['content-type'] || 'application/json' } : {}),
       },
       body,
       signal: controller.signal,
     });
     const headers = { 'Content-Type': upstream.headers.get('content-type') ?? 'application/json' };
+    const cookies = upstream.headers.getSetCookie?.() ?? (upstream.headers.get('set-cookie') ? [upstream.headers.get('set-cookie')] : []);
+    if (cookies.length) headers['Set-Cookie'] = cookies;
     const retryAfter = upstream.headers.get('retry-after');
     if (retryAfter) headers['Retry-After'] = retryAfter;
     response.writeHead(upstream.status, headers);

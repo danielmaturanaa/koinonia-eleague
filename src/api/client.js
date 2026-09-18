@@ -56,6 +56,7 @@ export async function apiRequest(path, {
         'Content-Type': 'application/json',
       },
       body: payload === undefined ? undefined : isFormData ? payload : JSON.stringify(payload),
+      credentials: 'include',
       signal: controller.signal,
     });
     const result = await parseResponse(response);

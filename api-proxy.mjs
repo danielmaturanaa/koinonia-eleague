@@ -29,6 +29,7 @@ function setCors(request, response) {
   }
   response.setHeader('Access-Control-Allow-Methods', allowedMethodsHeader);
   response.setHeader('Access-Control-Allow-Headers', 'Accept, Content-Type');
+  response.setHeader('Access-Control-Allow-Credentials', 'true');
   response.setHeader('Access-Control-Max-Age', '86400');
 }
 
@@ -81,12 +82,15 @@ createServer(async (request, response) => {
       headers: {
         'X-API-Key': values.API_KEY,
         Accept: 'application/json',
+        ...(request.headers.cookie ? { Cookie: request.headers.cookie } : {}),
         ...(body ? { 'Content-Type': request.headers['content-type'] || 'application/json' } : {}),
       },
       body,
       signal: controller.signal,
     });
     const headers = { 'Content-Type': upstream.headers.get('content-type') ?? 'application/json' };
+    const cookies = upstream.headers.getSetCookie?.() ?? (upstream.headers.get('set-cookie') ? [upstream.headers.get('set-cookie')] : []);
+    if (cookies.length) headers['Set-Cookie'] = cookies;
     const retryAfter = upstream.headers.get('retry-after');
     if (retryAfter) headers['Retry-After'] = retryAfter;
     response.writeHead(upstream.status, headers);

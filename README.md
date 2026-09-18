@@ -20,7 +20,7 @@ pnpm preview
 
 La primera etapa incluye Inicio, listado de equipos y ficha de equipo conectados a Cheeto API v1. El resto del menú se implementará por fases.
 
-El navegador consume `/api`; Vite reenvía esas solicitudes al gateway local de `api-proxy.mjs`. La llave se agrega en el gateway y no se incorpora al bundle del frontend. El gateway acepta GET, POST, PATCH, PUT y DELETE, conserva query strings y cuerpos JSON, y normaliza los fallos de red.
+El navegador consume `/api`; Vite reenvía esas solicitudes al gateway local de `api-proxy.mjs`. La llave se agrega en el gateway y no se incorpora al bundle del frontend. El gateway acepta GET, POST, PATCH, PUT y DELETE, conserva query strings, cuerpos JSON y cookies de acceso, y normaliza los fallos de red.
 
 La composición desktop se diseña sobre un lienzo de 1536 × 1024 y se escala proporcionalmente al ancho de la ventana.
 
@@ -38,7 +38,7 @@ La quinta etapa agrega la administración integral de torneos: creación y cambi
 
 La sexta etapa completa partidos y actas: creación manual de encuentros, inicio, finalización, cancelación y reapertura; carga de resultados, goles y tarjetas rojas; eliminación de goles y definición del ganador, incluida la modalidad de promoción. La gestión se abre desde la ficha de cada partido y actualiza tanto el acta como el listado al finalizar una operación.
 
-La séptima etapa cierra la integración con controles operativos: indicador de salud de la API con actualización periódica y manual, recuperación ante errores inesperados de render, cancelación segura de consultas y mutaciones al abandonar una vista, bloqueo de envíos duplicados y una prueba de humo de solo lectura para todas las rutas públicas. `pnpm check` compila la aplicación y ejecuta esa auditoría sin modificar datos.
+La séptima etapa cierra la integración con controles operativos: indicador de salud de la API con actualización periódica y manual, recuperación ante errores inesperados de render, cancelación segura de consultas y mutaciones al abandonar una vista, bloqueo de envíos duplicados y una prueba de humo. Las rutas protegidas que responden 401 sin una cookie se reportan correctamente como protegidas. `pnpm check` compila la aplicación y ejecuta esa auditoría sin modificar datos.
 
 ## Recursos
 
@@ -46,7 +46,7 @@ La séptima etapa cierra la integración con controles operativos: indicador de 
 
 ## Configuración de API
 
-Copia `.env.example` como `.env` y completa `API_BASE_URL` y `API_KEY`. Si `API_BASE_URL` termina en `/v1`, las rutas del cliente se escriben sin repetir ese prefijo; `/api/health` se dirige correctamente a `/health`.
+Copia `.env.example` como `.env` y completa `API_BASE_URL` y `API_KEY`. Si `API_BASE_URL` termina en `/v1`, las rutas del cliente se escriben sin repetir ese prefijo; `/api/health` se dirige correctamente a `/health`. El primer acceso muestra un equipo desenfocado y entrega una cookie de siete días al elegir su nombre correctamente.
 
 ### Despliegue en Vercel
 

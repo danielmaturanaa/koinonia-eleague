@@ -23,7 +23,7 @@ async function probe(label, path) {
   try {
     const response = await fetch(`${base}${path}`, { signal: AbortSignal.timeout(12000) });
     const payload = await response.json().catch(() => null);
-    const status = response.ok ? 'OK' : response.status === 404 ? 'NO PUBLICADO' : 'ERROR';
+    const status = response.ok ? 'OK' : response.status === 401 ? 'PROTEGIDO' : response.status === 404 ? 'NO PUBLICADO' : 'ERROR';
     results.push({ endpoint: label, http: response.status, estado: status });
     return response.ok ? payload : null;
   } catch (error) {
@@ -78,5 +78,6 @@ if (failures.length) {
   process.exitCode = 1;
 } else {
   const unavailable = results.filter(item => item.estado === 'NO PUBLICADO').length;
-  console.log(`Prueba de humo superada: ${results.length - unavailable}/${results.length} disponibles; ${unavailable} documentados aún no publicados.`);
+  const protectedEndpoints = results.filter(item => item.estado === 'PROTEGIDO').length;
+  console.log(`Prueba de humo superada: ${results.length - unavailable - protectedEndpoints}/${results.length} disponibles; ${protectedEndpoints} protegidos por el desafío; ${unavailable} documentados aún no publicados.`);
 }
