@@ -78,16 +78,6 @@ function MarketAdmin({ teams, players, onChanged }) {
   return <section className="market-admin"><nav><button className={tab === 'transfer' ? 'active' : ''} onClick={() => setTab('transfer')}>NUEVA TRANSFERENCIA</button><button className={tab === 'trade' ? 'active' : ''} onClick={() => setTab('trade')}>NUEVO TRUEQUE</button></nav>{tab === 'transfer' ? <TransferForm teams={teams} players={players} onChanged={onChanged}/> : <TradeForm teams={teams} players={players} onChanged={onChanged}/>}</section>;
 }
 
-function TransferActions({ item, onChanged }) {
-  const mutation = useApiMutation((operation, signal) => endpoints[`${operation}Transfer`](item.id, signal), { onSuccess: onChanged });
-  // El listado público solo trae traspasos aprobados y no envía status.
-  const status = String(item.status ?? 'approved').toLowerCase();
-  const act = operation => {
-    if (window.confirm(`¿${operation === 'approve' ? 'APROBAR' : operation === 'reject' ? 'RECHAZAR' : 'REVERSAR'} ESTA TRANSFERENCIA?`)) mutation.execute(operation);
-  };
-  return <><div className="mini-actions">{status === 'pending' && <><button onClick={() => act('approve')}>APROBAR</button><button className="danger" onClick={() => act('reject')}>RECHAZAR</button></>}{['approved','completed'].includes(status) && <button className="danger" onClick={() => act('reverse')}>REVERSAR</button>}</div><FormFeedback mutation={mutation}/></>;
-}
-
 
 function TradeActions({ item, onChanged }) {
   const mutation = useApiMutation((operation, signal) => endpoints[`${operation}Trade`](item.id, signal), { onSuccess: onChanged });
@@ -141,22 +131,6 @@ function PlayerList({ title, hint, status, teams, allHref }) {
   </section>;
 }
 
-const MOVE_TAGS = { purchase: 'FICHAJE', assignment: 'ASIGNACIÓN', transfer: 'TRASPASO', release: 'LIBERACIÓN', trade: 'TRUEQUE' };
-
-function MoveLine({ move, managing, onChanged }) {
-  const player = <EntityLink to="player" id={move.player?.id}>{move.player?.name}</EntityLink>;
-  const team = value => value ? <EntityLink to="team" id={value.id}>{value.name}</EntityLink> : 'AGENTE LIBRE';
-  const text = {
-    purchase: <>{team(move.toTeam)} ficha a {player}{move.origin === 'new' ? ' (desde eFootballDB)' : ' (agente libre)'}</>,
-    assignment: <>{player} asignado a {team(move.toTeam)}</>,
-    transfer: <>{player}: {team(move.fromTeam)} → {team(move.toTeam)}</>,
-    release: <>{team(move.fromTeam)} libera a {player}</>,
-    trade: <>{player} ⇄ <EntityLink to="player" id={move.givenPlayer?.id}>{move.givenPlayer?.name}</EntityLink> · {team(move.fromTeam)} / {team(move.toTeam)}</>,
-  }[move.type];
-  const amount = move.type === 'trade' ? (move.gpPaid || move.gpReceived ? gp(move.gpPaid || move.gpReceived) : '') : move.gpAmount ? gp(move.gpAmount) : '';
-  return <li className={`move-line move-${move.type}`}><b>{MOVE_TAGS[move.type]}</b><span>{text}</span><small>{amount}{amount && move.date ? ' · ' : ''}{move.date ? formatDate(move.date) : ''}</small>{managing && move.type === 'transfer' && <TransferActions item={move} onChanged={onChanged}/>}</li>;
-}
-
 function PendingTrades({ trades, players, teams, onChanged }) {
   const pending = asList(trades.data).filter(item => String(item.status ?? '').toLowerCase() === 'pending');
   if (!pending.length) return null;
@@ -170,7 +144,6 @@ function PendingTrades({ trades, players, teams, onChanged }) {
 export function MarketPage({ teams }) {
   const [managing, setManaging] = useState(false);
   const [revision, setRevision] = useState(0);
-  const moves = useApiQuery(signal => endpoints.marketMoves({ limit: 12 }, signal), [revision]);
   const trades = useApiQuery(signal => endpoints.trades({ page: 1, pageSize: 100 }, signal), [revision]);
   const hasPending = asList(trades.data).some(item => String(item.status ?? '').toLowerCase() === 'pending');
   const players = useApiQuery(signal => managing || hasPending ? loadAllPlayers(signal) : Promise.resolve({ data: [] }), [managing, hasPending, revision]);
@@ -178,15 +151,12 @@ export function MarketPage({ teams }) {
   return <main className="newspaper data-page"><section className="data-paper">
     <PageHeader kicker="JUGADORES DISPONIBLES" title="MERCADO"><button className="page-action" onClick={() => setManaging(value => !value)}>{managing ? 'CERRAR GESTIÓN' : '⚙ GESTIONAR'}</button></PageHeader>
     {managing && <section className="market-section market-manual"><header><h2>REGISTRAR OPERACIÓN MANUAL</h2><p>Los traspasos y trueques normalmente se hacen por Discord; usa esto solo para corregir o registrar algo a mano.</p></header><MarketAdmin teams={teams} players={asList(players.data)} onChanged={refresh}/></section>}
+    <PendingTrades trades={trades} players={players} teams={teams} onChanged={refresh}/>
     <div className="market-layout">
       <div className="market-main">
         <PlayerList key={`free-${revision}`} title="AGENTES LIBRES" hint="Inscritos en la liga y sin equipo: se pueden comprar o asignar." status="free" teams={teams} allHref="#/equipos/jugadores?status=free"/>
         <PlayerList key={`unregistered-${revision}`} title="NO INSCRITOS" hint="Nadie los tiene y aún no están en la liga. Las cartas más valiosas de eFootballDB." status="unregistered" teams={teams} allHref="#/equipos/jugadores?status=unregistered"/>
       </div>
-      <aside className="market-side">
-        <PendingTrades trades={trades} players={players} teams={teams} onChanged={refresh}/>
-        <section className="market-section"><header><h2>ÚLTIMOS MOVIMIENTOS</h2></header><DataState query={moves}/>{!moves.loading && !moves.error && (asList(moves.data).length ? <ul className="move-feed">{asList(moves.data).map(move => <MoveLine key={move.id} move={move} managing={managing} onChanged={refresh}/>)}</ul> : <p className="empty-copy">SIN MOVIMIENTOS REGISTRADOS.</p>)}</section>
-      </aside>
     </div>
   </section></main>;
 }
