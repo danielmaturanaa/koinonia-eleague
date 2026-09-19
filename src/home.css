@@ -1463,7 +1463,11 @@ span.player-photo.player-photo-fallback { display: inline-grid; place-items: cen
 .search-status img { width: 22px; height: 22px; flex: 0 0 22px; object-fit: contain; }
 .search-status.owned { background: #062764; }
 .search-status.free { color: #111; background: #ffd42a; }
-.search-status.game { background: #5b5b5b; }
+.search-status.unregistered { border: 2px dashed #062764; color: #062764; background: transparent; }
+.global-search-hint ul { display: grid; gap: 8px; margin: 10px 0 0; padding: 0; list-style: none; }
+.global-search-hint li { display: flex; align-items: center; gap: 8px; }
+.global-search-hint .search-status { flex: 0 0 118px; justify-content: center; }
+.global-search-hint .search-status.unregistered { border-color: #b8d8f0; color: #b8d8f0; }
 .global-search-all { padding: 9px; border: 2px solid #72b4e3; color: #fff; background: #062764; font: 600 14px/1 'Oswald', sans-serif; letter-spacing: .5px; }
 .global-search-all:hover { background: #a90020; }
 @media (max-width: 1320px) {

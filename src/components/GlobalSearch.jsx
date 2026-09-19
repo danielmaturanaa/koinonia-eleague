@@ -6,7 +6,7 @@ const MIN_QUERY = 2;
 const gp = value => typeof value === 'number' ? `${value.toLocaleString('es-CL')} GP` : '—';
 
 // Une la plantilla de la liga con el catálogo de eFootballDB y responde, para cada
-// jugador, quién lo tiene: un equipo, nadie (agente libre) o solo existe en el juego.
+// jugador, quién lo tiene: un equipo, nadie (agente libre) o nadie porque aún no está inscrito.
 function mergeResults(leaguePlayers, catalogCards) {
   const results = leaguePlayers.map(player => ({
     key: `league-${player.id}`,
@@ -26,9 +26,9 @@ function mergeResults(leaguePlayers, catalogCards) {
       results.push({ key: `league-${card.league.id}`, kind: card.league.teamId ? 'owned' : 'free', id: card.league.id, name: card.league.name ?? card.name, faceUrl: card.faceUrl, detail: [card.position, card.nationality].filter(Boolean).join(' · '), value: null, team: card.league.teamId ? { id: card.league.teamId, name: card.league.teamName } : null });
       continue;
     }
-    results.push({ key: `game-${card.pesId}-${card.variation}`, kind: 'game', name: card.name, faceUrl: card.faceUrl, detail: [card.position, card.nationality, card.clubName].filter(Boolean).join(' · '), value: card.gpPrice });
+    results.push({ key: `unregistered-${card.pesId}-${card.variation}`, kind: 'unregistered', name: card.name, faceUrl: card.faceUrl, detail: [card.position, card.nationality, card.clubName].filter(Boolean).join(' · '), value: card.gpPrice });
   }
-  const order = { owned: 0, free: 1, game: 2 };
+  const order = { owned: 0, free: 1, unregistered: 2 };
   return results.sort((left, right) => order[left.kind] - order[right.kind]);
 }
 
@@ -37,8 +37,8 @@ function statusLabel(result, teamsById) {
     const team = teamsById.get(result.team?.id) ?? result.team;
     return <span className="search-status owned">{team?.imageUrl && <img src={team.imageUrl} alt=""/>}LO TIENE {team?.name ?? 'UN EQUIPO'}</span>;
   }
-  if (result.kind === 'free') return <span className="search-status free">AGENTE LIBRE EN LA LIGA</span>;
-  return <span className="search-status game">SOLO EN eFOOTBALL</span>;
+  if (result.kind === 'free') return <span className="search-status free" title="Inscrito en la liga, sin equipo">AGENTE LIBRE</span>;
+  return <span className="search-status unregistered" title="Nadie lo tiene y no está inscrito en la liga; se puede importar desde eFootballDB">NO INSCRITO</span>;
 }
 
 export function GlobalSearch({ navigate, teams = [] }) {
@@ -96,7 +96,7 @@ export function GlobalSearch({ navigate, teams = [] }) {
     if (!result) return;
     setOpen(false);
     setQuery('');
-    if (result.kind === 'game') navigate(`/equipos/jugadores/importar?q=${encodeURIComponent(result.name)}`);
+    if (result.kind === 'unregistered') navigate(`/equipos/jugadores/importar?q=${encodeURIComponent(result.name)}`);
     else navigate(`/jugadores/${encodeURIComponent(result.id)}`);
   };
 
@@ -112,7 +112,7 @@ export function GlobalSearch({ navigate, teams = [] }) {
     {open && <div className="global-search-panel" role="dialog" aria-label="Buscar jugador">
       <input ref={inputRef} value={query} onChange={event => setQuery(event.target.value)} onKeyDown={onKeyDown} placeholder="¿QUIÉN TIENE A…? ESCRIBE UN JUGADOR" aria-label="Buscar jugador" aria-controls={listId} autoComplete="off"/>
       <div className="global-search-results" id={listId} role="listbox">
-        {term.length < MIN_QUERY ? <p className="global-search-hint">Busca en la liga y en eFootballDB al mismo tiempo. Te dice si el jugador tiene dueño, está libre o solo existe en el juego.</p>
+        {term.length < MIN_QUERY ? <div className="global-search-hint"><p>Busca en la liga y en eFootballDB al mismo tiempo y te dice quién tiene a cada jugador:</p><ul><li><span className="search-status owned">LO TIENE…</span> juega en un equipo de la liga.</li><li><span className="search-status free">AGENTE LIBRE</span> está inscrito, pero sin equipo.</li><li><span className="search-status unregistered">NO INSCRITO</span> nadie lo tiene y aún no está en la liga; se puede importar.</li></ul></div>
           : state.loading && !state.results.length ? <p className="global-search-hint">BUSCANDO…</p>
           : state.error ? <p className="global-search-hint">NO SE PUDO BUSCAR: {state.error.message}</p>
           : !state.results.length ? <p className="global-search-hint">NINGÚN JUGADOR COINCIDE CON “{term}”.</p>
