@@ -4,7 +4,8 @@ export const navigationItems = [
   { label: 'Clasificación', icon: 'chart', path: '/clasificacion' },
   { label: 'Torneos', icon: 'cup', path: '/torneos' },
   { label: 'Equipos', icon: 'shirt', path: '/equipos' },
-  { label: 'Selecciones', icon: 'globe', path: '/equipos/selecciones' },
+  { label: 'Jugadores', icon: 'ball', path: '/equipos/jugadores' },
+  // Selecciones se reactiva cuando la competición nacional vuelva a utilizarse.
   { label: 'Noticias', icon: 'news', path: '/noticias' },
   { label: 'Reglas', icon: 'book', path: '/reglas' },
 ];

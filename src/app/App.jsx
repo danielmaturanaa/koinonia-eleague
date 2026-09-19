@@ -12,6 +12,7 @@ import { MarketPage } from '../features/public/MarketPage.jsx';
 import { MatchesPage } from '../features/public/MatchesPage.jsx';
 import { NewsPage } from '../features/public/NewsPage.jsx';
 import { PlayersPage } from '../features/public/PlayersPage.jsx';
+import { PlayerProfilePage } from '../features/public/PlayerProfilePage.jsx';
 import { RulesPage } from '../features/public/RulesPage.jsx';
 import { RankingsPage, TournamentsPage } from '../features/public/TournamentsPage.jsx';
 import { TeamsDirectoryPage } from '../features/public/TeamsDirectoryPage.jsx';
@@ -48,6 +49,8 @@ export function App() {
     page = <TeamsPage teams={league.teams} loading={state.loading} onChoose={id => navigate(`/equipos/${encodeURIComponent(id)}`)} onChanged={refresh} navigate={navigate}/>;
   } else if (route.name === 'team') {
     page = <TeamDetailPage team={teamDetail} teams={league.teams} squad={squad} standings={league.standings} matches={teamMatches} history={teamHistory} historyError={teamHistoryError} loading={state.loadingTeam} onBack={() => navigate('/equipos')} onChanged={refresh}/>;
+  } else if (route.name === 'player') {
+    page = <PlayerProfilePage playerId={route.playerId} onBack={() => navigate('/equipos/jugadores')}/>;
   } else if (route.path === '/partidos' || route.path === '/partidos/jugados' || route.path === '/partidos/pendientes') {
     const matchesMode = route.path.endsWith('jugados') ? 'played' : route.path.endsWith('pendientes') ? 'pending' : 'all';
     page = <MatchesPage key={matchesMode} mode={matchesMode} teams={league.teams} navigate={navigate}/>;
@@ -58,7 +61,7 @@ export function App() {
   } else if (route.path === '/equipos/rankings') {
     page = <RankingsPage teams={league.teams} navigate={navigate}/>;
   } else if (route.path === '/equipos/jugadores') {
-    page = <PlayersPage teams={league.teams}/>;
+    page = <PlayersPage teams={league.teams} navigate={navigate}/>;
   } else if (route.path.startsWith('/equipos/')) {
     const modes = { plantillas: 'squads', presupuestos: 'budgets', presidentes: 'presidents', 'directores-tecnicos': 'coaches', emblemas: 'emblems', selecciones: 'national' };
     page = <TeamsDirectoryPage mode={modes[route.path.split('/').at(-1)]} teams={league.teams} onChoose={id => navigate(`/equipos/${encodeURIComponent(id)}`)}/>;

@@ -63,22 +63,48 @@ function PlayerActions({ player, teams, onChanged }) {
   </section>;
 }
 
-export function PlayersPage({ teams }) {
+const externalPosition = value => positions.includes(value) ? value : ({ GK: 'PT', RB: 'LD', CB: 'DEC', LB: 'LI', DMF: 'MC', CMF: 'MC', AMF: 'MO', LMF: 'EI', LWF: 'EI', RMF: 'ED', RWF: 'ED', SS: 'DC', CF: 'DC' }[value] ?? 'MC');
+
+function EfootballCatalog({ search, onImported }) {
+  const [filters, setFilters] = useState({ position: '', nationality: '', minGp: '', maxGp: '' });
+  const [selected, setSelected] = useState(null);
+  const [value, setValue] = useState('');
+  const catalog = useApiQuery(signal => search.trim().length >= 2 ? endpoints.efootballPlayers({ q: search, ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== '')) }, signal) : Promise.resolve({ data: [] }), [search, ...Object.values(filters)]);
+  const importer = useApiMutation((player, signal) => endpoints.createPlayer({ name: player.name, position: externalPosition(player.position), gpValue: Number(value || player.gpPrice || 0), efootballPesId: player.pesId, efootballVariation: player.variation, faceUrl: player.faceUrl, nationality: player.nationality }, signal), { onSuccess: result => { setSelected(null); onImported(result?.data?.id); } });
+  const change = event => setFilters(current => ({ ...current, [event.target.name]: event.target.value }));
+  return <section className="efootball-catalog">
+    <h2>eFOOTBALLDB · CARTAS GRISES</h2><p>Catálogo externo para importar. Los resultados de la liga aparecen en la sección separada de abajo.</p>
+    <div className="filter-bar"><select name="position" value={filters.position} onChange={change}><option value="">TODOS LOS PUESTOS</option>{positions.map(item => <option key={item}>{item}</option>)}</select><input name="nationality" value={filters.nationality} onChange={change} placeholder="NACIONALIDAD"/><input name="minGp" type="number" min="0" value={filters.minGp} onChange={change} placeholder="GP MÍN."/><input name="maxGp" type="number" min="0" value={filters.maxGp} onChange={change} placeholder="GP MÁX."/></div>
+    {search.trim().length >= 2 && <DataState query={catalog}/>}
+    <div className="efootball-results">{(catalog.data ?? []).map(player => <article key={`${player.pesId}-${player.variation}`}>
+      <img src={player.faceUrl} alt="" onError={event => { event.currentTarget.hidden = true; }}/><div><b>{player.name}</b><small>{player.position ?? '—'} · {player.nationality ?? '—'} · {player.age ?? '—'} años</small><small>{player.clubName ?? 'SIN CLUB'} · ref. {gp(player.gpPrice)}</small></div>
+      <strong>{player.league?.teamName ? `EN ${player.league.teamName}` : player.league ? 'AGENTE LIBRE' : 'AÚN NO ESTÁ EN LA LIGA'}</strong>{!player.league && <button className="action-button" onClick={() => { setSelected(player); setValue(String(player.gpPrice ?? '')); }}>IMPORTAR</button>}
+    </article>)}</div>
+    {selected && <form className="admin-form player-create-form import-confirmation" onSubmit={event => { event.preventDefault(); importer.execute(selected); }}><b>CONFIRMAR IMPORTACIÓN · {selected.name}</b><small>Se vinculará a la carta PES {selected.pesId}. No podrás crear un duplicado de esta identidad.</small><label>VALOR GP DE LA LIGA<input type="number" min="0" value={value} onChange={event => setValue(event.target.value)}/></label><div className="button-row"><button className="action-button positive" disabled={importer.loading}>CONFIRMAR IMPORTACIÓN</button><button type="button" className="action-button" onClick={() => setSelected(null)}>CANCELAR</button></div><FormFeedback mutation={importer}/></form>}
+  </section>;
+}
+
+function PlayerAdmin({ player, onChanged }) {
+  const [name, setName] = useState(player.name); const [gpValue, setGpValue] = useState(String(player.gpValue)); const [position, setPosition] = useState(player.position); const edit = useApiMutation((body, signal) => endpoints.updatePlayer(player.id, body, signal), { onSuccess: onChanged }); const retire = useApiMutation(signal => endpoints.deletePlayer(player.id, signal), { onSuccess: onChanged });
+  return <section className="player-actions"><h3>ADMINISTRACIÓN</h3><label>NOMBRE<input value={name} onChange={event => setName(event.target.value)}/></label><label>VALOR GP<input type="number" min="0" value={gpValue} onChange={event => setGpValue(event.target.value)}/></label><label>POSICIÓN<select value={position} onChange={event => setPosition(event.target.value)}>{positions.map(item => <option key={item}>{item}</option>)}</select></label><div className="button-row"><button className="action-button" disabled={!name.trim() || gpValue === '' || edit.loading} onClick={() => edit.execute({ name: name.trim(), gpValue: Number(gpValue), position })}>GUARDAR CAMBIOS</button><button className="action-button danger" disabled={retire.loading} onClick={() => { if (window.confirm(`¿RETIRAR A ${player.name}? Se conservará su historial.`)) retire.execute(); }}>RETIRAR DE LA LIGA</button></div><FormFeedback mutation={edit.error || edit.success ? edit : retire}/></section>;
+}
+
+export function PlayersPage({ teams, navigate }) {
   const [filters, setFilters] = useState({ q: '', position: '', teamId: '', freeAgent: '', page: 1 });
-  const [selectedId, setSelectedId] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
   const players = useApiQuery(signal => endpoints.players({ ...filters, pageSize: 20 }, signal), Object.values(filters));
-  const detail = useApiQuery(signal => selectedId ? endpoints.player(selectedId, signal) : Promise.resolve({ data: null }), [selectedId]);
   const rows = Array.isArray(players.data) ? players.data : [];
-  const refresh = () => { players.retry(); detail.retry(); };
+  const refresh = () => players.retry();
 
   const change = event => setFilters(current => ({ ...current, [event.target.name]: event.target.value, page: 1 }));
   return <main className="newspaper data-page"><section className="data-paper">
     <PageHeader kicker="BASE DE DATOS DE LA LIGA" title="JUGADORES"><button className="page-action" onClick={() => setShowCreate(value => !value)}>{showCreate ? 'CERRAR ALTA' : '+ CREAR JUGADOR'}</button></PageHeader>
     {showCreate && <CreatePlayerForm onChanged={refresh}/>} 
-    <div className="filter-bar"><input name="q" value={filters.q} onChange={change} placeholder="BUSCAR JUGADOR" aria-label="Buscar jugador"/><select name="position" value={filters.position} onChange={change} aria-label="Posición"><option value="">TODAS LAS POSICIONES</option>{positions.map(value => <option key={value}>{value}</option>)}</select><select name="teamId" value={filters.teamId} onChange={change} aria-label="Equipo"><option value="">TODOS LOS EQUIPOS</option>{teams.map(team => <option value={team.id} key={team.id}>{team.name}</option>)}</select><select name="freeAgent" value={filters.freeAgent} onChange={change} aria-label="Agente libre"><option value="">TODOS</option><option value="true">AGENTES LIBRES</option><option value="false">CON EQUIPO</option></select></div>
+    <div className="player-search-label"><b>BÚSQUEDA ÚNICA</b><span>Arriba: eFootballDB · Abajo: jugadores ya inscritos en la liga.</span></div><div className="filter-bar player-global-search"><input name="q" value={filters.q} onChange={change} placeholder="BUSCAR JUGADOR" aria-label="Buscar jugador"/><select name="position" value={filters.position} onChange={change} aria-label="Posición"><option value="">TODAS LAS POSICIONES</option>{positions.map(value => <option key={value}>{value}</option>)}</select><select name="teamId" value={filters.teamId} onChange={change} aria-label="Equipo"><option value="">TODOS LOS EQUIPOS</option>{teams.map(team => <option value={team.id} key={team.id}>{team.name}</option>)}</select><select name="freeAgent" value={filters.freeAgent} onChange={change} aria-label="Agente libre"><option value="">TODOS</option><option value="true">AGENTES LIBRES</option><option value="false">CON EQUIPO</option></select></div>
+    <EfootballCatalog search={filters.q} onImported={id => { refresh(); navigate?.(`/jugadores/${encodeURIComponent(id)}`); }}/>
+    <h2 className="league-results-title">RESULTADOS EN LA LIGA</h2>
     <DataState query={players}/>
-    {!players.loading && !players.error && <div className="split-view"><div className="data-list">{rows.map(player => <button className={`data-row ${selectedId === player.id ? 'active' : ''}`} key={player.id} onClick={() => setSelectedId(player.id)}><span><b>{player.name}</b><small>{player.position ?? 'SIN POSICIÓN'} · {player.team?.name ?? 'AGENTE LIBRE'}</small></span><strong>{gp(player.gpValue)}</strong></button>)}</div><aside className="detail-card player-detail">{!selectedId ? <p>SELECCIONA UN JUGADOR PARA VER Y GESTIONAR SU FICHA.</p> : <><DataState query={detail}/>{detail.data && <><h2>{detail.data.name}</h2><dl><div><dt>POSICIÓN</dt><dd>{detail.data.position ?? '—'}</dd></div><div><dt>EQUIPO</dt><dd>{detail.data.team?.name ?? 'AGENTE LIBRE'}</dd></div><div><dt>VALOR</dt><dd>{gp(detail.data.gpValue)}</dd></div><div><dt>GOLES</dt><dd>{detail.data.goals ?? 0}</dd></div><div><dt>PARTIDOS CON GOL</dt><dd>{detail.data.matchesWithGoals ?? 0}</dd></div></dl>{detail.data.team && <TeamMark team={detail.data.team} className="detail-watermark"/>}<PlayerActions key={`${detail.data.id}-${detail.data.team?.id ?? 'free'}`} player={detail.data} teams={teams} onChanged={refresh}/></>}</>}</aside></div>}
+    {!players.loading && !players.error && <div className="data-list player-results-list">{rows.map(player => <button className="data-row player-result-row" key={player.id} onClick={() => navigate?.(`/jugadores/${encodeURIComponent(player.id)}`)}>{player.faceUrl ? <img className="player-result-face" src={player.faceUrl} alt="" onError={event => { event.currentTarget.hidden = true; }}/> : <span className="player-result-placeholder">{player.name.slice(0, 1)}</span>}<span><b>{player.name}</b><small>{player.flag && <i className="player-flag">{player.flag}</i>} {player.position ?? 'SIN POSICIÓN'} · {player.team?.imageUrl && <img className="player-result-team-mark" src={player.team.imageUrl} alt="" onError={event => { event.currentTarget.hidden = true; }}/>} {player.team?.name ?? 'AGENTE LIBRE'}</small></span><strong>{gp(player.gpValue)}</strong></button>)}</div>}
     <Pagination pagination={players.pagination} page={filters.page} onPage={page => setFilters(current => ({ ...current, page }))}/>
   </section></main>;
 }

@@ -9,6 +9,8 @@ function currentPath() {
 function parseRoute(path) {
   if (path === '/resultados' || path === '/multipartido') return { name: 'section', path: '/partidos' };
   if (path === '/clasificacion/rankings') return { name: 'section', path: '/equipos/rankings' };
+  const playerMatch = path.match(/^\/jugadores\/([^/]+)$/);
+  if (playerMatch) return { name: 'player', path, playerId: decodeURIComponent(playerMatch[1]) };
   const teamMatch = path.match(/^\/equipos\/([^/]+)$/);
   const reservedTeamSections = new Set(['plantillas', 'presupuestos', 'presidentes', 'directores-tecnicos', 'emblemas', 'selecciones', 'jugadores', 'rankings']);
   if (teamMatch && !reservedTeamSections.has(teamMatch[1])) {
@@ -44,6 +46,8 @@ export function useRoute() {
           ? 'Ficha de equipo'
           : route.name === 'match'
             ? 'Gestión de partido'
+            : route.name === 'player'
+              ? 'Ficha de jugador'
             : route.name === 'scoreboard'
               ? 'Marcador en vivo'
               : sectionContent[route.path]?.[0] ?? 'Koinonia e-League';

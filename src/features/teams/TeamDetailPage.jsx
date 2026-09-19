@@ -22,7 +22,7 @@ function splitPlayerName(name) {
 
 function PlayerRow({ player }) {
   const { rest: name } = splitPlayerName(player.name);
-  return <div className="roster-row"><b>{String(player.squadOrder ?? '—').padStart(2, '0')}</b><span>{name}</span><small>{player.position ?? '—'}</small><strong>{gp(player.gpValue)} GP</strong></div>;
+  return <button type="button" className="roster-row roster-player-link" onClick={() => { window.location.hash = `/jugadores/${encodeURIComponent(player.id)}`; }}><b>{player.jerseyNumber ?? '—'}</b><span>{player.faceUrl && <img className="roster-player-face" src={player.faceUrl} alt="" onError={event => { event.currentTarget.hidden = true; }}/>}<i>{player.flag && <em className="player-flag">{player.flag}</em>}{name}</i></span><small>{player.position ?? '—'}</small><strong>{gp(player.gpValue)} GP</strong></button>;
 }
 
 function RosterHeader() {
@@ -94,17 +94,16 @@ function publishedHistoryFor(team) {
   };
 }
 
-function SquadPitch({ starters }) {
+function SquadPitch({ starters, onChoose }) {
   if (!starters.length) return <div className="club-pitch club-pitch-empty"><p className="empty-copy">NO HAY TITULARES DEFINIDOS.</p></div>;
   const defaults = defaultFormationPositions(starters);
   return <div className="club-pitch">
     {starters.map(player => {
       const { x, y } = pitchPositionFor(player, defaults);
       const { flag, rest: name } = splitPlayerName(player.name);
-      return <div className="club-pitch-player" style={{ left: `${x}%`, top: `${y}%` }} key={player.id}>
-        <span className="club-pitch-number">{player.jerseyNumber ?? '–'}{flag && <i className="club-pitch-flag">{flag}</i>}</span>
-        <span className="club-pitch-name">{name}</span>
-      </div>;
+      return <button type="button" className="club-pitch-player" style={{ left: `${x}%`, top: `${y}%` }} key={player.id} onClick={() => { window.location.hash = `/jugadores/${encodeURIComponent(player.id)}`; }} aria-label={`Ver ficha de ${name}`}>
+        {player.faceUrl && <img className="club-pitch-face" src={player.faceUrl} alt="" onError={event => { event.currentTarget.hidden = true; }}/>}<span className="club-pitch-name"><b>{player.jerseyNumber ?? '–'}</b>{flag && <i className="club-pitch-flag">{flag}</i>} {name}</span>
+      </button>;
     })}
   </div>;
 }
@@ -117,7 +116,7 @@ function LeadershipCarousel({ presidentName, photo, coachName, managerPhoto }) {
   return <div className="club-resumen-person club-leadership-carousel"><small>{person.role}</small><PersonPhoto photo={person.photo} name={person.name}/><b>{person.name}</b><div><button type="button" onClick={() => setIndex(current => (current + people.length - 1) % people.length)} aria-label="Persona anterior">◀</button><span>{index + 1} / {people.length}</span><button type="button" onClick={() => setIndex(current => (current + 1) % people.length)} aria-label="Persona siguiente">▶</button></div></div>;
 }
 
-function ResumenTab({ presidentName, photo, coachName, managerPhoto, honours, starters }) {
+function ResumenTab({ presidentName, photo, coachName, managerPhoto, honours, starters, onChoose }) {
   return <div className="club-resumen-tab">
     <div className="club-resumen-left">
       <LeadershipCarousel presidentName={presidentName} photo={photo} coachName={coachName} managerPhoto={managerPhoto}/>
@@ -125,7 +124,7 @@ function ResumenTab({ presidentName, photo, coachName, managerPhoto, honours, st
     </div>
     <section className="club-resumen-pitch-section">
       <h2>PLANTEL TITULAR</h2>
-      <SquadPitch starters={starters}/>
+      <SquadPitch starters={starters} onChoose={onChoose}/>
     </section>
   </div>;
 }
