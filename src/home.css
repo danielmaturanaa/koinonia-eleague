@@ -30,12 +30,12 @@ body { min-width: 0; overflow-x: hidden; background: #001344; }
 .site { position: relative; isolation: isolate; display: flex; flex-direction: column; min-height: 100vh; }
 .site::before { content: ''; position: fixed; inset: 0; z-index: -1; background: linear-gradient(#0013441a, #00134466 70%, #001344b3), url('/stadium-background-v2.jpeg') center top / cover no-repeat; }
 .site-header { position: sticky; top: 0; z-index: 20; border-bottom: 3px solid #43a8d6; background: #031d58f2 url('/paper-grain.svg'); box-shadow: 0 4px 0 #000c24; backdrop-filter: blur(6px); }
-.site-header-inner { display: flex; align-items: center; gap: 14px; max-width: 1360px; min-height: 68px; margin: 0 auto; padding: 6px 24px; }
+.site-header-inner { display: flex; align-items: center; gap: 14px; max-width: 1480px; min-height: 68px; margin: 0 auto; padding: 6px 24px; }
 .brand { flex: 0 0 auto; width: 150px; height: 56px; padding: 0; overflow: hidden; border: 0; background: transparent; }
 .brand-logo { display: block; width: 100%; height: 100%; object-fit: contain; }
 .site-nav { flex: 1 1 auto; min-width: 0; }
 .site-nav nav { display: flex; flex-wrap: nowrap; gap: 2px; }
-.nav-link { padding: 9px 10px; border: 2px solid transparent; color: #f1efd9; background: none; font: 500 17px/1 'Oswald', sans-serif; letter-spacing: .4px; text-transform: uppercase; white-space: nowrap; }
+.nav-link { padding: 9px 9px; border: 2px solid transparent; color: #f1efd9; background: none; font: 500 17px/1 'Oswald', sans-serif; letter-spacing: .4px; text-transform: uppercase; white-space: nowrap; }
 .nav-link:hover { border-color: #43a8d6; color: #fff; background: #0a3675; }
 .nav-link.selected { border-color: #ffb628; color: #fff; background: linear-gradient(#e70017, #bc0017); box-shadow: 3px 3px #000b23; }
 .mobile-menu-toggle { display: none; }
@@ -44,7 +44,7 @@ body { min-width: 0; overflow-x: hidden; background: #001344; }
 .mobile-menu-toggle[aria-expanded='true'] .hamburger-icon i:first-child { transform: translateY(8px) rotate(45deg); }
 .mobile-menu-toggle[aria-expanded='true'] .hamburger-icon i:nth-child(2) { opacity: 0; }
 .mobile-menu-toggle[aria-expanded='true'] .hamburger-icon i:last-child { transform: translateY(-8px) rotate(-45deg); }
-.radio { position: relative; display: flex; flex: 0 1 220px; min-width: 0; align-items: center; gap: 8px; }
+.radio { position: relative; display: flex; flex: 0 1 190px; min-width: 0; align-items: center; gap: 8px; }
 .radio-play { flex: 0 0 40px; width: 40px; height: 40px; border: 2px solid #ffd42a; border-radius: 50%; color: #fff; background: #a90020; font: 600 15px/1 'Oswald', sans-serif; }
 .radio-play.playing { box-shadow: 0 0 0 4px #ffd42a33; }
 .radio-play:disabled { opacity: .4; cursor: default; }
@@ -88,7 +88,10 @@ body { min-width: 0; overflow-x: hidden; background: #001344; }
   .site-body.with-sidebar { grid-template-columns: minmax(0, 1fr); }
   .match-sidebar { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
 }
-@media (max-width: 1240px) {
+@media (max-width: 1440px) {
+  .global-search-toggle b { display: none; }
+}
+@media (max-width: 1320px) {
   :root { --site-header-height: 63px; }
   .site-header-inner { flex-wrap: wrap; gap: 10px; min-height: 60px; padding: 6px 16px; }
   .brand { width: 120px; height: 46px; }
@@ -805,7 +808,7 @@ body { min-width: 0; overflow-x: hidden; background: #001344; }
 .player-efootball-refresh { margin-left: 5px; padding: 0 3px; border: 0; color: #062764; background: transparent; cursor: pointer; font: 700 16px/1 sans-serif; }.player-efootball-refresh:disabled { opacity: .5; }.player-refresh-error { margin: 0; padding: 8px 12px; color: #a0001d; font: 600 13px/1.2 'Roboto Condensed', sans-serif; }
 .efootball-results { display: grid; gap: 0; margin-top: 9px; max-height: 420px; overflow: auto; }
 .efootball-results article { display: grid; grid-template-columns: 62px minmax(190px, 1fr) minmax(145px, 220px) auto; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #a99e87; }
-.efootball-results img, .player-face { width: 56px; height: 56px; object-fit: contain; background: #c5bba4; }
+.efootball-results img, .efootball-face, .player-face { width: 56px; height: 56px; object-fit: contain; background: #c5bba4; }
 .efootball-results b, .efootball-results small { display: block; }
 .efootball-results strong { color: #8c0019; font: 600 13px/1.1 'Oswald', sans-serif; text-align: right; }
 .player-face { float: right; width: 86px; height: 86px; margin: 0 0 6px 10px; }
@@ -1412,8 +1415,7 @@ a.table-team-link:hover { text-decoration: underline; text-underline-offset: 3px
 .player-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 8px; }
 .player-card { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 10px; border: 2px solid #10285b; background: #fff9e8; }
 .player-card:hover { color: inherit; border-color: #a90020; background: #fff3c4; }
-.player-card-face, .player-card-placeholder { width: 64px; height: 64px; border: 2px solid #062764; background: #d9cfb8; object-fit: cover; }
-.player-card-placeholder { display: grid; place-items: center; color: #062764; font: 400 30px/1 'Anton', sans-serif; }
+.player-card-face { width: 64px; height: 64px; border: 2px solid #062764; background: #d9cfb8; object-fit: cover; font-size: 26px; }
 .player-card-body { display: grid; min-width: 0; gap: 4px; }
 .player-card-body b { overflow: hidden; font: 600 17px/1.1 'Roboto Condensed', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
 .player-card-body small { color: #625d4e; font: 500 13px/1.1 'Roboto Condensed', sans-serif; }
@@ -1432,4 +1434,43 @@ a.table-team-link:hover { text-decoration: underline; text-underline-offset: 3px
 @media (max-width: 560px) {
   .player-mode-tabs button { flex: 1 1 0; padding: 10px 8px; font-size: 14px; }
   .player-card-grid { grid-template-columns: 1fr; }
+}
+
+/* Foto de jugador con iniciales de respaldo (PlayerFace). */
+.player-photo { flex-shrink: 0; }
+span.player-photo.player-photo-fallback { display: inline-grid; place-items: center; overflow: hidden; color: #ffd42a; background: #062764 url('/paper-grain.svg'); font-family: 'Anton', sans-serif; font-weight: 400; line-height: 1; letter-spacing: .5px; }
+.roster-player-face.player-photo-fallback { font-size: 12px; }
+.club-pitch-face.player-photo-fallback { font-size: 14px; }
+.efootball-face.player-photo-fallback { font-size: 22px; }
+.player-profile-face.player-photo-fallback { font-size: 58px; }
+
+/* Buscador global: ¿quién tiene a este jugador? */
+.global-search { position: relative; flex: 0 0 auto; }
+.global-search-toggle { display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 12px; border: 2px solid #43a8d6; color: #fff; background: #062764; font: 600 15px/1 'Oswald', sans-serif; letter-spacing: .5px; }
+.global-search-toggle span { color: #ffd42a; font-size: 22px; line-height: 1; }
+.global-search-toggle:hover, .global-search-toggle[aria-expanded='true'] { border-color: #ffd42a; background: #a90020; }
+.global-search-panel { position: absolute; top: calc(100% + 12px); right: 0; z-index: 30; display: grid; width: min(640px, calc(100vw - 32px)); gap: 8px; padding: 12px; border: 3px solid #43a8d6; background: #031d58 url('/paper-grain.svg'); box-shadow: 6px 6px #000c24; }
+.global-search-panel > input { width: 100%; height: 46px; padding: 0 12px; border: 2px solid #ffd42a; color: #111; background: #fff9e8; font: 600 18px/1 'Roboto Condensed', sans-serif; }
+.global-search-results { display: grid; gap: 4px; max-height: min(60vh, 520px); overflow-y: auto; scrollbar-color: #72b4e3 #021238; }
+.global-search-hint { padding: 12px 4px; color: #b8d8f0; font: 500 15px/1.35 'Roboto Condensed', sans-serif; }
+.global-search-result { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; padding: 6px 8px; border: 2px solid transparent; color: #111; background: #fff9e8; text-align: left; }
+.global-search-result.active { border-color: #ffd42a; background: #fff3c4; }
+.global-search-result .player-photo { width: 48px; height: 48px; object-fit: cover; background: #d9cfb8; font-size: 18px; }
+.global-search-name { display: grid; min-width: 0; gap: 3px; }
+.global-search-name b { overflow: hidden; font: 700 17px/1.1 'Roboto Condensed', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+.global-search-name small { overflow: hidden; color: #625d4e; font: 500 13px/1.1 'Roboto Condensed', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+.search-status { display: inline-flex; align-items: center; gap: 6px; max-width: 240px; padding: 6px 8px; color: #fff; font: 600 13px/1.1 'Oswald', sans-serif; letter-spacing: .3px; text-align: right; }
+.search-status img { width: 22px; height: 22px; flex: 0 0 22px; object-fit: contain; }
+.search-status.owned { background: #062764; }
+.search-status.free { color: #111; background: #ffd42a; }
+.search-status.game { background: #5b5b5b; }
+.global-search-all { padding: 9px; border: 2px solid #72b4e3; color: #fff; background: #062764; font: 600 14px/1 'Oswald', sans-serif; letter-spacing: .5px; }
+.global-search-all:hover { background: #a90020; }
+@media (max-width: 1320px) {
+  .global-search { order: 2; }
+  .global-search-panel { position: fixed; top: var(--site-header-height); right: 16px; left: 16px; width: auto; }
+}
+@media (max-width: 560px) {
+  .global-search-result { grid-template-columns: 44px minmax(0, 1fr); }
+  .search-status { grid-column: 1 / -1; justify-self: start; max-width: none; text-align: left; }
 }

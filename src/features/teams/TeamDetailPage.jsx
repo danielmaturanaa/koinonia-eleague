@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { TeamMark } from '../../components/TeamMark.jsx';
 import { EntityLink } from '../../components/EntityLink.jsx';
+import { PlayerFace } from '../../components/PlayerFace.jsx';
 import { defaultFormationPositions, pitchPositionFor } from '../../utils/formationPositions.js';
 import { teamBalance, teamCoachName, teamCoachPhoto } from '../../utils/teamPresentation.js';
 import { readPersonProfile } from '../../utils/personProfile.js';
@@ -23,7 +24,7 @@ function splitPlayerName(name) {
 
 function PlayerRow({ player }) {
   const { rest: name } = splitPlayerName(player.name);
-  return <button type="button" className="roster-row roster-player-link" onClick={() => { window.location.hash = `/jugadores/${encodeURIComponent(player.id)}`; }}><b>{player.jerseyNumber ?? '—'}</b><span>{player.faceUrl && <img className="roster-player-face" src={player.faceUrl} alt="" onError={event => { event.currentTarget.hidden = true; }}/>}<i>{player.flag && <em className="player-flag">{player.flag}</em>}{name}</i></span><small>{player.position ?? '—'}</small><strong>{gp(player.gpValue)} GP</strong></button>;
+  return <button type="button" className="roster-row roster-player-link" onClick={() => { window.location.hash = `/jugadores/${encodeURIComponent(player.id)}`; }}><b>{player.jerseyNumber ?? '—'}</b><span><PlayerFace src={player.faceUrl} name={name} className="roster-player-face"/><i>{player.flag && <em className="player-flag">{player.flag}</em>}{name}</i></span><small>{player.position ?? '—'}</small><strong>{gp(player.gpValue)} GP</strong></button>;
 }
 
 function RosterHeader() {
@@ -114,7 +115,7 @@ function SquadPitch({ starters }) {
       const { x, y } = pitchPositionFor(player, defaults);
       const { flag, rest: name } = splitPlayerName(player.name);
       return <button type="button" className="club-pitch-player" style={{ left: `${x}%`, top: `${y}%` }} key={player.id} onClick={() => { window.location.hash = `/jugadores/${encodeURIComponent(player.id)}`; }} aria-label={`Ver ficha de ${name}`}>
-        {player.faceUrl && <img className="club-pitch-face" src={player.faceUrl} alt="" onError={event => { event.currentTarget.hidden = true; }}/>}<span className="club-pitch-name"><b>{player.jerseyNumber ?? '–'}</b>{flag && <i className="club-pitch-flag">{flag}</i>} {name}</span>
+        <PlayerFace src={player.faceUrl} name={name} className="club-pitch-face"/><span className="club-pitch-name"><b>{player.jerseyNumber ?? '–'}</b>{flag && <i className="club-pitch-flag">{flag}</i>} {name}</span>
       </button>;
     })}
   </div>;

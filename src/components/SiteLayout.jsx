@@ -1,9 +1,10 @@
 import { ApiStatus } from './ApiStatus.jsx';
+import { GlobalSearch } from './GlobalSearch.jsx';
 import { MusicPlayer } from './MusicPlayer.jsx';
 import { Navigation } from './Navigation.jsx';
 import { TransparentLogo } from './TransparentLogo.jsx';
 
-export function SiteLayout({ route, navigate, children, sidebar, error, dismissError, playlist = [] }) {
+export function SiteLayout({ route, navigate, children, sidebar, error, dismissError, playlist = [], teams = [] }) {
   return <div className="site">
     <header className="site-header">
       <div className="site-header-inner">
@@ -11,6 +12,7 @@ export function SiteLayout({ route, navigate, children, sidebar, error, dismissE
           <TransparentLogo className="brand-logo" src="/koinonia-eleague-logo.png" label="Koinonia e-League"/>
         </button>
         <Navigation route={route} navigate={navigate}/>
+        <GlobalSearch navigate={navigate} teams={teams}/>
         <MusicPlayer tracks={playlist}/>
       </div>
     </header>

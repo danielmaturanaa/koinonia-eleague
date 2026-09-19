@@ -6,7 +6,12 @@ function currentPath() {
   return path.startsWith('/') ? path : `/${path}`;
 }
 
-function parseRoute(path) {
+function parseRoute(fullPath) {
+  const [path, search = ''] = fullPath.split('?');
+  return { ...matchRoute(path), query: Object.fromEntries(new URLSearchParams(search)) };
+}
+
+function matchRoute(path) {
   if (path === '/resultados' || path === '/multipartido') return { name: 'section', path: '/partidos' };
   if (path === '/clasificacion/rankings') return { name: 'section', path: '/equipos/rankings' };
   const playerMatch = path.match(/^\/jugadores\/([^/]+)$/);
