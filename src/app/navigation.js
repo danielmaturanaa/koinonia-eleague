@@ -5,6 +5,7 @@ export const navigationItems = [
   { label: 'Torneos', path: '/torneos' },
   { label: 'Equipos', path: '/equipos' },
   { label: 'Jugadores', path: '/equipos/jugadores' },
+  { label: 'Mercado', path: '/transferencias' },
   // Selecciones se reactiva cuando la competición nacional vuelva a utilizarse.
   { label: 'Noticias', path: '/noticias' },
   { label: 'Reglas', path: '/reglas' },
