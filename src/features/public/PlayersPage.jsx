@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
-import { EntityLink } from '../../components/EntityLink.jsx';
 import { PlayerFace } from '../../components/PlayerFace.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
@@ -64,59 +63,60 @@ export function PlayerActions({ player, teams, onChanged }) {
   </section>;
 }
 
-const externalPosition = value => positions.includes(value) ? value : ({ GK: 'PT', RB: 'LD', CB: 'DEC', LB: 'LI', DMF: 'MC', CMF: 'MC', AMF: 'MO', LMF: 'EI', LWF: 'EI', RMF: 'ED', RWF: 'ED', SS: 'DC', CF: 'DC' }[value] ?? 'MC');
-
-function EfootballCatalog({ initialQuery = '', onImported }) {
-  const [search, setSearch] = useState(initialQuery);
-  const [filters, setFilters] = useState({ position: '', nationality: '', minGp: '', maxGp: '' });
-  const [selected, setSelected] = useState(null);
-  const [value, setValue] = useState('');
-  const catalog = useApiQuery(signal => search.trim().length >= 2 ? endpoints.efootballPlayers({ q: search, ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== '')) }, signal) : Promise.resolve({ data: [] }), [search, ...Object.values(filters)]);
-  const importer = useApiMutation((player, signal) => endpoints.createPlayer({ name: player.name, position: externalPosition(player.position), gpValue: Number(value || player.gpPrice || 0), efootballPesId: player.pesId, efootballVariation: player.variation, faceUrl: player.faceUrl, nationality: player.nationality }, signal), { onSuccess: result => { setSelected(null); onImported(result?.data?.id); } });
-  const change = event => setFilters(current => ({ ...current, [event.target.name]: event.target.value }));
-  return <section className="efootball-catalog">
-    <h2>CATÁLOGO eFOOTBALLDB · CARTAS GRISES</h2><p>Busca una carta y agrégala a la liga. Las que ya están inscritas muestran su equipo.</p>
-    <div className="filter-bar efootball-filters"><input value={search} onChange={event => setSearch(event.target.value)} placeholder="NOMBRE DE LA CARTA (MÍN. 2 LETRAS)" aria-label="Buscar en eFootballDB" autoFocus/><select name="position" value={filters.position} onChange={change}><option value="">TODOS LOS PUESTOS</option>{positions.map(item => <option key={item}>{item}</option>)}</select><input name="nationality" value={filters.nationality} onChange={change} placeholder="NACIONALIDAD"/><input name="minGp" type="number" min="0" value={filters.minGp} onChange={change} placeholder="GP MÍN."/><input name="maxGp" type="number" min="0" value={filters.maxGp} onChange={change} placeholder="GP MÁX."/></div>
-    {search.trim().length >= 2 ? <DataState query={catalog}/> : <p className="empty-copy">ESCRIBE AL MENOS DOS LETRAS PARA BUSCAR EN EL CATÁLOGO.</p>}
-    <div className="efootball-results">{(catalog.data ?? []).map(player => <article key={`${player.pesId}-${player.variation}`}>
-      <PlayerFace src={player.faceUrl} name={player.name} className="efootball-face"/><div><b>{player.name}</b><small>{player.position ?? '—'} · {player.nationality ?? '—'} · {player.age ?? '—'} años</small><small>{player.clubName ?? 'SIN CLUB'} · ref. {gp(player.gpPrice)}</small></div>
-      <strong>{player.league ? <EntityLink to="player" id={player.league.id}>{player.league.teamName ? `EN ${player.league.teamName}` : 'AGENTE LIBRE'}</EntityLink> : 'NO INSCRITO EN LA LIGA'}</strong>{!player.league && <button className="action-button" onClick={() => { setSelected(player); setValue(String(player.gpPrice ?? '')); }}>IMPORTAR</button>}
-    </article>)}</div>
-    {selected && <form className="admin-form player-create-form import-confirmation" onSubmit={event => { event.preventDefault(); importer.execute(selected); }}><b>CONFIRMAR IMPORTACIÓN · {selected.name}</b><small>Se vinculará a la carta PES {selected.pesId}. No podrás crear un duplicado de esta identidad.</small><label>VALOR GP DE LA LIGA<input type="number" min="0" value={value} onChange={event => setValue(event.target.value)}/></label><div className="button-row"><button className="action-button positive" disabled={importer.loading}>CONFIRMAR IMPORTACIÓN</button><button type="button" className="action-button" onClick={() => setSelected(null)}>CANCELAR</button></div><FormFeedback mutation={importer}/></form>}
-  </section>;
-}
-
 export function PlayerAdmin({ player, onChanged }) {
   const [name, setName] = useState(player.name); const [gpValue, setGpValue] = useState(String(player.gpValue)); const [position, setPosition] = useState(player.position); const edit = useApiMutation((body, signal) => endpoints.updatePlayer(player.id, body, signal), { onSuccess: onChanged }); const retire = useApiMutation(signal => endpoints.deletePlayer(player.id, signal), { onSuccess: onChanged });
   return <section className="player-actions"><h3>ADMINISTRACIÓN</h3><label>NOMBRE<input value={name} onChange={event => setName(event.target.value)}/></label><label>VALOR GP<input type="number" min="0" value={gpValue} onChange={event => setGpValue(event.target.value)}/></label><label>POSICIÓN<select value={position} onChange={event => setPosition(event.target.value)}>{positions.map(item => <option key={item}>{item}</option>)}</select></label><div className="button-row"><button className="action-button" disabled={!name.trim() || gpValue === '' || edit.loading} onClick={() => edit.execute({ name: name.trim(), gpValue: Number(gpValue), position })}>GUARDAR CAMBIOS</button><button className="action-button danger" disabled={retire.loading} onClick={() => { if (window.confirm(`¿RETIRAR A ${player.name}? Se conservará su historial.`)) retire.execute(); }}>RETIRAR DE LA LIGA</button></div><FormFeedback mutation={edit.error || edit.success ? edit : retire}/></section>;
 }
 
-function LeaguePlayers({ teams }) {
-  const [filters, setFilters] = useState({ q: '', position: '', teamId: '', freeAgent: '', page: 1 });
-  const players = useApiQuery(signal => endpoints.players({ ...filters, pageSize: 24 }, signal), Object.values(filters));
-  const rows = Array.isArray(players.data) ? players.data : [];
-  const change = event => setFilters(current => ({ ...current, [event.target.name]: event.target.value, page: 1 }));
-  return <>
-    <div className="filter-bar player-global-search"><input name="q" value={filters.q} onChange={change} placeholder="BUSCAR JUGADOR" aria-label="Buscar jugador"/><select name="position" value={filters.position} onChange={change} aria-label="Posición"><option value="">TODAS LAS POSICIONES</option>{positions.map(value => <option key={value}>{value}</option>)}</select><select name="teamId" value={filters.teamId} onChange={change} aria-label="Equipo"><option value="">TODOS LOS EQUIPOS</option>{teams.map(team => <option value={team.id} key={team.id}>{team.name}</option>)}</select><select name="freeAgent" value={filters.freeAgent} onChange={change} aria-label="Agente libre"><option value="">CON Y SIN EQUIPO</option><option value="true">AGENTES LIBRES</option><option value="false">CON EQUIPO</option></select></div>
-    <DataState query={players}/>
-    {!players.loading && !players.error && (rows.length ? <div className="player-card-grid">{rows.map(player => <EntityLink to="player" id={player.id} className="player-card" key={player.id}>
-      <PlayerFace src={player.faceUrl} name={player.name} className="player-card-face"/>
-      <span className="player-card-body"><b>{player.name}</b><small>{player.flag && <i className="player-flag">{player.flag}</i>}{player.nationality ?? ''}</small><span className="player-card-team">{player.team?.imageUrl && <img src={player.team.imageUrl} alt="" onError={event => { event.currentTarget.hidden = true; }}/>}{player.team?.name ?? 'AGENTE LIBRE'}</span></span>
-      <span className="player-card-meta"><em>{player.position ?? '—'}</em><strong>{gp(player.gpValue)}</strong></span>
-    </EntityLink>)}</div> : <p className="empty-copy">NO HAY JUGADORES QUE COINCIDAN CON LOS FILTROS.</p>)}
-    <Pagination pagination={players.pagination} page={filters.page} onPage={page => setFilters(current => ({ ...current, page }))}/>
-  </>;
+const STATUS_OPTIONS = [['', 'TODOS'], ['registered', 'EN LA LIGA'], ['owned', 'CON EQUIPO'], ['free', 'AGENTES LIBRES'], ['unregistered', 'NO INSCRITOS']];
+const SORT_OPTIONS = [['price_desc', 'PRECIO: MAYOR A MENOR'], ['price_asc', 'PRECIO: MENOR A MAYOR'], ['name', 'NOMBRE A-Z'], ['age_asc', 'MÁS JÓVENES'], ['age_desc', 'MÁS VETERANOS']];
+const EMPTY_FILTERS = { q: '', position: '', status: '', teamId: '', minGp: '', maxGp: '', nationality: '', sort: 'price_desc', page: 1 };
+
+function DirectoryStatus({ player }) {
+  if (player.status === 'owned') return <span className="search-status owned">{player.team?.imageUrl && <img src={player.team.imageUrl} alt=""/>}{player.team?.name}</span>;
+  if (player.status === 'free') return <span className="search-status free">AGENTE LIBRE</span>;
+  return <span className="search-status unregistered">NO INSCRITO</span>;
 }
 
-export function PlayersPage({ teams, navigate, mode = 'league', initialQuery = '' }) {
+// Directorio único: plantilla de la liga y cartas de eFootballDB sin inscribir.
+export function PlayersPage({ teams, navigate, initialQuery = '' }) {
+  const [filters, setFilters] = useState({ ...EMPTY_FILTERS, q: initialQuery });
+  const [search, setSearch] = useState(initialQuery);
   const [showCreate, setShowCreate] = useState(false);
-  const openPlayer = id => navigate?.(`/jugadores/${encodeURIComponent(id)}`);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setFilters(current => current.q === search.trim() ? current : { ...current, q: search.trim(), page: 1 }), 300);
+    return () => window.clearTimeout(timer);
+  }, [search]);
+  const query = Object.fromEntries(Object.entries({ ...filters, pageSize: 24 }).filter(([, value]) => value !== ''));
+  const directory = useApiQuery(signal => endpoints.playerDirectory(query, signal), Object.values(filters));
+  const rows = Array.isArray(directory.data) ? directory.data : [];
+  const set = (name, value) => setFilters(current => ({ ...current, [name]: value, page: 1 }));
+  const change = event => set(event.target.name, event.target.value);
+  const active = Object.entries(filters).filter(([key, value]) => !['sort', 'page'].includes(key) && value !== '').length;
+  const reset = () => { setSearch(''); setFilters(EMPTY_FILTERS); };
+  const open = player => player.playerId ? `#/jugadores/${encodeURIComponent(player.playerId)}` : `#/efootball/${player.pesId}${player.variation ? `?v=${player.variation}` : ''}`;
   return <main className="newspaper data-page"><section className="data-paper">
-    <PageHeader kicker="BASE DE DATOS DE LA LIGA" title="JUGADORES"/>
-    <nav className="player-mode-tabs" aria-label="Vistas de jugadores"><button className={mode === 'league' ? 'active' : ''} aria-current={mode === 'league' ? 'page' : undefined} onClick={() => navigate('/equipos/jugadores')}>JUGADORES DE LA LIGA</button><button className={mode === 'import' ? 'active' : ''} aria-current={mode === 'import' ? 'page' : undefined} onClick={() => navigate('/equipos/jugadores/importar')}>AGREGAR JUGADORES</button></nav>
-    {mode === 'import' ? <>
-      <EfootballCatalog key={initialQuery} initialQuery={initialQuery} onImported={openPlayer}/>
-      <details className="player-manual-create" open={showCreate} onToggle={event => setShowCreate(event.currentTarget.open)}><summary>¿NO ESTÁ EN eFOOTBALLDB? CREAR JUGADOR MANUALMENTE</summary><CreatePlayerForm onChanged={() => setShowCreate(false)}/></details>
-    </> : <LeaguePlayers teams={teams}/>}
+    <PageHeader kicker="LIGA + eFOOTBALLDB" title="JUGADORES"><button className="page-action" onClick={() => setShowCreate(value => !value)}>{showCreate ? 'CERRAR ALTA' : '+ CREAR JUGADOR MANUAL'}</button></PageHeader>
+    {showCreate && <CreatePlayerForm onChanged={() => { setShowCreate(false); directory.retry(); }}/>}
+    <section className="directory-filters">
+      <input className="directory-search" value={search} onChange={event => setSearch(event.target.value)} placeholder="BUSCAR POR NOMBRE" aria-label="Buscar jugador"/>
+      <div className="directory-chips" role="group" aria-label="Posición">{['', ...positions].map(value => <button type="button" key={value || 'all'} className={filters.position === value ? 'active' : ''} aria-pressed={filters.position === value} onClick={() => set('position', value)}>{value || 'TODAS'}</button>)}</div>
+      <div className="directory-chips" role="group" aria-label="Situación">{STATUS_OPTIONS.map(([value, label]) => <button type="button" key={value || 'all'} className={filters.status === value ? 'active' : ''} aria-pressed={filters.status === value} onClick={() => set('status', value)}>{label}</button>)}</div>
+      <div className="directory-row">
+        <select name="teamId" value={filters.teamId} onChange={change} aria-label="Equipo"><option value="">TODOS LOS EQUIPOS</option>{teams.map(team => <option value={team.id} key={team.id}>{team.name}</option>)}</select>
+        <input name="minGp" type="number" min="0" step="1000" value={filters.minGp} onChange={change} placeholder="GP MÍNIMO" aria-label="GP mínimo"/>
+        <input name="maxGp" type="number" min="0" step="1000" value={filters.maxGp} onChange={change} placeholder="GP MÁXIMO" aria-label="GP máximo"/>
+        <input name="nationality" value={filters.nationality} onChange={change} placeholder="NACIONALIDAD" aria-label="Nacionalidad"/>
+        <select name="sort" value={filters.sort} onChange={change} aria-label="Ordenar">{SORT_OPTIONS.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select>
+      </div>
+      <p className="directory-summary">{directory.pagination?.total != null ? `${directory.pagination.total.toLocaleString('es-CL')} JUGADORES` : ' '}{active > 0 && <button type="button" className="club-link-button" onClick={reset}>LIMPIAR FILTROS ({active})</button>}</p>
+    </section>
+    <DataState query={directory}/>
+    {!directory.loading && !directory.error && (rows.length ? <div className="player-card-grid">{rows.map(player => <a className={`player-card status-${player.status}`} href={open(player)} key={player.playerId ?? `${player.pesId}-${player.variation}`}>
+      <PlayerFace src={player.faceUrl} name={player.name} className="player-card-face"/>
+      <span className="player-card-body"><b>{player.name}</b><small>{[player.nationality, player.age ? `${player.age} AÑOS` : null].filter(Boolean).join(' · ') || '—'}</small><DirectoryStatus player={player}/></span>
+      <span className="player-card-meta"><em>{player.position ?? '—'}</em><strong>{gp(player.price)}</strong></span>
+    </a>)}</div> : <p className="empty-copy">NINGÚN JUGADOR COINCIDE CON LOS FILTROS.</p>)}
+    <Pagination pagination={directory.pagination} page={filters.page} onPage={page => { setFilters(current => ({ ...current, page })); window.scrollTo({ top: 0 }); }}/>
   </section></main>;
 }

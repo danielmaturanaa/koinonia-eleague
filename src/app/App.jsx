@@ -13,6 +13,7 @@ import { MatchesPage } from '../features/public/MatchesPage.jsx';
 import { NewsPage } from '../features/public/NewsPage.jsx';
 import { PlayersPage } from '../features/public/PlayersPage.jsx';
 import { PlayerProfilePage } from '../features/public/PlayerProfilePage.jsx';
+import { EfootballCardPage } from '../features/public/EfootballCard.jsx';
 import { RulesPage } from '../features/public/RulesPage.jsx';
 import { RankingsPage, TournamentsPage } from '../features/public/TournamentsPage.jsx';
 import { TeamsDirectoryPage } from '../features/public/TeamsDirectoryPage.jsx';
@@ -60,8 +61,10 @@ export function App() {
     page = <TournamentsPage classificationOnly teams={league.teams}/>;
   } else if (route.path === '/equipos/rankings') {
     page = <RankingsPage teams={league.teams} navigate={navigate}/>;
+  } else if (route.name === 'card') {
+    page = <EfootballCardPage pesId={route.pesId} variation={Number(route.query.v ?? 0)} navigate={navigate} onBack={() => navigate('/equipos/jugadores')}/>;
   } else if (route.path === '/equipos/jugadores' || route.path === '/equipos/jugadores/importar') {
-    page = <PlayersPage teams={league.teams} navigate={navigate} mode={route.path.endsWith('/importar') ? 'import' : 'league'} initialQuery={route.query.q ?? ''}/>;
+    page = <PlayersPage key={route.query.q ?? ''} teams={league.teams} navigate={navigate} initialQuery={route.query.q ?? ''}/>;
   } else if (route.path.startsWith('/equipos/')) {
     const modes = { plantillas: 'squads', presupuestos: 'budgets', presidentes: 'presidents', 'directores-tecnicos': 'coaches', emblemas: 'emblems', selecciones: 'national' };
     page = <TeamsDirectoryPage mode={modes[route.path.split('/').at(-1)]} teams={league.teams} onChoose={id => navigate(`/equipos/${encodeURIComponent(id)}`)}/>;

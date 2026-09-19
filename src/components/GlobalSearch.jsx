@@ -26,7 +26,7 @@ function mergeResults(leaguePlayers, catalogCards) {
       results.push({ key: `league-${card.league.id}`, kind: card.league.teamId ? 'owned' : 'free', id: card.league.id, name: card.league.name ?? card.name, faceUrl: card.faceUrl, detail: [card.position, card.nationality].filter(Boolean).join(' · '), value: null, team: card.league.teamId ? { id: card.league.teamId, name: card.league.teamName } : null });
       continue;
     }
-    results.push({ key: `unregistered-${card.pesId}-${card.variation}`, kind: 'unregistered', name: card.name, faceUrl: card.faceUrl, detail: [card.position, card.nationality, card.clubName].filter(Boolean).join(' · '), value: card.gpPrice });
+    results.push({ key: `unregistered-${card.pesId}-${card.variation}`, kind: 'unregistered', pesId: card.pesId, variation: card.variation, name: card.name, faceUrl: card.faceUrl, detail: [card.position, card.nationality, card.clubName].filter(Boolean).join(' · '), value: card.gpPrice });
   }
   const order = { owned: 0, free: 1, unregistered: 2 };
   return results.sort((left, right) => order[left.kind] - order[right.kind]);
@@ -96,7 +96,7 @@ export function GlobalSearch({ navigate, teams = [] }) {
     if (!result) return;
     setOpen(false);
     setQuery('');
-    if (result.kind === 'unregistered') navigate(`/equipos/jugadores/importar?q=${encodeURIComponent(result.name)}`);
+    if (result.kind === 'unregistered') navigate(`/efootball/${result.pesId}${result.variation ? `?v=${result.variation}` : ''}`);
     else navigate(`/jugadores/${encodeURIComponent(result.id)}`);
   };
 
@@ -122,7 +122,7 @@ export function GlobalSearch({ navigate, teams = [] }) {
             {statusLabel(result, teamsById)}
           </button>)}
       </div>
-      {term.length >= MIN_QUERY && <button type="button" className="global-search-all" onClick={() => { setOpen(false); navigate('/equipos/jugadores'); }}>VER TODOS LOS JUGADORES DE LA LIGA →</button>}
+      {term.length >= MIN_QUERY && <button type="button" className="global-search-all" onClick={() => { setOpen(false); navigate(`/equipos/jugadores?q=${encodeURIComponent(term)}`); }}>VER TODOS LOS RESULTADOS EN JUGADORES →</button>}
     </div>}
   </div>;
 }
