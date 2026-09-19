@@ -16,7 +16,7 @@ function relatedName(item, side, type, index) {
   return embedded?.name ?? item[`${camel}Name`] ?? item[`${snake}_name`] ?? index.get(id)?.name;
 }
 
-async function loadAllPlayers(signal) {
+export async function loadAllPlayers(signal) {
   const first = await endpoints.players({ page: 1, pageSize: 100 }, signal);
   const pages = first.pagination?.totalPages ?? 1;
   const rest = pages > 1 ? await Promise.all(Array.from({ length: pages - 1 }, (_, index) => endpoints.players({ page: index + 2, pageSize: 100 }, signal))) : [];
