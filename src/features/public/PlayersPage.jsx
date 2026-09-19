@@ -68,9 +68,13 @@ export function PlayerAdmin({ player, onChanged }) {
   return <section className="player-actions"><h3>ADMINISTRACIÓN</h3><label>NOMBRE<input value={name} onChange={event => setName(event.target.value)}/></label><label>VALOR GP<input type="number" min="0" value={gpValue} onChange={event => setGpValue(event.target.value)}/></label><label>POSICIÓN<select value={position} onChange={event => setPosition(event.target.value)}>{positions.map(item => <option key={item}>{item}</option>)}</select></label><div className="button-row"><button className="action-button" disabled={!name.trim() || gpValue === '' || edit.loading} onClick={() => edit.execute({ name: name.trim(), gpValue: Number(gpValue), position })}>GUARDAR CAMBIOS</button><button className="action-button danger" disabled={retire.loading} onClick={() => { if (window.confirm(`¿RETIRAR A ${player.name}? Se conservará su historial.`)) retire.execute(); }}>RETIRAR DE LA LIGA</button></div><FormFeedback mutation={edit.error || edit.success ? edit : retire}/></section>;
 }
 
-const STATUS_OPTIONS = [['', 'TODOS'], ['registered', 'EN LA LIGA'], ['owned', 'CON EQUIPO'], ['free', 'AGENTES LIBRES'], ['unregistered', 'NO INSCRITOS']];
-const SORT_OPTIONS = [['price_desc', 'PRECIO: MAYOR A MENOR'], ['price_asc', 'PRECIO: MENOR A MAYOR'], ['name', 'NOMBRE A-Z'], ['age_asc', 'MÁS JÓVENES'], ['age_desc', 'MÁS VETERANOS']];
-const EMPTY_FILTERS = { q: '', position: '', status: '', teamId: '', minGp: '', maxGp: '', nationality: '', sort: 'price_desc', page: 1 };
+const STATUS_OPTIONS = [['', 'Todos'], ['registered', 'En la liga'], ['owned', 'Con equipo'], ['free', 'Agentes libres'], ['unregistered', 'No inscritos']];
+const SORT_OPTIONS = [['price_desc', 'Precio: mayor a menor'], ['price_asc', 'Precio: menor a mayor'], ['name', 'Nombre A-Z'], ['age_asc', 'Más jóvenes'], ['age_desc', 'Más veteranos']];
+const POSITION_LINES = [['PORTERO', ['PT']], ['DEFENSA', ['DEC', 'LI', 'LD']], ['MEDIOCAMPO', ['MC', 'MO']], ['ATAQUE', ['EI', 'ED', 'DC']]];
+const PRICE_RANGES = [['', '', 'Cualquier precio'], ['', '50000', 'Hasta 50.000'], ['50000', '100000', '50.000 – 100.000'], ['100000', '200000', '100.000 – 200.000'], ['200000', '', 'Más de 200.000']];
+const EMPTY_FILTERS = { q: '', positions: [], status: '', teamId: '', minGp: '', maxGp: '', nationality: '', sort: 'price_desc', page: 1 };
+
+const filtersFromQuery = query => ({ ...EMPTY_FILTERS, q: query.q ?? '', status: query.status ?? '', teamId: query.teamId ?? '', positions: query.position ? query.position.split(',') : [], sort: query.sort ?? 'price_desc' });
 
 function DirectoryStatus({ player }) {
   if (player.status === 'owned') return <span className="search-status owned">{player.team?.imageUrl && <img src={player.team.imageUrl} alt=""/>}{player.team?.name}</span>;
@@ -78,45 +82,79 @@ function DirectoryStatus({ player }) {
   return <span className="search-status unregistered">NO INSCRITO</span>;
 }
 
+function FilterPanel({ filters, teams, set, togglePosition, total, onClose }) {
+  const priceKey = `${filters.minGp}-${filters.maxGp}`;
+  const custom = !PRICE_RANGES.some(([min, max]) => `${min}-${max}` === priceKey);
+  return <aside className="filter-panel" aria-label="Filtros">
+    <fieldset><legend>SITUACIÓN</legend>{STATUS_OPTIONS.map(([value, label]) => <label key={value || 'all'} className="filter-option"><input type="radio" name="status" checked={filters.status === value} onChange={() => set({ status: value })}/>{label}</label>)}</fieldset>
+    <fieldset><legend>POSICIÓN</legend>{POSITION_LINES.map(([line, values]) => {
+      const all = values.every(value => filters.positions.includes(value));
+      return <div className="filter-line" key={line}>
+        <label className="filter-option filter-line-title"><input type="checkbox" checked={all} onChange={() => set({ positions: all ? filters.positions.filter(value => !values.includes(value)) : [...new Set([...filters.positions, ...values])] })}/>{line}</label>
+        {values.length > 1 && <div className="filter-line-values">{values.map(value => <label key={value} className="filter-option"><input type="checkbox" checked={filters.positions.includes(value)} onChange={() => togglePosition(value)}/>{value}</label>)}</div>}
+      </div>;
+    })}</fieldset>
+    <fieldset><legend>PRECIO (GP)</legend>{PRICE_RANGES.map(([min, max, label]) => <label key={label} className="filter-option"><input type="radio" name="price" checked={!custom && priceKey === `${min}-${max}`} onChange={() => set({ minGp: min, maxGp: max })}/>{label}</label>)}
+      <div className="filter-range"><input type="number" min="0" step="1000" value={filters.minGp} onChange={event => set({ minGp: event.target.value })} placeholder="Mín." aria-label="GP mínimo"/><span>–</span><input type="number" min="0" step="1000" value={filters.maxGp} onChange={event => set({ maxGp: event.target.value })} placeholder="Máx." aria-label="GP máximo"/></div>
+    </fieldset>
+    <fieldset><legend>EQUIPO</legend><select value={filters.teamId} onChange={event => set({ teamId: event.target.value })} aria-label="Equipo"><option value="">Todos los equipos</option>{teams.map(team => <option value={team.id} key={team.id}>{team.name}</option>)}</select></fieldset>
+    <fieldset><legend>NACIONALIDAD</legend><input value={filters.nationality} onChange={event => set({ nationality: event.target.value })} placeholder="Ej: Argentina" aria-label="Nacionalidad"/></fieldset>
+    <button type="button" className="filter-panel-close" onClick={onClose}>VER {total != null ? total.toLocaleString('es-CL') : ''} RESULTADOS</button>
+  </aside>;
+}
+
+function activeTags(filters, teams) {
+  const tags = [];
+  if (filters.q) tags.push(['q', `“${filters.q}”`, { q: '' }]);
+  if (filters.status) tags.push(['status', STATUS_OPTIONS.find(([value]) => value === filters.status)?.[1], { status: '' }]);
+  for (const value of filters.positions) tags.push([`position-${value}`, value, { positions: filters.positions.filter(item => item !== value) }]);
+  if (filters.minGp || filters.maxGp) tags.push(['price', `${filters.minGp ? Number(filters.minGp).toLocaleString('es-CL') : '0'} – ${filters.maxGp ? Number(filters.maxGp).toLocaleString('es-CL') : '∞'} GP`, { minGp: '', maxGp: '' }]);
+  if (filters.teamId) tags.push(['team', teams.find(team => team.id === filters.teamId)?.name ?? 'Equipo', { teamId: '' }]);
+  if (filters.nationality) tags.push(['nationality', filters.nationality, { nationality: '' }]);
+  return tags;
+}
+
 // Directorio único: plantilla de la liga y cartas de eFootballDB sin inscribir.
-export function PlayersPage({ teams, navigate, initialQuery = '' }) {
-  const [filters, setFilters] = useState({ ...EMPTY_FILTERS, q: initialQuery });
-  const [search, setSearch] = useState(initialQuery);
+export function PlayersPage({ teams, initialQuery = {} }) {
+  const [filters, setFilters] = useState(() => filtersFromQuery(initialQuery));
+  const [search, setSearch] = useState(initialQuery.q ?? '');
   const [showCreate, setShowCreate] = useState(false);
+  const [panelOpen, setPanelOpen] = useState(false);
   useEffect(() => {
     const timer = window.setTimeout(() => setFilters(current => current.q === search.trim() ? current : { ...current, q: search.trim(), page: 1 }), 300);
     return () => window.clearTimeout(timer);
   }, [search]);
-  const query = Object.fromEntries(Object.entries({ ...filters, pageSize: 24 }).filter(([, value]) => value !== ''));
-  const directory = useApiQuery(signal => endpoints.playerDirectory(query, signal), Object.values(filters));
+  const { positions, ...rest } = filters;
+  const query = Object.fromEntries(Object.entries({ ...rest, position: positions.join(','), pageSize: 24 }).filter(([, value]) => value !== ''));
+  const directory = useApiQuery(signal => endpoints.playerDirectory(query, signal), [JSON.stringify(query)]);
   const rows = Array.isArray(directory.data) ? directory.data : [];
-  const set = (name, value) => setFilters(current => ({ ...current, [name]: value, page: 1 }));
-  const change = event => set(event.target.name, event.target.value);
-  const active = Object.entries(filters).filter(([key, value]) => !['sort', 'page'].includes(key) && value !== '').length;
-  const reset = () => { setSearch(''); setFilters(EMPTY_FILTERS); };
+  const set = patch => { if ('q' in patch) setSearch(patch.q); setFilters(current => ({ ...current, ...patch, page: 1 })); };
+  const togglePosition = value => set({ positions: filters.positions.includes(value) ? filters.positions.filter(item => item !== value) : [...filters.positions, value] });
+  const tags = activeTags(filters, teams);
   const open = player => player.playerId ? `#/jugadores/${encodeURIComponent(player.playerId)}` : `#/efootball/${player.pesId}${player.variation ? `?v=${player.variation}` : ''}`;
   return <main className="newspaper data-page"><section className="data-paper">
     <PageHeader kicker="LIGA + eFOOTBALLDB" title="JUGADORES"><button className="page-action" onClick={() => setShowCreate(value => !value)}>{showCreate ? 'CERRAR ALTA' : '+ CREAR JUGADOR MANUAL'}</button></PageHeader>
     {showCreate && <CreatePlayerForm onChanged={() => { setShowCreate(false); directory.retry(); }}/>}
-    <section className="directory-filters">
-      <input className="directory-search" value={search} onChange={event => setSearch(event.target.value)} placeholder="BUSCAR POR NOMBRE" aria-label="Buscar jugador"/>
-      <div className="directory-chips" role="group" aria-label="Posición">{['', ...positions].map(value => <button type="button" key={value || 'all'} className={filters.position === value ? 'active' : ''} aria-pressed={filters.position === value} onClick={() => set('position', value)}>{value || 'TODAS'}</button>)}</div>
-      <div className="directory-chips" role="group" aria-label="Situación">{STATUS_OPTIONS.map(([value, label]) => <button type="button" key={value || 'all'} className={filters.status === value ? 'active' : ''} aria-pressed={filters.status === value} onClick={() => set('status', value)}>{label}</button>)}</div>
-      <div className="directory-row">
-        <select name="teamId" value={filters.teamId} onChange={change} aria-label="Equipo"><option value="">TODOS LOS EQUIPOS</option>{teams.map(team => <option value={team.id} key={team.id}>{team.name}</option>)}</select>
-        <input name="minGp" type="number" min="0" step="1000" value={filters.minGp} onChange={change} placeholder="GP MÍNIMO" aria-label="GP mínimo"/>
-        <input name="maxGp" type="number" min="0" step="1000" value={filters.maxGp} onChange={change} placeholder="GP MÁXIMO" aria-label="GP máximo"/>
-        <input name="nationality" value={filters.nationality} onChange={change} placeholder="NACIONALIDAD" aria-label="Nacionalidad"/>
-        <select name="sort" value={filters.sort} onChange={change} aria-label="Ordenar">{SORT_OPTIONS.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select>
+    <div className={`directory-layout ${panelOpen ? 'panel-open' : ''}`}>
+      <FilterPanel filters={filters} teams={teams} set={set} togglePosition={togglePosition} total={directory.pagination?.total} onClose={() => setPanelOpen(false)}/>
+      <div className="directory-results">
+        <div className="directory-toolbar">
+          <input className="directory-search" value={search} onChange={event => setSearch(event.target.value)} placeholder="BUSCAR POR NOMBRE" aria-label="Buscar jugador"/>
+          <button type="button" className="directory-filter-toggle" aria-expanded={panelOpen} onClick={() => setPanelOpen(value => !value)}>FILTROS{tags.length ? ` (${tags.length})` : ''}</button>
+          <label className="directory-sort">ORDENAR<select value={filters.sort} onChange={event => set({ sort: event.target.value })}>{SORT_OPTIONS.map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></label>
+        </div>
+        <div className="directory-summary"><b>{directory.pagination?.total != null ? `${directory.pagination.total.toLocaleString('es-CL')} JUGADORES` : ' '}</b>
+          {tags.map(([key, label, patch]) => <button type="button" key={key} className="filter-tag" onClick={() => set(patch)} aria-label={`Quitar filtro ${label}`}>{label} <span aria-hidden="true">×</span></button>)}
+          {tags.length > 0 && <button type="button" className="club-link-button" onClick={() => { setSearch(''); setFilters(EMPTY_FILTERS); }}>LIMPIAR TODO</button>}
+        </div>
+        <DataState query={directory}/>
+        {!directory.loading && !directory.error && (rows.length ? <div className="player-card-grid">{rows.map(player => <a className={`player-card status-${player.status}`} href={open(player)} key={player.playerId ?? `${player.pesId}-${player.variation}`}>
+          <PlayerFace src={player.faceUrl} name={player.name} className="player-card-face"/>
+          <span className="player-card-body"><b>{player.name}</b><small>{[player.nationality, player.age ? `${player.age} AÑOS` : null].filter(Boolean).join(' · ') || '—'}</small><DirectoryStatus player={player}/></span>
+          <span className="player-card-meta"><em>{player.position ?? '—'}</em><strong>{gp(player.price)}</strong></span>
+        </a>)}</div> : <p className="empty-copy">NINGÚN JUGADOR COINCIDE CON LOS FILTROS.</p>)}
+        <Pagination pagination={directory.pagination} page={filters.page} onPage={page => { setFilters(current => ({ ...current, page })); window.scrollTo({ top: 0 }); }}/>
       </div>
-      <p className="directory-summary">{directory.pagination?.total != null ? `${directory.pagination.total.toLocaleString('es-CL')} JUGADORES` : ' '}{active > 0 && <button type="button" className="club-link-button" onClick={reset}>LIMPIAR FILTROS ({active})</button>}</p>
-    </section>
-    <DataState query={directory}/>
-    {!directory.loading && !directory.error && (rows.length ? <div className="player-card-grid">{rows.map(player => <a className={`player-card status-${player.status}`} href={open(player)} key={player.playerId ?? `${player.pesId}-${player.variation}`}>
-      <PlayerFace src={player.faceUrl} name={player.name} className="player-card-face"/>
-      <span className="player-card-body"><b>{player.name}</b><small>{[player.nationality, player.age ? `${player.age} AÑOS` : null].filter(Boolean).join(' · ') || '—'}</small><DirectoryStatus player={player}/></span>
-      <span className="player-card-meta"><em>{player.position ?? '—'}</em><strong>{gp(player.price)}</strong></span>
-    </a>)}</div> : <p className="empty-copy">NINGÚN JUGADOR COINCIDE CON LOS FILTROS.</p>)}
-    <Pagination pagination={directory.pagination} page={filters.page} onPage={page => { setFilters(current => ({ ...current, page })); window.scrollTo({ top: 0 }); }}/>
+    </div>
   </section></main>;
 }

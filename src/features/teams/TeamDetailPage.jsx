@@ -343,14 +343,16 @@ export function TeamDetailPage({ team, teams = [], squad, standings, matches = [
 
       <section className="club-tab-content" role="tabpanel">
         {activeTab === 'resumen' && <div className="club-overview">
-          <section className="club-card club-overview-pitch"><h3>TITULARES <button type="button" className="club-link-button" onClick={() => onTab?.('plantel')}>PLANTEL COMPLETO →</button></h3><SquadPitch starters={starters}/></section>
+          <div className="club-overview-main">
+            <section className="club-card club-overview-pitch"><h3>TITULARES <button type="button" className="club-link-button" onClick={() => onTab?.('plantel')}>PLANTEL COMPLETO →</button></h3><SquadPitch starters={starters}/></section>
+            <ClubScorers teamId={team.id}/>
+          </div>
           <div className="club-overview-side">
             <section className="club-card club-leadership"><h3>DIRECTIVA</h3><div className="club-leaders">
               <LeaderCard key={`president-${personRevision}`} photo={photo} name={presidentName} age={presidentProfile.age} country={presidentProfile.country} customFields={team.president?.customFields} role="PRESIDENTE" onEdit={() => setPersonEditor('president')}/>
               <LeaderCard key={`coach-${personRevision}`} photo={managerPhoto} name={coachName} age={coachProfile.age} country={coachProfile.country} customFields={team.coach?.customFields} role="DIRECTOR TÉCNICO" onEdit={() => setPersonEditor('coach')}/>
             </div></section>
             <UpcomingMatches matches={matches} resolveTeam={resolveTeam} teamId={team.id}/>
-            <ClubScorers teamId={team.id}/>
           </div>
         </div>}
 

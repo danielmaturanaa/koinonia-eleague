@@ -1,7 +1,6 @@
 export const navigationItems = [
   { label: 'Inicio', path: '/' },
   { label: 'Partidos', path: '/partidos' },
-  { label: 'Clasificación', path: '/clasificacion' },
   { label: 'Torneos', path: '/torneos' },
   { label: 'Equipos', path: '/equipos' },
   { label: 'Jugadores', path: '/equipos/jugadores' },
@@ -15,7 +14,7 @@ export const sectionContent = {
   '/partidos': ['CENTRO DE PARTIDOS', 'Calendario completo de la liga, encuentros en vivo y próximos cruces.'],
   '/partidos/jugados': ['PARTIDOS JUGADOS', 'Historial de encuentros finalizados con acceso a cada acta.'],
   '/partidos/pendientes': ['PRÓXIMOS PARTIDOS', 'Programación pendiente organizada por torneo y fecha.'],
-  '/clasificacion': ['CLASIFICACIÓN', 'Tablas y goleadores de torneos activos y completados.'],
+  '/clasificacion': ['TORNEOS', 'Tabla, goleadores y playoffs de cada torneo.'],
   '/equipos/rankings': ['RANKINGS Y DIVISIONES', 'Valor de planteles y estructura divisional.'],
   '/equipos/plantillas': ['PLANTILLAS', 'Jugadores titulares, suplentes, dorsales y orden de plantel.'],
   '/equipos/presupuestos': ['PRESUPUESTOS', 'Saldos GP y movimientos económicos de cada institución.'],
@@ -25,9 +24,9 @@ export const sectionContent = {
   '/equipos/selecciones': ['SELECCIONES', 'Equipos nacionales y clubes responsables.'],
   '/equipos/jugadores': ['JUGADORES', 'Buscador y fichas individuales de futbolistas.'],
   '/equipos/jugadores/importar': ['AGREGAR JUGADORES', 'Importación desde eFootballDB y alta manual.'],
-  '/transferencias': ['MERCADO DE FICHAJES', 'Transferencias, trueques y jugadores libres.'],
+  '/transferencias': ['MERCADO', 'Agentes libres, jugadores no inscritos y últimos movimientos.'],
   '/sanciones': ['SANCIONES', 'Expulsiones y suspensiones registradas en las actas.'],
-  '/torneos': ['TORNEOS', 'Ligas, copas, grupos, llaves y movimientos divisionales.'],
+  '/torneos': ['TORNEOS', 'Tabla, goleadores y playoffs de cada torneo.'],
   '/noticias': ['ACTIVIDAD DE LA LIGA', 'Novedades generadas por la actividad oficial de Koinonia e-League.'],
   '/reglas': ['REGLAS DEL TORNEO', 'Reglamento oficial, condiciones de competencia y criterios deportivos de Koinonia e-League.'],
 };

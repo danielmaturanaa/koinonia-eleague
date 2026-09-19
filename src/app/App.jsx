@@ -57,14 +57,14 @@ export function App() {
     page = <MatchesPage key={matchesMode} mode={matchesMode} teams={league.teams} navigate={navigate}/>;
   } else if (route.name === 'match') {
     page = <MatchesPage key="all" mode="all" teams={league.teams} navigate={navigate} initialMatchId={route.matchId}/>;
-  } else if (route.path === '/clasificacion') {
-    page = <TournamentsPage classificationOnly teams={league.teams}/>;
+  } else if (route.path === '/torneos') {
+    page = <TournamentsPage teams={league.teams}/>;
   } else if (route.path === '/equipos/rankings') {
     page = <RankingsPage teams={league.teams} navigate={navigate}/>;
   } else if (route.name === 'card') {
     page = <EfootballCardPage pesId={route.pesId} variation={Number(route.query.v ?? 0)} navigate={navigate} onBack={() => navigate('/equipos/jugadores')}/>;
   } else if (route.path === '/equipos/jugadores' || route.path === '/equipos/jugadores/importar') {
-    page = <PlayersPage key={route.query.q ?? ''} teams={league.teams} navigate={navigate} initialQuery={route.query.q ?? ''}/>;
+    page = <PlayersPage key={JSON.stringify(route.query)} teams={league.teams} initialQuery={route.query}/>;
   } else if (route.path.startsWith('/equipos/')) {
     const modes = { plantillas: 'squads', presupuestos: 'budgets', presidentes: 'presidents', 'directores-tecnicos': 'coaches', emblemas: 'emblems', selecciones: 'national' };
     page = <TeamsDirectoryPage mode={modes[route.path.split('/').at(-1)]} teams={league.teams} onChoose={id => navigate(`/equipos/${encodeURIComponent(id)}`)}/>;
@@ -72,8 +72,6 @@ export function App() {
     page = <MarketPage teams={league.teams}/>;
   } else if (route.path === '/sanciones') {
     page = <ActivityPage sanctionsOnly/>;
-  } else if (route.path === '/torneos') {
-    page = <TournamentsPage teams={league.teams}/>;
   } else if (route.path === '/noticias') {
     page = <NewsPage teams={league.teams}/>;
   } else if (route.path === '/reglas') {

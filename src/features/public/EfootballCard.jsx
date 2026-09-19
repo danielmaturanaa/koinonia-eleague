@@ -72,11 +72,11 @@ export function EfootballCardPage({ pesId, variation = 0, navigate, onBack }) {
       <header className="card-hero">
         <PlayerFace src={data.faceUrl} name={data.name} className="card-hero-face"/>
         <div className="card-hero-copy"><small>CARTA eFOOTBALL · {data.positionCode ?? data.position}</small><h1>{data.name}</h1><p>{[data.nationality, data.age ? `${data.age} AÑOS` : null, data.height ? `${data.height} CM` : null, data.clubName].filter(Boolean).join(' · ')}</p></div>
-        <div className="card-hero-price"><small>PRECIO eFOOTBALL</small><b>{gp(data.gpPrice)}</b><span>GP</span></div>
+        <div className="card-hero-price"><small>PRECIO eFOOTBALL</small><b>{data.gpPrice != null ? data.gpPrice.toLocaleString('es-CL') : '—'}</b><span>GP</span></div>
       </header>
       <div className="card-league-status">{data.league ? <>
         {data.league.team ? <span className="search-status owned">{data.league.team.imageUrl && <img src={data.league.team.imageUrl} alt=""/>}LO TIENE {data.league.team.name}</span> : <span className="search-status free">AGENTE LIBRE</span>}
-        <span>VALOR EN LA LIGA <b>{gp(data.league.gpValue)} GP</b></span>
+        <span>VALOR EN LA LIGA <b>{gp(data.league.gpValue)}</b></span>
         <EntityLink to="player" id={data.league.playerId} className="club-link-button">VER FICHA EN LA LIGA →</EntityLink>
         {data.league.team && <EntityLink to="team" id={data.league.team.id} className="card-team-link"><TeamMark team={data.league.team}/></EntityLink>}
       </> : <RegisterCard card={data} onRegistered={id => id && navigate(`/jugadores/${encodeURIComponent(id)}`)}/>}</div>
