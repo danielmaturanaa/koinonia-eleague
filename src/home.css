@@ -1687,3 +1687,9 @@ a.player-card { color: inherit; text-decoration: none; }
 @media (max-width: 900px) {
   .lead-columns { grid-template-columns: 1fr; }
 }
+/* En dos columnas, Goles sube para que ambos valores queden en la misma fila. */
+@media (max-width: 720px) {
+  .player-profile-facts > div:nth-child(1), .player-profile-facts > div:nth-child(2), .player-profile-facts > div:nth-child(3) { order: 0; }
+  .player-profile-facts > div:nth-child(6) { order: 1; }
+  .player-profile-facts > div:nth-child(4), .player-profile-facts > div:nth-child(5) { order: 2; }
+}
