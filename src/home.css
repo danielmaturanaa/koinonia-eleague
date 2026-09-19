@@ -145,7 +145,7 @@ body { min-width: 0; overflow-x: hidden; background: #001344; }
 .lead-story h2.automatic-news-headline { display: grid; width: 100%; min-width: 0; height: 142px; min-height: 142px; max-height: 142px; grid-template-rows: auto minmax(0, 1fr); align-content: center; gap: 7px; overflow: hidden; padding: 4px 3px 5px; }
 .lead-story h2.automatic-news-headline .headline-team { width: fit-content; max-width: 100%; padding: 2px 8px; overflow: hidden; border-left: 6px solid #a90020; color: #11120e; background: #ded2b8; font: 700 clamp(22px, 1.7vw, 28px)/1 'Oswald', sans-serif; letter-spacing: .4px; text-overflow: ellipsis; white-space: nowrap; transform: none; }
 .lead-story h2.automatic-news-headline .headline-result { display: block; width: 100%; max-width: 100%; height: 100%; min-height: 0; padding: 6px 4px 2px 0; overflow: hidden; border-top: 2px solid #575141; color: #cb0524; font: 400 34px/1.03 'Anton', Impact, sans-serif; letter-spacing: .4px; text-shadow: 1px 1px #9a0019; white-space: normal; overflow-wrap: anywhere; transform: none; }
-.lead-columns { display: grid; grid-template-columns: var(--lead-copy-width) minmax(0, 1fr); align-items: stretch; gap: 10px; }
+.lead-columns { display: grid; grid-template-columns: minmax(200px, 1fr) minmax(0, 1.6fr); align-items: start; gap: 16px; }
 .lead-copy { display: flex; min-height: 0; flex-direction: column; align-self: stretch; }
 .lead-copy p { font: 500 24px/.98 'Roboto Condensed', Arial, sans-serif; padding-top: 0; }
 .lead-copy blockquote { position: relative; width: 205px; margin-top: auto; padding-top: 8px; font: italic 600 19px/1.08 'Oswald', sans-serif; letter-spacing: .15px; }
@@ -453,7 +453,6 @@ body { min-width: 0; overflow-x: hidden; background: #001344; }
 .news-generic-preview i { color: #625d4e; font: 600 14px/1.15 'Oswald', sans-serif; font-style: normal; text-align: center; }
 .news-images-modal input[type='file'] { width: 100%; min-width: 0; color: #625d4e; font: 500 13px/1 'Roboto Condensed', sans-serif; }
 @media (max-width: 900px) {
-  .news-paper { height: 650px; min-height: 650px; }
   .news-header-actions { position: static; margin-top: 8px; }
   .data-page-header:has(.news-header-actions) { min-height: 108px; }
   .news-images-modal > div { grid-template-columns: 1fr; }
@@ -573,8 +572,6 @@ body { min-width: 0; overflow-x: hidden; background: #001344; }
 .workspace-columns { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
 .workspace-panel { max-height: 260px; }
 @media (min-width: 901px) {
-  .lead-columns { max-height: 270px; overflow: hidden; }
-  .lead-copy { max-height: 270px; padding-bottom: 4px; overflow: hidden; }
   .lead-copy p { display: -webkit-box; max-height: 180px; overflow: hidden; font-size: 20px; line-height: 1.02; -webkit-box-orient: vertical; -webkit-line-clamp: 9; }
   .lead-copy blockquote { flex-shrink: 0; }
 }
@@ -1671,3 +1668,22 @@ a.player-card { color: inherit; text-decoration: none; }
   .market-player-link strong { grid-column: 2; font-size: 14px; }
 }
 .tournament-main .league-table { table-layout: auto; }
+
+/* Noticia principal: la foto siempre 4:3, sin importar el ancho. */
+.lead-photo { aspect-ratio: 4 / 3; height: auto; max-height: none; }
+
+/* Noticias: grilla de tarjetas compactas con imagen 4:3 arriba. */
+.news-paper { overflow: visible; }
+.news-feed { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); align-items: stretch; gap: 14px; overflow: visible; }
+.news-feed > .news-feed-sentinel, .news-feed > .news-feed-status, .news-feed > .empty-copy { grid-column: 1 / -1; }
+.news-card { display: flex; flex-direction: column; grid-template-columns: none; }
+.news-card > .news-artwork { flex: 0 0 auto; width: 100%; aspect-ratio: 4 / 3; }
+.news-card > div:last-child { display: flex; flex: 1 1 auto; flex-direction: column; gap: 6px; padding: 10px 12px 12px; border-top: 4px solid #a90020; border-left: 0; }
+.news-card h2 { height: auto; max-height: none; display: -webkit-box; overflow: hidden; font-size: 21px; line-height: 1.05; -webkit-box-orient: vertical; -webkit-line-clamp: 3; }
+.news-card h2.news-headline-medium, .news-card h2.news-headline-compact, .news-card h2.news-headline-xs { font-size: 19px; }
+.news-card h3 { display: -webkit-box; overflow: hidden; font-size: 15px; -webkit-box-orient: vertical; -webkit-line-clamp: 2; }
+.news-card .news-read-more { margin-top: auto; }
+.news-card .news-artwork-scoreline { --news-score-size: 40px; }
+@media (max-width: 900px) {
+  .lead-columns { grid-template-columns: 1fr; }
+}
