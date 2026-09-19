@@ -15,7 +15,9 @@ function UpcomingMatch({ match, resolveTeam }) {
   return <article className="upcoming-match"><small>{detail}</small><div className="score-line"><TeamMark team={resolveTeam(match.homeTeam)}/><span className="home-name">{match.homeTeam.name}</span><span className="versus">VS</span><span className="away-name">{match.awayTeam.name}</span><TeamMark team={resolveTeam(match.awayTeam)}/></div></article>;
 }
 
-function UpcomingByTournament({ tournaments, upcoming, resolveTeam, loading }) {
+const UPCOMING_LIMIT = 8;
+
+function UpcomingByTournament({ tournaments, upcoming, resolveTeam, loading, navigate }) {
   const priority = new Map(tournaments.map((tournament, index) => [tournament.id, index]));
   const matches = [...upcoming].sort((left, right) => {
     const leftRound = left.roundNumber ?? left.round_number ?? Number.MAX_SAFE_INTEGER;
@@ -25,13 +27,13 @@ function UpcomingByTournament({ tournaments, upcoming, resolveTeam, loading }) {
     const rightTournament = right.tournament?.id ?? right.tournamentId ?? right.tournament_id;
     return (priority.get(leftTournament) ?? 99) - (priority.get(rightTournament) ?? 99);
   });
-  return <section className="score-panel upcoming-panel"><h2>PRÓXIMOS PARTIDOS</h2><div className="upcoming-scroll">{matches.length ? matches.map(match => <UpcomingMatch match={match} resolveTeam={resolveTeam} key={match.id}/>)
-    : <p className="league-note">{loading ? 'CARGANDO...' : 'SIN PARTIDOS PENDIENTES.'}</p>}</div></section>;
+  return <section className="score-panel upcoming-panel"><h2>PRÓXIMOS PARTIDOS</h2><div className="upcoming-scroll">{matches.length ? matches.slice(0, UPCOMING_LIMIT).map(match => <UpcomingMatch match={match} resolveTeam={resolveTeam} key={match.id}/>)
+    : <p className="league-note">{loading ? 'CARGANDO...' : 'SIN PARTIDOS PENDIENTES.'}</p>}</div>{matches.length > UPCOMING_LIMIT && <button className="sidebar-more" type="button" onClick={() => navigate('/partidos/pendientes')}>VER LOS {matches.length} PARTIDOS PENDIENTES →</button>}</section>;
 }
 
-export function MatchSidebar({ completed, upcoming, tournaments = [], resolveTeam, loading }) {
+export function MatchSidebar({ completed, upcoming, tournaments = [], resolveTeam, loading, navigate }) {
   return <aside className="match-sidebar">
     <Matches rows={completed} title="ÚLTIMOS RESULTADOS" resolveTeam={resolveTeam} loading={loading} showScore/>
-    <UpcomingByTournament tournaments={tournaments} upcoming={upcoming} resolveTeam={resolveTeam} loading={loading}/>
+    <UpcomingByTournament tournaments={tournaments} upcoming={upcoming} resolveTeam={resolveTeam} loading={loading} navigate={navigate}/>
   </aside>;
 }

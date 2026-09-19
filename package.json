@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "start /B node api-proxy.mjs && vite --configLoader native --host 127.0.0.1 --port 5174 --strictPort",
+    "dev": "node scripts/dev.mjs",
     "dev:api": "node api-proxy.mjs",
     "build": "vite build --configLoader native",
     "preview": "vite preview --configLoader native --host 127.0.0.1 --port 4174",
@@ -13,7 +13,6 @@
     "check": "pnpm build && pnpm test:news && pnpm smoke"
   },
   "dependencies": {
-    "qrcode": "^1.5.4",
     "react": "19.2.6",
     "react-dom": "19.2.6"
   },

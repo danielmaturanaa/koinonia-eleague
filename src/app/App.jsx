@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { ArcadeLayout } from '../components/ArcadeLayout.jsx';
+import { SiteLayout } from '../components/SiteLayout.jsx';
 import { MatchSidebar } from '../components/MatchSidebar.jsx';
 import { HomePage } from '../features/home/HomePage.jsx';
 import { useLeagueData } from '../features/league/useLeagueData.js';
@@ -79,6 +79,6 @@ export function App() {
     page = <SectionPage path={route.path}/>;
   }
 
-  const sidebar = <MatchSidebar completed={completed} upcoming={upcoming} tournaments={activeTournaments} resolveTeam={resolveTeam} loading={state.loading}/>;
-  return <ArcadeLayout route={route} navigate={navigate} sidebar={sidebar} error={state.error} dismissError={dismissError} headerTeams={league.teams} playlist={playlist}>{page}</ArcadeLayout>;
+  const sidebar = route.name === 'home' ? <MatchSidebar completed={completed} upcoming={upcoming} tournaments={activeTournaments} resolveTeam={resolveTeam} loading={state.loading} navigate={navigate}/> : null;
+  return <SiteLayout route={route} navigate={navigate} sidebar={sidebar} error={state.error} dismissError={dismissError} playlist={playlist}>{page}</SiteLayout>;
 }

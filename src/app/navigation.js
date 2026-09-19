@@ -1,13 +1,13 @@
 export const navigationItems = [
-  { label: 'Inicio', icon: 'ball', path: '/' },
-  { label: 'Partidos', icon: 'pitch', path: '/partidos' },
-  { label: 'Clasificación', icon: 'chart', path: '/clasificacion' },
-  { label: 'Torneos', icon: 'cup', path: '/torneos' },
-  { label: 'Equipos', icon: 'shirt', path: '/equipos' },
-  { label: 'Jugadores', icon: 'ball', path: '/equipos/jugadores' },
+  { label: 'Inicio', path: '/' },
+  { label: 'Partidos', path: '/partidos' },
+  { label: 'Clasificación', path: '/clasificacion' },
+  { label: 'Torneos', path: '/torneos' },
+  { label: 'Equipos', path: '/equipos' },
+  { label: 'Jugadores', path: '/equipos/jugadores' },
   // Selecciones se reactiva cuando la competición nacional vuelva a utilizarse.
-  { label: 'Noticias', icon: 'news', path: '/noticias' },
-  { label: 'Reglas', icon: 'book', path: '/reglas' },
+  { label: 'Noticias', path: '/noticias' },
+  { label: 'Reglas', path: '/reglas' },
 ];
 
 export const sectionContent = {
