@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { Scoreboard } from '../../components/Scoreboard.jsx';
+import { EntityLink } from '../../components/EntityLink.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
 import { MatchAdminPanel } from '../admin/MatchAdminPanel.jsx';
 import { matchRoundLabel } from '../../utils/matchPresentation.js';
@@ -70,12 +71,27 @@ function MultiSlot({ index, teamId, matchId, matches, teams, onSelectTeam, onSel
   </div>;
 }
 
+function MatchGoals({ match }) {
+  const goals = Array.isArray(match.goals) ? match.goals : [];
+  if (!goals.length) return null;
+  // Agrupa los goles de un mismo jugador; los minutos solo se muestran si el acta los registró.
+  const side = teamId => Object.values(goals.filter(goal => goal.teamId === teamId).reduce((groups, goal) => {
+    const key = `${goal.playerId ?? goal.playerName}:${goal.isOwnGoal ? 1 : 0}`;
+    groups[key] ??= { ...goal, count: 0, minutes: [] };
+    groups[key].count += 1;
+    if (goal.minute) groups[key].minutes.push(goal.minute);
+    return groups;
+  }, {}));
+  const column = teamId => <ul>{side(teamId).map(goal => <li key={goal.id}><EntityLink to="player" id={goal.playerId}>{goal.playerName ?? 'JUGADOR'}</EntityLink>{goal.count > 1 && <small>×{goal.count}</small>}{goal.minutes.length > 0 && <small>{goal.minutes.map(minute => `${minute}'`).join(', ')}</small>}{Boolean(goal.isOwnGoal) && <em>AUTOGOL</em>}</li>)}</ul>;
+  return <section className="match-goals" aria-label="Goles del partido">{column(match.homeTeam?.id)}<b aria-hidden="true">⚽</b>{column(match.awayTeam?.id)}</section>;
+}
+
 function MatchDetail({ matchId, onChanged, onBack, resolveTeam, teams }) {
   const [panel, setPanel] = useState(() => window.matchMedia?.('(max-width: 560px)').matches ? 'scoreboard' : null);
   const detail = useApiQuery(signal => matchId ? endpoints.match(matchId, signal) : Promise.resolve({ data: null }), [matchId]);
   const refresh = () => { detail.retry(); onChanged(); };
   const togglePanel = value => setPanel(current => current === value ? null : value);
-  return <aside className="detail-card match-detail match-detail-full"><div className="match-detail-navigation"><button onClick={onBack}>← VOLVER A PARTIDOS</button></div>{(!detail.data || detail.error) && <DataState query={detail}/>} {detail.data && <><div className="match-detail-kicker"><small>{detail.data.tournament?.name} · {matchRoundLabel(detail.data)}</small><span className="match-detail-actions"><button className={`match-detail-marcador-btn ${panel === 'scoreboard' ? 'active' : ''}`} onClick={() => togglePanel('scoreboard')}>🎮 MARCADOR</button><button className={panel === 'acta' ? 'active' : ''} onClick={() => togglePanel('acta')}>⚙ GESTIONAR ACTA</button></span></div>{panel === 'scoreboard' ? <Scoreboard key={detail.data.id} matchId={detail.data.id} mode="manage" density="full" teams={teams}/> : <div className="match-detail-score"><span><TeamMark team={resolveTeam(detail.data.homeTeam)}/><b>{detail.data.homeTeam?.name}</b></span><strong>{detail.data.homeScore ?? '–'} : {detail.data.awayScore ?? '–'}</strong><span><TeamMark team={resolveTeam(detail.data.awayTeam)}/><b>{detail.data.awayTeam?.name}</b></span></div>}{panel === 'acta' && <MatchAdminPanel key={detail.data.id} match={detail.data} onChanged={refresh}/>}</>}</aside>;
+  return <aside className="detail-card match-detail match-detail-full"><div className="match-detail-navigation"><button onClick={onBack}>← VOLVER A PARTIDOS</button></div>{(!detail.data || detail.error) && <DataState query={detail}/>} {detail.data && <><div className="match-detail-kicker"><small>{detail.data.tournament?.name} · {matchRoundLabel(detail.data)}</small><span className="match-detail-actions"><button className={`match-detail-marcador-btn ${panel === 'scoreboard' ? 'active' : ''}`} onClick={() => togglePanel('scoreboard')}>🎮 MARCADOR</button><button className={panel === 'acta' ? 'active' : ''} onClick={() => togglePanel('acta')}>⚙ GESTIONAR ACTA</button></span></div>{panel === 'scoreboard' ? <Scoreboard key={detail.data.id} matchId={detail.data.id} mode="manage" density="full" teams={teams}/> : <div className="match-detail-score"><EntityLink to="team" id={detail.data.homeTeam?.id}><TeamMark team={resolveTeam(detail.data.homeTeam)}/><b>{detail.data.homeTeam?.name}</b></EntityLink><strong>{detail.data.homeScore ?? '–'} : {detail.data.awayScore ?? '–'}</strong><EntityLink to="team" id={detail.data.awayTeam?.id}><TeamMark team={resolveTeam(detail.data.awayTeam)}/><b>{detail.data.awayTeam?.name}</b></EntityLink></div>}{panel !== 'scoreboard' && <MatchGoals match={detail.data}/>}{panel === 'acta' && <MatchAdminPanel key={detail.data.id} match={detail.data} onChanged={refresh}/>}</>}</aside>;
 }
 
 export function MatchesPage({ mode = 'all', teams, navigate, initialMatchId = null }) {

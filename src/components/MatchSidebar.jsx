@@ -1,9 +1,10 @@
+import { EntityLink } from './EntityLink.jsx';
 import { TeamMark } from './TeamMark.jsx';
 import { matchRoundLabel } from '../utils/matchPresentation.js';
 
 function Matches({ rows, title, resolveTeam, loading, showScore }) {
   return <section className="score-panel"><h2>{title}</h2>{rows.length ? rows.map(match =>
-    <article className="result-match" key={match.id}>{showScore && <small>{[match.tournament?.name ?? 'TORNEO', matchRoundLabel(match, { leagueRound: 'JORNADA' })].join(' · ')}</small>}<div className="score-line"><TeamMark team={resolveTeam(match.homeTeam)}/><span className="home-name">{match.homeTeam.name}</span>{showScore ? <strong>{match.homeScore} - {match.awayScore}</strong> : <span className="versus">VS</span>}<span className="away-name">{match.awayTeam.name}</span><TeamMark team={resolveTeam(match.awayTeam)}/></div></article>)
+    <EntityLink to="match" id={match.id} className="result-match" key={match.id}>{showScore && <small>{[match.tournament?.name ?? 'TORNEO', matchRoundLabel(match, { leagueRound: 'JORNADA' })].join(' · ')}</small>}<div className="score-line"><TeamMark team={resolveTeam(match.homeTeam)}/><span className="home-name">{match.homeTeam.name}</span>{showScore ? <strong>{match.homeScore} - {match.awayScore}</strong> : <span className="versus">VS</span>}<span className="away-name">{match.awayTeam.name}</span><TeamMark team={resolveTeam(match.awayTeam)}/></div></EntityLink>)
     : <p className="league-note">{loading ? 'CARGANDO...' : 'SIN PARTIDOS PUBLICADOS.'}</p>}</section>;
 }
 
@@ -12,7 +13,7 @@ const matchGroup = match => match.groupLabel ?? match.group_label ?? match.group
 function UpcomingMatch({ match, resolveTeam }) {
   const tournamentName = match.tournament?.name ?? 'TORNEO';
   const detail = [tournamentName, matchRoundLabel(match, { leagueRound: 'JORNADA' })].join(' · ');
-  return <article className="upcoming-match"><small>{detail}</small><div className="score-line"><TeamMark team={resolveTeam(match.homeTeam)}/><span className="home-name">{match.homeTeam.name}</span><span className="versus">VS</span><span className="away-name">{match.awayTeam.name}</span><TeamMark team={resolveTeam(match.awayTeam)}/></div></article>;
+  return <EntityLink to="match" id={match.id} className="upcoming-match"><small>{detail}</small><div className="score-line"><TeamMark team={resolveTeam(match.homeTeam)}/><span className="home-name">{match.homeTeam.name}</span><span className="versus">VS</span><span className="away-name">{match.awayTeam.name}</span><TeamMark team={resolveTeam(match.awayTeam)}/></div></EntityLink>;
 }
 
 const UPCOMING_LIMIT = 8;

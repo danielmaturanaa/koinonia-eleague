@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { TeamMark } from '../../components/TeamMark.jsx';
+import { EntityLink } from '../../components/EntityLink.jsx';
 import { defaultFormationPositions, pitchPositionFor } from '../../utils/formationPositions.js';
 import { teamBalance, teamCoachName, teamCoachPhoto } from '../../utils/teamPresentation.js';
 import { readPersonProfile } from '../../utils/personProfile.js';
@@ -44,10 +45,10 @@ function ClubUpcomingMatches({ matches, teams }) {
 
   return <section className="club-upcoming-tab">
     <header><h2>PRÓXIMOS PARTIDOS</h2><small>{upcoming.length} PROGRAMADOS</small></header>
-    <div className="club-upcoming-list">{upcoming.length ? upcoming.map(match => <article key={match.id}>
+    <div className="club-upcoming-list">{upcoming.length ? upcoming.map(match => <EntityLink to="match" id={match.id} key={match.id}>
       <small>{match.tournament?.name ?? 'TORNEO'} · {matchRoundLabel(match, { leagueRound: 'JORNADA' })}</small>
       <div><span><TeamMark team={resolveTeam(match.homeTeam)}/><b className="club-upcoming-team-name">{match.homeTeam?.name ?? 'LOCAL'}</b></span><strong>VS</strong><span><b className="club-upcoming-team-name">{match.awayTeam?.name ?? 'VISITA'}</b><TeamMark team={resolveTeam(match.awayTeam)}/></span></div>
-    </article>) : <p className="empty-copy">NO HAY PRÓXIMOS PARTIDOS PROGRAMADOS PARA ESTE CLUB.</p>}</div>
+    </EntityLink>) : <p className="empty-copy">NO HAY PRÓXIMOS PARTIDOS PROGRAMADOS PARA ESTE CLUB.</p>}</div>
   </section>;
 }
 
