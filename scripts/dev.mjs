@@ -6,7 +6,8 @@ const api = spawn(process.execPath, [fileURLToPath(new URL('../api-proxy.mjs', i
   env: process.env,
 });
 
-const vite = spawn('vite', [
+const viteCommand = process.platform === 'win32' ? 'vite.cmd' : 'vite';
+const vite = spawn(viteCommand, [
   '--configLoader', 'native',
   '--host', '127.0.0.1',
   '--port', '5174',
@@ -14,6 +15,7 @@ const vite = spawn('vite', [
 ], {
   stdio: 'inherit',
   env: process.env,
+  shell: process.platform === 'win32',
 });
 
 let shuttingDown = false;
