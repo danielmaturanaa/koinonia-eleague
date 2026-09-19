@@ -51,7 +51,9 @@ async function readBody(request) {
 function upstreamUrl(requestUrl) {
   const incoming = new URL(requestUrl, 'http://proxy.local');
   const suffix = incoming.pathname.slice('/api/'.length);
-  const target = suffix === 'health' ? new URL('/health', apiBase.origin) : new URL(suffix, apiBase);
+  const target = suffix === 'health'
+    ? new URL(apiBase.pathname === '/api/' ? '/api/health' : '/health', apiBase.origin)
+    : new URL(suffix, apiBase);
   target.search = incoming.search;
 
   const apiPath = apiBase.pathname.endsWith('/') ? apiBase.pathname : `${apiBase.pathname}/`;
