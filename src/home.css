@@ -1466,7 +1466,7 @@ span.player-photo.player-photo-fallback { display: inline-grid; place-items: cen
 .trade-status.trade-pending { color: #a90020; font-weight: 700; }
 
 /* Ficha de equipo: cabecera con colores del club y pestañas. */
-.club-hero { position: relative; display: grid; grid-template-columns: 96px minmax(0, 1fr); align-items: center; gap: 18px; padding: 18px 20px; overflow: hidden; color: #fff; background: linear-gradient(115deg, #062764 0 66%, var(--club-primary) 66% 76%, var(--club-secondary) 76% 86%, var(--club-tertiary) 86%); border: 3px solid #0a1634; box-shadow: inset 0 0 0 3px #ffffff22; }
+.club-hero { position: relative; display: grid; grid-template-columns: 96px minmax(0, 1fr) auto; align-items: center; gap: 18px; padding: 18px 20px; overflow: hidden; color: #fff; background: linear-gradient(115deg, #062764 0 66%, var(--club-primary) 66% 76%, var(--club-secondary) 76% 86%, var(--club-tertiary) 86%); border: 3px solid #0a1634; box-shadow: inset 0 0 0 3px #ffffff22; }
 .club-hero::after { content: ''; position: absolute; inset: 0; background: url('/paper-grain.svg'); opacity: .35; pointer-events: none; }
 .club-hero > * { position: relative; z-index: 1; }
 .club-hero .club-crest { width: 96px; height: 96px; filter: drop-shadow(3px 4px 0 #0008); }
@@ -1487,8 +1487,9 @@ a.club-form-pill:hover { color: #fff; transform: translateY(-2px); }
 .club-tabs button:hover { background: #fff3c4; }
 .club-tabs button.active { border-bottom-color: #a90020; color: #a90020; }
 .club-tab-content { min-height: 320px; }
-.club-overview { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; }
-.club-overview .club-leadership { grid-column: 1 / -1; }
+.club-overview { display: grid; grid-template-columns: minmax(300px, 420px) minmax(0, 1fr); gap: 14px; align-items: start; }
+.club-overview-side { display: grid; gap: 14px; min-width: 0; }
+.club-overview-pitch .club-pitch { width: 100%; }
 .club-card { padding: 12px 14px; border: 2px solid #10285b; background: #fff9e8; }
 .club-card > h3 { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 0 10px; color: #062764; font: 600 17px/1 'Oswald', sans-serif; letter-spacing: .6px; }
 .club-card > h3 small { color: #8c0019; font-size: 14px; }
@@ -1530,7 +1531,6 @@ a.club-form-pill:hover { color: #fff; transform: translateY(-2px); }
 .club-league-table th:nth-child(2), .club-league-table td:nth-child(2) { width: 42%; }
 .club-league-table td { padding-top: 7px; padding-bottom: 7px; }
 .club-league-table .team-mark { width: 24px; height: 24px; flex: 0 0 24px; }
-.club-transfers .trade .club-transfer-kind { color: #111; background: #ffd42a; }
 @media (max-width: 560px) {
   .club-leaders { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .club-leader-card { grid-template-columns: 1fr; justify-items: center; gap: 8px; padding: 8px; text-align: center; }
@@ -1541,4 +1541,41 @@ a.club-form-pill:hover { color: #fff; transform: translateY(-2px); }
   .club-match-row > div > span:first-child { grid-area: home; }
   .club-match-row > div > strong { grid-area: score; }
   .club-match-row > div > span:last-child { grid-area: away; flex-direction: row-reverse; justify-content: flex-end; text-align: left; }
+}
+
+.club-hero-value { display: grid; justify-items: end; gap: 2px; padding: 10px 14px; border: 2px solid #ffd42a; color: #fff; background: #001449d9; text-align: right; }
+.club-hero-value small { color: #ffd42a; font: 600 13px/1 'Oswald', sans-serif; letter-spacing: 1px; }
+.club-hero-value b { font: 400 clamp(28px, 3.4vw, 40px)/1 'Anton', sans-serif; letter-spacing: .5px; }
+.club-hero-value span { color: #b8d8f0; font: 600 12px/1 'Oswald', sans-serif; letter-spacing: .6px; }
+.club-squad-modes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.club-squad-modes button { padding: 9px 14px; border: 2px solid #10285b; color: #062764; background: #fff9e8; font: 600 14px/1 'Oswald', sans-serif; letter-spacing: .5px; }
+.club-squad-modes button.active { border-color: #a90020; color: #fff; background: #a90020; }
+.club-scorers { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.club-scorers li { display: grid; grid-template-columns: 22px 36px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 5px 6px; border-bottom: 1px solid #d8ccb0; font: 700 16px/1.1 'Roboto Condensed', sans-serif; }
+.club-scorers li > b { color: #a90020; font: 400 18px/1 'Anton', sans-serif; }
+.club-scorers .player-photo { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: #d9cfb8; font-size: 13px; }
+.club-scorers strong { color: #062764; font: 400 20px/1 'Anton', sans-serif; }
+.club-scorers strong small { font: 600 11px/1 'Oswald', sans-serif; }
+.club-card .club-more-button { display: block; margin: 10px auto 0; }
+.club-transfer-balance { margin-bottom: 10px; color: #625d4e; font: 600 15px/1.3 'Oswald', sans-serif; letter-spacing: .4px; }
+.club-transfer-balance b { color: #062764; }
+.club-transfers .move-in .club-transfer-kind, .club-transfers .move-purchase .club-transfer-kind { background: #1c7a3e; }
+.club-transfers .move-assignment .club-transfer-kind { background: #0b3f8d; }
+.club-transfers .move-out .club-transfer-kind { background: #a90020; }
+.club-transfers .move-trade .club-transfer-kind { color: #111; background: #ffd42a; }
+.club-history-tab-content { display: grid; gap: 14px; }
+@media (max-width: 900px) {
+  .club-overview { grid-template-columns: 1fr; }
+  .club-overview-pitch .club-pitch { max-width: 420px; margin: 0 auto; }
+  .club-hero { grid-template-columns: 72px minmax(0, 1fr); }
+  .club-hero-value { grid-column: 1 / -1; grid-template-columns: auto auto 1fr; align-items: baseline; justify-items: start; gap: 8px; text-align: left; }
+}
+/* La celda de equipo sigue siendo celda de tabla; el flex vive en el enlace. */
+.club-league-table td:nth-child(2) { display: table-cell; max-width: 0; }
+.club-league-table .table-team-link { gap: 8px; }
+@media (max-width: 560px) {
+  .club-league-table th:nth-child(4), .club-league-table td:nth-child(4),
+  .club-league-table th:nth-child(5), .club-league-table td:nth-child(5),
+  .club-league-table th:nth-child(6), .club-league-table td:nth-child(6) { display: none; }
+  .club-league-table th:nth-child(2), .club-league-table td:nth-child(2) { width: 60%; }
 }

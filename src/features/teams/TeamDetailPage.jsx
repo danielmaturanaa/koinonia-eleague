@@ -203,7 +203,7 @@ function AnthemEditor({ team, onChanged, onSaved }) {
   </form>;
 }
 
-const TABS = [['resumen', 'RESUMEN'], ['plantel', 'PLANTEL'], ['partidos', 'PARTIDOS'], ['tabla', 'TABLA'], ['fichajes', 'FICHAJES'], ['historia', 'HISTORIA'], ['gestion', 'GESTIÓN']];
+const TABS = [['resumen', 'RESUMEN'], ['plantel', 'PLANTEL'], ['partidos', 'PARTIDOS'], ['tabla', 'TABLA'], ['fichajes', 'FICHAJES'], ['historia', 'HISTORIA'], ['finanzas', 'FINANZAS']];
 
 const finishedMatches = (matches, teamId) => matches
   .filter(match => match.status === 'finished' && (match.homeTeam?.id === teamId || match.awayTeam?.id === teamId))
@@ -218,55 +218,89 @@ function FormPills({ matches, teamId }) {
   })}</div>;
 }
 
-function NextMatchCard({ match, resolveTeam }) {
-  if (!match) return <section className="club-card club-next-match"><h3>PRÓXIMO PARTIDO</h3><p className="empty-copy">SIN PARTIDOS PROGRAMADOS.</p></section>;
-  const home = resolveTeam(match.homeTeam); const away = resolveTeam(match.awayTeam);
-  return <section className="club-card club-next-match"><h3>PRÓXIMO PARTIDO</h3><EntityLink to="match" id={match.id} className="club-next-match-body">
-    <small>{match.tournament?.name ?? 'TORNEO'} · {matchRoundLabel(match, { leagueRound: 'JORNADA' })}</small>
-    <div><span><TeamMark team={home}/><b>{home?.name}</b></span><strong>{match.status === 'live' ? 'EN VIVO' : 'VS'}</strong><span><TeamMark team={away}/><b>{away?.name}</b></span></div>
-  </EntityLink></section>;
-}
-
 function ClubTable({ standings, teamId, teams }) {
   const teamIndex = new Map(teams.map(team => [team.id, team]));
   if (!standings.length) return <p className="empty-copy">SIN TABLA PUBLICADA.</p>;
   return <div className="table-scroll"><table className="league-table club-league-table"><thead><tr><th>#</th><th>EQUIPO</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>DG</th><th>PTS</th></tr></thead><tbody>{standings.map((row, index) => <tr key={row.team_id} className={row.team_id === teamId ? 'current-team' : ''}><td>{index + 1}</td><td><EntityLink to="team" id={row.team_id} className="table-team-link"><TeamMark team={{ ...row, ...(teamIndex.get(row.team_id) ?? {}) }}/>{row.name}</EntityLink></td><td>{row.played}</td><td>{row.wins}</td><td>{row.draws}</td><td>{row.losses}</td><td>{row.gd > 0 ? `+${row.gd}` : row.gd}</td><td><b>{row.points}</b></td></tr>)}</tbody></table></div>;
 }
 
-function ClubTransfers({ teamId, teams }) {
-  const transfers = useApiQuery(signal => endpoints.transfers({ page: 1, pageSize: 100 }, signal), [teamId]);
-  const trades = useApiQuery(signal => endpoints.trades({ page: 1, pageSize: 100 }, signal), [teamId]);
-  const players = useApiQuery(loadAllPlayers, []);
-  if (transfers.loading || trades.loading || players.loading) return <p className="empty-copy">CARGANDO FICHAJES…</p>;
-  if (transfers.error || trades.error) return <p className="empty-copy">NO SE PUDIERON CARGAR LOS FICHAJES.</p>;
-  const playerNames = new Map((Array.isArray(players.data) ? players.data : []).map(player => [player.id, player.name]));
-  const teamNames = new Map(teams.map(team => [team.id, team.name]));
-  const playerLink = id => <EntityLink to="player" id={playerNames.has(id) ? id : null}>{playerNames.get(id) ?? 'JUGADOR RETIRADO'}</EntityLink>;
-  const moves = [
-    ...(Array.isArray(transfers.data) ? transfers.data : []).filter(item => item.originId === teamId || item.destinationId === teamId).map(item => ({ ...item, type: 'transfer', date: item.completedAt })),
-    // Un trueque aprobado: el club entrega a un jugador y recibe a otro.
-    ...(Array.isArray(trades.data) ? trades.data : []).filter(item => item.status === 'approved' && (item.from_team_id === teamId || item.to_team_id === teamId)).map(item => ({ ...item, type: 'trade', date: item.resolved_at ?? item.created_at })),
-  ].sort((left, right) => String(right.date ?? '').localeCompare(String(left.date ?? '')));
-  if (!moves.length) return <p className="empty-copy">ESTE CLUB AÚN NO REGISTRA TRASPASOS NI TRUEQUES.</p>;
-  return <div className="club-transfers">{moves.map(item => {
-    if (item.type === 'trade') {
-      const mine = item.from_team_id === teamId;
-      const rivalId = mine ? item.to_team_id : item.from_team_id;
-      const gpPaid = mine ? item.gp_from : item.gp_to;
-      const gpReceived = mine ? item.gp_to : item.gp_from;
-      return <article key={item.id} className="trade">
-        <b className="club-transfer-kind">TRUEQUE</b>
-        <span>{playerLink(mine ? item.to_player_id : item.from_player_id)}<small>LLEGA A CAMBIO DE {playerLink(mine ? item.from_player_id : item.to_player_id)} · CON <EntityLink to="team" id={rivalId}>{teamNames.get(rivalId) ?? 'OTRO CLUB'}</EntityLink></small></span>
-        <strong>{gpPaid ? `PAGA ${gp(gpPaid)} GP` : gpReceived ? `RECIBE ${gp(gpReceived)} GP` : 'SIN GP'}</strong>
-      </article>;
-    }
-    const arrival = item.destinationId === teamId;
-    return <article key={item.id} className={arrival ? 'arrival' : 'departure'}>
-      <b className="club-transfer-kind">{arrival ? 'LLEGA' : 'SALE'}</b>
-      <span><EntityLink to="player" id={item.playerId}>{item.playerName}</EntityLink><small>{arrival ? 'DESDE' : 'HACIA'} <EntityLink to="team" id={arrival ? item.originId : item.destinationId}>{arrival ? item.originName : item.destinationName}</EntityLink></small></span>
-      <strong>{gp(item.gpAmount)} GP</strong>
-    </article>;
-  })}</div>;
+const MOVE_LABELS = { purchase: 'COMPRA', assignment: 'ASIGNADO', transfer: 'TRASPASO', release: 'LIBERADO', trade: 'TRUEQUE' };
+
+function moveDetail(move) {
+  const other = move.otherTeam ? <EntityLink to="team" id={move.otherTeam.id}>{move.otherTeam.name}</EntityLink> : null;
+  if (move.type === 'purchase') return move.origin === 'new' ? 'INSCRITO DESDE eFOOTBALLDB' : 'AGENTE LIBRE DE LA LIGA';
+  if (move.type === 'assignment') return 'ASIGNADO SIN COSTO';
+  if (move.type === 'release') return 'QUEDA COMO AGENTE LIBRE';
+  if (move.type === 'trade') return <>A CAMBIO DE <EntityLink to="player" id={move.givenPlayer?.id}>{move.givenPlayer?.name}</EntityLink> · CON {other}</>;
+  return <>{move.direction === 'in' ? 'DESDE' : 'HACIA'} {other}</>;
+}
+
+function moveAmount(move) {
+  if (move.type === 'trade') return move.gpPaid ? `PAGA ${gp(move.gpPaid)} GP` : move.gpReceived ? `RECIBE ${gp(move.gpReceived)} GP` : 'SIN GP';
+  if (move.type === 'release') return `RECIBE ${gp(move.gpAmount)} GP`;
+  if (move.type === 'assignment') return 'SIN COSTO';
+  return `${gp(move.gpAmount)} GP`;
+}
+
+function ClubTransfers({ teamId }) {
+  const moves = useApiQuery(signal => endpoints.teamMoves(teamId, signal), [teamId]);
+  const rows = Array.isArray(moves.data) ? moves.data : [];
+  if (moves.loading) return <p className="empty-copy">CARGANDO FICHAJES…</p>;
+  if (moves.error) return <p className="empty-copy">NO SE PUDIERON CARGAR LOS FICHAJES.</p>;
+  if (!rows.length) return <p className="empty-copy">ESTE CLUB AÚN NO REGISTRA MOVIMIENTOS.</p>;
+  const spent = rows.reduce((sum, move) => sum + (move.direction === 'in' && move.type !== 'trade' ? move.gpAmount ?? 0 : 0) + (move.type === 'trade' ? move.gpPaid ?? 0 : 0), 0);
+  const earned = rows.reduce((sum, move) => sum + (move.direction === 'out' ? move.gpAmount ?? 0 : 0) + (move.type === 'trade' ? move.gpReceived ?? 0 : 0), 0);
+  return <>
+    <p className="club-transfer-balance">INVERTIDO <b>{gp(spent)} GP</b> · RECIBIDO <b>{gp(earned)} GP</b></p>
+    <div className="club-transfers">{rows.map(move => <article key={move.id} className={`move-${move.type} move-${move.direction}`}>
+      <b className="club-transfer-kind">{move.type === 'transfer' ? (move.direction === 'in' ? 'LLEGA' : 'SALE') : MOVE_LABELS[move.type]}</b>
+      <span><EntityLink to="player" id={move.player?.id}>{move.player?.name ?? 'JUGADOR'}</EntityLink><small>{moveDetail(move)}{move.date ? ` · ${formatMoveDate(move.date)}` : ''}</small></span>
+      <strong>{moveAmount(move)}</strong>
+    </article>)}</div>
+  </>;
+}
+
+const formatMoveDate = value => {
+  const date = new Date(String(value).includes('T') ? value : `${String(value).replace(' ', 'T')}Z`);
+  return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
+};
+
+const UPCOMING_STEP = 5;
+
+function UpcomingMatches({ matches, resolveTeam, teamId }) {
+  const [visible, setVisible] = useState(UPCOMING_STEP);
+  const upcoming = matches
+    .filter(match => match.status === 'pending' || match.status === 'live')
+    .sort((left, right) => (left.status === 'live' ? -1 : 0) - (right.status === 'live' ? -1 : 0) || (left.roundNumber ?? Number.MAX_SAFE_INTEGER) - (right.roundNumber ?? Number.MAX_SAFE_INTEGER));
+  return <section className="club-card"><h3>PRÓXIMOS PARTIDOS <small>{upcoming.length}</small></h3>
+    {upcoming.length ? <div className="club-match-list">{upcoming.slice(0, visible).map(match => <ClubMatchRow match={match} resolveTeam={resolveTeam} teamId={teamId} key={match.id}/>)}</div> : <p className="empty-copy">SIN PARTIDOS PROGRAMADOS.</p>}
+    {upcoming.length > visible && <button type="button" className="club-more-button" onClick={() => setVisible(value => value + UPCOMING_STEP)}>MOSTRAR {Math.min(UPCOMING_STEP, upcoming.length - visible)} MÁS</button>}
+  </section>;
+}
+
+function ClubScorers({ teamId }) {
+  const scorers = useApiQuery(signal => endpoints.teamScorers(teamId, {}, signal), [teamId]);
+  const rows = (Array.isArray(scorers.data) ? scorers.data : []).slice(0, 5);
+  return <section className="club-card"><h3>GOLEADORES <small>TORNEOS ACTIVOS</small></h3>
+    {scorers.loading ? <p className="empty-copy">CARGANDO…</p> : scorers.error ? <p className="empty-copy">NO DISPONIBLE.</p> : rows.length ? <ol className="club-scorers">{rows.map((row, index) => <li key={row.playerId}><b>{index + 1}</b><PlayerFace src={row.faceUrl} name={row.name}/><EntityLink to="player" id={row.playerId}>{row.name}</EntityLink><strong>{row.goals} <small>GOL{row.goals === 1 ? '' : 'ES'}</small></strong></li>)}</ol> : <p className="empty-copy">AÚN SIN GOLES EN TORNEOS ACTIVOS.</p>}
+  </section>;
+}
+
+function HonoursList({ honours, historyError }) {
+  return <section className="club-card"><h3>PALMARÉS <small>{honours.length} TÍTULO{honours.length === 1 ? '' : 'S'}</small></h3>{honours.length ? <div className="honours-list">{honours.map(item => <article key={item.id}><span aria-hidden="true">★</span><b>{item.name}</b>{item.season && <small>{item.season}</small>}</article>)}</div> : <p className="empty-copy">AÚN NO HAY TÍTULOS REGISTRADOS.</p>}{historyError && <p className="honours-api-note">NO FUE POSIBLE CONSULTAR EL HISTORIAL DEL CLUB.</p>}</section>;
+}
+
+function SquadTab({ team, squad, starters, substitutes, onChanged }) {
+  const [mode, setMode] = useState('view');
+  return <div className="club-squad-tab">
+    <nav className="club-squad-modes" aria-label="Acciones del plantel">{[['view', 'VER PLANTEL'], ['formation', 'EDITAR FORMACIÓN'], ['edit', 'EDITAR PLANTEL']].map(([id, label]) => <button type="button" key={id} className={mode === id ? 'active' : ''} aria-pressed={mode === id} onClick={() => setMode(id)}>{label}</button>)}</nav>
+    {mode === 'view' && <div className="club-squad-layout">
+      <div className="club-squad-pitch"><h3>TITULARES EN CANCHA</h3><SquadPitch starters={starters}/></div>
+      <div className="roster-panel club-roster"><h3>TITULARES <small>{starters.length} / 11</small></h3><RosterHeader/><div className="roster-list">{starters.length ? starters.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay titulares definidos.</p>}</div><h3>SUPLENTES <small>{substitutes.length}</small></h3><div className="roster-list substitutes">{substitutes.length ? substitutes.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay suplentes registrados.</p>}</div></div>
+    </div>}
+    {mode === 'formation' && <div className="club-formation-tab"><FormationEditor team={team} squad={squad} onChanged={onChanged}/></div>}
+    {mode === 'edit' && <div className="club-squad-editor"><SquadEditor team={team} squad={squad} onChanged={onChanged}/></div>}
+  </div>;
 }
 
 export function TeamDetailPage({ team, teams = [], squad, standings, matches = [], history = [], historyError, loading, tab = 'resumen', onTab, onBack, onChanged }) {
@@ -295,10 +329,6 @@ export function TeamDetailPage({ team, teams = [], squad, standings, matches = [
   const balance = teamBalance(team);
   const teamIndex = new Map(teams.map(item => [item.id, item]));
   const resolveTeam = matchTeam => matchTeam ? { ...matchTeam, ...(teamIndex.get(matchTeam.id ?? matchTeam.team_id) ?? {}) } : matchTeam;
-  const nextMatch = matches
-    .filter(match => match.status === 'pending' || match.status === 'live')
-    .sort((left, right) => (left.status === 'live' ? -1 : 0) - (right.status === 'live' ? -1 : 0) || (left.roundNumber ?? Number.MAX_SAFE_INTEGER) - (right.roundNumber ?? Number.MAX_SAFE_INTEGER))[0];
-  const lastResults = team ? finishedMatches(matches, team.id).slice(0, 3) : [];
   const colors = team?.colors ?? {};
   const heroStyle = { '--club-primary': colors.primary ?? '#062764', '--club-secondary': colors.secondary ?? '#0b3f8d', '--club-tertiary': colors.tertiary ?? '#ffd42a' };
 
@@ -307,35 +337,29 @@ export function TeamDetailPage({ team, teams = [], squad, standings, matches = [
       <header className="club-hero" style={heroStyle}>
         <div className="club-crest-wrap"><TeamMark team={team} className="club-crest"/><button type="button" className="club-crest-edit" onClick={() => setCrestEditorOpen(true)} aria-label="Editar escudo y nombre del club" title="Editar escudo y nombre">✎</button></div>
         <div className="club-hero-copy"><p>{team.kind === 'national_team' ? 'SELECCIÓN' : 'CLUB'}{team.currentDivision ? ` · ${team.currentDivision}` : ''}</p><h1>{team.name}</h1><div className="club-hero-meta">{rank > 0 && <span className="club-hero-rank"><b>{rank}°</b> EN LA LIGA{standing ? ` · ${standing.points} PTS` : ''}</span>}<FormPills matches={matches} teamId={team.id}/></div></div>
+        <div className="club-hero-value"><small>VALOR DEL PLANTEL</small><b>{gp(team.squadValue)}</b><span>GP · {team.playerCount ?? squad.length} JUGADORES</span></div>
       </header>
       <nav className="club-tabs" ref={tabsRef} role="tablist" aria-label="Secciones del club">{TABS.map(([id, label]) => <button type="button" role="tab" key={id} aria-selected={activeTab === id} className={activeTab === id ? 'active' : ''} onClick={() => onTab?.(id)}>{label}</button>)}</nav>
 
       <section className="club-tab-content" role="tabpanel">
         {activeTab === 'resumen' && <div className="club-overview">
-          <section className="club-card club-leadership"><h3>DIRECTIVA</h3><div className="club-leaders">
-            <LeaderCard key={`president-${personRevision}`} photo={photo} name={presidentName} age={presidentProfile.age} country={presidentProfile.country} customFields={team.president?.customFields} role="PRESIDENTE" onEdit={() => setPersonEditor('president')}/>
-            <LeaderCard key={`coach-${personRevision}`} photo={managerPhoto} name={coachName} age={coachProfile.age} country={coachProfile.country} customFields={team.coach?.customFields} role="DIRECTOR TÉCNICO" onEdit={() => setPersonEditor('coach')}/>
-          </div></section>
-          <NextMatchCard match={nextMatch} resolveTeam={resolveTeam}/>
-          <section className="club-card"><h3>ÚLTIMOS RESULTADOS <button type="button" className="club-link-button" onClick={() => onTab?.('partidos')}>VER TODOS →</button></h3>{lastResults.length ? <div className="club-match-list">{lastResults.map(match => <ClubMatchRow match={match} resolveTeam={resolveTeam} teamId={team.id} key={match.id}/>)}</div> : <p className="empty-copy">AÚN NO JUEGA PARTIDOS.</p>}</section>
-          <section className="club-card"><h3>PALMARÉS <small>{honours.length} TÍTULO{honours.length === 1 ? '' : 'S'}</small></h3>{honours.length ? <div className="honours-list">{honours.map(item => <article key={item.id}><span aria-hidden="true">★</span><b>{item.name}</b>{item.season && <small>{item.season}</small>}</article>)}</div> : <p className="empty-copy">AÚN NO HAY TÍTULOS REGISTRADOS.</p>}{historyError && <p className="honours-api-note">NO FUE POSIBLE CONSULTAR EL HISTORIAL DEL CLUB.</p>}</section>
+          <section className="club-card club-overview-pitch"><h3>TITULARES <button type="button" className="club-link-button" onClick={() => onTab?.('plantel')}>PLANTEL COMPLETO →</button></h3><SquadPitch starters={starters}/></section>
+          <div className="club-overview-side">
+            <section className="club-card club-leadership"><h3>DIRECTIVA</h3><div className="club-leaders">
+              <LeaderCard key={`president-${personRevision}`} photo={photo} name={presidentName} age={presidentProfile.age} country={presidentProfile.country} customFields={team.president?.customFields} role="PRESIDENTE" onEdit={() => setPersonEditor('president')}/>
+              <LeaderCard key={`coach-${personRevision}`} photo={managerPhoto} name={coachName} age={coachProfile.age} country={coachProfile.country} customFields={team.coach?.customFields} role="DIRECTOR TÉCNICO" onEdit={() => setPersonEditor('coach')}/>
+            </div></section>
+            <UpcomingMatches matches={matches} resolveTeam={resolveTeam} teamId={team.id}/>
+            <ClubScorers teamId={team.id}/>
+          </div>
         </div>}
 
-        {activeTab === 'plantel' && <div className="club-squad-layout">
-          <div className="club-squad-pitch"><h3>TITULARES EN CANCHA</h3><SquadPitch starters={starters}/></div>
-          <div className="roster-panel club-roster"><h3>TITULARES <small>{starters.length} / 11</small></h3><RosterHeader/><div className="roster-list">{starters.length ? starters.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay titulares definidos.</p>}</div><h3>SUPLENTES <small>{substitutes.length}</small></h3><div className="roster-list substitutes">{substitutes.length ? substitutes.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay suplentes registrados.</p>}</div><p className="club-squad-value">VALOR DEL PLANTEL <b>{gp(team.squadValue)} GP</b> · PROMEDIO <b>{gp(team.averageValue)} GP</b></p></div>
-        </div>}
-
+        {activeTab === 'plantel' && <SquadTab team={team} squad={squad} starters={starters} substitutes={substitutes} onChanged={onChanged}/>}
         {activeTab === 'partidos' && <ClubMatches matches={matches} teams={teams} teamId={team.id}/>}
         {activeTab === 'tabla' && <ClubTable standings={standings} teamId={team.id} teams={teams}/>}
-        {activeTab === 'fichajes' && <ClubTransfers teamId={team.id} teams={teams}/>}
-        {activeTab === 'historia' && <ClubHistory team={team} onEdit={setHistoryEditor}/>}
-
-        {activeTab === 'gestion' && <div className="club-management">
-          <details open><summary>FINANZAS · SALDO {balance === null ? '—' : `${gp(balance)} GP`}</summary><div className="club-budget-tab"><div className="club-finance-stats"><span>SALDO DISPONIBLE <b>{balance === null ? '—' : `${gp(balance)} GP`}</b></span><span>VALOR PLANTEL <b>{gp(team.squadValue)} GP</b></span><span>PROMEDIO <b>{gp(team.averageValue)} GP</b></span></div><BudgetForm team={team} onChanged={onChanged}/></div></details>
-          <details><summary>FORMACIÓN EN CANCHA</summary><div className="club-formation-tab"><FormationEditor team={team} squad={squad} onChanged={onChanged}/></div></details>
-          <details><summary>EDITAR PLANTEL</summary><div className="club-squad-editor"><SquadEditor team={team} squad={squad} onChanged={onChanged}/></div></details>
-        </div>}
+        {activeTab === 'fichajes' && <ClubTransfers teamId={team.id}/>}
+        {activeTab === 'historia' && <div className="club-history-tab-content"><HonoursList honours={honours} historyError={historyError}/><ClubHistory team={team} onEdit={setHistoryEditor}/></div>}
+        {activeTab === 'finanzas' && <div className="club-budget-tab"><div className="club-finance-stats"><span>SALDO DISPONIBLE <b>{balance === null ? '—' : `${gp(balance)} GP`}</b></span><span>VALOR PLANTEL <b>{gp(team.squadValue)} GP</b></span><span>PROMEDIO <b>{gp(team.averageValue)} GP</b></span></div><BudgetForm team={team} onChanged={onChanged}/></div>}
       </section>
 
       {personEditor === 'president' && <PersonEditorModal title="EDITAR PRESIDENTE" onClose={() => setPersonEditor('')}><PresidentForm team={team} onChanged={onChanged} onSaved={() => { setPersonRevision(value => value + 1); setPersonEditor(''); }}/></PersonEditorModal>}
