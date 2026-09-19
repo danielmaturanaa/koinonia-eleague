@@ -34,7 +34,7 @@ function UpcomingByTournament({ tournaments, upcoming, resolveTeam, loading, nav
 
 export function MatchSidebar({ completed, upcoming, tournaments = [], resolveTeam, loading, navigate }) {
   return <aside className="match-sidebar">
-    <Matches rows={completed} title="ÚLTIMOS RESULTADOS" resolveTeam={resolveTeam} loading={loading} showScore/>
     <UpcomingByTournament tournaments={tournaments} upcoming={upcoming} resolveTeam={resolveTeam} loading={loading} navigate={navigate}/>
+    <Matches rows={completed} title="ÚLTIMOS RESULTADOS" resolveTeam={resolveTeam} loading={loading} showScore/>
   </aside>;
 }

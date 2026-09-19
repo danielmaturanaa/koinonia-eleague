@@ -1,9 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { Scoreboard } from '../../components/Scoreboard.jsx';
-import { EntityLink } from '../../components/EntityLink.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
-import { MatchAdminPanel } from '../admin/MatchAdminPanel.jsx';
 import { matchRoundLabel } from '../../utils/matchPresentation.js';
 import { DataState, PageHeader, Pagination } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
@@ -71,33 +69,9 @@ function MultiSlot({ index, teamId, matchId, matches, teams, onSelectTeam, onSel
   </div>;
 }
 
-function MatchGoals({ match }) {
-  const goals = Array.isArray(match.goals) ? match.goals : [];
-  if (!goals.length) return null;
-  // Agrupa los goles de un mismo jugador; los minutos solo se muestran si el acta los registró.
-  const side = teamId => Object.values(goals.filter(goal => goal.teamId === teamId).reduce((groups, goal) => {
-    const key = `${goal.playerId ?? goal.playerName}:${goal.isOwnGoal ? 1 : 0}`;
-    groups[key] ??= { ...goal, count: 0, minutes: [] };
-    groups[key].count += 1;
-    if (goal.minute) groups[key].minutes.push(goal.minute);
-    return groups;
-  }, {}));
-  const column = teamId => <ul>{side(teamId).map(goal => <li key={goal.id}><EntityLink to="player" id={goal.playerId}>{goal.playerName ?? 'JUGADOR'}</EntityLink>{goal.count > 1 && <small>×{goal.count}</small>}{goal.minutes.length > 0 && <small>{goal.minutes.map(minute => `${minute}'`).join(', ')}</small>}{Boolean(goal.isOwnGoal) && <em>AUTOGOL</em>}</li>)}</ul>;
-  return <section className="match-goals" aria-label="Goles del partido">{column(match.homeTeam?.id)}<b aria-hidden="true">⚽</b>{column(match.awayTeam?.id)}</section>;
-}
-
-function MatchDetail({ matchId, onChanged, onBack, resolveTeam, teams }) {
-  const [panel, setPanel] = useState(() => window.matchMedia?.('(max-width: 560px)').matches ? 'scoreboard' : null);
-  const detail = useApiQuery(signal => matchId ? endpoints.match(matchId, signal) : Promise.resolve({ data: null }), [matchId]);
-  const refresh = () => { detail.retry(); onChanged(); };
-  const togglePanel = value => setPanel(current => current === value ? null : value);
-  return <aside className="detail-card match-detail match-detail-full"><div className="match-detail-navigation"><button onClick={onBack}>← VOLVER A PARTIDOS</button></div>{(!detail.data || detail.error) && <DataState query={detail}/>} {detail.data && <><div className="match-detail-kicker"><small>{detail.data.tournament?.name} · {matchRoundLabel(detail.data)}</small><span className="match-detail-actions"><button className={`match-detail-marcador-btn ${panel === 'scoreboard' ? 'active' : ''}`} onClick={() => togglePanel('scoreboard')}>🎮 MARCADOR</button><button className={panel === 'acta' ? 'active' : ''} onClick={() => togglePanel('acta')}>⚙ GESTIONAR ACTA</button></span></div>{panel === 'scoreboard' ? <Scoreboard key={detail.data.id} matchId={detail.data.id} mode="manage" density="full" teams={teams}/> : <div className="match-detail-score"><EntityLink to="team" id={detail.data.homeTeam?.id}><TeamMark team={resolveTeam(detail.data.homeTeam)}/><b>{detail.data.homeTeam?.name}</b></EntityLink><strong>{detail.data.homeScore ?? '–'} : {detail.data.awayScore ?? '–'}</strong><EntityLink to="team" id={detail.data.awayTeam?.id}><TeamMark team={resolveTeam(detail.data.awayTeam)}/><b>{detail.data.awayTeam?.name}</b></EntityLink></div>}{panel !== 'scoreboard' && <MatchGoals match={detail.data}/>}{panel === 'acta' && <MatchAdminPanel key={detail.data.id} match={detail.data} onChanged={refresh}/>}</>}</aside>;
-}
-
-export function MatchesPage({ mode = 'all', teams, navigate, initialMatchId = null }) {
+export function MatchesPage({ mode = 'all', teams, navigate }) {
   const initialStatus = mode === 'played' ? 'finished' : mode === 'pending' ? 'pending' : '';
   const [filters, setFilters] = useState({ tournament: '', team: '', status: initialStatus, page: 1 });
-  const [selectedId, setSelectedId] = useState(initialMatchId);
   const [showMulti, setShowMulti] = useState(false);
   const [multiSlots, setMultiSlots] = useState(loadMultiSlots);
   const [multiFullscreen, setMultiFullscreen] = useState(false);
@@ -158,18 +132,14 @@ export function MatchesPage({ mode = 'all', teams, navigate, initialMatchId = nu
     });
   }, [showMulti, multiMatches, multiMatchesQuery.data]);
 
-  const selectMatch = id => { setSelectedId(id); navigate?.(`/partidos/${encodeURIComponent(id)}`); };
-  const backToList = () => { setSelectedId(null); navigate?.('/partidos'); };
+  const selectMatch = id => navigate?.(`/partidos/${encodeURIComponent(id)}`);
   const change = event => {
-    if (selectedId) backToList();
     setFilters(current => ({ ...current, [event.target.name]: event.target.value, page: 1 }));
   };
   const selectTeamFilter = teamId => {
-    if (selectedId) backToList();
     setFilters(current => ({ ...current, team: teamId, page: 1 }));
   };
   const toggleMulti = () => {
-    if (selectedId) backToList();
     setShowMulti(value => !value);
   };
   const toggleMultiFullscreen = () => {
@@ -181,7 +151,6 @@ export function MatchesPage({ mode = 'all', teams, navigate, initialMatchId = nu
   const clearMultiSlot = index => setMultiSlots(current => compactMultiSlots(current.map((slot, slotIndex) => slotIndex === index ? { ...MULTI_EMPTY_SLOT } : slot)));
   const title = mode === 'pending' ? 'PRÓXIMOS PARTIDOS' : mode === 'played' ? 'PARTIDOS JUGADOS' : 'CENTRO DE PARTIDOS';
 
-  const refresh = () => matches.retry();
   return <main className="newspaper data-page"><section className="data-paper"><PageHeader kicker="CALENDARIO Y ACTAS" title={title}><button className={`page-action ${showMulti ? 'active' : ''}`} onClick={toggleMulti}>{showMulti ? 'CERRAR MULTIPARTIDO' : '🎮 MULTIPARTIDO'}</button></PageHeader>
     {showMulti ? <>
       <p className="multi-inline-help">LAS CASILLAS VACÍAS SE LLENAN SOLAS CON PARTIDOS EN VIVO. TAMBIÉN PUEDES ELEGIR UN EQUIPO Y UNO DE SUS PARTIDOS A MANO.<button type="button" className="multi-fullscreen-button" onClick={toggleMultiFullscreen}>{multiFullscreen ? '✕ SALIR DE PANTALLA COMPLETA' : '⛶ PANTALLA COMPLETA'}</button></p>
@@ -191,10 +160,8 @@ export function MatchesPage({ mode = 'all', teams, navigate, initialMatchId = nu
     </> : <>
       <TeamChipBar teams={teams} value={filters.team} onChange={selectTeamFilter}/>
       <div className="filter-bar"><select name="tournament" value={filters.tournament} onChange={change} aria-label="Torneo"><option value="">TORNEOS ACTIVOS</option>{(tournaments.data ?? []).map(item => <option value={item.id} key={item.id}>{item.name}</option>)}</select><select name="status" value={filters.status} onChange={change} aria-label="Estado"><option value="">TODOS LOS ESTADOS</option>{Object.entries(labels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></div>
-      {!selectedId && <DataState query={matches}/>} {selectedId
-        ? <MatchDetail key={selectedId} matchId={selectedId} onChanged={refresh} onBack={backToList} resolveTeam={resolveTeam} teams={teams}/>
-        : !matches.loading && !matches.error && <div className="data-list matches-full-list">{rows.map(match => <button className="match-card" key={match.id} onClick={() => selectMatch(match.id)}><small>{match.tournament?.name ?? 'TORNEO'} · {matchRoundLabel(match)}</small><span><TeamMark team={resolveTeam(match.homeTeam)}/><b>{match.homeTeam?.name}</b><strong>{match.homeScore ?? '–'} : {match.awayScore ?? '–'}</strong><b>{match.awayTeam?.name}</b><TeamMark team={resolveTeam(match.awayTeam)}/></span><i className={`status status-${match.status}`}>{labels[match.status] ?? match.status}</i></button>)}</div>}
-      {!selectedId && <Pagination pagination={matches.pagination} page={filters.page} onPage={page => setFilters(current => ({ ...current, page }))}/>}
+      <DataState query={matches}/>{!matches.loading && !matches.error && <div className="data-list matches-full-list">{rows.map(match => <button className="match-card" key={match.id} onClick={() => selectMatch(match.id)}><small>{match.tournament?.name ?? 'TORNEO'} · {matchRoundLabel(match)}</small><span><TeamMark team={resolveTeam(match.homeTeam)}/><b>{match.homeTeam?.name}</b><strong>{match.homeScore ?? '–'} : {match.awayScore ?? '–'}</strong><b>{match.awayTeam?.name}</b><TeamMark team={resolveTeam(match.awayTeam)}/></span><i className={`status status-${match.status}`}>{labels[match.status] ?? match.status}</i></button>)}</div>}
+      {<Pagination pagination={matches.pagination} page={filters.page} onPage={page => setFilters(current => ({ ...current, page }))}/>}
     </>}
   </section></main>;
 }

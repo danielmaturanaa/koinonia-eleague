@@ -213,8 +213,8 @@ function ScoreboardActa({ match }) {
   </div>;
 }
 
-export function Scoreboard({ matchId, mode = 'view', density = 'tile', onOpen, onFinished, teams = [] }) {
-  const detail = useApiQuery(signal => matchId ? endpoints.match(matchId, signal) : Promise.resolve({ data: null }), [matchId]);
+export function Scoreboard({ matchId, mode = 'view', density = 'tile', onOpen, onFinished, onChanged, refreshKey = 0, showActa = true, teams = [] }) {
+  const detail = useApiQuery(signal => matchId ? endpoints.match(matchId, signal) : Promise.resolve({ data: null }), [matchId, refreshKey]);
   const match = detail.data;
   const teamIndex = new Map(teams.map(team => [team.id, team]));
   const resolveTeam = team => team ? { ...team, ...(teamIndex.get(team.id) ?? {}) } : team;
@@ -246,7 +246,7 @@ export function Scoreboard({ matchId, mode = 'view', density = 'tile', onOpen, o
       </div>
       <div className="scoreboard-team scoreboard-team-away"><TeamMark team={resolveTeam(match.awayTeam)}/><b>{match.awayTeam?.name}</b></div>
     </div>
-    <ScoreboardActa match={match}/>
-    {mode === 'manage' && <ScoreboardControls match={match} onChanged={detail.retry} compact={density === 'tile'}/>}
+    {showActa && <ScoreboardActa match={match}/>}
+    {mode === 'manage' && <ScoreboardControls match={match} onChanged={() => { detail.retry(); onChanged?.(); }} compact={density === 'tile'}/>}
   </article>;
 }

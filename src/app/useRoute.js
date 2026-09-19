@@ -53,7 +53,7 @@ export function useRoute() {
         : route.name === 'team'
           ? 'Ficha de equipo'
           : route.name === 'match'
-            ? 'Gestión de partido'
+            ? 'Partido'
             : route.name === 'player'
               ? 'Ficha de jugador'
             : route.name === 'card'

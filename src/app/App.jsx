@@ -18,6 +18,7 @@ import { RulesPage } from '../features/public/RulesPage.jsx';
 import { RankingsPage, TournamentsPage } from '../features/public/TournamentsPage.jsx';
 import { TeamsDirectoryPage } from '../features/public/TeamsDirectoryPage.jsx';
 import { MatchScoreboardPage } from '../features/public/MatchScoreboardPage.jsx';
+import { MatchCenterPage } from '../features/public/MatchCenterPage.jsx';
 import { useRoute } from './useRoute.js';
 
 const list = value => Array.isArray(value) ? value : [];
@@ -40,7 +41,7 @@ export function App() {
   const completed = list(league.home?.recentMatches).slice(0, 7);
 
   if (route.name === 'scoreboard') {
-    return <MatchScoreboardPage matchId={route.matchId} onBack={() => navigate('/partidos')}/>;
+    return <MatchScoreboardPage matchId={route.matchId} onBack={() => navigate(`/partidos/${encodeURIComponent(route.matchId)}`)}/>;
   }
 
   let page;
@@ -56,7 +57,7 @@ export function App() {
     const matchesMode = route.path.endsWith('jugados') ? 'played' : route.path.endsWith('pendientes') ? 'pending' : 'all';
     page = <MatchesPage key={matchesMode} mode={matchesMode} teams={league.teams} navigate={navigate}/>;
   } else if (route.name === 'match') {
-    page = <MatchesPage key="all" mode="all" teams={league.teams} navigate={navigate} initialMatchId={route.matchId}/>;
+    page = <MatchCenterPage key={route.matchId} matchId={route.matchId} teams={league.teams} navigate={navigate}/>;
   } else if (route.path === '/torneos') {
     page = <TournamentsPage teams={league.teams}/>;
   } else if (route.path === '/equipos/rankings') {
