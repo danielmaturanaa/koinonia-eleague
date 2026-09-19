@@ -50,7 +50,7 @@ export function App() {
   } else if (route.name === 'team') {
     page = <TeamDetailPage team={teamDetail} teams={league.teams} squad={squad} standings={league.standings} matches={teamMatches} history={teamHistory} historyError={teamHistoryError} loading={state.loadingTeam} onBack={() => navigate('/equipos')} onChanged={refresh}/>;
   } else if (route.name === 'player') {
-    page = <PlayerProfilePage playerId={route.playerId} onBack={() => navigate('/equipos/jugadores')}/>;
+    page = <PlayerProfilePage playerId={route.playerId} teams={league.teams} onBack={() => navigate('/equipos/jugadores')}/>;
   } else if (route.path === '/partidos' || route.path === '/partidos/jugados' || route.path === '/partidos/pendientes') {
     const matchesMode = route.path.endsWith('jugados') ? 'played' : route.path.endsWith('pendientes') ? 'pending' : 'all';
     page = <MatchesPage key={matchesMode} mode={matchesMode} teams={league.teams} navigate={navigate}/>;
@@ -60,8 +60,8 @@ export function App() {
     page = <TournamentsPage classificationOnly teams={league.teams}/>;
   } else if (route.path === '/equipos/rankings') {
     page = <RankingsPage teams={league.teams} navigate={navigate}/>;
-  } else if (route.path === '/equipos/jugadores') {
-    page = <PlayersPage teams={league.teams} navigate={navigate}/>;
+  } else if (route.path === '/equipos/jugadores' || route.path === '/equipos/jugadores/importar') {
+    page = <PlayersPage teams={league.teams} navigate={navigate} mode={route.path.endsWith('/importar') ? 'import' : 'league'}/>;
   } else if (route.path.startsWith('/equipos/')) {
     const modes = { plantillas: 'squads', presupuestos: 'budgets', presidentes: 'presidents', 'directores-tecnicos': 'coaches', emblemas: 'emblems', selecciones: 'national' };
     page = <TeamsDirectoryPage mode={modes[route.path.split('/').at(-1)]} teams={league.teams} onChoose={id => navigate(`/equipos/${encodeURIComponent(id)}`)}/>;

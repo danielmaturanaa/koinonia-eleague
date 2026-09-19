@@ -24,6 +24,7 @@ export const sectionContent = {
   '/equipos/emblemas': ['EMBLEMAS', 'Galería oficial de clubes y selecciones.'],
   '/equipos/selecciones': ['SELECCIONES', 'Equipos nacionales y clubes responsables.'],
   '/equipos/jugadores': ['JUGADORES', 'Buscador y fichas individuales de futbolistas.'],
+  '/equipos/jugadores/importar': ['AGREGAR JUGADORES', 'Importación desde eFootballDB y alta manual.'],
   '/transferencias': ['MERCADO DE FICHAJES', 'Transferencias, trueques y jugadores libres.'],
   '/sanciones': ['SANCIONES', 'Expulsiones y suspensiones registradas en las actas.'],
   '/torneos': ['TORNEOS', 'Ligas, copas, grupos, llaves y movimientos divisionales.'],

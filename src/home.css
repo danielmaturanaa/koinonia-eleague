@@ -420,7 +420,6 @@ body { min-width: 0; overflow-x: hidden; background: #001344; }
 .data-empty { padding: 25px; text-align: center; }
 .split-view { display: grid; grid-template-columns: 56% 1fr; gap: 10px; min-height: 470px; }
 .data-list { display: grid; align-content: start; gap: 5px; max-height: 485px; overflow: auto; }
-.player-results-list { grid-template-columns: repeat(2, minmax(0, 1fr)); max-height: 620px; }
 .data-row { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 8px; min-height: 53px; padding: 7px 9px; border: 2px solid #10285b; color: #11120e; background: #eee4cc; text-align: left; }
 .data-row:hover, .data-row.active, .match-card:hover, .match-card.active { color: #fff9e8; background: #a90020; }
 .data-row span { display: grid; gap: 3px; }
@@ -428,9 +427,6 @@ body { min-width: 0; overflow-x: hidden; background: #001344; }
 .data-row small { font: 500 13px/1 'Roboto Condensed', sans-serif; }
 .data-row strong { color: #063172; font: 700 14px/1 'Roboto Condensed', sans-serif; }
 .data-row.active strong, .data-row:hover strong { color: #ffd42a; }
-.player-result-row { grid-template-columns: 48px minmax(0, 1fr) auto; min-height: 62px; }
-.player-result-face, .player-result-placeholder { width: 44px; height: 44px; object-fit: contain; background: #c5bba4; }
-.player-result-placeholder { display: grid; place-items: center; color: #fff9e8; background: #062764; font: 500 24px/1 'Anton', sans-serif; }
 .detail-card { position: relative; min-height: 250px; padding: 13px; border: 3px solid #10285b; background: #d9cfb8; overflow: hidden; }
 .detail-card > p { font: 500 17px/1.2 'Oswald', sans-serif; }
 .detail-card h2 { padding-bottom: 7px; border-bottom: 2px solid #8d816a; font: 400 31px/1 'Anton', sans-serif; }
@@ -785,8 +781,6 @@ body { min-width: 0; overflow-x: hidden; background: #001344; }
 .efootball-catalog > p { margin: 5px 0 9px; font: 500 14px/1.1 'Roboto Condensed', sans-serif; }
 .player-global-search { grid-template-columns: minmax(260px, 2fr) repeat(3, minmax(130px, 1fr)); margin: 14px 0; }
 .player-global-search input { min-width: 0; }
-.player-search-label { display: flex; justify-content: space-between; gap: 12px; padding: 7px 9px; border: 2px solid #10285b; color: #062764; background: #fff9e8; font: 500 13px/1.2 'Oswald', sans-serif; }
-.player-search-label b { color: #a0001d; }
 .import-confirmation { border: 2px solid #a0001d; background: #fff5d8; }
 .import-confirmation > small { color: #5e2513; font: 600 13px/1.3 'Roboto Condensed', sans-serif; }
 .player-flag { display: inline-block; margin-right: 3px; font-style: normal; }
@@ -808,14 +802,12 @@ body { min-width: 0; overflow-x: hidden; background: #001344; }
 .player-profile-facts dt { color: #8c0019; font: 600 12px/1 'Oswald', sans-serif; }.player-profile-facts dd { margin: 4px 0 0; color: #062764; font: 600 15px/1.05 'Roboto Condensed', sans-serif; }
 .player-profile-external { margin: 0; border-top: 3px solid #10285b; }.player-profile-external > header { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 0; color: inherit; background: transparent; }.player-profile-external > header h2 { margin: 0; }.player-profile-external > header .action-button { font-size: 12px; }
 .player-tournament-form { padding: 12px; border-top: 3px solid #10285b; background: #e5dcc7; }.player-tournament-form > header { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; color: #062764; }.player-tournament-form h2 { margin: 0; font: 500 19px/1 'Anton', sans-serif; }.player-tournament-form > header small, .player-stat-note { font: 600 12px/1.2 'Oswald', sans-serif; }.player-tournament-form > div { display: grid; gap: 5px; margin-top: 8px; }.player-tournament-form article { display: flex; justify-content: space-between; gap: 12px; padding: 7px 9px; border-left: 5px solid #a0001d; background: #fff9e8; font: 600 14px/1 'Roboto Condensed', sans-serif; }.player-tournament-form article strong { color: #062764; }.player-tournament-form > p { margin: 9px 0; font: 500 14px/1.1 'Roboto Condensed', sans-serif; }.player-stat-note { display: block; margin-top: 10px; color: #564f43; }
-.player-result-team-mark { width: 15px; height: 15px; margin: -2px 2px -3px 0; object-fit: contain; vertical-align: middle; }.player-team-value { display: flex; align-items: center; gap: 5px; }.player-team-value img { width: 22px; height: 22px; object-fit: contain; }
 .player-efootball-refresh { margin-left: 5px; padding: 0 3px; border: 0; color: #062764; background: transparent; cursor: pointer; font: 700 16px/1 sans-serif; }.player-efootball-refresh:disabled { opacity: .5; }.player-refresh-error { margin: 0; padding: 8px 12px; color: #a0001d; font: 600 13px/1.2 'Roboto Condensed', sans-serif; }
 .efootball-results { display: grid; gap: 0; margin-top: 9px; max-height: 420px; overflow: auto; }
 .efootball-results article { display: grid; grid-template-columns: 62px minmax(190px, 1fr) minmax(145px, 220px) auto; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #a99e87; }
 .efootball-results img, .player-face { width: 56px; height: 56px; object-fit: contain; background: #c5bba4; }
 .efootball-results b, .efootball-results small { display: block; }
 .efootball-results strong { color: #8c0019; font: 600 13px/1.1 'Oswald', sans-serif; text-align: right; }
-.league-results-title { margin: 18px 0 8px; color: #062764; font: 400 24px/1 'Anton', sans-serif; }
 .player-face { float: right; width: 86px; height: 86px; margin: 0 0 6px 10px; }
 .external-profile { clear: both; position: relative; z-index: 1; margin-top: 10px; padding: 8px; border-top: 2px solid #10285b; background: #eee5d2; }
 .external-profile h3 { margin: 0; color: #062764; font: 500 14px/1 'Oswald', sans-serif; }
@@ -823,7 +815,8 @@ body { min-width: 0; overflow-x: hidden; background: #001344; }
 .external-profile div { display: flex; flex-wrap: wrap; gap: 4px 8px; }
 .external-profile small { text-transform: uppercase; font: 500 12px/1 'Oswald', sans-serif; }
 .roster-player-face { width: 28px; height: 28px; object-fit: contain; background: #c5bba4; }
-@media (max-width: 720px) { .player-global-search { grid-template-columns: 1fr 1fr; } .player-global-search input { grid-column: 1 / -1; } .player-search-label { display: grid; gap: 3px; } .player-results-list { grid-template-columns: 1fr; max-height: 520px; } .player-profile-card > header { align-items: flex-start; padding: 11px; gap: 10px; } .player-profile-portrait { flex-basis: 86px; } .player-profile-face { width: 86px; height: 86px; } .player-profile-portrait > b { font-size: 58px; } .player-profile-facts { grid-template-columns: 1fr 1fr; } .efootball-results article { grid-template-columns: 48px minmax(0, 1fr) auto; } .efootball-results article > strong { grid-column: 2; text-align: left; } .efootball-results article > .action-button { grid-column: 3; grid-row: 1 / 3; } .efootball-results img { width: 44px; height: 44px; } }
+.player-team-value { display: flex; align-items: center; gap: 5px; }.player-team-value img { width: 22px; height: 22px; object-fit: contain; }
+@media (max-width: 720px) { .player-global-search { grid-template-columns: 1fr 1fr; } .player-global-search input { grid-column: 1 / -1; } .player-profile-card > header { align-items: flex-start; padding: 11px; gap: 10px; } .player-profile-portrait { flex-basis: 86px; } .player-profile-face { width: 86px; height: 86px; } .player-profile-portrait > b { font-size: 58px; } .player-profile-facts { grid-template-columns: 1fr 1fr; } .efootball-results article { grid-template-columns: 48px minmax(0, 1fr) auto; } .efootball-results article > strong { grid-column: 2; text-align: left; } .efootball-results article > .action-button { grid-column: 3; grid-row: 1 / 3; } .efootball-results img { width: 44px; height: 44px; } }
 .market-admin { margin-bottom: 10px; border: 3px solid #10285b; background: #e4d9c0; }
 .market-admin > nav { display: flex; gap: 5px; padding: 6px; background: #062764; }
 .market-admin > nav button { padding: 7px 11px; border: 2px solid #72b4e3; color: #fff; background: #062764; font: 500 13px/1 'Oswald', sans-serif; }
@@ -986,7 +979,7 @@ body { min-width: 0; overflow-x: hidden; background: #001344; }
 .club-page .club-paper { overflow: visible; }
 .team-grid, .team-list-paper.with-form .team-grid { max-height: none; }
 .club-info, .roster-panel { height: auto; max-height: none; overflow: visible; }
-.data-list, .player-results-list, .match-detail, .match-detail-full, .player-detail, .timeline, .scorers-list, .upcoming-scroll, .fixture-panel, .efootball-results, .workspace-panel { max-height: none; overflow: visible; }
+.data-list, .match-detail, .match-detail-full, .player-detail, .timeline, .scorers-list, .upcoming-scroll, .fixture-panel, .efootball-results, .workspace-panel { max-height: none; overflow: visible; }
 .market-panel, .market-grid.with-admin .market-panel { min-height: 180px; max-height: none; overflow: visible; }
 
 @media (max-width: 900px) {
@@ -1411,3 +1404,32 @@ a.table-team-link:hover { text-decoration: underline; text-underline-offset: 3px
 }
 
 .roster-row .player-flag { margin-right: 6px; }
+
+/* Jugadores: vista de la liga e importación separadas. */
+.player-mode-tabs { display: flex; gap: 6px; margin: 10px 0 12px; }
+.player-mode-tabs button { padding: 10px 16px; border: 2px solid #72b4e3; color: #fff9e8; background: linear-gradient(#0b3f8d, #031e59); font: 600 16px/1 'Oswald', sans-serif; letter-spacing: .5px; }
+.player-mode-tabs button.active { border-color: #ffd42a; background: linear-gradient(#dc0923, #9e0019); }
+.player-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 8px; }
+.player-card { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 10px; border: 2px solid #10285b; background: #fff9e8; }
+.player-card:hover { color: inherit; border-color: #a90020; background: #fff3c4; }
+.player-card-face, .player-card-placeholder { width: 64px; height: 64px; border: 2px solid #062764; background: #d9cfb8; object-fit: cover; }
+.player-card-placeholder { display: grid; place-items: center; color: #062764; font: 400 30px/1 'Anton', sans-serif; }
+.player-card-body { display: grid; min-width: 0; gap: 4px; }
+.player-card-body b { overflow: hidden; font: 600 17px/1.1 'Roboto Condensed', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+.player-card-body small { color: #625d4e; font: 500 13px/1.1 'Roboto Condensed', sans-serif; }
+.player-card-body .player-flag { margin-right: 5px; font-style: normal; }
+.player-card-team { display: flex; align-items: center; gap: 5px; min-width: 0; overflow: hidden; color: #062764; font: 600 13px/1.1 'Oswald', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+.player-card-team img { width: 18px; height: 18px; flex: 0 0 18px; object-fit: contain; }
+.player-card-meta { display: grid; justify-items: end; gap: 6px; }
+.player-card-meta em { padding: 3px 6px; color: #fff; background: #062764; font: 600 13px/1 'Oswald', sans-serif; font-style: normal; }
+.player-card-meta strong { color: #a90020; font: 600 15px/1 'Oswald', sans-serif; white-space: nowrap; }
+.efootball-filters input:first-child { flex: 2 1 260px; }
+.player-manual-create, .player-management { margin-top: 12px; border: 2px solid #10285b; background: #e4d9c0; }
+.player-manual-create summary, .player-management summary { padding: 10px 12px; cursor: pointer; color: #fff; background: #0b3f8d; font: 500 16px/1 'Oswald', sans-serif; letter-spacing: .5px; }
+.player-manual-create[open] summary, .player-management[open] summary { background: #a90020; }
+.player-manual-create .admin-form { margin: 0; border: 0; }
+.player-management > div { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); align-items: start; gap: 12px; padding: 0 12px 12px; }
+@media (max-width: 560px) {
+  .player-mode-tabs button { flex: 1 1 0; padding: 10px 8px; font-size: 14px; }
+  .player-card-grid { grid-template-columns: 1fr; }
+}
