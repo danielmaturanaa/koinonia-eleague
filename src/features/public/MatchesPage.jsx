@@ -103,7 +103,7 @@ export function MatchesPage({ mode = 'all', teams, navigate, initialMatchId = nu
   const [multiFullscreen, setMultiFullscreen] = useState(false);
   const multiGridRef = useRef(null);
   const tournaments = useApiQuery(signal => endpoints.tournaments({ status: 'active', page: 1, pageSize: 100 }, signal));
-  const matches = useApiQuery(signal => endpoints.matches({ ...filters, activeOnly: 1, pageSize: 3 }, signal), Object.values(filters));
+  const matches = useApiQuery(signal => endpoints.matches({ ...filters, activeOnly: 1, pageSize: 12 }, signal), Object.values(filters));
   const multiMatchesQuery = useApiQuery(signal => showMulti ? endpoints.matches({ activeOnly: 1, pageSize: 100, page: 1 }, signal) : Promise.resolve({ data: [] }), [showMulti]);
   const multiMatches = useMemo(() => (Array.isArray(multiMatchesQuery.data) ? multiMatchesQuery.data : []).filter(match => match.status === 'pending' || match.status === 'live'), [multiMatchesQuery.data]);
   const teamIndex = useMemo(() => new Map(teams.map(team => [team.id, team])), [teams]);

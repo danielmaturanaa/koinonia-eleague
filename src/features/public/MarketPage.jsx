@@ -78,12 +78,15 @@ function MarketAdmin({ teams, players, onChanged }) {
 
 function TransferActions({ item, onChanged }) {
   const mutation = useApiMutation((operation, signal) => endpoints[`${operation}Transfer`](item.id, signal), { onSuccess: onChanged });
-  const status = String(item.status ?? 'pending').toLowerCase();
+  // El listado público solo trae traspasos aprobados y no envía status.
+  const status = String(item.status ?? 'approved').toLowerCase();
   const act = operation => {
     if (window.confirm(`¿${operation === 'approve' ? 'APROBAR' : operation === 'reject' ? 'RECHAZAR' : 'REVERSAR'} ESTA TRANSFERENCIA?`)) mutation.execute(operation);
   };
   return <><div className="mini-actions">{status === 'pending' && <><button onClick={() => act('approve')}>APROBAR</button><button className="danger" onClick={() => act('reject')}>RECHAZAR</button></>}{['approved','completed'].includes(status) && <button className="danger" onClick={() => act('reverse')}>REVERSAR</button>}</div><FormFeedback mutation={mutation}/></>;
 }
+
+const tradeStatusLabels = { pending: 'PENDIENTE DE APROBACIÓN', approved: 'APROBADO', rejected: 'RECHAZADO', cancelled: 'CANCELADO' };
 
 function TradeActions({ item, onChanged }) {
   const mutation = useApiMutation((operation, signal) => endpoints[`${operation}Trade`](item.id, signal), { onSuccess: onChanged });
@@ -113,8 +116,8 @@ export function MarketPage({ teams }) {
   return <main className="newspaper data-page"><section className="data-paper"><PageHeader kicker="OPERACIONES OFICIALES" title="MERCADO DE FICHAJES"><button className="page-action" onClick={() => setShowAdmin(value => !value)}>{showAdmin ? 'CERRAR GESTIÓN' : '⚙ GESTIONAR MERCADO'}</button></PageHeader>
     {showAdmin && <MarketAdmin teams={teams} players={playerRows} onChanged={refresh}/>} 
     <div className={`market-grid ${showAdmin ? 'with-admin' : ''}`}>
-      <MarketPanel title="TRANSFERENCIAS" query={transfers} render={item => <article className="market-item" key={item.id}><b><EntityLink to="player" id={item.player?.id ?? item.playerId}>{item.player?.name ?? item.playerName ?? 'Jugador'}</EntityLink></b><span><EntityLink to="team" id={item.fromTeam?.id ?? item.originId}>{item.fromTeam?.name ?? item.originName ?? 'Agente libre'}</EntityLink> → <EntityLink to="team" id={item.toTeam?.id ?? item.destinationId}>{item.toTeam?.name ?? item.destinationName ?? 'Agente libre'}</EntityLink></span><small>{gp(item.gpAmount)} · {item.status ?? 'pendiente'} · {formatDate(item.createdAt)}</small><TransferActions item={item} onChanged={refresh}/></article>}/>
-      <MarketPanel title="TRUEQUES" query={trades} render={item => <article className="market-item" key={item.id}><b>{relatedName(item, 'from', 'Player', playersById) ?? 'Jugador'} ⇄ {relatedName(item, 'to', 'Player', playersById) ?? 'Jugador'}</b><span>{relatedName(item, 'from', 'Team', teamsById) ?? 'Origen'} / {relatedName(item, 'to', 'Team', teamsById) ?? 'Destino'}</span><small>{item.status ?? 'pendiente'}</small><TradeActions item={item} onChanged={refresh}/></article>}/>
+      <MarketPanel title="TRANSFERENCIAS" query={transfers} render={item => <article className="market-item" key={item.id}><b><EntityLink to="player" id={item.player?.id ?? item.playerId}>{item.player?.name ?? item.playerName ?? 'Jugador'}</EntityLink></b><span><EntityLink to="team" id={item.fromTeam?.id ?? item.originId}>{item.fromTeam?.name ?? item.originName ?? 'Agente libre'}</EntityLink> → <EntityLink to="team" id={item.toTeam?.id ?? item.destinationId}>{item.toTeam?.name ?? item.destinationName ?? 'Agente libre'}</EntityLink></span><small>{gp(item.gpAmount)} · {item.status && item.status !== 'approved' ? item.status : 'completada'} · {formatDate(item.completedAt ?? item.createdAt)}</small>{showAdmin && <TransferActions item={item} onChanged={refresh}/>}</article>}/>
+      <MarketPanel title="TRUEQUES" query={trades} render={item => <article className="market-item" key={item.id}><b>{relatedName(item, 'from', 'Player', playersById) ?? 'Jugador'} ⇄ {relatedName(item, 'to', 'Player', playersById) ?? 'Jugador'}</b><span>{relatedName(item, 'from', 'Team', teamsById) ?? 'Origen'} / {relatedName(item, 'to', 'Team', teamsById) ?? 'Destino'}</span><small className={`trade-status trade-${item.status ?? 'pending'}`}>{tradeStatusLabels[item.status ?? 'pending'] ?? item.status}</small><TradeActions item={item} onChanged={refresh}/></article>}/>
       <MarketPanel title="AGENTES LIBRES" query={freeAgents} render={item => <article className="market-item" key={item.id}><b><EntityLink to="player" id={item.id}>{item.name}</EntityLink></b><span>{item.position ?? 'SIN POSICIÓN'}</span><small>{gp(item.gpValue)}</small></article>}/>
     </div>
   </section></main>;

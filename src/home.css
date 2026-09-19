@@ -1478,3 +1478,21 @@ span.player-photo.player-photo-fallback { display: inline-grid; place-items: cen
   .global-search-result { grid-template-columns: 44px minmax(0, 1fr); }
   .search-status { grid-column: 1 / -1; justify-self: start; max-width: none; text-align: left; }
 }
+
+/* Celular: tarjeta de partido en dos filas (local arriba, visita abajo). */
+@media (max-width: 560px) {
+  .matches-full-list .match-card > span { grid-template-columns: 34px minmax(0, 1fr) 58px; grid-template-areas: "home-mark home-name score" "away-mark away-name score"; row-gap: 6px; }
+  .matches-full-list .match-card > span > :nth-child(1) { grid-area: home-mark; }
+  .matches-full-list .match-card > span > :nth-child(2) { grid-area: home-name; }
+  .matches-full-list .match-card > span > :nth-child(3) { grid-area: score; }
+  .matches-full-list .match-card > span > :nth-child(4) { grid-area: away-name; text-align: left; }
+  .matches-full-list .match-card > span > :nth-child(5) { grid-area: away-mark; }
+  .matches-full-list .match-card .team-mark { width: 32px; height: 32px; }
+  .matches-full-list .match-card span b { font-size: 16px; overflow-wrap: normal; }
+}
+@media (max-width: 560px) {
+  .site-body { padding-right: 8px; padding-left: 8px; }
+  .newspaper { padding: 6px 6px 10px; }
+  .main-edition, .data-paper, .team-list-paper, .club-paper { padding: 8px; border-width: 2px; }
+}
+.trade-status.trade-pending { color: #a90020; font-weight: 700; }
