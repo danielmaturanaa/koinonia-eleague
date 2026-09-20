@@ -48,15 +48,15 @@ function StatusPanel({ tournament, onChanged, onDeleted }) {
 }
 
 function ParticipationPanel({ tournament, teams, onChanged }) {
-  const enrolled = new Set((tournament.teams ?? []).map(team => team.id));
-  const candidates = teams.filter(team => !enrolled.has(team.id));
-  const [form, setForm] = useState({ teamId: '', groupLabel: '', seed: '' });
-  const mutation = useApiMutation((body, signal) => endpoints.addTournamentParticipation(tournament.id, body, signal), { onSuccess: onChanged });
-  const submit = event => {
-    event.preventDefault();
-    mutation.execute({ teamId: form.teamId, ...(form.groupLabel.trim() ? { groupLabel: form.groupLabel.trim().toUpperCase() } : {}), ...(form.seed ? { seed: Number(form.seed) } : {}) });
-  };
-  return <section className="tournament-admin-section"><p>{tournament.teams?.length ?? 0} PARTICIPANTES INSCRITOS</p><form className="admin-form compact-form" onSubmit={submit}><label>EQUIPO<select required value={form.teamId} onChange={event => setForm(current => ({ ...current, teamId: event.target.value }))}><option value="">SELECCIONAR</option>{candidates.map(team => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label><label>GRUPO OPCIONAL<input maxLength="4" value={form.groupLabel} onChange={event => setForm(current => ({ ...current, groupLabel: event.target.value }))}/></label><label>SEMILLA OPCIONAL<input type="number" min="1" step="1" value={form.seed} onChange={event => setForm(current => ({ ...current, seed: event.target.value }))}/></label><button className="action-button" disabled={!form.teamId || mutation.loading}>AGREGAR PARTICIPANTE</button><FormFeedback mutation={mutation}/></form>{candidates.length === 0 && <p className="admin-empty compact">NO HAY MÁS CLUBES DISPONIBLES.</p>}</section>;
+  const candidates = teams.filter(team => team.kind === tournament.competitorKind);
+  const [selected, setSelected] = useState(() => (tournament.teams ?? []).map(team => team.id));
+  useEffect(() => setSelected((tournament.teams ?? []).map(team => team.id)), [tournament.id, tournament.teams]);
+  const mutation = useApiMutation((teamIds, signal) => endpoints.replaceTournamentParticipations(tournament.id, teamIds, signal), { onSuccess: onChanged });
+  const toggle = teamId => setSelected(current => current.includes(teamId) ? current.filter(id => id !== teamId) : [...current, teamId]);
+  const invalidKnockout = tournament.format === 'knockout' && (selected.length < 2 || (selected.length & (selected.length - 1)) !== 0);
+  const save = () => { if (window.confirm(`¿GUARDAR ${selected.length} PARTICIPANTES? EL SORTEO ACTUAL SE REINICIARÁ.`)) mutation.execute(selected); };
+  if (tournament.rosterLocked) return <section className="tournament-admin-section"><p>LA NÓMINA DE <b>{tournament.teams?.length ?? 0} PARTICIPANTES</b> ESTÁ BLOQUEADA PORQUE EL FIXTURE YA FUE CREADO.</p></section>;
+  return <section className="tournament-admin-section"><p>SELECCIONA LOS PARTICIPANTES. PODRÁS CAMBIARLOS HASTA GENERAR EL FIXTURE: <b>{selected.length}</b></p><div className="division-team-list">{candidates.map(team => <label key={team.id}><input type="checkbox" checked={selected.includes(team.id)} onChange={() => toggle(team.id)}/><span>{team.name}</span></label>)}</div>{invalidKnockout && <p className="admin-empty compact">LA ELIMINACIÓN DIRECTA REQUIERE 2, 4, 8, 16… PARTICIPANTES.</p>}<button className="action-button" disabled={selected.length < 2 || invalidKnockout || mutation.loading} onClick={save}>GUARDAR PARTICIPANTES</button><FormFeedback mutation={mutation}/></section>;
 }
 
 function DrawPanel({ tournament, onChanged }) {
@@ -82,7 +82,8 @@ function FixturesPanel({ tournament, onChanged }) {
   const groups = useApiMutation((body, signal) => endpoints.generateGroupFixtures(tournament.id, body, signal), { onSuccess: onChanged });
   const payload = () => ({ ...(groupLabel.trim() ? { groupLabel: groupLabel.trim().toUpperCase() } : {}), ...(legs ? { legs: Number(legs) } : {}) });
   const generate = (kind, mutation) => { if (window.confirm(`¿GENERAR EL FIXTURE ${kind} PARA ${tournament.name}?`)) mutation.execute(payload()); };
-  return <section className="tournament-admin-section"><div className="admin-form compact-form"><label>GRUPO OPCIONAL<input maxLength="4" value={groupLabel} onChange={event => setGroupLabel(event.target.value)}/></label><label>VUELTAS<input type="number" min="1" max="4" step="1" value={legs} onChange={event => setLegs(event.target.value)}/></label><button className="action-button" disabled={roundRobin.loading} onClick={() => generate('ROUND ROBIN', roundRobin)}>ROUND ROBIN</button><button className="action-button" disabled={groups.loading} onClick={() => generate('DE GRUPOS', groups)}>FIXTURE DE GRUPOS</button><FormFeedback mutation={roundRobin.error || roundRobin.success ? roundRobin : groups}/></div></section>;
+  const teamCount = tournament.teams?.length ?? 0;
+  return <section className="tournament-admin-section"><p>{teamCount} PARTICIPANTES{teamCount % 2 ? ' · HABRÁ UN DESCANSO POR JORNADA.' : ''}</p><div className="admin-form compact-form"><label>GRUPO OPCIONAL<input maxLength="4" value={groupLabel} onChange={event => setGroupLabel(event.target.value)}/></label><label>VUELTAS<select value={legs} onChange={event => setLegs(event.target.value)}><option value="1">1</option><option value="2">2</option></select></label><button className="action-button" disabled={roundRobin.loading} onClick={() => generate('ROUND ROBIN', roundRobin)}>ROUND ROBIN</button><button className="action-button" disabled={groups.loading} onClick={() => generate('DE GRUPOS', groups)}>FIXTURE DE GRUPOS</button><FormFeedback mutation={roundRobin.error || roundRobin.success ? roundRobin : groups}/></div></section>;
 }
 
 function BracketPanel({ tournament, onChanged }) {
@@ -123,6 +124,6 @@ function DivisionsPanel({ tournament, teams, onChanged }) {
 
 export function TournamentAdminPanel({ tournament, teams, onChanged, onDeleted }) {
   const [tab, setTab] = useState('status');
-  const tabs = [['status','ESTADO'],['participants','PARTICIPANTES'],['draw','SORTEO'],['fixtures','CALENDARIO'],['bracket','LLAVES'],['playoffs','PLAYOFFS'],['divisions','DIVISIONES']];
-  return <section className="tournament-admin"><nav>{tabs.map(([value, label]) => <button className={tab === value ? 'active' : ''} key={value} onClick={() => setTab(value)}>{label}</button>)}</nav>{tab === 'status' && <StatusPanel tournament={tournament} onChanged={onChanged} onDeleted={onDeleted}/>} {tab === 'participants' && <ParticipationPanel tournament={tournament} teams={teams} onChanged={onChanged}/>} {tab === 'draw' && <DrawPanel tournament={tournament} onChanged={onChanged}/>} {tab === 'fixtures' && <FixturesPanel tournament={tournament} onChanged={onChanged}/>} {tab === 'bracket' && <BracketPanel tournament={tournament} onChanged={onChanged}/>} {tab === 'playoffs' && <PlayoffsPanel tournament={tournament} teams={teams} onChanged={onChanged}/>} {tab === 'divisions' && <DivisionsPanel tournament={tournament} teams={teams} onChanged={onChanged}/>}</section>;
+  const tabs = [['status','ESTADO'],['participants','PARTICIPANTES'],['draw','SORTEO'],['fixtures','CALENDARIO'],['bracket','LLAVES'],['playoffs','PLAYOFFS'], ...(tournament.divisionsReady ? [['divisions','DIVISIONES']] : [])];
+  return <section className="tournament-admin"><nav>{tabs.map(([value, label]) => <button className={tab === value ? 'active' : ''} key={value} onClick={() => setTab(value)}>{label}</button>)}</nav>{tab === 'status' && <StatusPanel tournament={tournament} onChanged={onChanged} onDeleted={onDeleted}/>} {tab === 'participants' && <ParticipationPanel tournament={tournament} teams={teams} onChanged={onChanged}/>} {tab === 'draw' && <DrawPanel tournament={tournament} onChanged={onChanged}/>} {tab === 'fixtures' && <FixturesPanel tournament={tournament} onChanged={onChanged}/>} {tab === 'bracket' && <BracketPanel tournament={tournament} onChanged={onChanged}/>} {tab === 'playoffs' && <PlayoffsPanel tournament={tournament} teams={teams} onChanged={onChanged}/>} {tab === 'divisions' && tournament.divisionsReady && <DivisionsPanel tournament={tournament} teams={teams} onChanged={onChanged}/>}</section>;
 }

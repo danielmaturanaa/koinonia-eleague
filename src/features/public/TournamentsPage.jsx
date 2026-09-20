@@ -24,15 +24,23 @@ function PlayoffSeriesCard({ series, resolveTeam }) {
   return <article className={`playoff-series status-${series.status}`}><small>{stage} · {series.matches.length === 1 ? 'PARTIDO ÚNICO' : 'IDA Y VUELTA'}</small><div><EntityLink to="team" id={home.id}><TeamMark team={home}/>{home.name}</EntityLink><b>{series.aggregate.home}</b></div><div><EntityLink to="team" id={away.id}><TeamMark team={away}/>{away.name}</EntityLink><b>{series.aggregate.away}</b></div>{series.status === 'awaiting_tiebreak' && <em>DEFINICIÓN POR PENALES PENDIENTE</em>}{series.winnerTeamId && <strong>CLASIFICA {series.winnerTeamId === home.id ? home.name : away.name}</strong>}<footer>{series.matches.map(match => <EntityLink to="match" id={match.id} key={match.id}>#{match.leg}: {match.homeScore ?? '–'}-{match.awayScore ?? '–'}</EntityLink>)}</footer></article>;
 }
 
-function CreateTournamentForm({ onChanged }) {
-  const [form, setForm] = useState({ name: '', format: 'league', competitorKind: 'club', championPolicy: 'regular_season' });
+function CreateTournamentForm({ teams, onChanged }) {
+  const [form, setForm] = useState({ name: '', format: 'league', competitorKind: 'club', championPolicy: 'regular_season', teamIds: [] });
   const mutation = useApiMutation((body, signal) => endpoints.createTournament(body, signal), { onSuccess: onChanged });
-  const change = event => setForm(current => ({ ...current, [event.target.name]: event.target.value }));
+  const candidates = teams.filter(team => team.kind === form.competitorKind);
+  useEffect(() => {
+    setForm(current => current.teamIds.length ? { ...current, teamIds: current.teamIds.filter(id => candidates.some(team => team.id === id)) } : { ...current, teamIds: candidates.map(team => team.id) });
+  }, [form.competitorKind, teams]);
+  const change = event => setForm(current => event.target.name === 'competitorKind'
+    ? { ...current, competitorKind: event.target.value, teamIds: teams.filter(team => team.kind === event.target.value).map(team => team.id) }
+    : { ...current, [event.target.name]: event.target.value });
+  const toggle = teamId => setForm(current => ({ ...current, teamIds: current.teamIds.includes(teamId) ? current.teamIds.filter(id => id !== teamId) : [...current.teamIds, teamId] }));
   const submit = event => {
     event.preventDefault();
-    if (window.confirm(`¿CREAR ${form.name} E INSCRIBIR AUTOMÁTICAMENTE SUS COMPETIDORES?`)) mutation.execute(form);
+    if (window.confirm(`¿CREAR ${form.name} CON ${form.teamIds.length} PARTICIPANTES?`)) mutation.execute(form);
   };
-  return <form className="admin-form tournament-create-form" onSubmit={submit}><label>NOMBRE<input required name="name" value={form.name} onChange={change}/></label><label>FORMATO<select name="format" value={form.format} onChange={change}><option value="league">LIGA</option><option value="groups_knockout">GRUPOS + ELIMINACIÓN</option><option value="knockout">ELIMINACIÓN DIRECTA</option></select></label>{form.format === 'league' && <label>CAMPEONES<select name="championPolicy" value={form.championPolicy} onChange={change}><option value="regular_season">TABLA DE FASE REGULAR</option><option value="playoffs">PLAYOFFS</option><option value="both">LIGA REGULAR + PLAYOFFS</option></select></label>}<label>COMPETIDORES<select name="competitorKind" value={form.competitorKind} onChange={change}><option value="club">CLUBES</option><option value="national_team">SELECCIONES</option></select></label><button className="action-button" disabled={mutation.loading}>CREAR TORNEO</button><FormFeedback mutation={mutation}/></form>;
+  const invalidKnockout = form.format === 'knockout' && (form.teamIds.length < 2 || (form.teamIds.length & (form.teamIds.length - 1)) !== 0);
+  return <form className="admin-form tournament-create-form" onSubmit={submit}><label>NOMBRE<input required name="name" value={form.name} onChange={change}/></label><label>FORMATO<select name="format" value={form.format} onChange={change}><option value="league">LIGA</option><option value="groups_knockout">GRUPOS + ELIMINACIÓN</option><option value="knockout">ELIMINACIÓN DIRECTA</option></select></label>{form.format === 'league' && <label>CAMPEONES<select name="championPolicy" value={form.championPolicy} onChange={change}><option value="regular_season">TABLA DE FASE REGULAR</option><option value="playoffs">PLAYOFFS</option><option value="both">LIGA REGULAR + PLAYOFFS</option></select></label>}<label>COMPETIDORES<select name="competitorKind" value={form.competitorKind} onChange={change}><option value="club">CLUBES</option><option value="national_team">SELECCIONES</option></select></label><section className="division-team-list"><p>PARTICIPANTES: <b>{form.teamIds.length}</b></p>{candidates.map(team => <label key={team.id}><input type="checkbox" checked={form.teamIds.includes(team.id)} onChange={() => toggle(team.id)}/><span>{team.name}</span></label>)}</section>{form.format === 'knockout' && <p className="admin-empty compact">LA ELIMINACIÓN DIRECTA REQUIERE 2, 4, 8, 16… PARTICIPANTES.</p>}<button className="action-button" disabled={mutation.loading || form.teamIds.length < 2 || invalidKnockout}>CREAR TORNEO</button><FormFeedback mutation={mutation}/></form>;
 }
 
 const SCORERS_PREVIEW = 10;
@@ -98,7 +106,7 @@ export function TournamentsPage({ teams = [] }) {
   const selectedCompleted = completed.some(item => item.id === selectedId);
   return <main className="newspaper data-page"><section className="data-paper">
     <PageHeader kicker="COMPETICIONES OFICIALES" title="TORNEOS"><button className="page-action" onClick={() => setShowCreate(value => !value)}>{showCreate ? 'CERRAR ALTA' : '+ CREAR TORNEO'}</button></PageHeader>
-    {showCreate && <CreateTournamentForm onChanged={() => { setShowCreate(false); tournaments.retry(); }}/>}
+    {showCreate && <CreateTournamentForm teams={teams} onChanged={() => { setShowCreate(false); tournaments.retry(); }}/>}
     <DataState query={tournaments}/>
     {all.length > 0 && <nav className="tournament-picker" aria-label="Elegir torneo">
       {active.map(item => <button type="button" key={item.id} className={selectedId === item.id ? 'active' : ''} aria-pressed={selectedId === item.id} onClick={() => setSelectedId(item.id)}>{item.name}</button>)}
