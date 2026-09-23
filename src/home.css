@@ -304,6 +304,13 @@ body { min-width: 0; overflow-x: hidden; background: #001344; }
 .team-choice .team-mark { width: 52px; height: 52px; flex-basis: 52px; }
 .team-choice b { min-width: 0; font: 600 28px/.96 'Oswald', sans-serif; overflow-wrap: anywhere; white-space: normal; }
 .team-choice b.long-team-name { font-size: 21px; line-height: 1.02; }
+@media (min-width: 901px) {
+  .team-grid { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; }
+  .team-choice { width: 100%; min-height: 190px; grid-template-columns: 1fr; grid-template-rows: auto minmax(0, 1fr); align-content: space-between; justify-items: center; padding: 16px 12px; text-align: center; }
+  .team-choice .team-mark { width: 112px; height: 112px; flex-basis: 112px; }
+  .team-choice b { font-size: 27px; line-height: 1.02; }
+  .team-choice b.long-team-name { font-size: 19px; }
+}
 .arcade-state { display: grid; place-items: center; min-height: 220px; color: #00184e; font: 500 28px/1 'Oswald', sans-serif; letter-spacing: 2px; }
 .back-button { padding: 6px 11px; margin-bottom: 8px; color: #fff6db; background: #092e77; border: 2px solid #77bee2; box-shadow: 3px 3px #080f27; font: 500 15px/1 'Oswald', sans-serif; }
 .back-button:hover { background: #c50021; transform: translate(2px, 1px); }
@@ -1293,6 +1300,14 @@ a.table-team-link:hover { text-decoration: underline; text-underline-offset: 3px
 .player-card-body b { overflow: hidden; font: 600 17px/1.1 'Roboto Condensed', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
 .player-card-body small { color: #625d4e; font: 500 13px/1.1 'Roboto Condensed', sans-serif; }
 .player-card-body .player-flag { margin-right: 5px; font-style: normal; }
+.player-card-details { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.player-card-details em { padding: 3px 6px; color: #fff; background: #062764; font: 600 13px/1 'Oswald', sans-serif; font-style: normal; }
+.player-card-details strong { color: #a90020; font: 600 15px/1 'Oswald', sans-serif; white-space: nowrap; }
+.player-card-team-mark { display: grid; place-items: center; width: 46px; height: 46px; border: 2px solid #10285b; background: #e4d9c0; }
+.player-card-team-mark img { width: 38px; height: 38px; object-fit: contain; }
+.player-card-status-mark { width: 46px; height: 46px; border: 0; background: transparent; }
+.player-card-status-mark .search-status { display: grid; width: 46px; height: 46px; box-sizing: border-box; place-items: center; justify-content: center; padding: 3px; font-size: 9px; line-height: 1.05; text-align: center; white-space: normal; }
+.directory-results .pagination { margin-top: 18px; }
 .player-card-team { display: flex; align-items: center; gap: 5px; min-width: 0; overflow: hidden; color: #062764; font: 600 13px/1.1 'Oswald', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
 .player-card-team img { width: 18px; height: 18px; flex: 0 0 18px; object-fit: contain; }
 .player-card-meta { display: grid; justify-items: end; gap: 6px; }
@@ -1304,6 +1319,17 @@ a.table-team-link:hover { text-decoration: underline; text-underline-offset: 3px
 .player-management > div { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); align-items: start; gap: 12px; padding: 0 12px 12px; }
 @media (max-width: 560px) {
   .player-card-grid { grid-template-columns: 1fr; }
+}
+
+@media (min-width: 901px) {
+  .site-body:has(.player-page-tabs) { min-height: 0; flex: 1 1 0; overflow: hidden; }
+  .site-body:has(.player-page-tabs) .site-content { min-height: 0; height: 100%; }
+  .site-body:has(.player-page-tabs) .newspaper { height: 100%; min-height: 0; overflow: hidden; }
+  .site-body:has(.player-page-tabs) .data-paper { display: flex; height: 100%; min-height: 0; flex-direction: column; overflow: hidden; }
+  .site-body:has(.player-page-tabs) .directory-layout { min-height: 0; flex: 1 1 auto; overflow: hidden; }
+  .site-body:has(.player-page-tabs) .filter-panel { top: 0; }
+  .site-body:has(.player-page-tabs) .directory-results { min-height: 0; overflow-y: auto; padding-right: 4px; }
+  .site-body:has(.player-page-tabs) .player-comparator { min-height: 0; flex: 1 1 auto; overflow-y: auto; }
 }
 
 /* Foto de jugador con iniciales de respaldo (PlayerFace). */
@@ -1511,6 +1537,48 @@ a.club-form-pill:hover { color: #fff; transform: translateY(-2px); }
 .player-card.status-unregistered { border-style: dashed; background: #fbf5e4; }
 .player-card-body .search-status { justify-self: start; max-width: 100%; padding: 4px 7px; overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
 .player-card-body .search-status img { width: 16px; height: 16px; flex-basis: 16px; }
+.player-page-tabs { display: flex; gap: 6px; margin: 10px 0 12px; border-bottom: 3px solid #10285b; }
+.player-page-tabs button { flex: 1 1 0; min-width: 0; padding: 10px 14px; border: 2px solid #10285b; border-bottom: 0; color: #062764; background: #e4d9c0; font: 600 15px/1 'Oswald', sans-serif; letter-spacing: .45px; cursor: pointer; }
+.player-page-tabs button:hover { background: #fff3c4; }
+.player-page-tabs button.active { color: #fff; background: #a90020; }
+.player-card { grid-template-columns: 1fr; gap: 0; padding: 0; overflow: hidden; }
+.player-card-link { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 10px; min-width: 0; padding: 8px 10px; color: inherit; text-decoration: none; }
+.player-card-link:hover { color: inherit; }
+.player-card-compare { width: 100%; padding: 6px 8px; border: 0; border-top: 1px solid #10285b45; color: #062764; background: #e4d9c0; font: 600 12px/1 'Oswald', sans-serif; letter-spacing: .45px; cursor: pointer; }
+.player-card-compare:hover, .player-card.is-comparison-selected .player-card-compare { color: #fff; background: #a90020; }
+.player-card.is-comparison-selected { border-color: #a90020; box-shadow: 0 0 0 2px #ffd42a inset; }
+.player-comparator { display: grid; gap: 10px; margin: 12px 0; padding: 12px; border: 3px solid #10285b; background: #e4d9c0; }
+.player-comparator > header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-bottom: 8px; border-bottom: 2px solid #10285b; }
+.player-comparator > header h2 { margin: 0; color: #062764; font: 400 27px/1 'Anton', sans-serif; }
+.player-comparator > header p { margin: 5px 0 0; color: #625d4e; font: 500 15px/1.2 'Roboto Condensed', sans-serif; }
+.player-comparator > header > small { color: #a90020; font: 600 14px/1 'Oswald', sans-serif; white-space: nowrap; }
+.player-comparator-empty { margin: 0; padding: 10px; border: 2px dashed #10285b80; color: #625d4e; background: #fff9e8; font: 500 14px/1.2 'Roboto Condensed', sans-serif; text-align: center; }
+.player-comparison-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; align-items: start; }
+.player-comparison-card, .player-comparison-placeholder { min-width: 0; border: 2px solid #10285b; background: #fff9e8; }
+.player-comparison-card-header { display: grid; grid-template-columns: 72px minmax(0, 1fr) auto; align-items: center; gap: 10px; min-width: 0; padding: 10px; color: #fff; background: #062764; }
+.player-comparison-face { width: 72px; height: 72px; border: 2px solid #ffd42a; background: #d9cfb8; object-fit: cover; font-size: 25px; }
+.player-comparison-card-header small { display: block; overflow: hidden; color: #b8d8f0; font: 600 13px/1.1 'Oswald', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+.player-comparison-card-header h3 { margin: 4px 0 0; overflow-wrap: anywhere; font: 400 28px/1 'Anton', sans-serif; }
+.player-comparison-remove { align-self: start; padding: 1px 5px; border: 1px solid #ffd42a; color: #ffd42a; background: transparent; font: 700 18px/1 sans-serif; cursor: pointer; }
+.player-comparison-remove:hover { color: #fff; background: #a90020; }
+.player-comparison-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; margin: 0; padding: 8px; }
+.player-comparison-facts div { min-width: 0; padding: 5px 6px; border: 1px solid #d4c8ae; }
+.player-comparison-facts dt { color: #625d4e; font: 600 14px/1 'Oswald', sans-serif; letter-spacing: .25px; }
+.player-comparison-facts dd { margin: 5px 0 0; overflow-wrap: anywhere; color: #062764; font: 700 17px/1.1 'Roboto Condensed', sans-serif; }
+.player-comparison-section { margin: 0 8px 8px; padding: 9px; border: 1px solid #d4c8ae; }
+.player-comparison-section h4 { margin: 0 0 7px; color: #a90020; font: 600 16px/1 'Oswald', sans-serif; letter-spacing: .45px; }
+.player-comparison-section h5 { margin: 7px 0 5px; color: #062764; font: 600 15px/1 'Oswald', sans-serif; }
+.player-comparison-section p { display: flex; justify-content: space-between; gap: 8px; margin: 0; padding: 5px 0; border-bottom: 1px solid #e3d8bd; font: 500 16px/1.15 'Roboto Condensed', sans-serif; }
+.player-comparison-section p:last-child { border-bottom: 0; }
+.player-comparison-section p span { min-width: 0; overflow-wrap: anywhere; }
+.player-comparison-section p b { flex: 0 0 auto; color: #a90020; }
+.player-comparison-skills { display: block !important; color: #062764; font-size: 16px !important; line-height: 1.35 !important; }
+.player-comparison-placeholder { display: grid; min-height: 180px; place-items: center; padding: 20px; color: #625d4e; background: #fff9e8; font: 600 15px/1.2 'Oswald', sans-serif; text-align: center; }
+@media (max-width: 680px) {
+  .player-comparison-grid { grid-template-columns: 1fr; }
+  .player-comparison-placeholder { min-height: 80px; }
+  .player-comparator > header { align-items: flex-start; flex-direction: column; gap: 5px; }
+}
 
 /* Ficha de carta eFootball. */
 .card-hero { display: grid; grid-template-columns: 140px minmax(0, 1fr) auto; align-items: center; gap: 18px; padding: 16px 20px; color: #fff; background: linear-gradient(115deg, #062764 0 70%, #0b3f8d 70% 84%, #ffd42a 84%); border: 3px solid #0a1634; }

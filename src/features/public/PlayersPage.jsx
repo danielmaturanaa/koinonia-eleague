@@ -4,6 +4,7 @@ import { PlayerFace } from '../../components/PlayerFace.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { DataState, PageHeader, Pagination, gp } from './DataStates.jsx';
+import { PLAYING_STYLES, STAT_GROUPS } from './EfootballCard.jsx';
 import { useApiQuery } from './useApiQuery.js';
 
 const positions = ['PT','LD','DEC','LI','MC','MO','ED','EI','DC'];
@@ -77,7 +78,7 @@ const EMPTY_FILTERS = { q: '', positions: [], status: '', teamId: '', minGp: '',
 const filtersFromQuery = query => ({ ...EMPTY_FILTERS, q: query.q ?? '', status: query.status ?? '', teamId: query.teamId ?? '', positions: query.position ? query.position.split(',') : [], sort: query.sort ?? 'price_desc' });
 
 function DirectoryStatus({ player }) {
-  if (player.status === 'owned') return <span className="search-status owned">{player.team?.imageUrl && <img src={player.team.imageUrl} alt=""/>}{player.team?.name}</span>;
+  if (player.status === 'owned') return null;
   if (player.status === 'free') return <span className="search-status free">AGENTE LIBRE</span>;
   return <span className="search-status unregistered">NO INSCRITO</span>;
 }
@@ -114,26 +115,90 @@ function activeTags(filters, teams) {
   return tags;
 }
 
+const comparisonStatLabels = Object.fromEntries(STAT_GROUPS.flatMap(([, rows]) => rows));
+const comparisonValue = value => value == null || value === '' ? '—' : value;
+const comparisonSelectionKey = selection => selection ? `${selection.playerId ?? 'efootball'}:${selection.pesId ?? selection.key}:${selection.variation ?? 0}` : 'empty';
+
+function ComparePlayerCard({ selection, onRemove }) {
+  const key = comparisonSelectionKey(selection);
+  const profile = useApiQuery(signal => selection.playerId
+    ? endpoints.player(selection.playerId, signal)
+    : selection.pesId ? endpoints.efootballCard(selection.pesId, selection.variation ?? 0, signal) : Promise.resolve(null), [key]);
+  const cardId = selection.playerId ? profile.data?.efootballPesId : null;
+  const linkedCard = useApiQuery(signal => cardId
+    ? endpoints.efootballCard(cardId, profile.data?.efootballVariation ?? 0, signal)
+    : Promise.resolve(null), [cardId, profile.data?.efootballVariation]);
+  const player = profile.data;
+  const card = selection.playerId ? linkedCard.data : profile.data;
+  const stats = card?.stats ?? {};
+  const knownStats = new Set(STAT_GROUPS.flatMap(([, rows]) => rows.map(([stat]) => stat)));
+  const statGroups = [...STAT_GROUPS.map(([title, rows]) => [title, rows.filter(([stat]) => stats[stat] != null)]).filter(([, rows]) => rows.length), ...(Object.keys(stats).filter(stat => !knownStats.has(stat)).length ? [['OTRAS', Object.keys(stats).filter(stat => !knownStats.has(stat)).map(stat => [stat, comparisonStatLabels[stat] ?? stat])]] : [])];
+  const name = player?.name ?? card?.name ?? selection.name;
+  const faceUrl = player?.faceUrl ?? card?.faceUrl ?? selection.faceUrl;
+  const loading = profile.loading || (Boolean(cardId) && linkedCard.loading);
+
+  return <article className="player-comparison-card">
+    <header className="player-comparison-card-header"><PlayerFace src={faceUrl} name={name} className="player-comparison-face"/><div><small>FICHA DEL JUGADOR</small><h3>{name}</h3></div><button type="button" className="player-comparison-remove" onClick={() => onRemove(selection)}>×</button></header>
+    {loading ? <div className="arcade-state compact">CARGANDO DATOS...</div> : profile.error ? <p className="empty-copy">NO SE PUDO CARGAR ESTE JUGADOR.</p> : <>
+      <dl className="player-comparison-facts">
+        <div><dt>EQUIPO</dt><dd>{player?.team?.name ?? card?.clubName ?? 'AGENTE LIBRE'}</dd></div>
+        <div><dt>POSICIÓN</dt><dd>{comparisonValue(player?.position ?? card?.position)}</dd></div>
+        <div><dt>NACIONALIDAD</dt><dd>{comparisonValue(player?.nationality ?? card?.nationality)}</dd></div>
+        <div><dt>EDAD</dt><dd>{player?.age ?? card?.age ? `${player?.age ?? card.age} AÑOS` : '—'}</dd></div>
+        <div><dt>VALOR LIGA</dt><dd>{gp(player?.gpValue)}</dd></div>
+        <div><dt>GOLES HISTÓRICOS</dt><dd>{player?.goals ?? 0}</dd></div>
+        <div><dt>VALOR eFOOTBALL</dt><dd>{gp(card?.gpPrice ?? player?.external?.gpPrice)}</dd></div>
+        <div><dt>ALTURA</dt><dd>{card?.height ? `${card.height} CM` : '—'}</dd></div>
+        <div><dt>ESTILO DE JUEGO</dt><dd>{PLAYING_STYLES[card?.playingStyle] ?? '—'}</dd></div>
+        <div><dt>PIE HÁBIL</dt><dd>{card?.strongFoot === 1 ? 'IZQUIERDO' : card?.strongFoot === 0 ? 'DERECHO' : '—'}</dd></div>
+        <div><dt>USO PIE MALO</dt><dd>{card?.profile?.weakFootUsage != null ? `${card.profile.weakFootUsage}/4` : '—'}</dd></div>
+        <div><dt>PRECISIÓN PIE MALO</dt><dd>{card?.profile?.weakFootAccuracy != null ? `${card.profile.weakFootAccuracy}/4` : '—'}</dd></div>
+        <div><dt>FORMA</dt><dd>{card?.profile?.form != null ? `${card.profile.form}/8` : '—'}</dd></div>
+        <div><dt>RESIST. LESIONES</dt><dd>{card?.profile?.injuryResistance != null ? `${card.profile.injuryResistance}/3` : '—'}</dd></div>
+      </dl>
+      {player?.activeGoals?.length ? <section className="player-comparison-section"><h4>GOLES EN TORNEOS ACTIVOS</h4>{player.activeGoals.map(tournament => <p key={tournament.name}><span>{tournament.name}</span><b>{tournament.goals}</b></p>)}</section> : null}
+      {statGroups.length ? <section className="player-comparison-section"><h4>ESTADÍSTICAS eFOOTBALL</h4><div className="player-comparison-stat-groups">{statGroups.map(([title, rows]) => <div key={title}><h5>{title}</h5>{rows.map(([stat]) => <p key={stat}><span>{comparisonStatLabels[stat] ?? stat.replaceAll('_', ' ')}</span><b>{stats[stat]}</b></p>)}</div>)}</div></section> : <p className="empty-copy">SIN ESTADÍSTICAS eFOOTBALL DISPONIBLES.</p>}
+      {card?.skills?.length ? <section className="player-comparison-section"><h4>HABILIDADES</h4><p className="player-comparison-skills">{card.skills.join(' · ')}</p></section> : null}
+    </>}
+  </article>;
+}
+
+function PlayerComparator({ selections, onRemove }) {
+  return <section className="player-comparator"><header><div><h2>COMPARADOR DE JUGADORES</h2><p>Selecciona hasta dos jugadores para revisar sus datos, medias y estadísticas.</p></div><small>{selections.length} / 2 SELECCIONADOS</small></header>{selections.length ? <div className="player-comparison-grid">{selections.map(selection => <ComparePlayerCard key={comparisonSelectionKey(selection)} selection={selection} onRemove={onRemove}/>)}{selections.length === 1 && <div className="player-comparison-placeholder">ELIGE OTRO JUGADOR PARA COMPARARLO</div>}</div> : <p className="player-comparator-empty">Pulsa <b>COMPARAR</b> en dos fichas del directorio para comenzar.</p>}</section>;
+}
+
 // Directorio único: plantilla de la liga y cartas de eFootballDB sin inscribir.
 export function PlayersPage({ teams, initialQuery = {} }) {
   const [filters, setFilters] = useState(() => filtersFromQuery(initialQuery));
   const [search, setSearch] = useState(initialQuery.q ?? '');
   const [showCreate, setShowCreate] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState('directory');
+  const [compareSelections, setCompareSelections] = useState([]);
   useEffect(() => {
     const timer = window.setTimeout(() => setFilters(current => current.q === search.trim() ? current : { ...current, q: search.trim(), page: 1 }), 300);
     return () => window.clearTimeout(timer);
   }, [search]);
   const { positions, ...rest } = filters;
-  const query = Object.fromEntries(Object.entries({ ...rest, position: positions.join(','), pageSize: 24 }).filter(([, value]) => value !== ''));
+  const query = Object.fromEntries(Object.entries({ ...rest, position: positions.join(','), pageSize: 18 }).filter(([, value]) => value !== ''));
   const directory = useApiQuery(signal => endpoints.playerDirectory(query, signal), [JSON.stringify(query)]);
   const rows = Array.isArray(directory.data) ? directory.data : [];
   const set = patch => { if ('q' in patch) setSearch(patch.q); setFilters(current => ({ ...current, ...patch, page: 1 })); };
   const togglePosition = value => set({ positions: filters.positions.includes(value) ? filters.positions.filter(item => item !== value) : [...filters.positions, value] });
   const tags = activeTags(filters, teams);
   const open = player => player.playerId ? `#/jugadores/${encodeURIComponent(player.playerId)}` : `#/efootball/${player.pesId}${player.variation ? `?v=${player.variation}` : ''}`;
+  const comparisonCandidate = player => ({ key: player.playerId ?? `${player.pesId}-${player.variation ?? 0}`, playerId: player.playerId, pesId: player.pesId, variation: player.variation ?? 0, name: player.name, faceUrl: player.faceUrl });
+  const toggleCompare = player => {
+    const candidate = comparisonCandidate(player);
+    setCompareSelections(current => current.some(item => item.key === candidate.key)
+      ? current.filter(item => item.key !== candidate.key)
+      : current.length >= 2 ? [current[1], candidate] : [...current, candidate]);
+  };
+  const removeCompare = selection => setCompareSelections(current => current.filter(item => item.key !== selection.key));
   return <main className="newspaper data-page"><section className="data-paper">
     <PageHeader kicker="LIGA + eFOOTBALLDB" title="JUGADORES"><button className="page-action" onClick={() => setShowCreate(value => !value)}>{showCreate ? 'CERRAR ALTA' : '+ CREAR JUGADOR MANUAL'}</button></PageHeader>
+    <nav className="player-page-tabs" aria-label="Secciones de jugadores"><button type="button" className={activeTab === 'directory' ? 'active' : ''} onClick={() => setActiveTab('directory')}>DIRECTORIO</button><button type="button" className={activeTab === 'comparator' ? 'active' : ''} onClick={() => setActiveTab('comparator')}>COMPARADOR{compareSelections.length ? ` (${compareSelections.length})` : ''}</button></nav>
+    {activeTab === 'directory' && <>
     {showCreate && <CreatePlayerForm onChanged={() => { setShowCreate(false); directory.retry(); }}/>}
     <div className={`directory-layout ${panelOpen ? 'panel-open' : ''}`}>
       <FilterPanel filters={filters} teams={teams} set={set} togglePosition={togglePosition} total={directory.pagination?.total} onClose={() => setPanelOpen(false)}/>
@@ -148,13 +213,18 @@ export function PlayersPage({ teams, initialQuery = {} }) {
           {tags.length > 0 && <button type="button" className="club-link-button" onClick={() => { setSearch(''); setFilters(EMPTY_FILTERS); }}>LIMPIAR TODO</button>}
         </div>
         <DataState query={directory}/>
-        {!directory.loading && !directory.error && (rows.length ? <div className="player-card-grid">{rows.map(player => <a className={`player-card status-${player.status}`} href={open(player)} key={player.playerId ?? `${player.pesId}-${player.variation}`}>
-          <PlayerFace src={player.faceUrl} name={player.name} className="player-card-face"/>
-          <span className="player-card-body"><b>{player.name}</b><small>{[player.nationality, player.age ? `${player.age} AÑOS` : null].filter(Boolean).join(' · ') || '—'}</small><DirectoryStatus player={player}/></span>
-          <span className="player-card-meta"><em>{player.position ?? '—'}</em><strong>{gp(player.price)}</strong></span>
-        </a>)}</div> : <p className="empty-copy">NINGÚN JUGADOR COINCIDE CON LOS FILTROS.</p>)}
+        {!directory.loading && !directory.error && (rows.length ? <div className="player-card-grid">{rows.map(player => { const playerKey = player.playerId ?? `${player.pesId}-${player.variation}`; const selected = compareSelections.some(item => item.key === playerKey); return <article className={`player-card status-${player.status} ${selected ? 'is-comparison-selected' : ''}`} key={playerKey}>
+          <a className="player-card-link" href={open(player)}>
+            <PlayerFace src={player.faceUrl} name={player.name} className="player-card-face"/>
+            <span className="player-card-body"><b>{player.name}</b><small>{[player.nationality, player.age ? `${player.age} AÑOS` : null].filter(Boolean).join(' · ') || '—'}</small><span className="player-card-details"><em>{player.position ?? '—'}</em><strong>{gp(player.price)}</strong></span></span>
+            {player.status === 'owned' && player.team?.imageUrl ? <span className="player-card-team-mark" title={player.team.name}><img src={player.team.imageUrl} alt={`Emblema de ${player.team.name}`}/></span> : <span className="player-card-team-mark player-card-status-mark"><DirectoryStatus player={player}/></span>}
+          </a>
+          <button type="button" className="player-card-compare" onClick={() => toggleCompare(player)}>{selected ? 'QUITAR DEL COMPARADOR' : 'COMPARAR'}</button>
+        </article>; })}</div> : <p className="empty-copy">NINGÚN JUGADOR COINCIDE CON LOS FILTROS.</p>)}
         <Pagination pagination={directory.pagination} page={filters.page} onPage={page => { setFilters(current => ({ ...current, page })); window.scrollTo({ top: 0 }); }}/>
       </div>
     </div>
+    </>}
+    {activeTab === 'comparator' && <PlayerComparator selections={compareSelections} onRemove={removeCompare}/>}
   </section></main>;
 }
