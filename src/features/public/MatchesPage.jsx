@@ -77,12 +77,53 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
   const [multiFullscreen, setMultiFullscreen] = useState(false);
   const multiGridRef = useRef(null);
   const tournaments = useApiQuery(signal => endpoints.tournaments({ status: 'active', page: 1, pageSize: 100 }, signal));
-  const matches = useApiQuery(signal => endpoints.matches({ ...filters, activeOnly: 1, pageSize: 12 }, signal), Object.values(filters));
+  const allTeamsView = filters.team === '';
+  const datePaginationView = allTeamsView || Boolean(filters.team);
+  const matches = useApiQuery(signal => endpoints.matches({
+    ...filters,
+    activeOnly: 1,
+    // Las vistas por fecha cargan el conjunto filtrado para poder agruparlo
+    // localmente, sin que el límite de registros de la API parta una jornada.
+    page: datePaginationView ? 1 : filters.page,
+    pageSize: datePaginationView ? 100 : 12,
+  }, signal), Object.values(filters).concat(datePaginationView));
   const multiMatchesQuery = useApiQuery(signal => showMulti ? endpoints.matches({ activeOnly: 1, pageSize: 100, page: 1 }, signal) : Promise.resolve({ data: [] }), [showMulti]);
   const multiMatches = useMemo(() => (Array.isArray(multiMatchesQuery.data) ? multiMatchesQuery.data : []).filter(match => match.status === 'pending' || match.status === 'live'), [multiMatchesQuery.data]);
   const teamIndex = useMemo(() => new Map(teams.map(team => [team.id, team])), [teams]);
   const resolveTeam = team => ({ ...team, ...(teamIndex.get(team?.id ?? team?.team_id) ?? {}) });
-  const rows = Array.isArray(matches.data) ? matches.data : [];
+  const apiRows = Array.isArray(matches.data) ? matches.data : [];
+  const roundGroups = useMemo(() => {
+    if (!datePaginationView) return [];
+    const getRound = match => match.roundNumber ?? match.round_number ?? match.matchday ?? match.match_day;
+    const getDate = match => match.scheduledAt ?? match.scheduled_at ?? match.date ?? match.createdAt ?? match.created_at ?? '';
+    const sorted = [...apiRows].sort((left, right) => {
+      const leftRound = Number(getRound(left));
+      const rightRound = Number(getRound(right));
+      if (Number.isFinite(leftRound) && Number.isFinite(rightRound) && leftRound !== rightRound) return leftRound - rightRound;
+      if (Number.isFinite(leftRound) !== Number.isFinite(rightRound)) return Number.isFinite(leftRound) ? -1 : 1;
+      return String(getDate(left)).localeCompare(String(getDate(right)));
+    });
+    const groups = new Map();
+    sorted.forEach(match => {
+      const round = getRound(match);
+      const date = getDate(match);
+      const key = round != null && round !== '' ? `round:${round}` : `date:${String(date).slice(0, 10) || 'sin-fecha'}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(match);
+    });
+    return [...groups.values()];
+  }, [datePaginationView, apiRows]);
+  const datesPerPage = allTeamsView ? 1 : 4;
+  const roundPages = useMemo(() => {
+    if (!datePaginationView) return [];
+    const pages = [];
+    for (let index = 0; index < roundGroups.length; index += datesPerPage) {
+      pages.push(roundGroups.slice(index, index + datesPerPage).flat());
+    }
+    return pages;
+  }, [datePaginationView, datesPerPage, roundGroups]);
+  const rows = datePaginationView ? (roundPages[filters.page - 1] ?? []) : apiRows;
+  const roundPagination = datePaginationView && roundPages.length > 1 ? { totalPages: roundPages.length } : null;
 
   useEffect(() => saveMultiSlots(multiSlots), [multiSlots]);
 
@@ -161,7 +202,7 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
       <TeamChipBar teams={teams} value={filters.team} onChange={selectTeamFilter}/>
       <div className="filter-bar"><select name="tournament" value={filters.tournament} onChange={change} aria-label="Torneo"><option value="">TORNEOS ACTIVOS</option>{(tournaments.data ?? []).map(item => <option value={item.id} key={item.id}>{item.name}</option>)}</select><select name="status" value={filters.status} onChange={change} aria-label="Estado"><option value="">TODOS LOS ESTADOS</option>{Object.entries(labels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></div>
       <DataState query={matches}/>{!matches.loading && !matches.error && <div className="data-list matches-full-list">{rows.map(match => <button className="match-card" key={match.id} onClick={() => selectMatch(match.id)}><small>{match.tournament?.name ?? 'TORNEO'} · {matchRoundLabel(match)}</small><span><TeamMark team={resolveTeam(match.homeTeam)}/><b>{match.homeTeam?.name}</b><strong>{match.homeScore ?? '–'} : {match.awayScore ?? '–'}</strong><b>{match.awayTeam?.name}</b><TeamMark team={resolveTeam(match.awayTeam)}/></span><i className={`status status-${match.status}`}>{labels[match.status] ?? match.status}</i></button>)}</div>}
-      {<Pagination pagination={matches.pagination} page={filters.page} onPage={page => setFilters(current => ({ ...current, page }))}/>}
+      {<Pagination pagination={datePaginationView ? roundPagination : matches.pagination} page={filters.page} onPage={page => setFilters(current => ({ ...current, page }))}/>}
     </>}
   </section></main>;
 }

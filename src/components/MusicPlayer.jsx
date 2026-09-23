@@ -5,7 +5,6 @@ export function MusicPlayer({ tracks = [] }) {
   const rootRef = useRef(null);
   const [trackIndex, setTrackIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
-  const [autoplayBlocked, setAutoplayBlocked] = useState(false);
   const [open, setOpen] = useState(false);
   const [volume, setVolume] = useState(0.35);
   const volumeId = useId();
@@ -20,10 +19,9 @@ export function MusicPlayer({ tracks = [] }) {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !track) return;
+    const resumePlayback = !audio.paused;
     audio.load();
-    audio.play()
-      .then(() => setAutoplayBlocked(false))
-      .catch(() => setAutoplayBlocked(true));
+    if (resumePlayback) audio.play().catch(() => {});
   }, [track]);
 
   useEffect(() => {
@@ -46,15 +44,15 @@ export function MusicPlayer({ tracks = [] }) {
   const toggle = () => {
     const audio = audioRef.current;
     if (!audio || !track) return;
-    if (audio.paused) audio.play().then(() => setAutoplayBlocked(false)).catch(() => setAutoplayBlocked(true));
+    if (audio.paused) audio.play().catch(() => {});
     else audio.pause();
   };
 
   return <section className="radio" ref={rootRef} aria-label="Radio Koinonia League">
-    <audio ref={audioRef} src={track?.src} autoPlay preload="metadata" onEnded={() => move(1)} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)}/>
+    <audio ref={audioRef} src={track?.src} preload="metadata" onEnded={() => move(1)} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)}/>
     <button className={`radio-play ${playing ? 'playing' : ''}`} type="button" onClick={toggle} disabled={!tracks.length} aria-label={playing ? 'Pausar radio' : 'Reproducir radio'}>{playing ? '❚❚' : '▶'}</button>
     <button className="radio-info" type="button" aria-expanded={open} aria-controls={panelId} onClick={() => setOpen(value => !value)}>
-      <small>{autoplayBlocked && !playing ? 'RADIO · TOCA PLAY' : 'RADIO KOINONIA'}</small>
+      <small>{playing ? 'RADIO KOINONIA' : 'RADIO · TOCA PLAY'}</small>
       <b>{track?.title ?? 'PLAYLIST PENDIENTE'}</b>
     </button>
     {open && <div className="radio-panel" id={panelId}>

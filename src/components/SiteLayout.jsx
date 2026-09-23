@@ -16,11 +16,11 @@ export function SiteLayout({ route, navigate, children, sidebar, error, dismissE
         <MusicPlayer tracks={playlist}/>
       </div>
     </header>
-    <div className={`site-body ${sidebar ? 'with-sidebar' : ''}`}>
+    <div className={`site-body ${sidebar ? 'with-sidebar' : ''} ${route.path === '/' ? 'home-body' : ''}`}>
       <div className="site-content">{children}</div>
       {sidebar}
     </div>
-    <footer className="site-footer"><span>KOINONIA e-LEAGUE · FÚTBOL VIRTUAL. PASIÓN REAL.</span><ApiStatus/></footer>
+    <footer className="site-footer"><span className="site-slogan">KOINONIA e-LEAGUE · FÚTBOL VIRTUAL. PASIÓN REAL.</span><ApiStatus/></footer>
     {error && <div className="preview-notice" role="status">{error}<button onClick={dismissError} aria-label="Cerrar aviso">×</button></div>}
   </div>;
 }

@@ -16,7 +16,7 @@ function UpcomingMatch({ match, resolveTeam }) {
   return <EntityLink to="match" id={match.id} className="upcoming-match"><small>{detail}</small><div className="score-line"><TeamMark team={resolveTeam(match.homeTeam)}/><span className="home-name">{match.homeTeam.name}</span><span className="versus">VS</span><span className="away-name">{match.awayTeam.name}</span><TeamMark team={resolveTeam(match.awayTeam)}/></div></EntityLink>;
 }
 
-const UPCOMING_LIMIT = 8;
+const UPCOMING_LIMIT = 7;
 
 function UpcomingByTournament({ tournaments, upcoming, resolveTeam, loading, navigate }) {
   const priority = new Map(tournaments.map((tournament, index) => [tournament.id, index]));
