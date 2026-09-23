@@ -7,7 +7,7 @@ import { defaultFormationPositions, pitchPositionFor } from '../../utils/formati
 import { teamBalance, teamCoachName, teamCoachPhoto } from '../../utils/teamPresentation.js';
 import { readPersonProfile } from '../../utils/personProfile.js';
 import { matchRoundLabel } from '../../utils/matchPresentation.js';
-import { BudgetForm, CoachForm, FormationEditor, PresidentForm, ProfileForm, SquadEditor } from '../admin/TeamAdminPanel.jsx';
+import { CoachForm, FormationEditor, PresidentForm, ProfileForm, SquadEditor } from '../admin/TeamAdminPanel.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { loadAllPlayers } from '../public/MarketPage.jsx';
@@ -203,7 +203,119 @@ function AnthemEditor({ team, onChanged, onSaved }) {
   </form>;
 }
 
-const TABS = [['resumen', 'RESUMEN'], ['plantel', 'PLANTEL'], ['partidos', 'PARTIDOS'], ['tabla', 'TABLA'], ['fichajes', 'FICHAJES'], ['historia', 'HISTORIA'], ['finanzas', 'FINANZAS']];
+const simulatorPlayerId = player => String(player?.id ?? player?.playerId ?? '');
+const SIMULATOR_BUDGET_LIMIT = 2_000_000;
+const simulatorPlayerTeamId = player => String(player?.team?.id ?? player?.teamId ?? player?.team_id ?? '');
+const simulatorPlayerTeamName = player => player?.team?.name ?? player?.teamName ?? player?.team_name ?? '';
+
+function normalizeSimulatorRoster(players) {
+  return players
+    .map((player, index) => ({
+      ...player,
+      id: player.id ?? player.playerId,
+      squadOrder: player.squadOrder ?? index + 1,
+      section: player.section ?? ((player.squadOrder ?? index + 1) <= 11 ? 'starters' : 'substitutes'),
+    }))
+    .filter(player => simulatorPlayerId(player));
+}
+
+function SimulatorRosterRow({ player, base, onRemove }) {
+  const { rest: name } = splitPlayerName(player.name);
+  return <li className="squad-simulator-row">
+    <span><PlayerFace src={player.faceUrl} name={name} className="squad-simulator-face"/><b>{name || 'JUGADOR'}</b></span>
+    <small>{player.position ?? '—'}</small>
+    <strong>{gp(Number(player.gpValue ?? player.price ?? 0))} GP</strong>
+    <button type="button" className="squad-simulator-remove" onClick={onRemove} aria-label={`Quitar a ${name || 'jugador'} de la simulación`}>×</button>
+    {base && <em>BASE</em>}
+  </li>;
+}
+
+function SquadValueSimulator({ team, squad, balance }) {
+  const playersQuery = useApiQuery(signal => loadAllPlayers(signal), [team?.id]);
+  const baseRoster = normalizeSimulatorRoster(squad);
+  const baseSignature = baseRoster.map(player => `${simulatorPlayerId(player)}:${player.gpValue ?? player.price ?? ''}:${player.section ?? ''}:${player.squadOrder ?? ''}`).join('|');
+  const [simulatedRoster, setSimulatedRoster] = useState(baseRoster);
+  const [removedPlayers, setRemovedPlayers] = useState([]);
+  const [selectedPlayerId, setSelectedPlayerId] = useState('');
+  const [playerSearch, setPlayerSearch] = useState('');
+
+  useEffect(() => {
+    setSimulatedRoster(baseRoster);
+    setRemovedPlayers([]);
+    setSelectedPlayerId('');
+    setPlayerSearch('');
+  }, [team?.id, baseSignature]);
+
+  const baseIds = new Set(baseRoster.map(simulatorPlayerId));
+  const simulatedIds = new Set(simulatedRoster.map(simulatorPlayerId));
+  const availablePlayers = (Array.isArray(playersQuery.data) ? playersQuery.data : [])
+    .filter(player => simulatorPlayerId(player) && !simulatedIds.has(simulatorPlayerId(player)))
+    .sort((left, right) => String(left.name ?? '').localeCompare(String(right.name ?? ''), 'es'));
+  const valueOf = player => Number(player.gpValue ?? player.price ?? 0) || 0;
+  const baseValue = baseRoster.reduce((total, player) => total + valueOf(player), 0);
+  const simulatedValue = simulatedRoster.reduce((total, player) => total + valueOf(player), 0);
+  const movement = simulatedValue - baseValue;
+  const projectedBalance = balance === null ? null : balance - movement;
+  const exceedsLimit = simulatedValue > SIMULATOR_BUDGET_LIMIT;
+  const overBudget = exceedsLimit || (projectedBalance !== null && projectedBalance < 0);
+  const starters = simulatedRoster.filter(player => player.section === 'starters' || (!player.section && player.squadOrder <= 11));
+  const substitutes = simulatedRoster.filter(player => player.section === 'substitutes' || (!player.section && player.squadOrder > 11));
+
+  const addPlayerToSimulation = player => {
+    if (!player) return;
+    setSimulatedRoster(current => [...current, { ...player, section: player.section ?? 'substitutes', squadOrder: player.squadOrder ?? current.length + 1 }]);
+    setRemovedPlayers(current => current.filter(item => simulatorPlayerId(item) !== simulatorPlayerId(player)));
+  };
+  const addPlayer = () => {
+    const player = availablePlayers.find(item => simulatorPlayerId(item) === selectedPlayerId);
+    if (!player) return;
+    addPlayerToSimulation(player);
+    setSelectedPlayerId('');
+    setPlayerSearch('');
+  };
+  const removePlayer = player => {
+    setSimulatedRoster(current => current.filter(item => simulatorPlayerId(item) !== simulatorPlayerId(player)));
+    setRemovedPlayers(current => current.some(item => simulatorPlayerId(item) === simulatorPlayerId(player)) ? current : [...current, player]);
+  };
+  const forgetRemovedPlayer = player => setRemovedPlayers(current => current.filter(item => simulatorPlayerId(item) !== simulatorPlayerId(player)));
+  const reset = () => { setSimulatedRoster(baseRoster); setRemovedPlayers([]); setSelectedPlayerId(''); setPlayerSearch(''); };
+  const selectedPlayer = availablePlayers.find(player => simulatorPlayerId(player) === selectedPlayerId);
+  const selectedPlayerTeamId = simulatorPlayerTeamId(selectedPlayer);
+  const selectedPlayerTeamName = simulatorPlayerTeamName(selectedPlayer);
+  const isTakenByAnotherTeam = Boolean(selectedPlayer && selectedPlayerTeamId && selectedPlayerTeamId !== String(team?.id));
+  const playerOptionValue = player => `${player.name ?? 'JUGADOR'} · ${gp(valueOf(player))} GP · ${simulatorPlayerTeamName(player) || 'AGENTE LIBRE'}`;
+  const selectPlayerFromSearch = event => {
+    const value = event.target.value;
+    const selected = availablePlayers.find(player => playerOptionValue(player) === value);
+    setPlayerSearch(value);
+    setSelectedPlayerId(selected ? simulatorPlayerId(selected) : '');
+  };
+
+  return <section className="club-card squad-value-simulator">
+    <header className="squad-simulator-header"><div><h3>SIMULADOR DE PLANTEL</h3><p>ARMADO FICTICIO · NO MODIFICA FICHAJES NI LA API.</p></div><button type="button" className="club-link-button" onClick={reset}>RESTABLECER PLANTEL BASE</button></header>
+    <div className="squad-simulator-controls">
+      <label>AÑADIR JUGADOR<input list="squad-simulator-player-options" value={playerSearch} onChange={selectPlayerFromSearch} disabled={playersQuery.loading || !availablePlayers.length} placeholder="ESCRIBE PARA BUSCAR…"/><datalist id="squad-simulator-player-options">{availablePlayers.map(player => <option key={simulatorPlayerId(player)} value={playerOptionValue(player)}/>)}</datalist></label>
+      <button type="button" className="action-button" disabled={!selectedPlayerId} onClick={addPlayer}>AÑADIR A SIMULACIÓN</button>
+    </div>
+    {selectedPlayer && <p className={`squad-simulator-player-note ${isTakenByAnotherTeam ? 'warning' : ''}`}>{isTakenByAnotherTeam ? `AVISO: ${selectedPlayer.name} ESTÁ INSCRITO EN ${selectedPlayerTeamName || 'OTRO EQUIPO'}. SE AÑADIRÁ SOLO A ESTA SIMULACIÓN.` : selectedPlayerTeamName ? `PERTENECE A ${selectedPlayerTeamName}.` : 'JUGADOR DISPONIBLE COMO AGENTE LIBRE.'}</p>}
+    {playersQuery.loading && <p className="empty-copy">CARGANDO JUGADORES DISPONIBLES…</p>}
+    {playersQuery.error && <p className="empty-copy">NO SE PUDIERON CARGAR LOS JUGADORES.</p>}
+    <div className="squad-simulator-summary" aria-label="Resumen del presupuesto simulado">
+      <span>VALOR BASE <b>{gp(baseValue)} GP</b></span>
+      <span className={exceedsLimit ? 'over-budget' : ''}>VALOR TOTAL SIMULADO <b>{gp(simulatedValue)} GP</b></span>
+      <span>VALOR LÍMITE <b>{gp(SIMULATOR_BUDGET_LIMIT)} GP</b></span>
+      <span className={projectedBalance !== null && projectedBalance < 0 ? 'over-budget' : ''}>PRESUPUESTO RESTANTE <b>{projectedBalance === null ? '—' : `${gp(projectedBalance)} GP`}</b></span>
+    </div>
+    <p className={`squad-simulator-status ${overBudget ? 'over-budget' : ''}`}>{exceedsLimit ? 'SOBREPASA EL LÍMITE DE 2.000.000 GP.' : projectedBalance === null ? 'CONFIGURA UN PRESUPUESTO PARA COMPARAR EL SALDO.' : projectedBalance < 0 ? 'SOBREPASA EL PRESUPUESTO DISPONIBLE.' : 'DENTRO DEL PRESUPUESTO DISPONIBLE.'}</p>
+    <div className="squad-simulator-rosters">
+      <section><h4>TITULARES <small>{starters.length}</small></h4><ul>{starters.length ? starters.map(player => <SimulatorRosterRow key={simulatorPlayerId(player)} player={player} base={baseIds.has(simulatorPlayerId(player))} onRemove={() => removePlayer(player)}/>) : <li className="empty-copy">SIN TITULARES.</li>}</ul></section>
+      <section><h4>SUPLENTES <small>{substitutes.length}</small></h4><ul>{substitutes.length ? substitutes.map(player => <SimulatorRosterRow key={simulatorPlayerId(player)} player={player} base={baseIds.has(simulatorPlayerId(player))} onRemove={() => removePlayer(player)}/>) : <li className="empty-copy">SIN SUPLENTES.</li>}</ul></section>
+    </div>
+    {removedPlayers.length > 0 && <section className="squad-simulator-removed"><h4>FUERA DE LA SIMULACIÓN <small>{removedPlayers.length}</small></h4><ul>{removedPlayers.map(player => { const { rest: name } = splitPlayerName(player.name); return <li key={simulatorPlayerId(player)}><span><PlayerFace src={player.faceUrl} name={name} className="squad-simulator-face"/><b>{name || 'JUGADOR'}</b></span><small>{player.position ?? '—'}</small><strong>{gp(valueOf(player))} GP</strong><div className="squad-simulator-removed-actions"><button type="button" className="squad-simulator-restore" onClick={() => addPlayerToSimulation(player)}>REINCORPORAR</button><button type="button" className="squad-simulator-forget" onClick={() => forgetRemovedPlayer(player)}>ELIMINAR</button></div></li>; })}</ul></section>}
+  </section>;
+}
+
+const TABS = [['resumen', 'RESUMEN'], ['plantel', 'PLANTEL'], ['partidos', 'PARTIDOS'], ['tabla', 'TABLA'], ['fichajes', 'FICHAJES'], ['historia', 'HISTORIA'], ['finanzas', 'SIMULADOR DE PRESUPUESTO']];
 
 const finishedMatches = (matches, teamId) => matches
   .filter(match => match.status === 'finished' && (match.homeTeam?.id === teamId || match.awayTeam?.id === teamId))
@@ -343,6 +455,7 @@ export function TeamDetailPage({ team, teams = [], squad, standings, matches = [
 
       <section className="club-tab-content" role="tabpanel">
         {activeTab === 'resumen' && <div className="club-overview">
+          <div className="club-finance-stats"><span>PRESUPUESTO DISPONIBLE <b>{balance === null ? '—' : `${gp(balance)} GP`}</b></span><span>VALOR PLANTEL <b>{gp(team.squadValue)} GP</b></span><span>PROMEDIO <b>{gp(team.averageValue)} GP</b></span></div>
           <div className="club-overview-main">
             <section className="club-card club-overview-pitch"><h3>TITULARES <button type="button" className="club-link-button" onClick={() => onTab?.('plantel')}>PLANTEL COMPLETO →</button></h3><SquadPitch starters={starters}/></section>
             <ClubScorers teamId={team.id}/>
@@ -361,7 +474,7 @@ export function TeamDetailPage({ team, teams = [], squad, standings, matches = [
         {activeTab === 'tabla' && <ClubTable standings={standings} teamId={team.id} teams={teams}/>}
         {activeTab === 'fichajes' && <ClubTransfers teamId={team.id}/>}
         {activeTab === 'historia' && <div className="club-history-tab-content"><HonoursList honours={honours} historyError={historyError}/><ClubHistory team={team} onEdit={setHistoryEditor}/></div>}
-        {activeTab === 'finanzas' && <div className="club-budget-tab"><div className="club-finance-stats"><span>SALDO DISPONIBLE <b>{balance === null ? '—' : `${gp(balance)} GP`}</b></span><span>VALOR PLANTEL <b>{gp(team.squadValue)} GP</b></span><span>PROMEDIO <b>{gp(team.averageValue)} GP</b></span></div><BudgetForm team={team} onChanged={onChanged}/></div>}
+        {activeTab === 'finanzas' && <div className="club-budget-tab"><SquadValueSimulator team={team} squad={squad} balance={balance}/></div>}
       </section>
 
       {personEditor === 'president' && <PersonEditorModal title="EDITAR PRESIDENTE" onClose={() => setPersonEditor('')}><PresidentForm team={team} onChanged={onChanged} onSaved={() => { setPersonRevision(value => value + 1); setPersonEditor(''); }}/></PersonEditorModal>}
