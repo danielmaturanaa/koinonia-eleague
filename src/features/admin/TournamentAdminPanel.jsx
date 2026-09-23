@@ -12,7 +12,7 @@ function MutationAction({ action, label, confirmText, onChanged, danger = false 
   return <div className="mutation-action"><button className={`action-button ${danger ? 'danger' : ''}`} disabled={mutation.loading} onClick={run}>{label}</button><FormFeedback mutation={mutation}/></div>;
 }
 
-function TournamentAwardsPanel({ tournament, onChanged }) {
+export function TournamentAwardsPanel({ tournament, onChanged }) {
   const standings = useApiQuery(signal => endpoints.standings(tournament.id, {}, signal), [tournament.id]);
   const rows = Array.isArray(standings.data) ? standings.data : [];
   const [amounts, setAmounts] = useState({});
