@@ -116,9 +116,7 @@ function MarketPlayer({ player, teams, onChanged }) {
     : `#/efootball/${player.pesId}?${player.variation ? `v=${player.variation}&` : ''}from=mercado`;
   return <article className={`market-player ${open ? 'open' : ''}`}>
     <a href={href} className="market-player-link"><PlayerFace src={player.faceUrl} name={player.name}/><span><b>{player.name}</b><small>{[player.position, player.nationality, player.age ? `${player.age} AÑOS` : null].filter(Boolean).join(' · ')}</small></span><strong>{gp(player.price)}</strong></a>
-    {player.status === 'free'
-      ? <button type="button" className="market-player-action" aria-expanded={open} onClick={() => setOpen(value => !value)}>{open ? 'CERRAR' : 'FICHAR'}</button>
-      : <a href={href} className="market-player-action">INSCRIBIR</a>}
+    <button type="button" className="market-player-action" aria-expanded={open} onClick={() => setOpen(value => !value)}>{open ? 'CERRAR' : 'FICHAR'}</button>
     {open && <SigningForm player={player} teams={teams} onDone={() => { setOpen(false); onChanged(); }}/>}
   </article>;
 }
@@ -156,8 +154,7 @@ export function MarketPage({ teams }) {
     <PendingTrades trades={trades} players={players} teams={teams} onChanged={refresh}/>
     <div className="market-layout">
       <div className="market-main">
-        <PlayerList key={`free-${revision}`} title="AGENTES LIBRES" hint="Inscritos en la liga y sin equipo: se pueden comprar o asignar." status="free" teams={teams} allHref="#/equipos/jugadores?status=free"/>
-        <PlayerList key={`unregistered-${revision}`} title="NO INSCRITOS" hint="Nadie los tiene y aún no están en la liga. Las cartas más valiosas de eFootballDB." status="unregistered" teams={teams} allHref="#/equipos/jugadores?status=unregistered"/>
+        <PlayerList key={`free-${revision}`} title="AGENTES LIBRES" hint="Todos los jugadores de eFootballDB están inscritos y sin equipo: se pueden comprar o asignar." status="free" teams={teams} allHref="#/equipos/jugadores?status=free"/>
       </div>
     </div>
   </section></main>;

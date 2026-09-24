@@ -69,7 +69,7 @@ export function PlayerAdmin({ player, onChanged }) {
   return <section className="player-actions"><h3>ADMINISTRACIÓN</h3><label>NOMBRE<input value={name} onChange={event => setName(event.target.value)}/></label><label>VALOR GP<input type="number" min="0" value={gpValue} onChange={event => setGpValue(event.target.value)}/></label><label>POSICIÓN<select value={position} onChange={event => setPosition(event.target.value)}>{positions.map(item => <option key={item}>{item}</option>)}</select></label><div className="button-row"><button className="action-button" disabled={!name.trim() || gpValue === '' || edit.loading} onClick={() => edit.execute({ name: name.trim(), gpValue: Number(gpValue), position })}>GUARDAR CAMBIOS</button><button className="action-button danger" disabled={retire.loading} onClick={() => { if (window.confirm(`¿RETIRAR A ${player.name}? Se conservará su historial.`)) retire.execute(); }}>RETIRAR DE LA LIGA</button></div><FormFeedback mutation={edit.error || edit.success ? edit : retire}/></section>;
 }
 
-const STATUS_OPTIONS = [['', 'Todos'], ['registered', 'En la liga'], ['owned', 'Con equipo'], ['free', 'Agentes libres'], ['unregistered', 'No inscritos']];
+const STATUS_OPTIONS = [['', 'Todos'], ['registered', 'En la liga'], ['owned', 'Con equipo'], ['free', 'Agentes libres']];
 const SORT_OPTIONS = [['price_desc', 'Precio: mayor a menor'], ['price_asc', 'Precio: menor a mayor'], ['name', 'Nombre A-Z'], ['age_asc', 'Más jóvenes'], ['age_desc', 'Más veteranos']];
 const POSITION_LINES = [['PORTERO', ['PT']], ['DEFENSA', ['DEC', 'LI', 'LD']], ['MEDIOCAMPO', ['MC', 'MO']], ['ATAQUE', ['EI', 'ED', 'DC']]];
 const PRICE_RANGES = [['', '', 'Cualquier precio'], ['', '50000', 'Hasta 50.000'], ['50000', '100000', '50.000 – 100.000'], ['100000', '200000', '100.000 – 200.000'], ['200000', '', 'Más de 200.000']];
@@ -80,7 +80,7 @@ const filtersFromQuery = query => ({ ...EMPTY_FILTERS, q: query.q ?? '', status:
 function DirectoryStatus({ player }) {
   if (player.status === 'owned') return null;
   if (player.status === 'free') return <span className="search-status free">AGENTE LIBRE</span>;
-  return <span className="search-status unregistered">NO INSCRITO</span>;
+  return <span className="search-status free">AGENTE LIBRE</span>;
 }
 
 function FilterPanel({ filters, teams, set, togglePosition, total, onClose }) {
