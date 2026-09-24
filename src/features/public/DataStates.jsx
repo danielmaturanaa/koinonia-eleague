@@ -17,3 +17,6 @@ export function Pagination({ pagination, page, onPage }) {
 
 export const formatDate = value => value ? new Intl.DateTimeFormat('es-CL', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : '—';
 export const gp = value => typeof value === 'number' ? `${value.toLocaleString('es-CL')} GP` : '—';
+export function OverallBadge({ value, className = '' }) {
+  return <span className={`overall-badge ${className}`.trim()} title={value == null ? 'Media eFootball no disponible' : `Media eFootball: ${value}`}>OVR {value ?? '—'}</span>;
+}

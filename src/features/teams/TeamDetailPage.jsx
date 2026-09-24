@@ -25,7 +25,7 @@ function splitPlayerName(name) {
 
 function PlayerRow({ player }) {
   const { rest: name } = splitPlayerName(player.name);
-  return <button type="button" className="roster-row roster-player-link" onClick={() => { window.location.hash = `/jugadores/${encodeURIComponent(player.id)}`; }}><b>{player.jerseyNumber ?? '—'}</b><span><PlayerFace src={player.faceUrl} name={name} className="roster-player-face"/><i>{player.flag && <em className="player-flag">{player.flag}</em>}{name}</i></span><small>{player.position ?? '—'}</small><strong>{gp(player.gpValue)} GP</strong></button>;
+  return <button type="button" className="roster-row roster-player-link" onClick={() => { window.location.hash = `/jugadores/${encodeURIComponent(player.id)}`; }}><b>{player.jerseyNumber ?? '—'}</b><span><PlayerFace src={player.faceUrl} name={name} className="roster-player-face"/><i>{player.flag && <em className="player-flag">{player.flag}</em>}{name}</i></span><small>{player.position ?? '—'} · OVR {player.overall ?? '—'}</small><strong>{gp(player.gpValue)} GP</strong></button>;
 }
 
 function RosterHeader() {

@@ -5,7 +5,7 @@ import { PlayerFace } from '../../components/PlayerFace.jsx';
 import { teamBalance } from '../../utils/teamPresentation.js';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
-import { DataState, PageHeader, formatDate, gp } from './DataStates.jsx';
+import { DataState, OverallBadge, PageHeader, formatDate, gp } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
 
 const asList = value => Array.isArray(value) ? value : [];
@@ -115,7 +115,7 @@ function MarketPlayer({ player, teams, onChanged }) {
     ? `#/jugadores/${encodeURIComponent(player.playerId)}?from=mercado`
     : `#/efootball/${player.pesId}?${player.variation ? `v=${player.variation}&` : ''}from=mercado`;
   return <article className={`market-player ${open ? 'open' : ''}`}>
-    <a href={href} className="market-player-link"><PlayerFace src={player.faceUrl} name={player.name}/><span><b>{player.name}</b><small>{[player.position, player.nationality, player.age ? `${player.age} AÑOS` : null].filter(Boolean).join(' · ')}</small></span><strong>{gp(player.price)}</strong></a>
+    <a href={href} className="market-player-link"><PlayerFace src={player.faceUrl} name={player.name}/><span><b>{player.name}</b><small>{[player.position, player.nationality, player.age ? `${player.age} AÑOS` : null].filter(Boolean).join(' · ')}</small><OverallBadge value={player.overall}/></span><strong>{gp(player.price)}</strong></a>
     <button type="button" className="market-player-action" aria-expanded={open} onClick={() => setOpen(value => !value)}>{open ? 'CERRAR' : 'FICHAR'}</button>
     {open && <SigningForm player={player} teams={teams} onDone={() => { setOpen(false); onChanged(); }}/>}
   </article>;

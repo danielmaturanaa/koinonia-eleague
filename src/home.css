@@ -781,7 +781,7 @@ body { min-width: 0; overflow-x: hidden; background: #001344; }
 .player-profile-facts dt { color: #8c0019; font: 600 12px/1 'Oswald', sans-serif; }.player-profile-facts dd { margin: 4px 0 0; color: #062764; font: 600 15px/1.05 'Roboto Condensed', sans-serif; }
 .player-profile-external { margin: 0; border-top: 3px solid #10285b; }.player-profile-external > header { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 0; color: inherit; background: transparent; }.player-profile-external > header h2 { margin: 0; }.player-profile-external > header .action-button { font-size: 12px; }
 .player-tournament-form { padding: 12px; border-top: 3px solid #10285b; background: #e5dcc7; }.player-tournament-form > header { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; color: #062764; }.player-tournament-form h2 { margin: 0; font: 500 19px/1 'Anton', sans-serif; }.player-tournament-form > header small, .player-stat-note { font: 600 12px/1.2 'Oswald', sans-serif; }.player-tournament-form > div { display: grid; gap: 5px; margin-top: 8px; }.player-tournament-form article { display: flex; justify-content: space-between; gap: 12px; padding: 7px 9px; border-left: 5px solid #a0001d; background: #fff9e8; font: 600 14px/1 'Roboto Condensed', sans-serif; }.player-tournament-form article strong { color: #062764; }.player-tournament-form > p { margin: 9px 0; font: 500 14px/1.1 'Roboto Condensed', sans-serif; }.player-stat-note { display: block; margin-top: 10px; color: #564f43; }
-.player-efootball-refresh { margin-left: 5px; padding: 0 3px; border: 0; color: #062764; background: transparent; cursor: pointer; font: 700 16px/1 sans-serif; }.player-efootball-refresh:disabled { opacity: .5; }.player-refresh-error { margin: 0; padding: 8px 12px; color: #a0001d; font: 600 13px/1.2 'Roboto Condensed', sans-serif; }
+.player-data-source-note { margin: 0 12px 12px; padding: 8px 10px; border-left: 3px solid #43a8d6; color: #625d4e; background: #e8f2f5; font: 600 12px/1.3 'Oswald', sans-serif; letter-spacing: .25px; }
 .player-face { width: 56px; height: 56px; object-fit: contain; background: #c5bba4; }
 .player-face { float: right; width: 86px; height: 86px; margin: 0 0 6px 10px; }
 .external-profile { clear: both; position: relative; z-index: 1; margin-top: 10px; padding: 8px; border-top: 2px solid #10285b; background: #eee5d2; }
@@ -1606,6 +1606,10 @@ a.club-form-pill:hover { color: #fff; transform: translateY(-2px); }
 .player-card-compare { width: 100%; padding: 6px 8px; border: 0; border-top: 1px solid #10285b45; color: #062764; background: #e4d9c0; font: 600 12px/1 'Oswald', sans-serif; letter-spacing: .45px; cursor: pointer; }
 .player-card-compare:hover, .player-card.is-comparison-selected .player-card-compare { color: #fff; background: #a90020; }
 .player-card.is-comparison-selected { border-color: #a90020; box-shadow: 0 0 0 2px #ffd42a inset; }
+.overall-badge { display: inline-block; width: max-content; padding: 3px 5px; border: 1px solid #062764; color: #fff; background: #062764; font: 700 11px/1 'Oswald', sans-serif; letter-spacing: .45px; white-space: nowrap; }
+.overall-badge-hero { border-color: #ffd42a; color: #ffd42a; background: #001449; font-size: 14px; }
+.player-card-details .overall-badge { align-self: center; }
+.market-player-link .overall-badge { margin-top: 2px; font-size: 10px; }
 .player-comparator { display: grid; gap: 10px; margin: 12px 0; padding: 12px; border: 3px solid #10285b; background: #e4d9c0; }
 .player-comparator > header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-bottom: 8px; border-bottom: 2px solid #10285b; }
 .player-comparator > header h2 { margin: 0; color: #062764; font: 400 27px/1 'Anton', sans-serif; }

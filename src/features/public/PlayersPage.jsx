@@ -3,7 +3,7 @@ import { endpoints } from '../../api/endpoints.js';
 import { PlayerFace } from '../../components/PlayerFace.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
-import { DataState, PageHeader, Pagination, gp } from './DataStates.jsx';
+import { DataState, OverallBadge, PageHeader, Pagination, gp } from './DataStates.jsx';
 import { PLAYING_STYLES, STAT_GROUPS } from './EfootballCard.jsx';
 import { useApiQuery } from './useApiQuery.js';
 
@@ -143,6 +143,7 @@ function ComparePlayerCard({ selection, onRemove }) {
       <dl className="player-comparison-facts">
         <div><dt>EQUIPO</dt><dd>{player?.team?.name ?? card?.clubName ?? 'AGENTE LIBRE'}</dd></div>
         <div><dt>POSICIÓN</dt><dd>{comparisonValue(player?.position ?? card?.position)}</dd></div>
+        <div><dt>MEDIA eFOOTBALL</dt><dd><OverallBadge value={card?.overall ?? player?.external?.overall}/></dd></div>
         <div><dt>NACIONALIDAD</dt><dd>{comparisonValue(player?.nationality ?? card?.nationality)}</dd></div>
         <div><dt>EDAD</dt><dd>{player?.age ?? card?.age ? `${player?.age ?? card.age} AÑOS` : '—'}</dd></div>
         <div><dt>VALOR LIGA</dt><dd>{gp(player?.gpValue)}</dd></div>
@@ -216,7 +217,7 @@ export function PlayersPage({ teams, initialQuery = {} }) {
         {!directory.loading && !directory.error && (rows.length ? <div className="player-card-grid">{rows.map(player => { const playerKey = player.playerId ?? `${player.pesId}-${player.variation}`; const selected = compareSelections.some(item => item.key === playerKey); return <article className={`player-card status-${player.status} ${selected ? 'is-comparison-selected' : ''}`} key={playerKey}>
           <a className="player-card-link" href={open(player)}>
             <PlayerFace src={player.faceUrl} name={player.name} className="player-card-face"/>
-            <span className="player-card-body"><b>{player.name}</b><small>{[player.nationality, player.age ? `${player.age} AÑOS` : null].filter(Boolean).join(' · ') || '—'}</small><span className="player-card-details"><em>{player.position ?? '—'}</em><strong>{gp(player.price)}</strong></span></span>
+            <span className="player-card-body"><b>{player.name}</b><small>{[player.nationality, player.age ? `${player.age} AÑOS` : null].filter(Boolean).join(' · ') || '—'}</small><span className="player-card-details"><em>{player.position ?? '—'}</em><OverallBadge value={player.overall}/><strong>{gp(player.price)}</strong></span></span>
             {player.status === 'owned' && player.team?.imageUrl ? <span className="player-card-team-mark" title={player.team.name}><img src={player.team.imageUrl} alt={`Emblema de ${player.team.name}`}/></span> : <span className="player-card-team-mark player-card-status-mark"><DirectoryStatus player={player}/></span>}
           </a>
           <button type="button" className="player-card-compare" onClick={() => toggleCompare(player)}>{selected ? 'QUITAR DEL COMPARADOR' : 'COMPARAR'}</button>

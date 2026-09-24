@@ -5,7 +5,7 @@ import { PlayerFace } from '../../components/PlayerFace.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
-import { DataState, gp } from './DataStates.jsx';
+import { DataState, OverallBadge, gp } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
 
 // Medias agrupadas como en eFootballDB, con los nombres en español del juego.
@@ -72,7 +72,7 @@ export function EfootballCardPage({ pesId, variation = 0, navigate, onBack, back
       <header className="card-hero">
         <PlayerFace src={data.faceUrl} name={data.name} className="card-hero-face"/>
         <div className="card-hero-copy"><small>CARTA eFOOTBALL · {data.positionCode ?? data.position}</small><h1>{data.name}</h1><p>{[data.nationality, data.age ? `${data.age} AÑOS` : null, data.height ? `${data.height} CM` : null, data.clubName].filter(Boolean).join(' · ')}</p></div>
-        <div className="card-hero-price"><small>PRECIO eFOOTBALL</small><b>{data.gpPrice != null ? data.gpPrice.toLocaleString('es-CL') : '—'}</b><span>GP</span></div>
+        <div className="card-hero-price"><OverallBadge value={data.overall} className="overall-badge-hero"/><small>PRECIO eFOOTBALL</small><b>{data.gpPrice != null ? data.gpPrice.toLocaleString('es-CL') : '—'}</b><span>GP</span></div>
       </header>
       <div className="card-league-status">{data.league ? <>
         {data.league.team ? <span className="search-status owned">{data.league.team.imageUrl && <img src={data.league.team.imageUrl} alt=""/>}LO TIENE {data.league.team.name}</span> : <span className="search-status free">AGENTE LIBRE</span>}

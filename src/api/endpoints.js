@@ -75,7 +75,6 @@ export const endpoints = {
   assignNationalTeam: (teamId, clubId, signal) => apiClient.post(`/national-teams/${teamId}/assign`, { clubId }, { actor: 'web', signal }),
   releaseNationalTeam: (teamId, signal) => apiClient.post(`/national-teams/${teamId}/release`, {}, { actor: 'web', signal }),
   createPlayer: (body, signal) => apiClient.post('/players', body, { actor: 'web', signal }),
-  refreshEfootballPlayer: (playerId, signal) => apiClient.post(`/players/${playerId}/efootball-refresh`, {}, { actor: 'web', signal }),
   updatePlayer: (playerId, body, signal) => apiClient.patch(`/players/${playerId}`, body, { actor: 'web', signal }),
   deletePlayer: (playerId, signal) => apiClient.delete(`/players/${playerId}`, {}, { actor: 'web', signal }),
   assignPlayer: (playerId, body, signal) => apiClient.post(`/players/${playerId}/assign`, body, { actor: 'web', signal }),
