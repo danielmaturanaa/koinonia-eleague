@@ -94,18 +94,16 @@ const PREVIEW = 8;
 function SigningForm({ player, teams, onDone }) {
   const [teamId, setTeamId] = useState('');
   const buy = useApiMutation((id, signal) => endpoints.buyPlayer(player.playerId, id, signal), { onSuccess: onDone });
-  const assign = useApiMutation((id, signal) => endpoints.assignPlayer(player.playerId, { teamId: id }, signal), { onSuccess: onDone });
   const team = teams.find(item => item.id === teamId);
   const balance = team ? teamBalance(team) : null;
   const short = balance !== null && player.price != null && balance < player.price;
   return <div className="signing-form">
     <select value={teamId} onChange={event => setTeamId(event.target.value)} aria-label="Equipo que ficha"><option value="">¿QUÉ EQUIPO LO FICHA?</option>{teams.map(item => <option key={item.id} value={item.id}>{item.name}{teamBalance(item) !== null ? ` · saldo ${gp(teamBalance(item))}` : ''}</option>)}</select>
     <div className="button-row">
-      <button type="button" className="action-button positive" disabled={!teamId || short || buy.loading || assign.loading} onClick={() => { if (window.confirm(`¿${team.name} COMPRA A ${player.name} POR ${gp(player.price)}?`)) buy.execute(teamId); }}>COMPRAR · {gp(player.price)}</button>
-      <button type="button" className="action-button" disabled={!teamId || buy.loading || assign.loading} onClick={() => { if (window.confirm(`¿ASIGNAR GRATIS A ${player.name} A ${team.name}?`)) assign.execute(teamId); }}>ASIGNAR GRATIS</button>
+      <button type="button" className="action-button positive" disabled={!teamId || short || buy.loading} onClick={() => { if (window.confirm(`¿${team.name} COMPRA A ${player.name} POR ${gp(player.price)}?`)) buy.execute(teamId); }}>COMPRAR · {gp(player.price)}</button>
     </div>
     {short && <small className="signing-warning">SALDO INSUFICIENTE PARA COMPRARLO.</small>}
-    <FormFeedback mutation={buy.error || buy.success ? buy : assign}/>
+    <FormFeedback mutation={buy}/>
   </div>;
 }
 

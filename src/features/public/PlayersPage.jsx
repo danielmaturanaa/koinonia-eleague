@@ -33,32 +33,28 @@ function CreatePlayerForm({ onChanged }) {
 
 export function PlayerActions({ player, teams, onChanged }) {
   const [teamId, setTeamId] = useState('');
-  const [note, setNote] = useState('');
-  const [gpAmount, setGpAmount] = useState('');
-  const assign = useApiMutation((body, signal) => endpoints.assignPlayer(player.id, body, signal), { onSuccess: onChanged });
   const buy = useApiMutation((id, signal) => endpoints.buyPlayer(player.id, id, signal), { onSuccess: onChanged });
   const release = useApiMutation((body, signal) => endpoints.releasePlayer(player.id, body, signal), { onSuccess: onChanged });
   const isFree = player.isFreeAgent ?? !player.team;
   const currentTeamId = player.team?.id ?? player.teamId;
-  const feedback = assign.error || assign.success ? assign : buy.error || buy.success ? buy : release;
+  const feedback = buy.error || buy.success ? buy : release;
 
   const buyPlayer = () => {
     const team = teams.find(item => item.id === teamId);
     if (window.confirm(`¿COMPRAR A ${player.name} PARA ${team?.name ?? 'EL EQUIPO SELECCIONADO'} POR SU VALOR GP?`)) buy.execute(teamId);
   };
   const releasePlayer = () => {
-    if (window.confirm(`¿LIBERAR A ${player.name} POR ${Number(gpAmount).toLocaleString('es-CL')} GP?`)) release.execute({ teamId: currentTeamId, gpAmount: Number(gpAmount) });
+    const amount = Math.round(Number(player.gpValue ?? 0) * 0.2);
+    if (window.confirm(`¿LIBERAR A ${player.name}? EL CLUB RECIBE EL 20% DE SU VALOR (${amount.toLocaleString('es-CL')} GP).`)) release.execute({ teamId: currentTeamId });
   };
 
   return <section className="player-actions">
     <h3>EQUIPO</h3>
     {isFree ? <>
       <label>EQUIPO<select value={teamId} onChange={event => setTeamId(event.target.value)}><option value="">SELECCIONAR</option>{teams.map(team => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label>
-      <label>NOTA OPCIONAL<input value={note} onChange={event => setNote(event.target.value)}/></label>
-      <div className="button-row"><button className="action-button positive" disabled={!teamId || assign.loading || buy.loading} onClick={() => assign.execute({ teamId, ...(note.trim() ? { note: note.trim() } : {}) })}>ASIGNAR GRATIS</button><button className="action-button" disabled={!teamId || assign.loading || buy.loading} onClick={buyPlayer}>COMPRAR</button></div>
+      <div className="button-row"><button className="action-button" disabled={!teamId || buy.loading} onClick={buyPlayer}>COMPRAR</button></div>
     </> : <>
-      <label>MONTO DE LIBERACIÓN<input type="number" min="0" step="1" value={gpAmount} onChange={event => setGpAmount(event.target.value)}/></label>
-      <button className="action-button danger" disabled={gpAmount === '' || release.loading} onClick={releasePlayer}>LIBERAR JUGADOR</button>
+      <button className="action-button danger" disabled={release.loading} onClick={releasePlayer}>LIBERAR JUGADOR · 20%</button>
     </>}
     <FormFeedback mutation={feedback}/>
   </section>;

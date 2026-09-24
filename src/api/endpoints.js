@@ -77,7 +77,6 @@ export const endpoints = {
   createPlayer: (body, signal) => apiClient.post('/players', body, { actor: 'web', signal }),
   updatePlayer: (playerId, body, signal) => apiClient.patch(`/players/${playerId}`, body, { actor: 'web', signal }),
   deletePlayer: (playerId, signal) => apiClient.delete(`/players/${playerId}`, {}, { actor: 'web', signal }),
-  assignPlayer: (playerId, body, signal) => apiClient.post(`/players/${playerId}/assign`, body, { actor: 'web', signal }),
   buyPlayer: (playerId, teamId, signal) => apiClient.post(`/players/${playerId}/buy`, { teamId }, { actor: 'web', signal }),
   releasePlayer: (playerId, body, signal) => apiClient.post(`/players/${playerId}/release`, body, { actor: 'web', signal }),
   createTransfer: (body, signal) => apiClient.post('/market/transfers', body, { actor: 'web', signal }),
