@@ -57,6 +57,7 @@ export async function apiRequest(path, {
       },
       body: payload === undefined ? undefined : isFormData ? payload : JSON.stringify(payload),
       credentials: 'include',
+      cache: normalizedMethod === 'GET' ? 'no-store' : 'default',
       signal: controller.signal,
     });
     const result = await parseResponse(response);
