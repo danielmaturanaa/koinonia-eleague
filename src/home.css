@@ -368,7 +368,7 @@ body { min-width: 0; overflow-x: hidden; background: #001344; }
 .roster-row b { color: #bd001e; font: 700 15px/1 'Oswald', sans-serif; }
 .roster-row span { display: flex; align-items: center; gap: 7px; min-width: 0; overflow: hidden; }
 .roster-row span i { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-style: normal; }
-.roster-row small { text-align: center; font-size: 13px; }
+.roster-row small { text-align: center; font-size: 12px; white-space: nowrap; }
 .roster-row strong { color: #063172; text-align: right; font-size: 13px; }
 .empty-copy { font: 500 15px/1.1 'Roboto Condensed', sans-serif; }
 .section-paper { height: 100%; display: grid; place-content: center; justify-items: center; padding: 45px; border: 3px double #5f5949; text-align: center; }
