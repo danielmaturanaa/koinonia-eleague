@@ -10,11 +10,21 @@ import { matchRoundLabel } from '../../utils/matchPresentation.js';
 import { CoachForm, FormationEditor, PresidentForm, ProfileForm, SquadEditor } from '../admin/TeamAdminPanel.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
-import { loadAllPlayers } from '../public/MarketPage.jsx';
 import { useApiQuery } from '../public/useApiQuery.js';
 
 const gp = value => typeof value === 'number' ? value.toLocaleString('es-CL') : '—';
 const FLAG_REGEX = /^(\p{Regional_Indicator}{2})\s*/u;
+const SIMULATOR_SEARCH_DELAY = 250;
+const SIMULATOR_SEARCH_MIN_LENGTH = 2;
+
+function useDebouncedValue(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  useEffect(() => {
+    const timeout = window.setTimeout(() => setDebouncedValue(value), delay);
+    return () => window.clearTimeout(timeout);
+  }, [value, delay]);
+  return debouncedValue;
+}
 
 function splitPlayerName(name) {
   const match = name?.match(FLAG_REGEX);
@@ -231,13 +241,16 @@ function SimulatorRosterRow({ player, base, onRemove }) {
 }
 
 function SquadValueSimulator({ team, squad, balance }) {
-  const playersQuery = useApiQuery(signal => loadAllPlayers(signal), [team?.id]);
   const baseRoster = normalizeSimulatorRoster(squad);
   const baseSignature = baseRoster.map(player => `${simulatorPlayerId(player)}:${player.gpValue ?? player.price ?? ''}:${player.section ?? ''}:${player.squadOrder ?? ''}`).join('|');
   const [simulatedRoster, setSimulatedRoster] = useState(baseRoster);
   const [removedPlayers, setRemovedPlayers] = useState([]);
   const [selectedPlayerId, setSelectedPlayerId] = useState('');
   const [playerSearch, setPlayerSearch] = useState('');
+  const debouncedPlayerSearch = useDebouncedValue(playerSearch.trim(), SIMULATOR_SEARCH_DELAY);
+  const playersQuery = useApiQuery(signal => debouncedPlayerSearch.length >= SIMULATOR_SEARCH_MIN_LENGTH
+    ? endpoints.players({ q: debouncedPlayerSearch, page: 1, pageSize: 25 }, signal)
+    : Promise.resolve({ data: [] }), [debouncedPlayerSearch]);
 
   useEffect(() => {
     setSimulatedRoster(baseRoster);
@@ -283,7 +296,7 @@ function SquadValueSimulator({ team, squad, balance }) {
   const selectedPlayerTeamId = simulatorPlayerTeamId(selectedPlayer);
   const selectedPlayerTeamName = simulatorPlayerTeamName(selectedPlayer);
   const isTakenByAnotherTeam = Boolean(selectedPlayer && selectedPlayerTeamId && selectedPlayerTeamId !== String(team?.id));
-  const playerOptionValue = player => `${player.name ?? 'JUGADOR'} · ${gp(valueOf(player))} GP · ${simulatorPlayerTeamName(player) || 'AGENTE LIBRE'}`;
+  const playerOptionValue = player => player.name ?? 'JUGADOR';
   const selectPlayerFromSearch = event => {
     const value = event.target.value;
     const selected = availablePlayers.find(player => playerOptionValue(player) === value);
@@ -294,11 +307,12 @@ function SquadValueSimulator({ team, squad, balance }) {
   return <section className="club-card squad-value-simulator">
     <header className="squad-simulator-header"><div><h3>SIMULADOR DE PLANTEL</h3><p>ARMADO FICTICIO · NO MODIFICA FICHAJES NI LA API.</p></div><button type="button" className="club-link-button" onClick={reset}>RESTABLECER PLANTEL BASE</button></header>
     <div className="squad-simulator-controls">
-      <label>AÑADIR JUGADOR<input list="squad-simulator-player-options" value={playerSearch} onChange={selectPlayerFromSearch} disabled={playersQuery.loading || !availablePlayers.length} placeholder="ESCRIBE PARA BUSCAR…"/><datalist id="squad-simulator-player-options">{availablePlayers.map(player => <option key={simulatorPlayerId(player)} value={playerOptionValue(player)}/>)}</datalist></label>
+      <label>AÑADIR JUGADOR<input list="squad-simulator-player-options" value={playerSearch} onChange={selectPlayerFromSearch} placeholder="ESCRIBE AL MENOS 2 LETRAS…"/><datalist id="squad-simulator-player-options">{availablePlayers.map(player => <option key={simulatorPlayerId(player)} value={playerOptionValue(player)} label={`${gp(valueOf(player))} GP · ${simulatorPlayerTeamName(player) || 'AGENTE LIBRE'}`}/>)}</datalist></label>
       <button type="button" className="action-button" disabled={!selectedPlayerId} onClick={addPlayer}>AÑADIR A SIMULACIÓN</button>
     </div>
     {selectedPlayer && <p className={`squad-simulator-player-note ${isTakenByAnotherTeam ? 'warning' : ''}`}>{isTakenByAnotherTeam ? `AVISO: ${selectedPlayer.name} ESTÁ INSCRITO EN ${selectedPlayerTeamName || 'OTRO EQUIPO'}. SE AÑADIRÁ SOLO A ESTA SIMULACIÓN.` : selectedPlayerTeamName ? `PERTENECE A ${selectedPlayerTeamName}.` : 'JUGADOR DISPONIBLE COMO AGENTE LIBRE.'}</p>}
-    {playersQuery.loading && <p className="empty-copy">CARGANDO JUGADORES DISPONIBLES…</p>}
+    {playerSearch.trim().length > 0 && playerSearch.trim().length < SIMULATOR_SEARCH_MIN_LENGTH && <p className="empty-copy">ESCRIBE AL MENOS 2 LETRAS PARA BUSCAR.</p>}
+    {playersQuery.loading && debouncedPlayerSearch.length >= SIMULATOR_SEARCH_MIN_LENGTH && <p className="empty-copy">BUSCANDO JUGADORES…</p>}
     {playersQuery.error && <p className="empty-copy">NO SE PUDIERON CARGAR LOS JUGADORES.</p>}
     <div className="squad-simulator-summary" aria-label="Resumen del presupuesto simulado">
       <span>VALOR BASE <b>{gp(baseValue)} GP</b></span>
