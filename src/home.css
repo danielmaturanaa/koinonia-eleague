@@ -1378,14 +1378,16 @@ a.table-team-link:hover { text-decoration: underline; text-underline-offset: 3px
 }
 
 @media (min-width: 901px) {
-  .site-body:has(.player-page-tabs) { min-height: 0; flex: 1 1 0; overflow: hidden; }
-  .site-body:has(.player-page-tabs) .site-content { min-height: 0; height: 100%; }
-  .site-body:has(.player-page-tabs) .newspaper { height: 100%; min-height: 0; overflow: hidden; }
-  .site-body:has(.player-page-tabs) .data-paper { display: flex; height: 100%; min-height: 0; flex-direction: column; overflow: hidden; }
-  .site-body:has(.player-page-tabs) .directory-layout { min-height: 0; flex: 1 1 auto; overflow: hidden; }
-  .site-body:has(.player-page-tabs) .filter-panel { top: 0; }
-  .site-body:has(.player-page-tabs) .directory-results { min-height: 0; overflow-y: auto; padding-right: 4px; }
-  .site-body:has(.player-page-tabs) .player-comparator { min-height: 0; flex: 1 1 auto; overflow-y: auto; }
+  /* El directorio ocupa todo su contenido: filtros, 18 tarjetas y paginación
+     quedan en el flujo normal, sin un segundo scroll dentro del periódico. */
+  .site-body:has(.player-page-tabs) { min-height: 0; flex: 0 0 auto; overflow: visible; }
+  .site-body:has(.player-page-tabs) .site-content { min-height: 0; height: auto; }
+  .site-body:has(.player-page-tabs) .newspaper { height: auto; min-height: 0; overflow: visible; }
+  .site-body:has(.player-page-tabs) .data-paper { display: block; height: auto; min-height: 0; overflow: visible; }
+  .site-body:has(.player-page-tabs) .directory-layout { min-height: 0; align-items: start; overflow: visible; }
+  .site-body:has(.player-page-tabs) .filter-panel { position: static; top: auto; max-height: none; overflow: visible; }
+  .site-body:has(.player-page-tabs) .directory-results { min-height: 0; height: auto; overflow: visible; padding-right: 0; }
+  .site-body:has(.player-page-tabs) .player-comparator { min-height: 0; overflow: visible; }
 }
 
 /* Foto de jugador con iniciales de respaldo (PlayerFace). */
@@ -2025,4 +2027,175 @@ a.player-card { color: inherit; text-decoration: none; }
   .site-body.with-sidebar > .match-sidebar > .upcoming-panel .upcoming-scroll,
   .site-body.home-body.with-sidebar > .match-sidebar > .upcoming-panel .upcoming-scroll { display: grid; grid-auto-rows: minmax(36px, 1fr); flex: 1 1 auto; min-height: 0; max-height: none; overflow-y: hidden; }
   .site-body.home-body > .site-content > main.newspaper { display: flex; overflow: hidden; flex-direction: column; }
+}
+
+/* Directorio de jugadores: en escritorio se muestran filtros, 18 fichas y
+   paginación dentro del marco, sin scroll anidado ni tarjetas recortadas. */
+@media (min-width: 901px) {
+  .site-body:has(.player-page-tabs),
+  .site-body:has(.player-page-tabs) > .site-content,
+  .site-body:has(.player-page-tabs) > .site-content > main.newspaper {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+  }
+
+  .site-body:has(.player-page-tabs) > .site-content > main.newspaper .data-paper {
+    height: auto;
+    overflow: visible;
+  }
+
+  .site-body:has(.player-page-tabs) .data-page-header {
+    min-height: 64px;
+    margin-bottom: 6px;
+    padding: 2px 6px 5px;
+  }
+
+  .site-body:has(.player-page-tabs) .data-page-header p {
+    font-size: 11px;
+    letter-spacing: 1.4px;
+  }
+
+  .site-body:has(.player-page-tabs) .data-page-header h1 {
+    margin-top: 4px;
+    font-size: 36px;
+  }
+
+  .site-body:has(.player-page-tabs) .player-page-tabs {
+    margin: 6px 0 8px;
+  }
+
+  .site-body:has(.player-page-tabs) .player-page-tabs button {
+    padding: 7px 12px;
+    font-size: 13px;
+  }
+
+  .site-body:has(.player-page-tabs) .filter-panel {
+    gap: 2px;
+    padding: 6px;
+    align-self: stretch;
+    height: 100%;
+    box-sizing: border-box;
+  }
+
+  .site-body:has(.player-page-tabs) .filter-panel fieldset {
+    gap: 0;
+    padding: 4px 0 5px;
+  }
+
+  .site-body:has(.player-page-tabs) .filter-panel legend {
+    padding-bottom: 2px;
+    font-size: 11px;
+    letter-spacing: .8px;
+  }
+
+  .site-body:has(.player-page-tabs) .filter-option {
+    gap: 5px;
+    padding: 1px 1px;
+    font-size: 12px;
+  }
+
+  .site-body:has(.player-page-tabs) .filter-option input {
+    width: 13px;
+    height: 13px;
+  }
+
+  .site-body:has(.player-page-tabs) .filter-line-values {
+    gap: 0 8px;
+    padding-left: 18px;
+  }
+
+  .site-body:has(.player-page-tabs) .filter-range {
+    gap: 4px;
+    margin-top: 3px;
+  }
+
+  .site-body:has(.player-page-tabs) .filter-panel input[type="number"],
+  .site-body:has(.player-page-tabs) .filter-panel input:not([type]),
+  .site-body:has(.player-page-tabs) .filter-panel select {
+    height: 28px;
+    padding: 0 6px;
+    font-size: 12px;
+  }
+
+  .site-body:has(.player-page-tabs) .directory-toolbar {
+    gap: 6px;
+    margin-bottom: 5px;
+  }
+
+  .site-body:has(.player-page-tabs) .directory-search,
+  .site-body:has(.player-page-tabs) .directory-sort select {
+    height: 36px;
+  }
+
+  .site-body:has(.player-page-tabs) .directory-summary {
+    min-height: 24px;
+    margin-bottom: 6px;
+  }
+
+  .site-body:has(.player-page-tabs) .player-card-grid {
+    gap: 6px;
+  }
+
+  .site-body:has(.player-page-tabs) .player-card-link {
+    grid-template-columns: 52px minmax(0, 1fr) auto;
+    gap: 6px;
+    padding: 5px 7px;
+  }
+
+  .site-body:has(.player-page-tabs) .player-card-face {
+    width: 52px;
+    height: 52px;
+  }
+
+  .site-body:has(.player-page-tabs) .player-card-body {
+    gap: 2px;
+  }
+
+  .site-body:has(.player-page-tabs) .player-card-body b {
+    font-size: 14px;
+  }
+
+  .site-body:has(.player-page-tabs) .player-card-body small {
+    font-size: 11px;
+  }
+
+  .site-body:has(.player-page-tabs) .player-card-details {
+    gap: 5px;
+  }
+
+  .site-body:has(.player-page-tabs) .player-card-details em {
+    padding: 2px 4px;
+    font-size: 11px;
+  }
+
+  .site-body:has(.player-page-tabs) .player-card-details strong {
+    font-size: 12px;
+  }
+
+  .site-body:has(.player-page-tabs) .player-card-team-mark,
+  .site-body:has(.player-page-tabs) .player-card-status-mark,
+  .site-body:has(.player-page-tabs) .player-card-status-mark .search-status {
+    width: 36px;
+    height: 36px;
+  }
+
+  .site-body:has(.player-page-tabs) .player-card-team-mark img {
+    width: 30px;
+    height: 30px;
+  }
+
+  .site-body:has(.player-page-tabs) .player-card-status-mark .search-status {
+    padding: 2px;
+    font-size: 8px;
+  }
+
+  .site-body:has(.player-page-tabs) .player-card-compare {
+    padding: 4px 6px;
+    font-size: 10px;
+  }
+
+  .site-body:has(.player-page-tabs) .directory-results .pagination {
+    margin-top: 10px;
+  }
 }
