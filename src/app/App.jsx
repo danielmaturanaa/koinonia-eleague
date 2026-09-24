@@ -52,7 +52,8 @@ export function App() {
   } else if (route.name === 'team') {
     page = <TeamDetailPage team={teamDetail} teams={league.teams} squad={squad} standings={league.standings} matches={teamMatches} history={teamHistory} historyError={teamHistoryError} loading={state.loadingTeam} tab={route.query.tab} onTab={tab => navigate(`/equipos/${encodeURIComponent(route.teamId)}${tab === 'resumen' ? '' : `?tab=${tab}`}`)} onBack={() => navigate('/equipos')} onChanged={refresh}/>;
   } else if (route.name === 'player') {
-    page = <PlayerProfilePage playerId={route.playerId} teams={league.teams} onBack={() => navigate('/equipos/jugadores')}/>;
+    const fromMarket = route.query.from === 'mercado';
+    page = <PlayerProfilePage playerId={route.playerId} teams={league.teams} backLabel={fromMarket ? '← VOLVER A MERCADO' : '← VOLVER A JUGADORES'} onBack={() => navigate(fromMarket ? '/transferencias' : '/equipos/jugadores')}/>;
   } else if (route.path === '/partidos' || route.path === '/partidos/jugados' || route.path === '/partidos/pendientes') {
     const matchesMode = route.path.endsWith('jugados') ? 'played' : route.path.endsWith('pendientes') ? 'pending' : 'all';
     page = <MatchesPage key={matchesMode} mode={matchesMode} teams={league.teams} navigate={navigate}/>;
@@ -63,7 +64,8 @@ export function App() {
   } else if (route.path === '/equipos/rankings') {
     page = <RankingsPage teams={league.teams} navigate={navigate}/>;
   } else if (route.name === 'card') {
-    page = <EfootballCardPage pesId={route.pesId} variation={Number(route.query.v ?? 0)} navigate={navigate} onBack={() => navigate('/equipos/jugadores')}/>;
+    const fromMarket = route.query.from === 'mercado';
+    page = <EfootballCardPage pesId={route.pesId} variation={Number(route.query.v ?? 0)} navigate={navigate} backLabel={fromMarket ? '← VOLVER A MERCADO' : '← VOLVER A JUGADORES'} onBack={() => navigate(fromMarket ? '/transferencias' : '/equipos/jugadores')}/>;
   } else if (route.path === '/equipos/jugadores' || route.path === '/equipos/jugadores/importar') {
     page = <PlayersPage key={JSON.stringify(route.query)} teams={league.teams} initialQuery={route.query}/>;
   } else if (route.path.startsWith('/equipos/')) {

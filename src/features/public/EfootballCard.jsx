@@ -63,11 +63,11 @@ function RegisterCard({ card, onRegistered }) {
   return <form className="card-register" onSubmit={submit}><p>NADIE LO TIENE Y AÚN NO ESTÁ INSCRITO EN LA LIGA.</p><label>VALOR GP EN LA LIGA<input type="number" min="0" value={value} onChange={event => setValue(event.target.value)}/></label><button className="action-button positive" disabled={register.loading}>INSCRIBIR EN LA LIGA</button><FormFeedback mutation={register}/></form>;
 }
 
-export function EfootballCardPage({ pesId, variation = 0, navigate, onBack }) {
+export function EfootballCardPage({ pesId, variation = 0, navigate, onBack, backLabel = '← VOLVER A JUGADORES' }) {
   const card = useApiQuery(signal => endpoints.efootballCard(pesId, variation, signal), [pesId, variation]);
   const data = card.data;
   return <main className="newspaper data-page"><section className="data-paper">
-    <button className="back-button" onClick={onBack}>← VOLVER A JUGADORES</button><DataState query={card}/>
+    <button className="back-button" onClick={onBack}>{backLabel}</button><DataState query={card}/>
     {data && <article className="efootball-card-page">
       <header className="card-hero">
         <PlayerFace src={data.faceUrl} name={data.name} className="card-hero-face"/>

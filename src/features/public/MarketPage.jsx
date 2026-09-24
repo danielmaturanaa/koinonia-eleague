@@ -111,7 +111,9 @@ function SigningForm({ player, teams, onDone }) {
 
 function MarketPlayer({ player, teams, onChanged }) {
   const [open, setOpen] = useState(false);
-  const href = player.playerId ? `#/jugadores/${encodeURIComponent(player.playerId)}` : `#/efootball/${player.pesId}${player.variation ? `?v=${player.variation}` : ''}`;
+  const href = player.playerId
+    ? `#/jugadores/${encodeURIComponent(player.playerId)}?from=mercado`
+    : `#/efootball/${player.pesId}?${player.variation ? `v=${player.variation}&` : ''}from=mercado`;
   return <article className={`market-player ${open ? 'open' : ''}`}>
     <a href={href} className="market-player-link"><PlayerFace src={player.faceUrl} name={player.name}/><span><b>{player.name}</b><small>{[player.position, player.nationality, player.age ? `${player.age} AÑOS` : null].filter(Boolean).join(' · ')}</small></span><strong>{gp(player.price)}</strong></a>
     {player.status === 'free'

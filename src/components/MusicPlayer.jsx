@@ -3,6 +3,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 export function MusicPlayer({ tracks = [] }) {
   const audioRef = useRef(null);
   const rootRef = useRef(null);
+  const resumeAfterTrackChangeRef = useRef(false);
   const [trackIndex, setTrackIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [open, setOpen] = useState(false);
@@ -11,15 +12,18 @@ export function MusicPlayer({ tracks = [] }) {
   const panelId = useId();
   const track = tracks[trackIndex];
 
-  const move = direction => {
+  const move = (direction, resumePlayback = false) => {
     if (!tracks.length) return;
+    const audio = audioRef.current;
+    if (resumePlayback || playing || (audio && !audio.paused)) resumeAfterTrackChangeRef.current = true;
     setTrackIndex(index => (index + direction + tracks.length) % tracks.length);
   };
 
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio || !track) return;
-    const resumePlayback = !audio.paused;
+    const resumePlayback = resumeAfterTrackChangeRef.current || playing || !audio.paused;
+    resumeAfterTrackChangeRef.current = false;
     audio.load();
     if (resumePlayback) audio.play().catch(() => {});
   }, [track]);
@@ -48,8 +52,10 @@ export function MusicPlayer({ tracks = [] }) {
     else audio.pause();
   };
 
+  const handleEnded = () => move(1, true);
+
   return <section className="radio" ref={rootRef} aria-label="Radio Koinonia League">
-    <audio ref={audioRef} src={track?.src} preload="metadata" onEnded={() => move(1)} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)}/>
+    <audio ref={audioRef} src={track?.src} preload="metadata" onEnded={handleEnded} onPlay={() => setPlaying(true)} onPause={() => setPlaying(false)}/>
     <button className={`radio-play ${playing ? 'playing' : ''}`} type="button" onClick={toggle} disabled={!tracks.length} aria-label={playing ? 'Pausar radio' : 'Reproducir radio'}>{playing ? '❚❚' : '▶'}</button>
     <button className="radio-info" type="button" aria-expanded={open} aria-controls={panelId} onClick={() => setOpen(value => !value)}>
       <small>{playing ? 'RADIO KOINONIA' : 'RADIO · TOCA PLAY'}</small>
