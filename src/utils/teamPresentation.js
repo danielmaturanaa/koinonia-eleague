@@ -44,3 +44,52 @@ export function teamBalance(team) {
     .find(candidate => candidate !== null && candidate !== undefined && candidate !== '' && Number.isFinite(Number(candidate)));
   return value === undefined ? null : Number(value);
 }
+
+function numericValue(value) {
+  return value !== null && value !== undefined && value !== '' && Number.isFinite(Number(value)) ? Number(value) : null;
+}
+
+/* La API puede exponer los premios acumulados con distintos nombres según
+   la versión del backend. Normalizamos todos los formatos para la ficha. */
+export function teamPrizes(team) {
+  const direct = [
+    team?.prizes,
+    team?.prizeMoney,
+    team?.prize,
+    team?.prizeGp,
+    team?.prizeGP,
+    team?.prizeTotal,
+    team?.prizesGp,
+    team?.prizesGP,
+    team?.prizeBalance,
+    team?.prizeAmount,
+    team?.earnedPrizes,
+    team?.awardedGp,
+    team?.awardedGP,
+    team?.earnings,
+    team?.totalPrizes,
+    team?.awards,
+    team?.awardTotal,
+    team?.totalAwards,
+    team?.premios,
+    team?.premiosTotal,
+    team?.totalPremios,
+    team?.financials?.prizes,
+    team?.financials?.prizeTotal,
+    team?.financialSummary?.prizes,
+    team?.financialSummary?.prizeTotal,
+    team?.finance?.prizes,
+    team?.finance?.prizeTotal,
+  ];
+  const record = direct.find(value => Array.isArray(value) || (value && typeof value === 'object'));
+  if (Array.isArray(record)) {
+    const total = record.reduce((sum, item) => sum + (numericValue(item?.amount ?? item?.gp ?? item?.value ?? item?.prize ?? item?.prizeMoney) ?? 0), 0);
+    return total || null;
+  }
+  if (record && typeof record === 'object') {
+    const total = numericValue(record.total ?? record.amount ?? record.gp ?? record.value ?? record.prize ?? record.prizeMoney);
+    if (total !== null) return total;
+  }
+  const value = direct.map(numericValue).find(candidate => candidate !== null);
+  return value ?? null;
+}

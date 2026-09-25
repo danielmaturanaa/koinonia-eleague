@@ -95,7 +95,22 @@ function PersonPhoto({ photo, name }) {
 }
 
 function LeaderCard({ photo, name, age, country, customFields = [], role, onEdit }) {
-  return <article className="club-leader-card"><PersonPhoto photo={photo} name={name}/><div><small>{role}</small><h3>{name}</h3><dl><div><dt>EDAD</dt><dd>{age || '—'}</dd></div><div><dt>PAÍS</dt><dd>{country || '—'}</dd></div>{customFields.map(field => <div key={field.key}><dt>{field.label}</dt><dd>{field.value || '—'}</dd></div>)}</dl><button type="button" className="club-inline-edit" onClick={onEdit}>✎ EDITAR</button></div></article>;
+  return <article className="club-leader-card"><PersonPhoto photo={photo} name={name}/><div><small>{role}</small><h3>{name}</h3><dl><div><dt>EDAD</dt><dd>{age || '—'}</dd></div><div><dt>PAÍS</dt><dd>{country || '—'}</dd></div>{customFields.map(field => <div key={field.key}><dt>{field.label}</dt><dd>{field.value || '—'}</dd></div>)}</dl></div><button type="button" className="club-inline-edit club-leader-edit" onClick={onEdit} aria-label={`Editar ${role.toLowerCase()}`} title={`Editar ${role.toLowerCase()}`}>⚙</button></article>;
+}
+
+function ClubLeadership({ president, coach, onEditPresident, onEditCoach }) {
+  const [mode, setMode] = useState('president');
+  const isPresident = mode === 'president';
+  return <section className="club-card club-leadership club-leadership-feature">
+    <h3>DIRECTIVA</h3>
+    <nav className="club-leadership-tabs" aria-label="Vista de la directiva">
+      <button type="button" className={isPresident ? 'active' : ''} aria-pressed={isPresident} onClick={() => setMode('president')}>PRESIDENTE</button>
+      <button type="button" className={!isPresident ? 'active' : ''} aria-pressed={!isPresident} onClick={() => setMode('coach')}>DIRECTOR TÉCNICO</button>
+    </nav>
+    <div className="club-leaders">
+      {isPresident ? <LeaderCard {...president} onEdit={onEditPresident}/> : <LeaderCard {...coach} onEdit={onEditCoach}/>}
+    </div>
+  </section>;
 }
 
 function PersonEditorModal({ title, onClose, children }) {
@@ -139,6 +154,16 @@ function SquadPitch({ starters }) {
       </button>;
     })}
   </div>;
+}
+
+function ClubOverviewRoster({ starters, substitutes }) {
+  const [mode, setMode] = useState('starters');
+  return <section className="club-card club-overview-pitch">
+    <h3>TITULARES</h3>
+    <nav className="club-overview-roster-tabs" aria-label="Vista del plantel"><button type="button" className={mode === 'starters' ? 'active' : ''} aria-pressed={mode === 'starters'} onClick={() => setMode('starters')}>TITULARES <small>{starters.length}</small></button><button type="button" className={mode === 'substitutes' ? 'active' : ''} aria-pressed={mode === 'substitutes'} onClick={() => setMode('substitutes')}>SUPLENTES <small>{substitutes.length}</small></button></nav>
+    {mode === 'starters' && <div className="club-overview-roster-panel"><SquadPitch starters={starters}/></div>}
+    {mode === 'substitutes' && <div className="club-overview-roster-panel"><h3>SUPLENTES <small>{substitutes.length}</small></h3><ul className="club-overview-substitutes">{substitutes.length ? substitutes.map(player => { const { rest: name } = splitPlayerName(player.name); return <li key={player.id}><EntityLink to="player" id={player.id}><PlayerFace src={player.faceUrl} name={name} className="club-overview-substitute-face"/><span><b>{name}</b><small>{player.position ?? '—'} · DORSAL {player.jerseyNumber ?? '—'}</small></span></EntityLink></li>; }) : <li className="empty-copy">SIN SUPLENTES REGISTRADOS.</li>}</ul></div>}
+  </section>;
 }
 
 function TeamCoversModal({ team, onClose, onChanged }) {
@@ -398,7 +423,7 @@ function UpcomingMatches({ matches, resolveTeam, teamId }) {
   const upcoming = matches
     .filter(match => match.status === 'pending' || match.status === 'live')
     .sort((left, right) => (left.status === 'live' ? -1 : 0) - (right.status === 'live' ? -1 : 0) || (left.roundNumber ?? Number.MAX_SAFE_INTEGER) - (right.roundNumber ?? Number.MAX_SAFE_INTEGER));
-  return <section className="club-card"><h3>PRÓXIMOS PARTIDOS <small>{upcoming.length}</small></h3>
+  return <section className="club-card club-overview-upcoming"><h3>PRÓXIMOS PARTIDOS <small>{upcoming.length}</small></h3>
     {upcoming.length ? <div className="club-match-list">{upcoming.slice(0, visible).map(match => <ClubMatchRow match={match} resolveTeam={resolveTeam} teamId={teamId} key={match.id}/>)}</div> : <p className="empty-copy">SIN PARTIDOS PROGRAMADOS.</p>}
     {upcoming.length > visible && <button type="button" className="club-more-button" onClick={() => setVisible(value => value + UPCOMING_STEP)}>MOSTRAR {Math.min(UPCOMING_STEP, upcoming.length - visible)} MÁS</button>}
   </section>;
@@ -468,18 +493,19 @@ export function TeamDetailPage({ team, teams = [], squad, standings, matches = [
       <nav className="club-tabs" ref={tabsRef} role="tablist" aria-label="Secciones del club">{TABS.map(([id, label]) => <button type="button" role="tab" key={id} aria-selected={activeTab === id} className={activeTab === id ? 'active' : ''} onClick={() => onTab?.(id)}>{label}</button>)}</nav>
 
       <section className="club-tab-content" role="tabpanel">
-        {activeTab === 'resumen' && <div className="club-overview">
-          <div className="club-finance-stats"><span>PRESUPUESTO DISPONIBLE <b>{balance === null ? '—' : `${gp(balance)} GP`}</b></span><span>VALOR PLANTEL <b>{gp(team.squadValue)} GP</b></span><span>PROMEDIO <b>{gp(team.averageValue)} GP</b></span></div>
-          <div className="club-overview-main">
-            <section className="club-card club-overview-pitch"><h3>TITULARES <button type="button" className="club-link-button" onClick={() => onTab?.('plantel')}>PLANTEL COMPLETO →</button></h3><SquadPitch starters={starters}/></section>
-            <ClubScorers teamId={team.id}/>
-          </div>
-          <div className="club-overview-side">
-            <section className="club-card club-leadership"><h3>DIRECTIVA</h3><div className="club-leaders">
-              <LeaderCard key={`president-${personRevision}`} photo={photo} name={presidentName} age={presidentProfile.age} country={presidentProfile.country} customFields={team.president?.customFields} role="PRESIDENTE" onEdit={() => setPersonEditor('president')}/>
-              <LeaderCard key={`coach-${personRevision}`} photo={managerPhoto} name={coachName} age={coachProfile.age} country={coachProfile.country} customFields={team.coach?.customFields} role="DIRECTOR TÉCNICO" onEdit={() => setPersonEditor('coach')}/>
-            </div></section>
-            <UpcomingMatches matches={matches} resolveTeam={resolveTeam} teamId={team.id}/>
+        {activeTab === 'resumen' && <div className="club-overview club-overview-reorganized">
+          <section className="club-card club-overview-finance"><h3>FINANZAS</h3><div className="club-finance-stats"><span>VALOR PLANTEL <b>{gp(team.squadValue)} GP</b></span><span>SALDO DISPONIBLE <b>{balance === null ? '—' : `${gp(balance)} GP`}</b></span><span>PROMEDIO <b>{gp(team.averageValue)} GP</b></span></div></section>
+          <div className="club-overview-secondary">
+            <div className="club-overview-left-column">
+              <ClubLeadership
+                president={{ key: `president-${personRevision}`, photo, name: presidentName, age: presidentProfile.age, country: presidentProfile.country, customFields: team.president?.customFields, role: 'PRESIDENTE' }}
+                coach={{ key: `coach-${personRevision}`, photo: managerPhoto, name: coachName, age: coachProfile.age, country: coachProfile.country, customFields: team.coach?.customFields, role: 'DIRECTOR TÉCNICO' }}
+                onEditPresident={() => setPersonEditor('president')}
+                onEditCoach={() => setPersonEditor('coach')}
+              />
+              <UpcomingMatches matches={matches} resolveTeam={resolveTeam} teamId={team.id}/>
+            </div>
+            <ClubOverviewRoster starters={starters} substitutes={substitutes}/>
           </div>
         </div>}
 

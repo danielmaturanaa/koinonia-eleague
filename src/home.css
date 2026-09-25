@@ -1306,6 +1306,7 @@ a.table-team-link:hover { text-decoration: underline; text-underline-offset: 3px
 .club-more-button:hover { background: #a90020; }
 .club-leaders { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .club-leader-card { display: grid; grid-template-columns: 140px minmax(0, 1fr); gap: 14px; padding: 12px; border: 2px solid #10285b; background: #fff9e8; }
+.club-leader-card { position: relative; }
 .club-leader-card > img,
 .club-leader-card > .president-photo-placeholder { width: 140px; height: 160px; object-fit: cover; border: 3px solid #062764; }
 .club-leader-card small { color: #8c0019; font: 600 13px/1 'Oswald', sans-serif; letter-spacing: .8px; }
@@ -1316,6 +1317,7 @@ a.table-team-link:hover { text-decoration: underline; text-underline-offset: 3px
 .club-leader-card dd { margin: 0; font: 600 15px/1.2 'Roboto Condensed', sans-serif; overflow-wrap: anywhere; }
 .club-inline-edit { padding: 5px 9px; border: 2px solid #10285b; color: #062764; background: #e4d9c0; font: 600 13px/1 'Oswald', sans-serif; letter-spacing: .4px; }
 .club-inline-edit:hover { color: #fff; background: #a90020; }
+.club-leader-edit { position: absolute; right: 10px; bottom: 10px; display: grid; place-items: center; width: 36px; height: 36px; padding: 0; font-size: 21px; line-height: 1; }
 .club-history { display: grid; grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr); gap: 16px; align-items: start; }
 .club-history header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
 .club-history h3 { margin: 0; }
@@ -1569,6 +1571,76 @@ a.club-form-pill:hover { color: #fff; transform: translateY(-2px); }
   .club-league-table th:nth-child(2), .club-league-table td:nth-child(2) { width: 60%; }
 }
 
+/* Resumen del club: directiva destacada, próximos partidos debajo y sin
+   repetir titulares ni goleadores en esta vista. */
+.club-overview-reorganized { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: start; }
+.club-overview-reorganized .club-overview-secondary { order: 2; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; min-width: 0; }
+.club-overview-left-column { display: grid; gap: 14px; min-width: 0; align-content: start; }
+.club-overview-reorganized .club-overview-upcoming { order: 3; }
+.club-overview-reorganized > .club-finance-stats { order: 1; grid-column: auto; width: 100%; margin: 0; grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.club-overview-reorganized .club-leaders { grid-template-columns: 1fr; gap: 14px; }
+.club-overview-reorganized .club-leader-card { grid-template-columns: 320px minmax(0, 1fr); min-height: 375px; padding: 14px; gap: 16px; }
+.club-overview-reorganized .club-leader-card > img,
+.club-overview-reorganized .club-leader-card > .president-photo-placeholder { width: 320px; height: 365px; }
+.club-overview-reorganized .club-leader-card h3 { font-size: 28px; }
+.club-overview-reorganized .club-leader-card dl { gap: 8px; margin-bottom: 14px; }
+.club-overview-reorganized .club-leader-card dd { font-size: 17px; }
+.club-overview-reorganized .club-overview-finance { order: 1; width: 100%; margin: 0; }
+.club-overview-reorganized .club-overview-finance .club-finance-stats { grid-template-columns: repeat(3, minmax(0, 1fr)); margin: 0; border: 0; background: transparent; }
+.club-overview-reorganized .club-overview-upcoming { width: min(720px, 100%); justify-self: center; padding: 10px 12px; }
+.club-overview-left-column .club-overview-upcoming { width: 100%; justify-self: stretch; box-sizing: border-box; }
+.club-overview-reorganized .club-overview-upcoming > h3 { font-size: 20px; }
+.club-overview-reorganized .club-overview-upcoming .club-match-row > small { font-size: 13px; }
+.club-overview-reorganized .club-overview-upcoming .club-match-row { padding-top: 9px; padding-bottom: 9px; }
+.club-overview-reorganized .club-overview-upcoming .club-match-row b { font-size: 17px; }
+.club-overview-reorganized .club-overview-upcoming .club-match-row strong { font-size: 23px; }
+.club-overview-roster-tabs { display: flex; gap: 6px; margin-bottom: 10px; border-bottom: 2px solid #10285b; }
+.club-overview-roster-tabs button { flex: 1 1 0; display: flex; align-items: baseline; justify-content: center; gap: 6px; padding: 8px 10px; border: 2px solid #10285b; border-bottom: 0; color: #062764; background: #e4d9c0; font: 600 15px/1 'Oswald', sans-serif; letter-spacing: .5px; }
+.club-overview-roster-tabs button:hover { background: #fff3c4; }
+.club-overview-roster-tabs button.active { color: #fff; background: #a90020; }
+.club-overview-roster-tabs button small { font-size: 12px; }
+.club-leadership-tabs { display: flex; gap: 6px; margin-bottom: 10px; border-bottom: 2px solid #10285b; }
+.club-leadership-tabs button { flex: 1 1 0; min-width: 0; padding: 8px 10px; border: 2px solid #10285b; border-bottom: 0; color: #062764; background: #e4d9c0; font: 600 14px/1 'Oswald', sans-serif; letter-spacing: .4px; }
+.club-leadership-tabs button:hover { background: #fff3c4; }
+.club-leadership-tabs button.active { color: #fff; background: #a90020; }
+.club-overview-roster-panel { min-height: 520px; }
+.club-overview-pitch .club-pitch { max-width: none; aspect-ratio: 2.8 / 4; }
+.club-overview-pitch .club-pitch-face { width: 58px; height: 58px; }
+.club-overview-pitch .club-pitch-name { max-width: 140px; font-size: 16px; line-height: 1.1; }
+.club-overview-pitch .club-pitch-name b { margin-right: 3px; font-size: 19px; }
+.club-overview-roster-panel > h3 { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 0 10px; color: #062764; font: 600 17px/1 'Oswald', sans-serif; letter-spacing: .6px; }
+.club-overview-roster-panel > h3 small { color: #8c0019; font-size: 14px; }
+.club-overview-substitutes { display: grid; gap: 5px; min-width: 0; margin: 0; padding: 0; list-style: none; }
+.club-overview-substitutes li { min-width: 0; }
+.club-overview-substitutes li > a { display: grid; grid-template-columns: 50px minmax(0, 1fr); align-items: center; gap: 10px; min-width: 0; padding: 8px 10px; border: 1px solid #d0c4a8; color: inherit; background: #fff9e8; }
+.club-overview-substitutes li > a:hover { border-color: #a90020; background: #fff3c4; }
+.club-overview-substitute-face { width: 50px; height: 50px; border: 2px solid #062764; border-radius: 50%; object-fit: cover; background: #d9cfb8; }
+.club-overview-substitutes li > a span { display: grid; min-width: 0; gap: 3px; }
+.club-overview-substitutes li > a b { overflow: hidden; color: #062764; font: 700 18px/1.1 'Roboto Condensed', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+.club-overview-substitutes li > a small { color: #625d4e; font: 600 13px/1.1 'Oswald', sans-serif; white-space: nowrap; }
+@media (max-width: 900px) {
+  .club-overview-reorganized > .club-finance-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .club-overview-reorganized .club-overview-secondary { grid-template-columns: 1fr; }
+  .club-overview-reorganized .club-leaders { grid-template-columns: 1fr; }
+  .club-overview-reorganized .club-leader-card { grid-template-columns: 210px minmax(0, 1fr); min-height: 0; padding: 12px; gap: 14px; }
+  .club-overview-reorganized .club-leader-card > img,
+  .club-overview-reorganized .club-leader-card > .president-photo-placeholder { width: 210px; height: 235px; }
+}
+@media (max-width: 560px) {
+  .club-overview-reorganized > .club-finance-stats { grid-template-columns: 1fr; }
+  .club-overview-reorganized .club-leader-card { grid-template-columns: 138px minmax(0, 1fr); gap: 8px; padding: 8px; }
+  .club-overview-reorganized .club-leader-card > img,
+  .club-overview-reorganized .club-leader-card > .president-photo-placeholder { width: 138px; height: 166px; }
+  .club-overview-reorganized .club-leader-card h3 { font-size: 20px; }
+  .club-overview-pitch .club-pitch-face { width: 48px; height: 48px; }
+  .club-overview-pitch .club-pitch-name { max-width: 112px; font-size: 14px; }
+  .club-overview-pitch .club-pitch-name b { font-size: 16px; }
+  .club-overview-substitutes li > a { grid-template-columns: 44px minmax(0, 1fr); gap: 8px; padding: 7px 8px; }
+  .club-overview-substitute-face { width: 44px; height: 44px; }
+  .club-overview-substitutes li > a b { font-size: 16px; }
+  .club-overview-substitutes li > a small { font-size: 12px; }
+}
+
 /* Menú desplegable de equipos (solo escritorio). */
 .nav-item-with-menu { position: relative; }
 .nav-dropdown { position: absolute; top: calc(100% + 8px); left: 50%; z-index: 30; display: none; width: min(560px, 90vw); padding: 12px; border: 3px solid #43a8d6; background: #031d58 url('/paper-grain.svg'); box-shadow: 6px 6px #000c24; transform: translateX(-50%); }
@@ -1622,12 +1694,18 @@ a.club-form-pill:hover { color: #fff; transform: translateY(-2px); }
 .player-comparison-face { width: 72px; height: 72px; border: 2px solid #ffd42a; background: #d9cfb8; object-fit: cover; font-size: 25px; }
 .player-comparison-card-header small { display: block; overflow: hidden; color: #b8d8f0; font: 600 13px/1.1 'Oswald', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
 .player-comparison-card-header h3 { margin: 4px 0 0; overflow-wrap: anywhere; font: 400 28px/1 'Anton', sans-serif; }
+.player-comparison-score { display: inline-block; margin-top: 6px; padding: 3px 6px; color: #062764; background: #ffd42a; font: 700 11px/1 'Oswald', sans-serif; letter-spacing: .35px; }
 .player-comparison-remove { align-self: start; padding: 1px 5px; border: 1px solid #ffd42a; color: #ffd42a; background: transparent; font: 700 18px/1 sans-serif; cursor: pointer; }
 .player-comparison-remove:hover { color: #fff; background: #a90020; }
+.player-comparison-legend { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 4px 8px; color: #062764; font: 600 11px/1 'Oswald', sans-serif; letter-spacing: .25px; }
+.player-comparison-legend span { padding: 4px 6px; border: 1px solid #10285b; }
+.player-comparison-legend .legend-winner { color: #176b3a; background: #d7f1d8; }
+.player-comparison-legend .legend-tie { color: #625d4e; background: #eee7d5; }
 .player-comparison-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 5px; margin: 0; padding: 8px; }
 .player-comparison-facts div { min-width: 0; padding: 5px 6px; border: 1px solid #d4c8ae; }
 .player-comparison-facts dt { color: #625d4e; font: 600 14px/1 'Oswald', sans-serif; letter-spacing: .25px; }
 .player-comparison-facts dd { margin: 5px 0 0; overflow-wrap: anywhere; color: #062764; font: 700 17px/1.1 'Roboto Condensed', sans-serif; }
+.player-comparison-facts dd.comparison-value { display: flex; align-items: center; justify-content: flex-end; gap: 5px; padding: 3px 5px; border: 1px solid transparent; }
 .player-comparison-section { margin: 0 8px 8px; padding: 9px; border: 1px solid #d4c8ae; }
 .player-comparison-section h4 { margin: 0 0 7px; color: #a90020; font: 600 16px/1 'Oswald', sans-serif; letter-spacing: .45px; }
 .player-comparison-section h5 { margin: 7px 0 5px; color: #062764; font: 600 15px/1 'Oswald', sans-serif; }
@@ -1635,6 +1713,11 @@ a.club-form-pill:hover { color: #fff; transform: translateY(-2px); }
 .player-comparison-section p:last-child { border-bottom: 0; }
 .player-comparison-section p span { min-width: 0; overflow-wrap: anywhere; }
 .player-comparison-section p b { flex: 0 0 auto; color: #a90020; }
+.player-comparison-section p b.comparison-value { display: inline-flex; align-items: center; gap: 4px; padding: 2px 5px; border: 1px solid transparent; }
+.comparison-value.is-winner { color: #176b3a !important; background: #d7f1d8; border-color: #71b67b !important; }
+.comparison-value.is-loser { color: #a90020 !important; background: #fde1e1; border-color: #d78c8c !important; }
+.comparison-value.is-tie { color: #625d4e !important; background: #eee7d5; border-color: #c7bda5 !important; }
+.comparison-indicator { font: 700 11px/1 'Oswald', sans-serif; }
 .player-comparison-skills { display: block !important; color: #062764; font-size: 16px !important; line-height: 1.35 !important; }
 .player-comparison-placeholder { display: grid; min-height: 180px; place-items: center; padding: 20px; color: #625d4e; background: #fff9e8; font: 600 15px/1.2 'Oswald', sans-serif; text-align: center; }
 @media (max-width: 680px) {

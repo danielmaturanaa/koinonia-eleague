@@ -1,10 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { PlayerFace } from '../../components/PlayerFace.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { DataState, OverallBadge, PageHeader, Pagination, gp } from './DataStates.jsx';
-import { PLAYING_STYLES, STAT_GROUPS } from './EfootballCard.jsx';
+import { PLAYING_STYLES, skillLabel, STAT_GROUPS } from './EfootballCard.jsx';
 import { useApiQuery } from './useApiQuery.js';
 
 const positions = ['PT','LD','DEC','LI','MC','MO','ED','EI','DC'];
@@ -114,8 +114,26 @@ function activeTags(filters, teams) {
 const comparisonStatLabels = Object.fromEntries(STAT_GROUPS.flatMap(([, rows]) => rows));
 const comparisonValue = value => value == null || value === '' ? '—' : value;
 const comparisonSelectionKey = selection => selection ? `${selection.playerId ?? 'efootball'}:${selection.pesId ?? selection.key}:${selection.variation ?? 0}` : 'empty';
+const numericComparisonValue = value => {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
+};
+const comparisonState = (value, otherValue) => {
+  const own = numericComparisonValue(value);
+  const other = numericComparisonValue(otherValue);
+  if (own == null || other == null) return '';
+  if (own === other) return 'is-tie';
+  return own > other ? 'is-winner' : 'is-loser';
+};
 
-function ComparePlayerCard({ selection, onRemove }) {
+function ComparisonValue({ value, otherValue, children }) {
+  const state = comparisonState(value, otherValue);
+  return <dd className={`comparison-value ${state}`.trim()}>{children}{state && <small className="comparison-indicator" aria-label={state === 'is-winner' ? 'Mejor valor' : state === 'is-tie' ? 'Empate' : 'Valor inferior'}>{state === 'is-winner' ? '▲' : state === 'is-tie' ? '=' : '▼'}</small>}</dd>;
+}
+
+const comparisonWins = (stats, opponentStats) => Object.keys(stats).reduce((total, stat) => total + (comparisonState(stats[stat], opponentStats[stat]) === 'is-winner' ? 1 : 0), 0);
+
+function ComparePlayerCard({ selection, onRemove, opponentData, onData }) {
   const key = comparisonSelectionKey(selection);
   const profile = useApiQuery(signal => selection.playerId
     ? endpoints.player(selection.playerId, signal)
@@ -132,19 +150,26 @@ function ComparePlayerCard({ selection, onRemove }) {
   const name = player?.name ?? card?.name ?? selection.name;
   const faceUrl = player?.faceUrl ?? card?.faceUrl ?? selection.faceUrl;
   const loading = profile.loading || (Boolean(cardId) && linkedCard.loading);
+  const opponentPlayer = opponentData?.player;
+  const opponentCard = opponentData?.card;
+  const opponentStats = opponentCard?.stats ?? {};
+
+  useEffect(() => {
+    if (!loading && card && onData) onData(key, { player, card });
+  }, [card, key, loading, onData, player]);
 
   return <article className="player-comparison-card">
-    <header className="player-comparison-card-header"><PlayerFace src={faceUrl} name={name} className="player-comparison-face"/><div><small>FICHA DEL JUGADOR</small><h3>{name}</h3></div><button type="button" className="player-comparison-remove" onClick={() => onRemove(selection)}>×</button></header>
+    <header className="player-comparison-card-header"><PlayerFace src={faceUrl} name={name} className="player-comparison-face"/><div><small>FICHA DEL JUGADOR</small><h3>{name}</h3>{opponentCard && <strong className="player-comparison-score">{comparisonWins(stats, opponentStats)} ATRIBUTOS SUPERIORES</strong>}</div><button type="button" className="player-comparison-remove" onClick={() => onRemove(selection)}>×</button></header>
     {loading ? <div className="arcade-state compact">CARGANDO DATOS...</div> : profile.error ? <p className="empty-copy">NO SE PUDO CARGAR ESTE JUGADOR.</p> : <>
       <dl className="player-comparison-facts">
         <div><dt>EQUIPO</dt><dd>{player?.team?.name ?? card?.clubName ?? 'AGENTE LIBRE'}</dd></div>
         <div><dt>POSICIÓN</dt><dd>{comparisonValue(player?.position ?? card?.position)}</dd></div>
-        <div><dt>MEDIA eFOOTBALL</dt><dd><OverallBadge value={card?.overall ?? player?.external?.overall}/></dd></div>
+        <div><dt>MEDIA eFOOTBALL</dt><ComparisonValue value={card?.overall ?? player?.external?.overall} otherValue={opponentCard?.overall ?? opponentPlayer?.external?.overall}><OverallBadge value={card?.overall ?? player?.external?.overall}/></ComparisonValue></div>
         <div><dt>NACIONALIDAD</dt><dd>{comparisonValue(player?.nationality ?? card?.nationality)}</dd></div>
         <div><dt>EDAD</dt><dd>{player?.age ?? card?.age ? `${player?.age ?? card.age} AÑOS` : '—'}</dd></div>
-        <div><dt>VALOR LIGA</dt><dd>{gp(player?.gpValue)}</dd></div>
-        <div><dt>GOLES HISTÓRICOS</dt><dd>{player?.goals ?? 0}</dd></div>
-        <div><dt>VALOR eFOOTBALL</dt><dd>{gp(card?.gpPrice ?? player?.external?.gpPrice)}</dd></div>
+        <div><dt>VALOR LIGA</dt><ComparisonValue value={player?.gpValue} otherValue={opponentPlayer?.gpValue}>{gp(player?.gpValue)}</ComparisonValue></div>
+        <div><dt>GOLES HISTÓRICOS</dt><ComparisonValue value={player?.goals ?? 0} otherValue={opponentPlayer?.goals ?? 0}>{player?.goals ?? 0}</ComparisonValue></div>
+        <div><dt>VALOR eFOOTBALL</dt><ComparisonValue value={card?.gpPrice ?? player?.external?.gpPrice} otherValue={opponentCard?.gpPrice ?? opponentPlayer?.external?.gpPrice}>{gp(card?.gpPrice ?? player?.external?.gpPrice)}</ComparisonValue></div>
         <div><dt>ALTURA</dt><dd>{card?.height ? `${card.height} CM` : '—'}</dd></div>
         <div><dt>ESTILO DE JUEGO</dt><dd>{PLAYING_STYLES[card?.playingStyle] ?? '—'}</dd></div>
         <div><dt>PIE HÁBIL</dt><dd>{card?.strongFoot === 1 ? 'IZQUIERDO' : card?.strongFoot === 0 ? 'DERECHO' : '—'}</dd></div>
@@ -154,14 +179,16 @@ function ComparePlayerCard({ selection, onRemove }) {
         <div><dt>RESIST. LESIONES</dt><dd>{card?.profile?.injuryResistance != null ? `${card.profile.injuryResistance}/3` : '—'}</dd></div>
       </dl>
       {player?.activeGoals?.length ? <section className="player-comparison-section"><h4>GOLES EN TORNEOS ACTIVOS</h4>{player.activeGoals.map(tournament => <p key={tournament.name}><span>{tournament.name}</span><b>{tournament.goals}</b></p>)}</section> : null}
-      {statGroups.length ? <section className="player-comparison-section"><h4>ESTADÍSTICAS eFOOTBALL</h4><div className="player-comparison-stat-groups">{statGroups.map(([title, rows]) => <div key={title}><h5>{title}</h5>{rows.map(([stat]) => <p key={stat}><span>{comparisonStatLabels[stat] ?? stat.replaceAll('_', ' ')}</span><b>{stats[stat]}</b></p>)}</div>)}</div></section> : <p className="empty-copy">SIN ESTADÍSTICAS eFOOTBALL DISPONIBLES.</p>}
-      {card?.skills?.length ? <section className="player-comparison-section"><h4>HABILIDADES</h4><p className="player-comparison-skills">{card.skills.join(' · ')}</p></section> : null}
+      {statGroups.length ? <section className="player-comparison-section"><h4>ESTADÍSTICAS eFOOTBALL</h4><div className="player-comparison-stat-groups">{statGroups.map(([title, rows]) => <div key={title}><h5>{title}</h5>{rows.map(([stat]) => { const state = comparisonState(stats[stat], opponentStats[stat]); return <p key={stat}><span>{comparisonStatLabels[stat] ?? stat.replaceAll('_', ' ')}</span><b className={`comparison-value ${state}`.trim()}>{stats[stat]}{state && <small className="comparison-indicator" aria-label={state === 'is-winner' ? 'Mejor valor' : state === 'is-tie' ? 'Empate' : 'Valor inferior'}>{state === 'is-winner' ? '▲' : state === 'is-tie' ? '=' : '▼'}</small>}</b></p>; })}</div>)}</div></section> : <p className="empty-copy">SIN ESTADÍSTICAS eFOOTBALL DISPONIBLES.</p>}
+      {card?.skills?.length ? <section className="player-comparison-section"><h4>HABILIDADES</h4><p className="player-comparison-skills">{card.skills.map(skillLabel).join(' · ')}</p></section> : null}
     </>}
   </article>;
 }
 
 function PlayerComparator({ selections, onRemove }) {
-  return <section className="player-comparator"><header><div><h2>COMPARADOR DE JUGADORES</h2><p>Selecciona hasta dos jugadores para revisar sus datos, medias y estadísticas.</p></div><small>{selections.length} / 2 SELECCIONADOS</small></header>{selections.length ? <div className="player-comparison-grid">{selections.map(selection => <ComparePlayerCard key={comparisonSelectionKey(selection)} selection={selection} onRemove={onRemove}/>)}{selections.length === 1 && <div className="player-comparison-placeholder">ELIGE OTRO JUGADOR PARA COMPARARLO</div>}</div> : <p className="player-comparator-empty">Pulsa <b>COMPARAR</b> en dos fichas del directorio para comenzar.</p>}</section>;
+  const [comparisonData, setComparisonData] = useState({});
+  const onData = useCallback((key, data) => setComparisonData(current => current[key]?.card === data.card && current[key]?.player === data.player ? current : { ...current, [key]: data }), []);
+  return <section className="player-comparator"><header><div><h2>COMPARADOR DE JUGADORES</h2><p>Selecciona hasta dos jugadores para revisar sus datos, medias y estadísticas.</p></div><div className="player-comparison-legend"><span className="legend-winner">▲ MEJOR VALOR</span><span className="legend-tie">= EMPATE</span></div><small>{selections.length} / 2 SELECCIONADOS</small></header>{selections.length ? <div className="player-comparison-grid">{selections.map(selection => { const key = comparisonSelectionKey(selection); const opponent = selections.find(item => comparisonSelectionKey(item) !== key); return <ComparePlayerCard key={key} selection={selection} onRemove={onRemove} onData={onData} opponentData={opponent ? comparisonData[comparisonSelectionKey(opponent)] : null}/>; })}{selections.length === 1 && <div className="player-comparison-placeholder">ELIGE OTRO JUGADOR PARA COMPARARLO</div>}</div> : <p className="player-comparator-empty">Pulsa <b>COMPARAR</b> en dos fichas del directorio para comenzar.</p>}</section>;
 }
 
 // Directorio único: plantilla de la liga y cartas de eFootballDB sin inscribir.
