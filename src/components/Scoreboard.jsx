@@ -237,6 +237,7 @@ export function Scoreboard({ matchId, mode = 'view', density = 'tile', onOpen, o
       <span className="scoreboard-meta">{match.tournament?.name ?? 'TORNEO'} · {matchRoundLabel(match)}</span>
       <i className={`scoreboard-tag scoreboard-tag-${match.status}`}>{STATUS_LABEL[match.status] ?? match.status}</i>
     </header>
+    {match.homeTeam?.stadium && <div className="scoreboard-venue" title={`Estadio de ${match.homeTeam.name}`}>🏟️ {match.homeTeam.stadium}</div>}
     <div className="scoreboard-teams">
       <div className="scoreboard-team"><TeamMark team={resolveTeam(match.homeTeam)}/><b>{match.homeTeam?.name}</b></div>
       <div className="scoreboard-score">

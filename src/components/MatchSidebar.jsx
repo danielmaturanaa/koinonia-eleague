@@ -17,7 +17,7 @@ function LiveMatches({ resolveTeam }) {
   const rows = (Array.isArray(live.data) ? live.data : []).filter(match => match.status === 'live');
   if (!rows.length) return null;
   return <section className="score-panel live-panel"><h2><span className="live-dot" aria-hidden="true"/>EN VIVO <small>{rows.length}</small></h2>{rows.map(match =>
-    <EntityLink to="match" id={match.id} className="result-match" key={match.id}><small>{[match.tournament?.name ?? 'TORNEO', matchRoundLabel(match, { leagueRound: 'JORNADA' })].join(' · ')}</small><div className="score-line"><TeamMark team={resolveTeam(match.homeTeam)}/><span className="home-name">{match.homeTeam.name}</span><strong>{match.homeScore ?? 0} - {match.awayScore ?? 0}</strong><span className="away-name">{match.awayTeam.name}</span><TeamMark team={resolveTeam(match.awayTeam)}/></div></EntityLink>)}
+    <EntityLink to="match" id={match.id} className="result-match" key={match.id}><small>{[match.tournament?.name ?? 'TORNEO', matchRoundLabel(match, { leagueRound: 'JORNADA' })].join(' · ')}</small><div className="score-line"><TeamMark team={resolveTeam(match.homeTeam)}/><span className="home-name">{match.homeTeam.name}</span><strong>{match.homeScore ?? 0} - {match.awayScore ?? 0}</strong><span className="away-name">{match.awayTeam.name}</span><TeamMark team={resolveTeam(match.awayTeam)}/></div>{match.homeTeam?.stadium && <span className="match-venue compact">🏟️ {match.homeTeam.stadium}</span>}</EntityLink>)}
   </section>;
 }
 

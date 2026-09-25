@@ -30,7 +30,7 @@ function FixtureCard({ match, resolveTeam, onSelect, showRound }) {
   return <button type="button" className={`fixture-card fixture-${match.status}`} onClick={() => onSelect(match.id)} aria-label={`${match.homeTeam?.name ?? 'Equipo local'} contra ${match.awayTeam?.name ?? 'Equipo visitante'}: ${state}`}>
     <span className="fixture-teams">{team('home', home)}{team('away', away)}</span>
     <span className="fixture-state"><b>{live && <i aria-hidden="true"/>}{state}</b></span>
-    <small className="fixture-footer">{showRound ? matchRoundLabel(match) : 'FECHA POR DEFINIR'}</small>
+    <small className="fixture-footer"><span>{showRound ? matchRoundLabel(match) : 'FECHA POR DEFINIR'}</span>{match.homeTeam?.stadium && <span className="match-venue" title={`Estadio de ${match.homeTeam.name}`}>🏟️ {match.homeTeam.stadium}</span>}</small>
   </button>;
 }
 
