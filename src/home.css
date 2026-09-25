@@ -2660,3 +2660,17 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .h2h-heads > .h2h-search, .h2h-heads > .h2h-search:last-child { display: grid; grid-template-columns: 1fr; border-style: dashed; background: #fff9e8; }
 .fixture-group { scroll-margin-top: calc(var(--site-header-height) + 12px); }
 .fixture-group h3 em { margin-left: auto; padding: 3px 7px; color: #062764; background: var(--yellow); font: 600 12px/1 'Oswald', sans-serif; font-style: normal; letter-spacing: .5px; }
+
+/* Mini tabla del resumen: solo los vecinos del club. */
+.club-standing-snippet > h3 { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.club-standing-snippet table { width: 100%; border-collapse: collapse; font-family: 'Roboto Condensed', sans-serif; }
+.club-standing-snippet th { padding: 0 6px 6px; color: #4d4839; font: 600 12px/1 'Oswald', sans-serif; letter-spacing: .4px; text-align: center; }
+.club-standing-snippet th:nth-child(2) { text-align: left; }
+.club-standing-snippet td { padding: 7px 6px; border-top: 1px solid #d8ccb0; font-size: 16px; text-align: center; }
+.club-standing-snippet td:first-child { width: 30px; font: 400 18px/1 'Anton', sans-serif; color: #4d4839; }
+.club-standing-snippet td:nth-child(2) { text-align: left; }
+.club-standing-snippet .table-team-link { display: flex; align-items: center; gap: 8px; color: inherit; font-weight: 700; text-decoration: none; }
+.club-standing-snippet .team-mark { width: 26px; height: 26px; flex: 0 0 26px; }
+.club-standing-snippet td:last-child b { font: 400 20px/1 'Anton', sans-serif; }
+.club-standing-snippet tr.current-team td { color: #062764; background: #fff3c4; }
+.club-standing-snippet tr.current-team td:first-child { color: #fff; background: #a90020; }

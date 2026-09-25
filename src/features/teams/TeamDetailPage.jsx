@@ -104,6 +104,18 @@ function ClubPeople({ president: { key: presidentKey, ...president }, coach: { k
   return <section className="club-card club-people"><h3>DIRECTIVA Y CUERPO TÉCNICO</h3><div className="club-people-grid"><LeaderCard key={presidentKey} {...president} onEdit={onEditPresident}/><LeaderCard key={coachKey} {...coach} onEdit={onEditCoach}/></div></section>;
 }
 
+// Tabla acotada al equipo: el de arriba y el de abajo; en los extremos, los dos siguientes.
+function ClubStandingSnippet({ standings, teamId, teams, onMore }) {
+  const index = standings.findIndex(row => row.team_id === teamId);
+  if (index < 0) return null;
+  const start = Math.max(0, Math.min(index - 1, standings.length - 3));
+  const rows = standings.slice(start, start + 3);
+  const teamIndex = new Map(teams.map(team => [team.id, team]));
+  return <section className="club-card club-standing-snippet"><h3>TABLA <button type="button" className="club-link-button" onClick={onMore}>VER COMPLETA →</button></h3>
+    <table><thead><tr><th>#</th><th>EQUIPO</th><th>PJ</th><th>DG</th><th>PTS</th></tr></thead><tbody>{rows.map(row => { const position = standings.indexOf(row) + 1; return <tr key={row.team_id} className={row.team_id === teamId ? 'current-team' : ''}><td>{position}</td><td><EntityLink to="team" id={row.team_id} className="table-team-link"><TeamMark team={{ ...row, ...(teamIndex.get(row.team_id) ?? {}) }}/><span>{row.name}</span></EntityLink></td><td>{row.played}</td><td>{row.gd > 0 ? `+${row.gd}` : row.gd}</td><td><b>{row.points}</b></td></tr>; })}</tbody></table>
+  </section>;
+}
+
 function ClubRecentResults({ matches, resolveTeam, teamId, onMore }) {
   const played = finishedMatches(matches, teamId).slice(0, 3);
   return <section className="club-card club-recent"><h3>ÚLTIMOS RESULTADOS {played.length > 0 && <button type="button" className="club-link-button" onClick={onMore}>VER TODOS →</button>}</h3>
@@ -542,6 +554,7 @@ export function TeamDetailPage({ team, teams = [], squad, standings, matches = [
                 onEditPresident={() => setPersonEditor('president')}
                 onEditCoach={() => setPersonEditor('coach')}
               />
+              <ClubStandingSnippet standings={standings} teamId={team.id} teams={teams} onMore={() => onTab?.('tabla')}/>
               <ClubScorers teamId={team.id} limit={3}/>
               <ClubRecentResults matches={matches} resolveTeam={resolveTeam} teamId={team.id} onMore={() => onTab?.('partidos')}/>
             </div>
