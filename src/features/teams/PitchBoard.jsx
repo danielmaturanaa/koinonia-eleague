@@ -8,11 +8,13 @@ import { useApiMutation } from '../admin/useApiMutation.js';
 
 const openPlayer = player => { window.location.hash = `/jugadores/${encodeURIComponent(player.id)}`; };
 
+// Carta al estilo eFootballDB: media y posición a la izquierda, foto a la derecha
+// sobre los colores del club y el nombre en una franja inferior.
 function PitchCard({ player, selected, swappable, editing, style, onPointerDown, onPointerMove, onPointerUp, onClick, bench }) {
   return <button type="button" className={`pitch-card ${bench ? 'bench' : ''} ${selected ? 'selected' : ''} ${swappable ? 'swappable' : ''} ${editing ? 'editing' : ''}`} style={style} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onClick={onClick} aria-pressed={editing ? selected : undefined} aria-label={`${player.name}${editing ? (selected ? ', seleccionado' : '') : ', ver ficha'}`}>
-    <span className="pitch-card-top"><b>{player.overall ?? '—'}</b><small>{player.position ?? '—'}</small></span>
-    <span className="pitch-card-photo"><PlayerFace src={player.faceUrl} name={player.name} className="pitch-card-face"/><i>{player.jerseyNumber ?? '–'}</i></span>
-    <span className="pitch-card-name">{shortPlayerName(player)}</span>
+    <span className="pitch-card-stats"><b>{player.overall ?? '—'}</b><small>{player.position ?? '—'}</small></span>
+    <span className="pitch-card-photo"><PlayerFace src={player.faceUrl} name={player.name} className="pitch-card-face"/></span>
+    <span className="pitch-card-name"><i>{player.jerseyNumber ?? '–'}</i>{shortPlayerName(player)}</span>
   </button>;
 }
 
@@ -79,7 +81,9 @@ export function PitchBoard({ team, starters, substitutes, onChanged }) {
     : selected ? `${shortPlayerName(selected)} seleccionado: toca un suplente para hacer el cambio u otro titular para intercambiar posiciones.`
       : 'Toca un titular para cambiarlo, o arrástralo para moverlo en la cancha.';
 
-  return <section className={`club-card pitch-board ${editing ? 'is-editing' : ''}`}>
+  const colors = team?.colors ?? {};
+  const cardColors = { '--card-primary': colors.primary ?? '#062764', '--card-secondary': colors.secondary ?? '#a90020' };
+  return <section className={`club-card pitch-board ${editing ? 'is-editing' : ''}`} style={cardColors}>
     <header><h3>ALINEACIÓN <small>{starters.length} TITULARES · {substitutes.length} SUPLENTES</small></h3><button type="button" className={`pitch-board-toggle ${editing ? 'active' : ''}`} onClick={() => { setEditing(value => !value); setSelectedId(null); }}>{editing ? '✓ LISTO' : '✎ EDITAR ALINEACIÓN'}</button></header>
     <p className="pitch-board-hint" role="status">{busy ? 'GUARDANDO…' : hint}</p>
     {starters.length ? <div className="pitch-board-field" ref={pitchRef}>

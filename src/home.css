@@ -2170,39 +2170,35 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .pitch-box { left: 26%; width: 48%; height: 13%; }
 .pitch-box.top { top: -2px; border-top: 0; }
 .pitch-box.bottom { bottom: -2px; border-bottom: 0; }
-.pitch-card { --card-w: clamp(66px, 14%, 96px); position: absolute; z-index: 1; display: grid; justify-items: center; width: var(--card-w); padding: 4px 4px 5px; border: 2px solid #c9a227; border-radius: 6px 6px 10px 10px; color: #3a2e05; background: linear-gradient(170deg, #fff1b8, #e8c65a 55%, #caa13b); box-shadow: 0 3px 0 #0006; transform: translate(-50%, -50%); transition: transform 120ms ease, box-shadow 120ms ease; touch-action: none; user-select: none; }
-.pitch-card:hover { transform: translate(-50%, -52%); box-shadow: 0 6px 0 #0005; }
+.pitch-card { --card-w: clamp(76px, 16%, 112px); position: absolute; z-index: 1; display: grid; grid-template-columns: 30% 70%; grid-template-rows: auto auto; width: var(--card-w); padding: 0; overflow: hidden; border: 1px solid #ffffff40; border-radius: 4px; color: #fff; background: #151823; box-shadow: 0 4px 10px #0007; transform: translate(-50%, -50%); transition: transform 120ms ease, box-shadow 120ms ease; touch-action: none; user-select: none; }
+.pitch-card:hover { transform: translate(-50%, -53%); box-shadow: 0 8px 14px #0008; }
 .pitch-card.editing { cursor: grab; }
 .pitch-card.editing:active { cursor: grabbing; }
-.pitch-card-top { display: flex; width: 100%; align-items: baseline; justify-content: space-between; padding: 0 2px; }
-.pitch-card-top b { font: 400 clamp(15px, 1.4vw, 20px)/1 'Anton', sans-serif; }
-.pitch-card-top small { font: 700 10px/1 'Oswald', sans-serif; letter-spacing: .4px; }
-.pitch-card-face { width: 78%; height: auto; aspect-ratio: 1; margin: 1px 0 3px; border-radius: 50%; object-fit: cover; background: #f7e7a8; }
-.pitch-card-name { display: block; width: 100%; overflow: hidden; padding: 2px 3px; border-radius: 3px; color: #fff; background: #062764; font: 600 clamp(10px, .9vw, 13px)/1.1 'Oswald', sans-serif; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
-.pitch-card-name i { margin-right: 3px; color: var(--yellow); font-style: normal; }
-.pitch-card.selected { z-index: 3; border-color: #fff; background: linear-gradient(170deg, #ffffff, #bfe7ff 55%, #72b4e3); box-shadow: 0 0 0 3px #a90020, 0 0 18px 4px #ffd42acc; transform: translate(-50%, -54%) scale(1.06); }
+.pitch-card-stats { display: grid; align-content: start; justify-items: center; gap: 2px; padding: 5px 0 0; }
+.pitch-card-stats b { font: 700 clamp(15px, 1.35vw, 21px)/1 'Oswald', sans-serif; }
+.pitch-card-stats small { font: 700 clamp(9px, .75vw, 11px)/1 'Oswald', sans-serif; letter-spacing: .3px; }
+.pitch-card-photo { position: relative; display: block; aspect-ratio: 1; overflow: hidden; background: linear-gradient(150deg, color-mix(in srgb, var(--card-secondary) 55%, #10131c) 0 38%, color-mix(in srgb, var(--card-primary) 35%, #10131c) 38% 100%); }
+.pitch-card-photo::after { content: ''; position: absolute; inset: auto 0 0; height: 30%; background: linear-gradient(transparent, #151823aa); }
+.pitch-card-face { display: block; width: 100%; height: 100%; border-radius: 0; object-fit: cover; object-position: center top; background: transparent; }
+.pitch-card-name { grid-column: 1 / -1; display: block; overflow: hidden; padding: 3px 4px 4px; background: #0d0f16; font: 600 clamp(10px, .85vw, 12px)/1.1 'Roboto Condensed', sans-serif; text-align: center; text-overflow: ellipsis; white-space: nowrap; }
+.pitch-card-name i { margin-right: 3px; color: var(--yellow); font-style: normal; font-weight: 700; }
+.pitch-card.selected { z-index: 3; border-color: var(--yellow); box-shadow: 0 0 0 2px var(--yellow), 0 0 18px 3px #ffd42acc; transform: translate(-50%, -54%) scale(1.07); }
 .pitch-card.swappable { animation: pitch-card-pulse 1.2s ease-in-out infinite; }
-@keyframes pitch-card-pulse { 50% { box-shadow: 0 0 0 3px #ffd42a, 0 3px 0 #0006; } }
+@keyframes pitch-card-pulse { 50% { box-shadow: 0 0 0 2px var(--yellow), 0 4px 10px #0007; } }
 .pitch-board-bench { display: grid; gap: 6px; }
 .pitch-board-bench h4 { margin: 0; color: #062764; font: 600 14px/1 'Oswald', sans-serif; letter-spacing: .6px; }
-.pitch-board-bench > div { display: grid; grid-auto-flow: column; grid-auto-columns: 84px; gap: 8px; overflow-x: auto; padding: 6px 2px 10px; scrollbar-width: thin; }
-.pitch-card.bench { position: relative; width: 100%; transform: none; background: linear-gradient(170deg, #f2f2f2, #c9ced6 60%, #9aa3b0); border-color: #8a93a0; }
+.pitch-board-bench > div { display: grid; grid-auto-flow: column; grid-auto-columns: 104px; gap: 8px; overflow-x: auto; padding: 6px 2px 10px; scrollbar-width: thin; }
+.pitch-card.bench { position: relative; width: 100%; transform: none; opacity: .92; }
 .pitch-card.bench:hover { transform: translateY(-2px); }
-.pitch-card.bench.swappable { border-color: #ffd42a; }
+.pitch-card.bench.swappable { border-color: #ffd42a; opacity: 1; }
 .club-formation-tab .pitch-board { max-width: 760px; margin: 0 auto; }
 @media (max-width: 560px) {
   .pitch-board-field { aspect-ratio: 3 / 4; }
-  .pitch-card { --card-w: 17%; padding: 2px 2px 3px; }
-  .pitch-card-top small { display: none; }
-  .pitch-card-name { font-size: 9px; padding: 1px 2px; }
-  .pitch-board-bench > div { grid-auto-columns: 70px; }
-}
-.pitch-card-photo { position: relative; display: block; width: 78%; margin: 1px 0 3px; }
-.pitch-card-photo .pitch-card-face { display: block; width: 100%; margin: 0; }
-.pitch-card-photo i { position: absolute; right: -6px; bottom: -2px; display: grid; place-items: center; min-width: 20px; height: 20px; padding: 0 3px; border: 2px solid #fff; border-radius: 10px; color: #062764; background: var(--yellow); font: 700 11px/1 'Oswald', sans-serif; font-style: normal; }
-.pitch-board.is-editing .pitch-board-field .pitch-card:not(.selected) { outline: 1px dashed #ffffff88; outline-offset: 2px; }
-@media (max-width: 560px) {
-  .pitch-card-photo i { min-width: 16px; height: 16px; font-size: 9px; right: -4px; }
+  .pitch-card { --card-w: 19%; }
+  .pitch-card-stats b { font-size: 13px; }
+  .pitch-card-stats small { font-size: 8px; }
+  .pitch-card-name { font-size: 9px; padding: 2px; }
+  .pitch-board-bench > div { grid-auto-columns: 84px; }
 }
 
 /* Comparador con identidad de versus: azul a la izquierda, rojo a la derecha. */
