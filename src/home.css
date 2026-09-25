@@ -1571,8 +1571,8 @@ a.club-form-pill:hover { color: #fff; transform: translateY(-2px); }
   .club-league-table th:nth-child(2), .club-league-table td:nth-child(2) { width: 60%; }
 }
 
-/* Resumen del club: directiva destacada, próximos partidos debajo y sin
-   repetir titulares ni goleadores en esta vista. */
+/* Resumen del club: finanzas, directiva (presidente y DT) y plantel titular,
+   sin repetir próximos partidos, titulares ni goleadores en esta vista. */
 .club-overview-reorganized { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: start; }
 .club-overview-reorganized .club-overview-secondary { order: 2; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; min-width: 0; }
 .club-overview-left-column { display: grid; gap: 14px; min-width: 0; align-content: start; }
@@ -2100,6 +2100,7 @@ a.player-card { color: inherit; text-decoration: none; }
 
 /* En escritorio todos los periódicos comparten el mismo marco vertical. */
 @media (min-width: 901px) {
+  html, body { overflow-y: hidden; }
   .site-body { height: calc(100vh - var(--site-header-height) - 34px); min-height: 0; padding-bottom: 0; flex: 0 0 auto; }
   .site-body > .site-content { height: 100%; min-height: 0; overflow: hidden; }
   .site-body > .site-content > main.newspaper { height: 100%; min-height: 0; overflow: auto; }
@@ -2116,20 +2117,68 @@ a.player-card { color: inherit; text-decoration: none; }
   .site-body.home-body > .site-content > main.newspaper { display: flex; overflow: hidden; flex-direction: column; }
 }
 
-/* Directorio de jugadores: en escritorio se muestran filtros, 18 fichas y
+/* Directorio de jugadores: en escritorio se muestran filtros, 12 fichas y
    paginación dentro del marco, sin scroll anidado ni tarjetas recortadas. */
 @media (min-width: 901px) {
-  .site-body:has(.player-page-tabs),
-  .site-body:has(.player-page-tabs) > .site-content,
-  .site-body:has(.player-page-tabs) > .site-content > main.newspaper {
-    height: auto;
+  /* El directorio comparte el mismo marco vertical que el resto del sitio.
+     El scroll queda dentro del periódico, nunca en el documento completo. */
+  .site-body:has(.player-page-tabs) {
+    height: calc(100vh - var(--site-header-height) - 34px);
     min-height: 0;
     overflow: visible;
   }
 
+  .site-body:has(.player-page-tabs) > .site-content {
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .site-body:has(.player-page-tabs) > .site-content > main.newspaper {
+    height: 100%;
+    min-height: 0;
+    overflow: auto;
+  }
+
   .site-body:has(.player-page-tabs) > .site-content > main.newspaper .data-paper {
-    height: auto;
-    overflow: visible;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .site-body:has(.player-page-tabs) .players-paper {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .site-body:has(.player-page-tabs) .players-paper > .directory-layout {
+    flex: 1 1 auto;
+    min-height: 0;
+    align-items: stretch;
+    overflow: hidden;
+  }
+
+  .site-body:has(.player-page-tabs) .players-paper > .directory-layout .filter-panel {
+    position: static;
+    top: auto;
+    height: 100%;
+    max-height: none;
+    overflow-y: auto;
+  }
+
+  .site-body:has(.player-page-tabs) .players-paper > .directory-layout .directory-results {
+    min-height: 0;
+    height: 100%;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+
+  .site-body:has(.player-page-tabs) .players-paper > .player-comparator {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: auto;
   }
 
   .site-body:has(.player-page-tabs) .data-page-header {
@@ -2285,4 +2334,42 @@ a.player-card { color: inherit; text-decoration: none; }
   .site-body:has(.player-page-tabs) .directory-results .pagination {
     margin-top: 10px;
   }
+
+  .site-body:has(.player-page-tabs) .players-paper > .directory-layout .directory-results {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .site-body:has(.player-page-tabs) .players-paper .player-card-grid {
+    flex: 1 1 auto;
+    grid-auto-rows: minmax(105px, 1fr);
+    align-content: stretch;
+  }
+
+  .site-body:has(.player-page-tabs) .players-paper .player-card {
+    grid-template-rows: minmax(0, 1fr) auto;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .site-body:has(.player-page-tabs) .players-paper .player-card-link {
+    grid-template-columns: 64px minmax(0, 1fr) auto;
+    gap: 10px;
+    height: 100%;
+    padding: 8px 10px;
+  }
+
+  .site-body:has(.player-page-tabs) .players-paper .player-card-face {
+    width: 64px;
+    height: 64px;
+  }
+
+  .site-body:has(.player-page-tabs) .players-paper .player-card-body b { font-size: 17px; }
+  .site-body:has(.player-page-tabs) .players-paper .player-card-body small { font-size: 13px; }
+  .site-body:has(.player-page-tabs) .players-paper .player-card-details em { padding: 3px 6px; font-size: 13px; }
+  .site-body:has(.player-page-tabs) .players-paper .player-card-details strong { font-size: 15px; }
+  .site-body:has(.player-page-tabs) .players-paper .player-card-team-mark,
+  .site-body:has(.player-page-tabs) .players-paper .player-card-status-mark,
+  .site-body:has(.player-page-tabs) .players-paper .player-card-status-mark .search-status { width: 46px; height: 46px; }
+  .site-body:has(.player-page-tabs) .players-paper .player-card-team-mark img { width: 38px; height: 38px; }
 }

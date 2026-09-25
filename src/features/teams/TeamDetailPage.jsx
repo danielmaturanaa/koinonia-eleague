@@ -98,17 +98,20 @@ function LeaderCard({ photo, name, age, country, customFields = [], role, onEdit
   return <article className="club-leader-card"><PersonPhoto photo={photo} name={name}/><div><small>{role}</small><h3>{name}</h3><dl><div><dt>EDAD</dt><dd>{age || '—'}</dd></div><div><dt>PAÍS</dt><dd>{country || '—'}</dd></div>{customFields.map(field => <div key={field.key}><dt>{field.label}</dt><dd>{field.value || '—'}</dd></div>)}</dl></div><button type="button" className="club-inline-edit club-leader-edit" onClick={onEdit} aria-label={`Editar ${role.toLowerCase()}`} title={`Editar ${role.toLowerCase()}`}>⚙</button></article>;
 }
 
-function ClubLeadership({ president, coach, onEditPresident, onEditCoach }) {
-  const [mode, setMode] = useState('president');
-  const isPresident = mode === 'president';
+function ClubLeadership({ president, onEditPresident }) {
   return <section className="club-card club-leadership club-leadership-feature">
     <h3>DIRECTIVA</h3>
-    <nav className="club-leadership-tabs" aria-label="Vista de la directiva">
-      <button type="button" className={isPresident ? 'active' : ''} aria-pressed={isPresident} onClick={() => setMode('president')}>PRESIDENTE</button>
-      <button type="button" className={!isPresident ? 'active' : ''} aria-pressed={!isPresident} onClick={() => setMode('coach')}>DIRECTOR TÉCNICO</button>
-    </nav>
     <div className="club-leaders">
-      {isPresident ? <LeaderCard {...president} onEdit={onEditPresident}/> : <LeaderCard {...coach} onEdit={onEditCoach}/>}
+      <LeaderCard {...president} onEdit={onEditPresident}/>
+    </div>
+  </section>;
+}
+
+function ClubCoachPanel({ coach, onEditCoach }) {
+  return <section className="club-card club-overview-coach">
+    <h3>DIRECTOR TÉCNICO</h3>
+    <div className="club-leaders">
+      <LeaderCard {...coach} onEdit={onEditCoach}/>
     </div>
   </section>;
 }
@@ -499,11 +502,12 @@ export function TeamDetailPage({ team, teams = [], squad, standings, matches = [
             <div className="club-overview-left-column">
               <ClubLeadership
                 president={{ key: `president-${personRevision}`, photo, name: presidentName, age: presidentProfile.age, country: presidentProfile.country, customFields: team.president?.customFields, role: 'PRESIDENTE' }}
-                coach={{ key: `coach-${personRevision}`, photo: managerPhoto, name: coachName, age: coachProfile.age, country: coachProfile.country, customFields: team.coach?.customFields, role: 'DIRECTOR TÉCNICO' }}
                 onEditPresident={() => setPersonEditor('president')}
+              />
+              <ClubCoachPanel
+                coach={{ key: `coach-${personRevision}`, photo: managerPhoto, name: coachName, age: coachProfile.age, country: coachProfile.country, customFields: team.coach?.customFields, role: 'DIRECTOR TÉCNICO' }}
                 onEditCoach={() => setPersonEditor('coach')}
               />
-              <UpcomingMatches matches={matches} resolveTeam={resolveTeam} teamId={team.id}/>
             </div>
             <ClubOverviewRoster starters={starters} substitutes={substitutes}/>
           </div>

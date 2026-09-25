@@ -70,8 +70,32 @@ const SORT_OPTIONS = [['price_desc', 'Precio: mayor a menor'], ['price_asc', 'Pr
 const POSITION_LINES = [['PORTERO', ['PT']], ['DEFENSA', ['DEC', 'LI', 'LD']], ['MEDIOCAMPO', ['MC', 'MO']], ['ATAQUE', ['EI', 'ED', 'DC']]];
 const PRICE_RANGES = [['', '', 'Cualquier precio'], ['', '50000', 'Hasta 50.000'], ['50000', '100000', '50.000 – 100.000'], ['100000', '200000', '100.000 – 200.000'], ['200000', '', 'Más de 200.000']];
 const EMPTY_FILTERS = { q: '', positions: [], status: '', teamId: '', minGp: '', maxGp: '', nationality: '', sort: 'price_desc', page: 1 };
+const filtersFromQuery = query => ({
+  ...EMPTY_FILTERS,
+  q: query.q ?? '',
+  status: query.status ?? '',
+  teamId: query.teamId ?? '',
+  positions: query.position ? query.position.split(',').filter(Boolean) : [],
+  minGp: query.minGp ?? '',
+  maxGp: query.maxGp ?? '',
+  nationality: query.nationality ?? '',
+  sort: query.sort ?? 'price_desc',
+  page: Math.max(1, Number.parseInt(query.page ?? '1', 10) || 1),
+});
 
-const filtersFromQuery = query => ({ ...EMPTY_FILTERS, q: query.q ?? '', status: query.status ?? '', teamId: query.teamId ?? '', positions: query.position ? query.position.split(',') : [], sort: query.sort ?? 'price_desc' });
+const directoryQueryFromFilters = filters => Object.fromEntries(Object.entries({
+  q: filters.q,
+  status: filters.status,
+  teamId: filters.teamId,
+  position: filters.positions.join(','),
+  minGp: filters.minGp,
+  maxGp: filters.maxGp,
+  nationality: filters.nationality,
+  sort: filters.sort,
+  page: filters.page > 1 ? filters.page : '',
+}).filter(([, value]) => value !== ''));
+
+export const playersReturnQuery = filters => new URLSearchParams(directoryQueryFromFilters(filters)).toString();
 
 function DirectoryStatus({ player }) {
   if (player.status === 'owned') return null;
@@ -204,13 +228,18 @@ export function PlayersPage({ teams, initialQuery = {} }) {
     return () => window.clearTimeout(timer);
   }, [search]);
   const { positions, ...rest } = filters;
-  const query = Object.fromEntries(Object.entries({ ...rest, position: positions.join(','), pageSize: 18 }).filter(([, value]) => value !== ''));
+  const query = Object.fromEntries(Object.entries({ ...rest, position: positions.join(','), pageSize: 12 }).filter(([, value]) => value !== ''));
   const directory = useApiQuery(signal => endpoints.playerDirectory(query, signal), [JSON.stringify(query)]);
   const rows = Array.isArray(directory.data) ? directory.data : [];
   const set = patch => { if ('q' in patch) setSearch(patch.q); setFilters(current => ({ ...current, ...patch, page: 1 })); };
   const togglePosition = value => set({ positions: filters.positions.includes(value) ? filters.positions.filter(item => item !== value) : [...filters.positions, value] });
   const tags = activeTags(filters, teams);
-  const open = player => player.playerId ? `#/jugadores/${encodeURIComponent(player.playerId)}` : `#/efootball/${player.pesId}${player.variation ? `?v=${player.variation}` : ''}`;
+  const open = player => {
+    const params = new URLSearchParams({ from: 'jugadores', ...directoryQueryFromFilters(filters) });
+    if (player.playerId) return `#/jugadores/${encodeURIComponent(player.playerId)}?${params.toString()}`;
+    if (player.variation) params.set('v', player.variation);
+    return `#/efootball/${player.pesId}?${params.toString()}`;
+  };
   const comparisonCandidate = player => ({ key: player.playerId ?? `${player.pesId}-${player.variation ?? 0}`, playerId: player.playerId, pesId: player.pesId, variation: player.variation ?? 0, name: player.name, faceUrl: player.faceUrl });
   const toggleCompare = player => {
     const candidate = comparisonCandidate(player);
@@ -219,7 +248,7 @@ export function PlayersPage({ teams, initialQuery = {} }) {
       : current.length >= 2 ? [current[1], candidate] : [...current, candidate]);
   };
   const removeCompare = selection => setCompareSelections(current => current.filter(item => item.key !== selection.key));
-  return <main className="newspaper data-page"><section className="data-paper">
+  return <main className="newspaper data-page"><section className="data-paper players-paper">
     <PageHeader kicker="LIGA + eFOOTBALLDB" title="JUGADORES"><button className="page-action" onClick={() => setShowCreate(value => !value)}>{showCreate ? 'CERRAR ALTA' : '+ CREAR JUGADOR MANUAL'}</button></PageHeader>
     <nav className="player-page-tabs" aria-label="Secciones de jugadores"><button type="button" className={activeTab === 'directory' ? 'active' : ''} onClick={() => setActiveTab('directory')}>DIRECTORIO</button><button type="button" className={activeTab === 'comparator' ? 'active' : ''} onClick={() => setActiveTab('comparator')}>COMPARADOR{compareSelections.length ? ` (${compareSelections.length})` : ''}</button></nav>
     {activeTab === 'directory' && <>
