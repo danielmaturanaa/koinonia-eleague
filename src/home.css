@@ -91,7 +91,7 @@ body { min-width: 0; overflow-x: hidden; background: #001344; }
 @media (max-width: 1440px) {
   .global-search-toggle b { display: none; }
 }
-@media (max-width: 1320px) {
+@media (max-width: 1060px) {
   :root { --site-header-height: 63px; }
   .site-header-inner { flex-wrap: wrap; gap: 10px; min-height: 60px; padding: 6px 16px; }
   .brand { width: 120px; height: 46px; }
@@ -2294,3 +2294,41 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .global-search-match-state { color: #625d4e; font: 600 11px/1 'Oswald', sans-serif; letter-spacing: .4px; text-align: center; }
 .global-search-match-state.live { color: #d10020; }
 .global-search-match-state.pending { color: #062764; }
+
+/* Pantallas grandes (monitores 1080p+, TV): la interfaz escala como un todo para
+   mantener un ancho lógico de ~1500px, en vez de dejar el contenido chico al centro. */
+@media (min-width: 1700px) { html { zoom: 1.12; } }
+@media (min-width: 1900px) { html { zoom: 1.26; } }
+@media (min-width: 2300px) { html { zoom: 1.5; } }
+@media (min-width: 2800px) { html { zoom: 1.85; } }
+@media (min-width: 3400px) { html { zoom: 2.4; } }
+
+/* Móvil: las columnas del club nunca crecen más que la pantalla. */
+.club-overview-left-column { grid-template-columns: minmax(0, 1fr); }
+.club-card { min-width: 0; }
+.club-standing-snippet .table-team-link span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.club-standing-snippet td:nth-child(2) { max-width: 0; width: 100%; }
+@media (max-width: 560px) {
+  .fixture-group h3 { flex-wrap: wrap; row-gap: 4px; font-size: 19px; }
+  .fixture-group h3 em { margin-left: 0; }
+  .fixture-card { grid-template-columns: minmax(0, 1fr) 72px; }
+  .fixture-state { font-size: 11px; }
+  .club-standing-snippet th:nth-child(3), .club-standing-snippet td:nth-child(3) { display: none; }
+}
+
+/* Notebook (1061–1320px): menú completo compacto en vez de hamburguesa. */
+@media (min-width: 1061px) and (max-width: 1320px) {
+  .site-header-inner { gap: 8px; padding: 6px 14px; }
+  .brand { width: 132px; }
+  .nav-link { padding: 8px 6px; font-size: 15px; letter-spacing: .2px; }
+  .radio { flex: 0 0 auto; }
+  .radio-info { display: none; }
+}
+/* En escritorio de dos columnas, el extracto de la historia solo aparece si hay alto. */
+@media (min-width: 1181px) and (max-width: 1500px) {
+  .news-story-excerpt { display: none; }
+}
+@media (max-width: 720px) {
+  .h2h-player h3 { white-space: normal; overflow-wrap: anywhere; font-size: 17px; line-height: 1.05; text-align: center; }
+  .h2h-player small { white-space: normal; text-align: center; }
+}
