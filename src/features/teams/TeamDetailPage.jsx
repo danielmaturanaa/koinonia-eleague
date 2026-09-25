@@ -528,7 +528,7 @@ export function TeamDetailPage({ team, teams = [], squad, standings, matches = [
       <header className="club-hero" style={heroStyle}>
         <div className="club-crest-wrap"><TeamMark team={team} className="club-crest"/><button type="button" className="club-crest-edit" onClick={() => setCrestEditorOpen(true)} aria-label="Editar escudo y nombre del club" title="Editar escudo y nombre">✎</button></div>
         <div className="club-hero-copy"><p>{team.kind === 'national_team' ? 'SELECCIÓN' : 'CLUB'}{team.currentDivision ? ` · ${team.currentDivision}` : ''}</p><h1>{team.name}</h1><div className="club-hero-meta">{rank > 0 && <span className="club-hero-rank"><b>{rank}°</b> EN LA LIGA{standing ? ` · ${standing.points} PTS` : ''}</span>}<FormPills matches={matches} teamId={team.id}/></div></div>
-        <div className="club-hero-value"><small>VALOR DEL PLANTEL</small><b>{gp(team.squadValue)}</b><span>GP · {team.playerCount ?? squad.length} JUGADORES</span><dl className="club-hero-finance"><div><dt>SALDO</dt><dd>{balance === null ? '—' : gp(balance)}</dd></div><div><dt>PROMEDIO</dt><dd>{gp(team.averageValue)}</dd></div></dl></div>
+        <dl className="club-hero-value"><div><dt>VALOR DEL PLANTEL</dt><dd>{gp(team.squadValue)}</dd><small>GP · {team.playerCount ?? squad.length} JUGADORES</small></div><div><dt>SALDO DISPONIBLE</dt><dd>{balance === null ? '—' : gp(balance)}</dd><small>GP PARA FICHAJES</small></div></dl>
       </header>
       <nav className="club-tabs" ref={tabsRef} role="tablist" aria-label="Secciones del club">{TABS.map(([id, label]) => <button type="button" role="tab" key={id} aria-selected={activeTab === id} className={activeTab === id ? 'active' : ''} onClick={() => onTab?.(id)}>{label}</button>)}</nav>
 
