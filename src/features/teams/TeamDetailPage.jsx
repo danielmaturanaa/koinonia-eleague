@@ -97,11 +97,11 @@ function PersonPhoto({ photo, name }) {
 // Foto a sangre con nombre, edad y país sobre un degradado inferior; la edición va en la esquina.
 function LeaderCard({ photo, name, age, country, customFields = [], role, onEdit }) {
   const details = [age ? `${age} AÑOS` : null, country, ...customFields.map(field => field.value ? `${field.label}: ${field.value}` : null)].filter(Boolean);
-  return <article className="club-person-card"><PersonPhoto photo={photo} name={name}/><div className="club-person-overlay"><small>{role}</small><h3>{name}</h3>{details.length > 0 && <p>{details.join(' · ')}</p>}</div><button type="button" className="club-inline-edit club-leader-edit" onClick={onEdit} aria-label={`Editar ${role.toLowerCase()}`} title={`Editar ${role.toLowerCase()}`}>⚙</button></article>;
+  return <div className="club-person-entry"><h3 className="club-person-role">{role}</h3><article className="club-person-card"><PersonPhoto photo={photo} name={name}/><div className="club-person-overlay"><h3>{name}</h3>{details.length > 0 && <p>{details.join(' · ')}</p>}</div><button type="button" className="club-inline-edit club-leader-edit" onClick={onEdit} aria-label={`Editar ${role.toLowerCase()}`} title={`Editar ${role.toLowerCase()}`}>⚙</button></article></div>;
 }
 
 function ClubPeople({ president: { key: presidentKey, ...president }, coach: { key: coachKey, ...coach }, onEditPresident, onEditCoach }) {
-  return <section className="club-card club-people"><h3>DIRECTIVA Y CUERPO TÉCNICO</h3><div className="club-people-grid"><LeaderCard key={presidentKey} {...president} onEdit={onEditPresident}/><LeaderCard key={coachKey} {...coach} onEdit={onEditCoach}/></div></section>;
+  return <section className="club-card club-people"><div className="club-people-grid"><LeaderCard key={presidentKey} {...president} onEdit={onEditPresident}/><LeaderCard key={coachKey} {...coach} onEdit={onEditCoach}/></div></section>;
 }
 
 // Tabla acotada al equipo: el de arriba y el de abajo; en los extremos, los dos siguientes.
@@ -530,10 +530,10 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
               />
               <ClubStandingSnippet standings={standings} teamId={team.id} teams={teams} onMore={() => onTab?.('tabla')}/>
               <ClubRecentResults matches={matches} resolveTeam={resolveTeam} teamId={team.id} onMore={() => onTab?.('partidos')}/>
+              <ClubScorers teamId={team.id} limit={3} tournaments={tournaments}/>
             </div>
             <div className="club-overview-right-column">
               <PitchBoard team={team} starters={starters} substitutes={substitutes} onChanged={onChanged}/>
-              <ClubScorers teamId={team.id} limit={3} tournaments={tournaments}/>
             </div>
           </div>
         </div>}

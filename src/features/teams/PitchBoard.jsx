@@ -151,7 +151,7 @@ export function PitchBoard({ team, starters, substitutes = [], onChanged, readOn
   };
   const hint = readOnly ? '' : selected
     ? <>{shortPlayerName(selected)} seleccionado: {selectedIsBench ? 'toca un titular para que entre, u otro suplente para cambiar el orden de la banca.' : 'toca un suplente para hacer el cambio u otro titular para intercambiar posiciones.'} <button type="button" className="pitch-board-link" onClick={() => openPlayer(selected)}>Ver ficha →</button> <button type="button" className="pitch-board-link" onClick={() => setSelectedId(null)}>Cancelar</button></>
-    : 'Toca un titular y luego un suplente (o al revés) para hacer un cambio. Toca dos suplentes para reordenar la banca, o arrastra un titular para moverlo.';
+    : '';
   useEffect(() => {
     if (!selectedId) return undefined;
     const onKey = event => { if (event.key === 'Escape') setSelectedId(null); };
@@ -168,7 +168,7 @@ export function PitchBoard({ team, starters, substitutes = [], onChanged, readOn
   if (bare) return <div className="pitch-board pitch-board-bare" style={cardColors}>{field}</div>;
   return <section className="club-card pitch-board is-editing" style={cardColors}>
     <header><h3>ALINEACIÓN <small>{starters.length} TITULARES · {substitutes.length} SUPLENTES</small></h3></header>
-    <p className="pitch-board-hint" role="status">{busy ? 'GUARDANDO…' : hint}</p>
+    {(busy || hint) && <p className="pitch-board-hint" role="status">{busy ? 'GUARDANDO…' : hint}</p>}
     {field}
     <div className="pitch-board-bench"><h4>BANCA</h4>{substitutes.length ? <div>{substitutes.map(player => <PitchCard key={player.id} bench player={player} editing={editing} selected={selectedId === player.id} swappable={Boolean(selectedId) && selectedId !== player.id} onClick={onBenchClick(player)}/>)}</div> : <p className="empty-copy">SIN SUPLENTES.</p>}</div>
     <FormFeedback mutation={swap}/><FormFeedback mutation={move}/><FormFeedback mutation={reorder}/>

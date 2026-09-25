@@ -20,10 +20,17 @@ function FixtureCard({ match, resolveTeam, onSelect, showRound }) {
   const away = Number(match.awayScore ?? 0);
   const winner = finished ? (home > away ? 'home' : away > home ? 'away' : match.winnerTeamId ? (match.winnerTeamId === match.homeTeam?.id ? 'home' : 'away') : '') : '';
   const team = (side, value) => <span className={`fixture-team ${winner && winner !== side ? 'lost' : ''}`}><TeamMark team={resolveTeam(match[`${side}Team`])}/><b>{match[`${side}Team`]?.name ?? '—'}</b>{hasScore && <strong>{value}</strong>}</span>;
-  return <button type="button" className={`fixture-card fixture-${match.status}`} onClick={() => onSelect(match.id)}>
+  const state = live
+    ? 'EN VIVO'
+    : finished
+      ? 'FINAL'
+      : match.status === 'cancelled'
+        ? 'CANCELADO'
+        : 'PENDIENTE';
+  return <button type="button" className={`fixture-card fixture-${match.status}`} onClick={() => onSelect(match.id)} aria-label={`${match.homeTeam?.name ?? 'Equipo local'} contra ${match.awayTeam?.name ?? 'Equipo visitante'}: ${state}`}>
     <span className="fixture-teams">{team('home', home)}{team('away', away)}</span>
-    <span className="fixture-state">{live ? <em><i aria-hidden="true"/>EN VIVO</em> : finished ? 'FINAL' : match.status === 'cancelled' ? 'CANCELADO' : 'POR JUGAR'}</span>
-    <small className="fixture-footer">{showRound ? `${matchRoundLabel(match)} · ` : ''}{match.tournament?.name ?? 'TORNEO'}</small>
+    <span className="fixture-state"><b>{live && <i aria-hidden="true"/>}{state}</b></span>
+    <small className="fixture-footer">{showRound ? matchRoundLabel(match) : 'FECHA POR DEFINIR'}</small>
   </button>;
 }
 
@@ -90,7 +97,7 @@ function MultiSlot({ index, teamId, matchId, matches, teams, onSelectTeam, onSel
 
 export function MatchesPage({ mode = 'all', teams, navigate }) {
   const initialStatus = mode === 'played' ? 'finished' : mode === 'pending' ? 'pending' : '';
-  const [filters, setFilters] = useState({ tournament: '', team: '', status: initialStatus, page: 1 });
+  const [filters, setFilters] = useState({ tournament: '', team: '', opponent: '', status: initialStatus, page: 1 });
   const [showMulti, setShowMulti] = useState(false);
   const [multiSlots, setMultiSlots] = useState(loadMultiSlots);
   const [multiFullscreen, setMultiFullscreen] = useState(false);
@@ -99,28 +106,41 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
   // Se cargan todos los partidos del filtro (la API entrega hasta 100 por página)
   // para armar una sola línea de tiempo, sin paginación.
   const matches = useApiQuery(async signal => {
-    const query = { ...filters, activeOnly: 1, pageSize: 100 };
+    // La API filtra por un equipo. Para el cruce directo pedimos los encuentros
+    // del equipo de referencia y filtramos el rival en cliente.
+    const { opponent, ...queryFilters } = filters;
+    const query = { ...queryFilters, team: filters.team || opponent, activeOnly: 1, pageSize: 100 };
     const first = await endpoints.matches({ ...query, page: 1 }, signal);
     const totalPages = Math.min(first?.pagination?.totalPages ?? 1, 10);
     const rest = await Promise.all(Array.from({ length: totalPages - 1 }, (_, index) => endpoints.matches({ ...query, page: index + 2 }, signal)));
     return { data: [first, ...rest].flatMap(page => Array.isArray(page?.data) ? page.data : []) };
-  }, [filters.tournament, filters.team, filters.status]);
+  }, [filters.tournament, filters.team, filters.opponent, filters.status]);
   const multiMatchesQuery = useApiQuery(signal => showMulti ? endpoints.matches({ activeOnly: 1, pageSize: 100, page: 1 }, signal) : Promise.resolve({ data: [] }), [showMulti]);
   const multiMatches = useMemo(() => (Array.isArray(multiMatchesQuery.data) ? multiMatchesQuery.data : []).filter(match => match.status === 'pending' || match.status === 'live'), [multiMatchesQuery.data]);
   const teamIndex = useMemo(() => new Map(teams.map(team => [team.id, team])), [teams]);
   const resolveTeam = team => ({ ...team, ...(teamIndex.get(team?.id ?? team?.team_id) ?? {}) });
-  const apiRows = Array.isArray(matches.data) ? matches.data : [];
-  // Orden: en vivo, luego pendientes (por fecha) y al final jugados (el más reciente primero).
+  const apiRows = useMemo(() => {
+    const rows = Array.isArray(matches.data) ? matches.data : [];
+    if (!filters.opponent) return rows;
+    return rows.filter(match => match.homeTeam?.id === filters.opponent || match.awayTeam?.id === filters.opponent);
+  }, [matches.data, filters.opponent]);
+  // Los partidos en vivo van primero; el resto conserva el orden cronológico de
+  // la fecha/jornada, sin separar pendientes de finalizados.
   // En ligas a dos vueltas se separan primera vuelta, segunda vuelta y playoffs.
   const sections = useMemo(() => {
     const byRound = (left, right) => (Number(matchRound(left)) || Number.MAX_SAFE_INTEGER) - (Number(matchRound(right)) || Number.MAX_SAFE_INTEGER);
-    const finishedAt = match => String(match.finishedAt ?? match.finished_at ?? match.updatedAt ?? '');
-    const rank = { live: 0, pending: 1, finished: 2, cancelled: 3 };
-    const ordered = [...apiRows].sort((left, right) => {
-      const status = (rank[left.status] ?? 4) - (rank[right.status] ?? 4);
-      if (status) return status;
-      if (left.status === 'finished' || left.status === 'cancelled') return finishedAt(right).localeCompare(finishedAt(left));
+    const scheduledAt = match => String(match.scheduledAt ?? match.scheduled_at ?? match.date ?? match.playedAt ?? match.played_at ?? '');
+    const chronology = (left, right) => {
+      const leftDate = scheduledAt(left);
+      const rightDate = scheduledAt(right);
+      if (leftDate && rightDate && leftDate !== rightDate) return leftDate.localeCompare(rightDate);
+      if (leftDate && !rightDate) return -1;
+      if (!leftDate && rightDate) return 1;
       return byRound(left, right);
+    };
+    const ordered = [...apiRows].sort((left, right) => {
+      const live = Number(right.status === 'live') - Number(left.status === 'live');
+      return live || chronology(left, right);
     });
     const tournamentsById = new Map((tournaments.data ?? []).map(item => [item.id, item]));
     const maxRound = new Map();
@@ -137,10 +157,16 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
       return (maxRound.get(id) ?? 0) > perLeg ? perLeg : null;
     };
     const sectionOf = match => {
-      if (match.stage === 'playoffs') return { key: 'playoffs', label: 'PLAYOFFS', order: 3 };
-      const perLeg = legRoundsFor(match.tournament?.id);
-      if (!perLeg) return { key: 'all', label: '', order: 0 };
-      return Number(matchRound(match)) > perLeg ? { key: 'second', label: 'SEGUNDA VUELTA', order: 2 } : { key: 'first', label: 'PRIMERA VUELTA', order: 1 };
+      const tournamentName = match.tournament?.name ?? 'TORNEO';
+      const tournamentKey = match.tournament?.id ?? tournamentName;
+      const section = match.stage === 'playoffs'
+        ? { key: 'playoffs', label: 'PLAYOFFS', order: 3 }
+        : (() => {
+          const perLeg = legRoundsFor(match.tournament?.id);
+          if (!perLeg) return { key: 'all', label: '', order: 0 };
+          return Number(matchRound(match)) > perLeg ? { key: 'second', label: 'SEGUNDA VUELTA', order: 2 } : { key: 'first', label: 'PRIMERA VUELTA', order: 1 };
+        })();
+      return { ...section, key: `${tournamentKey}:${section.key}`, label: section.label ? `${tournamentName} · ${section.label}` : tournamentName };
     };
     const groups = new Map();
     ordered.forEach(match => {
@@ -204,7 +230,7 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
     setFilters(current => ({ ...current, [event.target.name]: event.target.value, page: 1 }));
   };
   const selectTeamFilter = teamId => {
-    setFilters(current => ({ ...current, team: teamId, page: 1 }));
+    setFilters(current => ({ ...current, team: teamId, opponent: current.opponent === teamId ? '' : current.opponent, page: 1 }));
   };
   const toggleMulti = () => {
     setShowMulti(value => !value);
@@ -226,7 +252,7 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
       </div>
     </> : <>
       <TeamChipBar teams={teams} value={filters.team} onChange={selectTeamFilter}/>
-      <div className="filter-bar"><select name="tournament" value={filters.tournament} onChange={change} aria-label="Torneo"><option value="">TORNEOS ACTIVOS</option>{(tournaments.data ?? []).map(item => <option value={item.id} key={item.id}>{item.name}</option>)}</select><select name="status" value={filters.status} onChange={change} aria-label="Estado"><option value="">TODOS LOS ESTADOS</option>{Object.entries(labels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></div>
+      <div className="filter-bar"><select name="tournament" value={filters.tournament} onChange={change} aria-label="Torneo"><option value="">TORNEOS ACTIVOS</option>{(tournaments.data ?? []).map(item => <option value={item.id} key={item.id}>{item.name}</option>)}</select><select name="status" value={filters.status} onChange={change} aria-label="Estado"><option value="">TODOS LOS ESTADOS</option>{Object.entries(labels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select>{filters.team && <select name="opponent" value={filters.opponent} onChange={change} aria-label="Rival para cruce directo"><option value="">CONTRA CUALQUIER RIVAL</option>{[...teams].filter(team => team.id !== filters.team).sort((a, b) => a.name.localeCompare(b.name, 'es')).map(team => <option value={team.id} key={team.id}>VS {team.name}</option>)}</select>}</div>
       <DataState query={matches}/>{!matches.loading && !matches.error && (sections.length
         ? <div className="fixture-board">{sections.map(section => <section className="fixture-group" key={section.key}>{section.label && <h3>{section.label} <small>{section.rows.filter(match => match.status === 'finished').length} / {section.rows.length} JUGADOS</small></h3>}<div className="fixture-grid">{section.rows.map(match => <FixtureCard key={match.id} match={match} showRound resolveTeam={resolveTeam} onSelect={selectMatch}/>)}</div></section>)}</div>
         : <p className="empty-copy">NO HAY PARTIDOS CON ESTOS FILTROS.</p>)}

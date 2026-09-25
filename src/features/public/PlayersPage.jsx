@@ -10,28 +10,6 @@ import { addToComparison, comparisonCandidate, readComparison, writeComparison }
 
 const positions = ['PT','LD','DEC','LI','MC','MO','ED','EI','DC'];
 
-function CreatePlayerForm({ onChanged }) {
-  const [form, setForm] = useState({ name: '', position: 'PT', gpValue: '' });
-  const mutation = useApiMutation((payload, signal) => endpoints.createPlayer(payload, signal), {
-    onSuccess: () => {
-      setForm({ name: '', position: 'PT', gpValue: '' });
-      onChanged();
-    },
-  });
-  const change = event => setForm(current => ({ ...current, [event.target.name]: event.target.value }));
-  const submit = event => {
-    event.preventDefault();
-    mutation.execute({ name: form.name.trim(), position: form.position, ...(form.gpValue ? { gpValue: Number(form.gpValue) } : {}) });
-  };
-  return <form className="admin-form player-create-form" onSubmit={submit}>
-    <label>NOMBRE<input name="name" required value={form.name} onChange={change}/></label>
-    <label>POSICIÓN<select name="position" value={form.position} onChange={change}>{positions.map(value => <option key={value}>{value}</option>)}</select></label>
-    <label>VALOR GP OPCIONAL<input name="gpValue" type="number" min="0" step="1" value={form.gpValue} onChange={change}/></label>
-    <button className="action-button" disabled={mutation.loading}>CREAR JUGADOR</button>
-    <FormFeedback mutation={mutation}/>
-  </form>;
-}
-
 export function PlayerActions({ player, teams, onChanged }) {
   const [teamId, setTeamId] = useState('');
   const buy = useApiMutation((id, signal) => endpoints.buyPlayer(player.id, id, signal), { onSuccess: onChanged });
@@ -196,6 +174,9 @@ const comparisonProfile = data => {
   ].filter(Boolean).join(' · ');
 };
 
+// Misma escala que la ficha eFootball: excelente, alta, media y baja.
+const statTone = value => Number(value) >= 90 ? '#0a8fd1' : Number(value) >= 80 ? '#1c7a3e' : Number(value) >= 70 ? '#e0b400' : '#e07a2e';
+
 // Buscador dentro del comparador: usa el mismo directorio (liga + eFootballDB).
 function ComparisonSearch({ excludedKeys, onAdd }) {
   const [search, setSearch] = useState('');
@@ -235,7 +216,7 @@ function ComparisonRow({ label, left, right, format = value => value, bar }) {
   const leftNumber = numericComparisonValue(left);
   const rightNumber = numericComparisonValue(right);
   const diff = leftNumber != null && rightNumber != null ? leftNumber - rightNumber : null;
-  const side = (position, value, state, delta) => <span className={`h2h-value h2h-${position} ${state}`.trim()}>{bar && !empty(value) && <i style={{ width: `${Math.min(100, Number(value))}%` }}/>}<b>{show(value)}</b>{delta > 0 && <em>+{format === gp ? gp(delta) : delta}</em>}</span>;
+  const side = (position, value, state, delta) => <span className={`h2h-value h2h-${position} ${state}`.trim()} style={bar && !empty(value) ? { '--h2h-bar': statTone(value) } : undefined}>{bar && !empty(value) && <i style={{ width: `${Math.min(100, Number(value))}%` }}/>}<b>{show(value)}</b>{delta > 0 && <em>+{format === gp ? gp(delta) : delta}</em>}</span>;
   return <div className="h2h-row">
     {side('left', left, comparisonState(left, right), diff)}
     <span className="h2h-label">{label}</span>
@@ -308,7 +289,6 @@ function PlayerComparator({ selections, onAdd, onRemove }) {
 export function PlayersPage({ teams, initialQuery = {} }) {
   const [filters, setFilters] = useState(() => filtersFromQuery(initialQuery));
   const [search, setSearch] = useState(initialQuery.q ?? '');
-  const [showCreate, setShowCreate] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
   const [activeTab, setActiveTab] = useState(initialQuery.tab === 'comparador' ? 'comparator' : 'directory');
   const [compareSelections, setCompareSelections] = useState(readComparison);
@@ -333,10 +313,8 @@ export function PlayersPage({ teams, initialQuery = {} }) {
   const addCompare = player => setCompareSelections(current => addToComparison(current, comparisonCandidate(player)));
   const removeCompare = selection => setCompareSelections(current => current.filter(item => item.key !== selection.key));
   return <main className="newspaper data-page"><section className="data-paper players-paper">
-    <PageHeader kicker="LIGA + eFOOTBALLDB" title="JUGADORES"><button className="page-action" onClick={() => setShowCreate(value => !value)}>{showCreate ? 'CERRAR ALTA' : '+ CREAR JUGADOR MANUAL'}</button></PageHeader>
-    <nav className="player-page-tabs" aria-label="Secciones de jugadores"><button type="button" className={activeTab === 'directory' ? 'active' : ''} onClick={() => setActiveTab('directory')}>DIRECTORIO</button><button type="button" className={activeTab === 'comparator' ? 'active' : ''} onClick={() => setActiveTab('comparator')}>COMPARADOR{compareSelections.length ? ` (${compareSelections.length})` : ''}</button></nav>
+    <PageHeader kicker="LIGA + eFOOTBALLDB" title="JUGADORES"><nav className="player-page-tabs" aria-label="Secciones de jugadores"><button type="button" className={activeTab === 'directory' ? 'active' : ''} onClick={() => setActiveTab('directory')}>DIRECTORIO</button><button type="button" className={activeTab === 'comparator' ? 'active' : ''} onClick={() => setActiveTab('comparator')}>COMPARADOR{compareSelections.length ? ` (${compareSelections.length})` : ''}</button></nav></PageHeader>
     {activeTab === 'directory' && <>
-    {showCreate && <CreatePlayerForm onChanged={() => { setShowCreate(false); directory.retry(); }}/>}
     <div className={`directory-layout ${panelOpen ? 'panel-open' : ''}`}>
       <FilterPanel filters={filters} teams={teams} set={set} togglePosition={togglePosition} total={directory.pagination?.total} onClose={() => setPanelOpen(false)}/>
       <div className="directory-results">
