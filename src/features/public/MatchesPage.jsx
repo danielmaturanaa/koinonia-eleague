@@ -110,18 +110,46 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
   const teamIndex = useMemo(() => new Map(teams.map(team => [team.id, team])), [teams]);
   const resolveTeam = team => ({ ...team, ...(teamIndex.get(team?.id ?? team?.team_id) ?? {}) });
   const apiRows = Array.isArray(matches.data) ? matches.data : [];
-  // Una sola lista: en vivo, luego pendientes (por fecha) y al final jugados (el más reciente primero).
-  const orderedMatches = useMemo(() => {
+  // Orden: en vivo, luego pendientes (por fecha) y al final jugados (el más reciente primero).
+  // En ligas a dos vueltas se separan primera vuelta, segunda vuelta y playoffs.
+  const sections = useMemo(() => {
     const byRound = (left, right) => (Number(matchRound(left)) || Number.MAX_SAFE_INTEGER) - (Number(matchRound(right)) || Number.MAX_SAFE_INTEGER);
     const finishedAt = match => String(match.finishedAt ?? match.finished_at ?? match.updatedAt ?? '');
     const rank = { live: 0, pending: 1, finished: 2, cancelled: 3 };
-    return [...apiRows].sort((left, right) => {
+    const ordered = [...apiRows].sort((left, right) => {
       const status = (rank[left.status] ?? 4) - (rank[right.status] ?? 4);
       if (status) return status;
       if (left.status === 'finished' || left.status === 'cancelled') return finishedAt(right).localeCompare(finishedAt(left));
       return byRound(left, right);
     });
-  }, [apiRows]);
+    const tournamentsById = new Map((tournaments.data ?? []).map(item => [item.id, item]));
+    const maxRound = new Map();
+    apiRows.forEach(match => {
+      const id = match.tournament?.id;
+      const round = Number(matchRound(match));
+      if (id && match.stage !== 'playoffs' && Number.isFinite(round)) maxRound.set(id, Math.max(maxRound.get(id) ?? 0, round));
+    });
+    // Fechas por vuelta en un todos contra todos: n-1 con equipos pares, n con impares (hay descanso).
+    const legRoundsFor = id => {
+      const tournament = tournamentsById.get(id);
+      if (!tournament || tournament.format !== 'league' || !tournament.teamCount) return null;
+      const perLeg = tournament.teamCount % 2 ? tournament.teamCount : tournament.teamCount - 1;
+      return (maxRound.get(id) ?? 0) > perLeg ? perLeg : null;
+    };
+    const sectionOf = match => {
+      if (match.stage === 'playoffs') return { key: 'playoffs', label: 'PLAYOFFS', order: 3 };
+      const perLeg = legRoundsFor(match.tournament?.id);
+      if (!perLeg) return { key: 'all', label: '', order: 0 };
+      return Number(matchRound(match)) > perLeg ? { key: 'second', label: 'SEGUNDA VUELTA', order: 2 } : { key: 'first', label: 'PRIMERA VUELTA', order: 1 };
+    };
+    const groups = new Map();
+    ordered.forEach(match => {
+      const section = sectionOf(match);
+      if (!groups.has(section.key)) groups.set(section.key, { ...section, rows: [] });
+      groups.get(section.key).rows.push(match);
+    });
+    return [...groups.values()].sort((left, right) => left.order - right.order);
+  }, [apiRows, tournaments.data]);
 
   useEffect(() => saveMultiSlots(multiSlots), [multiSlots]);
 
@@ -199,8 +227,8 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
     </> : <>
       <TeamChipBar teams={teams} value={filters.team} onChange={selectTeamFilter}/>
       <div className="filter-bar"><select name="tournament" value={filters.tournament} onChange={change} aria-label="Torneo"><option value="">TORNEOS ACTIVOS</option>{(tournaments.data ?? []).map(item => <option value={item.id} key={item.id}>{item.name}</option>)}</select><select name="status" value={filters.status} onChange={change} aria-label="Estado"><option value="">TODOS LOS ESTADOS</option>{Object.entries(labels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></div>
-      <DataState query={matches}/>{!matches.loading && !matches.error && (orderedMatches.length
-        ? <div className="fixture-grid">{orderedMatches.map(match => <FixtureCard key={match.id} match={match} showRound resolveTeam={resolveTeam} onSelect={selectMatch}/>)}</div>
+      <DataState query={matches}/>{!matches.loading && !matches.error && (sections.length
+        ? <div className="fixture-board">{sections.map(section => <section className="fixture-group" key={section.key}>{section.label && <h3>{section.label} <small>{section.rows.filter(match => match.status === 'finished').length} / {section.rows.length} JUGADOS</small></h3>}<div className="fixture-grid">{section.rows.map(match => <FixtureCard key={match.id} match={match} showRound resolveTeam={resolveTeam} onSelect={selectMatch}/>)}</div></section>)}</div>
         : <p className="empty-copy">NO HAY PARTIDOS CON ESTOS FILTROS.</p>)}
     </>}
   </section></main>;
