@@ -110,45 +110,18 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
   const teamIndex = useMemo(() => new Map(teams.map(team => [team.id, team])), [teams]);
   const resolveTeam = team => ({ ...team, ...(teamIndex.get(team?.id ?? team?.team_id) ?? {}) });
   const apiRows = Array.isArray(matches.data) ? matches.data : [];
-  // Línea de tiempo estilo OneFootball: jugados arriba, luego en vivo y pendientes.
-  // Al cargar, la vista se posiciona en el primer partido en vivo o por jugar.
-  const timeline = useMemo(() => {
-    const getDate = match => match.scheduledAt ?? match.scheduled_at ?? match.date ?? match.createdAt ?? match.created_at ?? '';
-    const sorted = [...apiRows].sort((left, right) => {
-      const leftRound = Number(matchRound(left));
-      const rightRound = Number(matchRound(right));
-      if (Number.isFinite(leftRound) && Number.isFinite(rightRound) && leftRound !== rightRound) return leftRound - rightRound;
-      if (Number.isFinite(leftRound) !== Number.isFinite(rightRound)) return Number.isFinite(leftRound) ? -1 : 1;
-      return String(getDate(left)).localeCompare(String(getDate(right)));
-    });
-    // Las fechas no se juegan en orden: los jugados se ordenan por cuándo terminaron
-    // (el más reciente queda justo encima de lo próximo) y los pendientes por fecha.
+  // Una sola lista: en vivo, luego pendientes (por fecha) y al final jugados (el más reciente primero).
+  const orderedMatches = useMemo(() => {
+    const byRound = (left, right) => (Number(matchRound(left)) || Number.MAX_SAFE_INTEGER) - (Number(matchRound(right)) || Number.MAX_SAFE_INTEGER);
     const finishedAt = match => String(match.finishedAt ?? match.finished_at ?? match.updatedAt ?? '');
-    const played = sorted.filter(match => match.status === 'finished' || match.status === 'cancelled')
-      .sort((left, right) => finishedAt(left).localeCompare(finishedAt(right)));
-    const live = sorted.filter(match => match.status === 'live');
-    const pending = sorted.filter(match => match.status === 'pending');
-    const pendingGroups = filters.team
-      ? [{ key: 'pending', label: 'PRÓXIMOS', rows: pending, showRound: true }]
-      : pending.reduce((groups, match) => {
-        const label = `PRÓXIMOS · ${matchRoundLabel(match)}`;
-        const last = groups.at(-1);
-        if (last && last.label === label) last.rows.push(match);
-        else groups.push({ key: label, label, rows: [match] });
-        return groups;
-      }, []);
-    return [
-      { key: 'played', label: 'JUGADOS', rows: played, showRound: true },
-      { key: 'live', label: 'EN VIVO', rows: live, live: true, showRound: true },
-      ...pendingGroups,
-    ].filter(group => group.rows.length);
-  }, [apiRows, filters.team]);
-  const anchorKey = (timeline.find(group => group.rows.some(match => match.status === 'live'))
-    ?? timeline.find(group => group.rows.some(match => match.status === 'pending')))?.key;
-  const anchorRef = useRef(null);
-  useEffect(() => {
-    if (!matches.loading && anchorRef.current) anchorRef.current.scrollIntoView({ block: 'start' });
-  }, [matches.loading, anchorKey]);
+    const rank = { live: 0, pending: 1, finished: 2, cancelled: 3 };
+    return [...apiRows].sort((left, right) => {
+      const status = (rank[left.status] ?? 4) - (rank[right.status] ?? 4);
+      if (status) return status;
+      if (left.status === 'finished' || left.status === 'cancelled') return finishedAt(right).localeCompare(finishedAt(left));
+      return byRound(left, right);
+    });
+  }, [apiRows]);
 
   useEffect(() => saveMultiSlots(multiSlots), [multiSlots]);
 
@@ -226,10 +199,9 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
     </> : <>
       <TeamChipBar teams={teams} value={filters.team} onChange={selectTeamFilter}/>
       <div className="filter-bar"><select name="tournament" value={filters.tournament} onChange={change} aria-label="Torneo"><option value="">TORNEOS ACTIVOS</option>{(tournaments.data ?? []).map(item => <option value={item.id} key={item.id}>{item.name}</option>)}</select><select name="status" value={filters.status} onChange={change} aria-label="Estado"><option value="">TODOS LOS ESTADOS</option>{Object.entries(labels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></div>
-      <DataState query={matches}/>{!matches.loading && !matches.error && <div className="fixture-board">
-        {timeline.map(group => <section className={`fixture-group ${group.live ? 'fixture-group-live' : ''}`} key={group.key} ref={group.key === anchorKey ? anchorRef : undefined}><h3>{group.live && <i aria-hidden="true"/>}{group.label} <small>{group.rows.length} PARTIDO{group.rows.length === 1 ? '' : 'S'}</small>{group.key === anchorKey && <em>LO PRÓXIMO</em>}</h3><div className="fixture-grid">{group.rows.map(match => <FixtureCard key={match.id} match={match} showRound={group.showRound} resolveTeam={resolveTeam} onSelect={selectMatch}/>)}</div></section>)}
-        {!timeline.length && <p className="empty-copy">NO HAY PARTIDOS CON ESTOS FILTROS.</p>}
-      </div>}
+      <DataState query={matches}/>{!matches.loading && !matches.error && (orderedMatches.length
+        ? <div className="fixture-grid">{orderedMatches.map(match => <FixtureCard key={match.id} match={match} showRound resolveTeam={resolveTeam} onSelect={selectMatch}/>)}</div>
+        : <p className="empty-copy">NO HAY PARTIDOS CON ESTOS FILTROS.</p>)}
     </>}
   </section></main>;
 }
