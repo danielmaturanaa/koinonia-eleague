@@ -99,11 +99,14 @@ export function MatchCenterPage({ matchId, teams = [], navigate }) {
   return <main className="newspaper data-page"><section className="data-paper match-center">
     <div className="match-center-bar"><button className="back-button" onClick={() => navigate('/partidos')}>← PARTIDOS</button>{match && <span>{match.tournament?.name ?? 'TORNEO'} · {matchRoundLabel(match)}</span>}<button className="match-center-fullscreen" onClick={() => navigate(`/marcador/${encodeURIComponent(matchId)}`)}>⛶ PANTALLA COMPLETA</button></div>
     {!match && <DataState query={detail}/>}
-    <div className="match-center-score"><Scoreboard matchId={matchId} mode="manage" density="full" teams={teams} refreshKey={revision} onChanged={bump} showActa={false}/></div>
+    {/* Marcador + incidencias a la izquierda y cara a cara a la derecha, con el mismo alto:
+        el historial se desplaza dentro de su columna en vez de estirar la página. */}
+    <div className="match-center-top">
+      <div className="match-center-main"><div className="match-center-score"><Scoreboard matchId={matchId} mode="manage" density="full" teams={teams} refreshKey={revision} onChanged={bump} showActa={false}/></div>{match && <Incidents match={match}/>}</div>
+      {match && <div className="match-center-h2h"><HeadToHead match={match} resolveTeam={resolveTeam}/></div>}
+    </div>
     {match && <>
-      <Incidents match={match}/>
       <section className="match-card-panel"><h2>ALINEACIONES <small>TITULARES ACTUALES DE CADA CLUB</small></h2><div className="match-lineups"><Lineup team={resolveTeam(match.homeTeam)}/><Lineup team={resolveTeam(match.awayTeam)}/></div></section>
-      <div className="match-center-h2h"><HeadToHead match={match} resolveTeam={resolveTeam}/></div>
       <details className="match-corrections"><summary>SANCIONES Y CORRECCIONES</summary><div><SanctionPanel key={`${match.id}-${revision}`} match={match} onChanged={bump}/></div></details>
     </>}
   </section></main>;

@@ -2790,3 +2790,16 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .h2h-value.h2h-right.is-winner i { opacity: .7; background: var(--h2h-right); }
 .h2h-value.h2h-left.is-winner:has(i) b, .h2h-value.h2h-right.is-winner:has(i) b { color: #fff; text-shadow: 0 1px 2px #0006; }
 .h2h-value.h2h-left.is-winner, .h2h-value.h2h-right.is-winner { background: transparent; }
+
+/* Centro de partido: marcador a la izquierda y cara a cara a la derecha, mismo alto. */
+.match-center-top { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(300px, 1fr); gap: 14px; align-items: stretch; }
+.match-center-main { display: grid; align-content: start; gap: 12px; min-width: 0; }
+.match-center-main .match-center-score .scoreboard { max-width: none; }
+.match-center-main > .match-card-panel { width: 100%; margin: 0; }
+.match-center-top > .match-center-h2h { position: relative; display: block; min-width: 0; }
+.match-center-top > .match-center-h2h > .match-card-panel { position: absolute; inset: 0; display: flex; width: 100%; flex-direction: column; overflow: hidden; }
+.match-center-top > .match-center-h2h .h2h-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
+@media (max-width: 1100px) {
+  .match-center-top { grid-template-columns: 1fr; }
+  .match-center-top > .match-center-h2h > .match-card-panel { position: static; max-height: 480px; }
+}
