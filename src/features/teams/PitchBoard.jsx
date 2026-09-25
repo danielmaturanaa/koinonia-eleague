@@ -63,7 +63,7 @@ const openPlayer = player => { window.location.hash = `/jugadores/${encodeURICom
 // Carta al estilo eFootballDB: media y posición a la izquierda, foto a la derecha
 // sobre los colores del club y el nombre en una franja inferior.
 function PitchCard({ player, selected, swappable, editing, style, onPointerDown, onPointerMove, onPointerUp, onClick, bench }) {
-  return <button type="button" className={`pitch-card ${bench ? 'bench' : ''} ${selected ? 'selected' : ''} ${swappable ? 'swappable' : ''} ${editing ? 'editing' : ''}`} style={style} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onClick={onClick} aria-pressed={editing ? selected : undefined} aria-label={`${player.name}${editing ? (selected ? ', seleccionado' : '') : ', ver ficha'}`}>
+  return <button type="button" className={`pitch-card ${bench ? 'bench' : ''} ${selected ? 'selected' : ''} ${swappable ? 'swappable' : ''} ${editing ? 'editing' : ''}`} style={style} draggable={false} onDragStart={event => event.preventDefault()} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onClick={onClick} aria-pressed={editing ? selected : undefined} aria-label={`${player.name}${editing ? (selected ? ', seleccionado' : '') : ', ver ficha'}`}>
     <span className="pitch-card-stats"><b>{player.overall ?? '—'}</b><small>{player.position ?? '—'}</small></span>
     <span className="pitch-card-photo"><PlayerFace src={player.faceUrl} name={player.name} className="pitch-card-face"/></span>
     <span className="pitch-card-name"><i>{player.jerseyNumber ?? '–'}</i>{shortPlayerName(player)}</span>

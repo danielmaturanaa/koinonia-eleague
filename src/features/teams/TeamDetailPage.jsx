@@ -457,10 +457,10 @@ const formatMoveDate = value => {
   return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
 };
 
-function ClubScorers({ teamId, limit = 5 }) {
+function ClubScorers({ teamId, limit = 5, tournaments = [] }) {
   const scorers = useApiQuery(signal => endpoints.teamScorers(teamId, {}, signal), [teamId]);
   const rows = (Array.isArray(scorers.data) ? scorers.data : []).slice(0, limit);
-  return <section className="club-card"><h3>GOLEADORES <small>TORNEOS ACTIVOS</small></h3>
+  return <section className="club-card"><h3>GOLEADORES <small>{tournaments.length === 1 ? tournaments[0].name : 'TORNEOS ACTIVOS'}</small></h3>
     {scorers.loading ? <p className="empty-copy">CARGANDO…</p> : scorers.error ? <p className="empty-copy">NO DISPONIBLE.</p> : rows.length ? <ol className="club-scorers">{rows.map((row, index) => <li key={row.playerId}><b>{index + 1}</b><PlayerFace src={row.faceUrl} name={row.name}/><EntityLink to="player" id={row.playerId}>{row.name}</EntityLink><strong>{row.goals} <small>GOL{row.goals === 1 ? '' : 'ES'}</small></strong></li>)}</ol> : <p className="empty-copy">AÚN SIN GOLES EN TORNEOS ACTIVOS.</p>}
   </section>;
 }
@@ -480,7 +480,7 @@ function SquadTab({ team, squad, starters, substitutes, onChanged }) {
   </div>;
 }
 
-export function TeamDetailPage({ team, teams = [], squad, standings, matches = [], history = [], historyError, loading, tab = 'resumen', onTab, onBack, onChanged }) {
+export function TeamDetailPage({ team, teams = [], tournaments = [], squad, standings, matches = [], history = [], historyError, loading, tab = 'resumen', onTab, onBack, onChanged }) {
   const [historyEditor, setHistoryEditor] = useState('');
   const [personEditor, setPersonEditor] = useState('');
   const [personRevision, setPersonRevision] = useState(0);
@@ -529,10 +529,12 @@ export function TeamDetailPage({ team, teams = [], squad, standings, matches = [
                 onEditCoach={() => setPersonEditor('coach')}
               />
               <ClubStandingSnippet standings={standings} teamId={team.id} teams={teams} onMore={() => onTab?.('tabla')}/>
-              <ClubScorers teamId={team.id} limit={3}/>
               <ClubRecentResults matches={matches} resolveTeam={resolveTeam} teamId={team.id} onMore={() => onTab?.('partidos')}/>
             </div>
-            <PitchBoard team={team} starters={starters} substitutes={substitutes} onChanged={onChanged}/>
+            <div className="club-overview-right-column">
+              <PitchBoard team={team} starters={starters} substitutes={substitutes} onChanged={onChanged}/>
+              <ClubScorers teamId={team.id} limit={3} tournaments={tournaments}/>
+            </div>
           </div>
         </div>}
 

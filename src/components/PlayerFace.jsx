@@ -15,5 +15,5 @@ export function PlayerFace({ src, name, className = '' }) {
   const [failed, setFailed] = useState(false);
   useEffect(() => setFailed(false), [src]);
   if (!src || failed) return <span className={`player-photo player-photo-fallback ${className}`} aria-hidden="true">{initials(name)}</span>;
-  return <img className={`player-photo ${className}`} src={src} alt="" loading="lazy" onError={() => setFailed(true)}/>;
+  return <img className={`player-photo ${className}`} src={src} alt="" loading="lazy" draggable={false} onError={() => setFailed(true)}/>;
 }

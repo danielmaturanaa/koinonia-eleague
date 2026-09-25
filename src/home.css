@@ -2381,3 +2381,5 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .pitch-card.bench:hover { transform: translateY(-2px); }
 .pitch-board-field.in-perspective { aspect-ratio: 4 / 3; }
 .pitch-board-field.in-perspective .pitch-card { --card-w: clamp(64px, 13.5%, 98px); }
+.club-overview-right-column { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 14px; min-width: 0; }
+.pitch-card, .pitch-card img { -webkit-user-drag: none; user-select: none; -webkit-user-select: none; }

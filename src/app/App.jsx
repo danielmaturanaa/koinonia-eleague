@@ -62,7 +62,7 @@ export function App() {
   } else if (route.name === 'teams') {
     page = <TeamsPage teams={league.teams} loading={state.loading} onChoose={id => navigate(`/equipos/${encodeURIComponent(id)}`)} onChanged={refresh} navigate={navigate}/>;
   } else if (route.name === 'team') {
-    page = <TeamDetailPage team={teamDetail} teams={league.teams} squad={squad} standings={league.standings} matches={teamMatches} history={teamHistory} historyError={teamHistoryError} loading={state.loadingTeam} tab={route.query.tab} onTab={tab => navigate(`/equipos/${encodeURIComponent(route.teamId)}${tab === 'resumen' ? '' : `?tab=${tab}`}`)} onBack={() => navigate('/equipos')} onChanged={refresh}/>;
+    page = <TeamDetailPage team={teamDetail} teams={league.teams} tournaments={activeTournaments} squad={squad} standings={league.standings} matches={teamMatches} history={teamHistory} historyError={teamHistoryError} loading={state.loadingTeam} tab={route.query.tab} onTab={tab => navigate(`/equipos/${encodeURIComponent(route.teamId)}${tab === 'resumen' ? '' : `?tab=${tab}`}`)} onBack={() => navigate('/equipos')} onChanged={refresh}/>;
   } else if (route.name === 'player') {
     const fromMarket = route.query.from === 'mercado';
     const fromPlayers = route.query.from === 'jugadores';
