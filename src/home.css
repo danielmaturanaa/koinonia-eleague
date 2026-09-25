@@ -2363,3 +2363,21 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .pitch-card-photo::after { height: 22%; background: linear-gradient(transparent, #0006); }
 .pitch-card::before { height: 4px; background: linear-gradient(90deg, var(--card-primary) 0 40%, var(--card-tertiary) 40% 60%, var(--card-secondary) 60% 100%); }
 .pitch-card::before { content: none; }
+
+/* Cancha dibujada en SVG (franjas y líneas proyectadas). En escritorio va en perspectiva:
+   más baja, y las cartas se achican levemente hacia el fondo sin deformarse. */
+.pitch-board-field { background: #0d4d26; }
+.pitch-board-field > .pitch-line { display: none; }
+.pitch-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.pitch-stripe-light { fill: #218546; }
+.pitch-stripe-dark { fill: #1b7239; }
+.pitch-svg-lines > * { fill: none; stroke: #ffffffa6; stroke-width: 2px; vector-effect: non-scaling-stroke; }
+.pitch-board-field.in-perspective { aspect-ratio: 16 / 11; border: 0; background: linear-gradient(180deg, #0a3d1f, #0d4d26); }
+.pitch-board-field.in-perspective .pitch-watermark { width: 26%; transform: translate(-50%, -50%) scaleY(.8); }
+.pitch-card { transform: translate(-50%, -50%) scale(var(--depth-scale, 1)); }
+.pitch-card:hover { transform: translate(-50%, -53%) scale(var(--depth-scale, 1)); }
+.pitch-card.selected { transform: translate(-50%, -54%) scale(calc(var(--depth-scale, 1) * 1.07)); }
+.pitch-card.bench, .pitch-card.bench.selected { transform: none; }
+.pitch-card.bench:hover { transform: translateY(-2px); }
+.pitch-board-field.in-perspective { aspect-ratio: 4 / 3; }
+.pitch-board-field.in-perspective .pitch-card { --card-w: clamp(64px, 13.5%, 98px); }
