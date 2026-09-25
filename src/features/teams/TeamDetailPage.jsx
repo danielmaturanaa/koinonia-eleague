@@ -123,6 +123,18 @@ function ClubRecentResults({ matches, resolveTeam, teamId, onMore }) {
   </section>;
 }
 
+function StadiumEditor({ team, onChanged }) {
+  const [stadium, setStadium] = useState(team.stadium ?? '');
+  useEffect(() => setStadium(team.stadium ?? ''), [team.id, team.stadium]);
+  const mutation = useApiMutation((body, signal) => endpoints.updateTeam(team.id, body, signal), { onSuccess: onChanged });
+  const submit = event => { event.preventDefault(); mutation.execute({ stadium }); };
+  return <form className="club-stadium-editor" onSubmit={submit}>
+    <label><span>🏟️ ESTADIO</span><input value={stadium} maxLength={100} placeholder="Ej. Madness Arena" onChange={event => setStadium(event.target.value)}/></label>
+    <button className="action-button" disabled={mutation.loading}>{mutation.loading ? 'GUARDANDO…' : 'GUARDAR ESTADIO'}</button>
+    <FormFeedback mutation={mutation}/>
+  </form>;
+}
+
 function PersonEditorModal({ title, onClose, children }) {
   useEffect(() => {
     const closeWithEscape = event => { if (event.key === 'Escape') onClose(); };
@@ -534,6 +546,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
             </div>
             <div className="club-overview-right-column">
               <PitchBoard team={team} starters={starters} substitutes={substitutes} onChanged={onChanged}/>
+              <StadiumEditor team={team} onChanged={onChanged}/>
             </div>
           </div>
         </div>}

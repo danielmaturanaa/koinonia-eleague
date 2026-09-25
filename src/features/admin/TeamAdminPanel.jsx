@@ -38,7 +38,6 @@ function ColorPickerField({ label, value, onChange }) {
 export function ProfileForm({ team, onChanged, onSaved }) {
   const buildForm = source => ({
     name: source.name ?? '',
-    stadium: source.stadium ?? '',
     imageUrl: source.imageUrl ?? '',
     championImageUrl: source.championImageUrl ?? '',
     colors: {
@@ -54,7 +53,6 @@ export function ProfileForm({ team, onChanged, onSaved }) {
   const setColor = (key, color) => setForm(current => ({ ...current, colors: { ...current.colors, [key]: color } }));
   return <form className="admin-form" onSubmit={submit}>
     <label>NOMBRE<input required value={form.name} onChange={event => setForm(current => ({ ...current, name: event.target.value }))}/></label>
-    <label>ESTADIO<input value={form.stadium} maxLength={100} placeholder="Ej. Estadio Koinonia" onChange={event => setForm(current => ({ ...current, stadium: event.target.value }))}/></label>
     <MediaImageField label="SUBIR NUEVO EMBLEMA" entityType="team" entityId={team.id} onUploaded={imageUrl => setForm(current => ({ ...current, imageUrl }))}/>
     <MediaImageField label="SUBIR IMAGEN DE CAMPEÓN" entityType="team" entityId={team.id} onUploaded={championImageUrl => setForm(current => ({ ...current, championImageUrl }))}/>
     {form.championImageUrl && <div className="color-pick-preview"><img src={form.championImageUrl} alt={`Imagen de campeón de ${team.name}`}/><small>IMAGEN PARA LA NOTICIA CUANDO ESTE EQUIPO ASEGURE EL CAMPEONATO</small><button type="button" className="action-button" onClick={() => setForm(current => ({ ...current, championImageUrl: '' }))}>USAR EMBLEMA DEL EQUIPO</button></div>}
