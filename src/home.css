@@ -2658,3 +2658,5 @@ a.news-read-more { display: inline-block; text-decoration: none; }
   .h2h-value em { font-size: 10px; padding: 1px 3px; }
 }
 .h2h-heads > .h2h-search, .h2h-heads > .h2h-search:last-child { display: grid; grid-template-columns: 1fr; border-style: dashed; background: #fff9e8; }
+.fixture-group { scroll-margin-top: calc(var(--site-header-height) + 12px); }
+.fixture-group h3 em { margin-left: auto; padding: 3px 7px; color: #062764; background: var(--yellow); font: 600 12px/1 'Oswald', sans-serif; font-style: normal; letter-spacing: .5px; }

@@ -3,7 +3,7 @@ import { endpoints } from '../../api/endpoints.js';
 import { Scoreboard } from '../../components/Scoreboard.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
 import { matchRoundLabel } from '../../utils/matchPresentation.js';
-import { DataState, PageHeader, Pagination } from './DataStates.jsx';
+import { DataState, PageHeader } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
 
 const labels = { pending: 'PENDIENTE', live: 'EN VIVO', finished: 'FINALIZADO', cancelled: 'CANCELADO' };
@@ -12,7 +12,7 @@ const matchRound = match => match.roundNumber ?? match.round_number ?? match.mat
 
 // Tarjeta compacta estilo marcador: un equipo por línea, marcador a la derecha y
 // estado en una columna aparte, para ver muchos partidos sin hacer scroll.
-function FixtureCard({ match, resolveTeam, onSelect }) {
+function FixtureCard({ match, resolveTeam, onSelect, showRound }) {
   const finished = match.status === 'finished';
   const live = match.status === 'live';
   const hasScore = finished || live;
@@ -23,7 +23,7 @@ function FixtureCard({ match, resolveTeam, onSelect }) {
   return <button type="button" className={`fixture-card fixture-${match.status}`} onClick={() => onSelect(match.id)}>
     <span className="fixture-teams">{team('home', home)}{team('away', away)}</span>
     <span className="fixture-state">{live ? <em><i aria-hidden="true"/>EN VIVO</em> : finished ? 'FINAL' : match.status === 'cancelled' ? 'CANCELADO' : 'POR JUGAR'}</span>
-    <small className="fixture-footer">{match.tournament?.name ?? 'TORNEO'}</small>
+    <small className="fixture-footer">{showRound ? `${matchRoundLabel(match)} · ` : ''}{match.tournament?.name ?? 'TORNEO'}</small>
   </button>;
 }
 
@@ -96,62 +96,59 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
   const [multiFullscreen, setMultiFullscreen] = useState(false);
   const multiGridRef = useRef(null);
   const tournaments = useApiQuery(signal => endpoints.tournaments({ status: 'active', page: 1, pageSize: 100 }, signal));
-  const allTeamsView = filters.team === '';
-  const datePaginationView = allTeamsView || Boolean(filters.team);
-  const matches = useApiQuery(signal => endpoints.matches({
-    ...filters,
-    activeOnly: 1,
-    // Las vistas por fecha cargan el conjunto filtrado para poder agruparlo
-    // localmente, sin que el límite de registros de la API parta una jornada.
-    page: datePaginationView ? 1 : filters.page,
-    pageSize: datePaginationView ? 100 : 12,
-  }, signal), Object.values(filters).concat(datePaginationView));
+  // Se cargan todos los partidos del filtro (la API entrega hasta 100 por página)
+  // para armar una sola línea de tiempo, sin paginación.
+  const matches = useApiQuery(async signal => {
+    const query = { ...filters, activeOnly: 1, pageSize: 100 };
+    const first = await endpoints.matches({ ...query, page: 1 }, signal);
+    const totalPages = Math.min(first?.pagination?.totalPages ?? 1, 10);
+    const rest = await Promise.all(Array.from({ length: totalPages - 1 }, (_, index) => endpoints.matches({ ...query, page: index + 2 }, signal)));
+    return { data: [first, ...rest].flatMap(page => Array.isArray(page?.data) ? page.data : []) };
+  }, [filters.tournament, filters.team, filters.status]);
   const multiMatchesQuery = useApiQuery(signal => showMulti ? endpoints.matches({ activeOnly: 1, pageSize: 100, page: 1 }, signal) : Promise.resolve({ data: [] }), [showMulti]);
   const multiMatches = useMemo(() => (Array.isArray(multiMatchesQuery.data) ? multiMatchesQuery.data : []).filter(match => match.status === 'pending' || match.status === 'live'), [multiMatchesQuery.data]);
   const teamIndex = useMemo(() => new Map(teams.map(team => [team.id, team])), [teams]);
   const resolveTeam = team => ({ ...team, ...(teamIndex.get(team?.id ?? team?.team_id) ?? {}) });
   const apiRows = Array.isArray(matches.data) ? matches.data : [];
-  const roundGroups = useMemo(() => {
-    if (!datePaginationView) return [];
-    const getRound = matchRound;
+  // Línea de tiempo estilo OneFootball: jugados arriba, luego en vivo y pendientes.
+  // Al cargar, la vista se posiciona en el primer partido en vivo o por jugar.
+  const timeline = useMemo(() => {
     const getDate = match => match.scheduledAt ?? match.scheduled_at ?? match.date ?? match.createdAt ?? match.created_at ?? '';
-    const sorted = apiRows.filter(match => match.status !== 'live').sort((left, right) => {
-      const leftRound = Number(getRound(left));
-      const rightRound = Number(getRound(right));
+    const sorted = [...apiRows].sort((left, right) => {
+      const leftRound = Number(matchRound(left));
+      const rightRound = Number(matchRound(right));
       if (Number.isFinite(leftRound) && Number.isFinite(rightRound) && leftRound !== rightRound) return leftRound - rightRound;
       if (Number.isFinite(leftRound) !== Number.isFinite(rightRound)) return Number.isFinite(leftRound) ? -1 : 1;
       return String(getDate(left)).localeCompare(String(getDate(right)));
     });
-    const groups = new Map();
-    sorted.forEach(match => {
-      const round = getRound(match);
-      const date = getDate(match);
-      const key = round != null && round !== '' ? `round:${round}` : `date:${String(date).slice(0, 10) || 'sin-fecha'}`;
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key).push(match);
-    });
-    return [...groups.values()];
-  }, [datePaginationView, apiRows]);
-  const datesPerPage = 4;
-  const roundPages = useMemo(() => {
-    if (!datePaginationView) return [];
-    const pages = [];
-    for (let index = 0; index < roundGroups.length; index += datesPerPage) {
-      pages.push(roundGroups.slice(index, index + datesPerPage).flat());
-    }
-    return pages;
-  }, [datePaginationView, datesPerPage, roundGroups]);
-  const rows = datePaginationView ? (roundPages[filters.page - 1] ?? []) : apiRows.filter(match => match.status !== 'live');
-  // Los partidos en vivo van siempre arriba, fuera de la paginación por fecha.
-  const liveRows = apiRows.filter(match => match.status === 'live');
-  const rowGroups = rows.reduce((groups, match) => {
-    const label = matchRoundLabel(match);
-    const last = groups.at(-1);
-    if (last && last.label === label) last.rows.push(match);
-    else groups.push({ label, rows: [match] });
-    return groups;
-  }, []);
-  const roundPagination = datePaginationView && roundPages.length > 1 ? { totalPages: roundPages.length } : null;
+    // Las fechas no se juegan en orden: los jugados se ordenan por cuándo terminaron
+    // (el más reciente queda justo encima de lo próximo) y los pendientes por fecha.
+    const finishedAt = match => String(match.finishedAt ?? match.finished_at ?? match.updatedAt ?? '');
+    const played = sorted.filter(match => match.status === 'finished' || match.status === 'cancelled')
+      .sort((left, right) => finishedAt(left).localeCompare(finishedAt(right)));
+    const live = sorted.filter(match => match.status === 'live');
+    const pending = sorted.filter(match => match.status === 'pending');
+    const pendingGroups = filters.team
+      ? [{ key: 'pending', label: 'PRÓXIMOS', rows: pending, showRound: true }]
+      : pending.reduce((groups, match) => {
+        const label = `PRÓXIMOS · ${matchRoundLabel(match)}`;
+        const last = groups.at(-1);
+        if (last && last.label === label) last.rows.push(match);
+        else groups.push({ key: label, label, rows: [match] });
+        return groups;
+      }, []);
+    return [
+      { key: 'played', label: 'JUGADOS', rows: played, showRound: true },
+      { key: 'live', label: 'EN VIVO', rows: live, live: true, showRound: true },
+      ...pendingGroups,
+    ].filter(group => group.rows.length);
+  }, [apiRows, filters.team]);
+  const anchorKey = (timeline.find(group => group.rows.some(match => match.status === 'live'))
+    ?? timeline.find(group => group.rows.some(match => match.status === 'pending')))?.key;
+  const anchorRef = useRef(null);
+  useEffect(() => {
+    if (!matches.loading && anchorRef.current) anchorRef.current.scrollIntoView({ block: 'start' });
+  }, [matches.loading, anchorKey]);
 
   useEffect(() => saveMultiSlots(multiSlots), [multiSlots]);
 
@@ -230,11 +227,9 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
       <TeamChipBar teams={teams} value={filters.team} onChange={selectTeamFilter}/>
       <div className="filter-bar"><select name="tournament" value={filters.tournament} onChange={change} aria-label="Torneo"><option value="">TORNEOS ACTIVOS</option>{(tournaments.data ?? []).map(item => <option value={item.id} key={item.id}>{item.name}</option>)}</select><select name="status" value={filters.status} onChange={change} aria-label="Estado"><option value="">TODOS LOS ESTADOS</option>{Object.entries(labels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></div>
       <DataState query={matches}/>{!matches.loading && !matches.error && <div className="fixture-board">
-        {liveRows.length > 0 && <section className="fixture-group fixture-group-live"><h3><i aria-hidden="true"/>EN VIVO <small>{liveRows.length}</small></h3><div className="fixture-grid">{liveRows.map(match => <FixtureCard key={match.id} match={match} resolveTeam={resolveTeam} onSelect={selectMatch}/>)}</div></section>}
-        {rowGroups.map(group => <section className="fixture-group" key={group.label}><h3>{group.label} <small>{group.rows.length} PARTIDO{group.rows.length === 1 ? '' : 'S'}</small></h3><div className="fixture-grid">{group.rows.map(match => <FixtureCard key={match.id} match={match} resolveTeam={resolveTeam} onSelect={selectMatch}/>)}</div></section>)}
-        {!rows.length && !liveRows.length && <p className="empty-copy">NO HAY PARTIDOS CON ESTOS FILTROS.</p>}
+        {timeline.map(group => <section className={`fixture-group ${group.live ? 'fixture-group-live' : ''}`} key={group.key} ref={group.key === anchorKey ? anchorRef : undefined}><h3>{group.live && <i aria-hidden="true"/>}{group.label} <small>{group.rows.length} PARTIDO{group.rows.length === 1 ? '' : 'S'}</small>{group.key === anchorKey && <em>LO PRÓXIMO</em>}</h3><div className="fixture-grid">{group.rows.map(match => <FixtureCard key={match.id} match={match} showRound={group.showRound} resolveTeam={resolveTeam} onSelect={selectMatch}/>)}</div></section>)}
+        {!timeline.length && <p className="empty-copy">NO HAY PARTIDOS CON ESTOS FILTROS.</p>}
       </div>}
-      {<Pagination pagination={datePaginationView ? roundPagination : matches.pagination} page={filters.page} onPage={page => setFilters(current => ({ ...current, page }))}/>}
     </>}
   </section></main>;
 }
