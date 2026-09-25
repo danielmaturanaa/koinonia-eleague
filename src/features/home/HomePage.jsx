@@ -1,15 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useAutomaticNews } from '../news/useAutomaticNews.js';
 import { formatDate } from '../public/DataStates.jsx';
 import { NewsArtwork } from '../../components/NewsArtwork.jsx';
-import { newsPath, rememberNews } from '../news/newsCache.js';
+import { rememberNews } from '../news/newsCache.js';
+import { NewsModal, useNewsItem } from '../news/NewsModal.jsx';
 
 const STORY_LIMIT = 8;
 const newsDate = item => item?.publishedAt ?? item?.date;
 
 // Historias estilo Instagram: avance automático con barras de progreso, pausa al
 // mantener presionado o al pasar el mouse, y toques a los lados para navegar.
-function NewsStories({ items, teams }) {
+function NewsStories({ items, teams, onOpen }) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const count = items.length;
@@ -36,10 +37,10 @@ function NewsStories({ items, teams }) {
       </div>
       <div className="news-story-copy">
         <p><b>{current.label}</b>{newsDate(current) && <time>{formatDate(newsDate(current))}</time>}</p>
-        <h2><a href={`#${newsPath(current)}`}>{current.headline}</a></h2>
+        <h2><button type="button" onClick={() => onOpen(current)}>{current.headline}</button></h2>
         {current.subtitle && <h3>{current.subtitle}</h3>}
         {current.body && <p className="news-story-excerpt">{current.body}</p>}
-        <a className="news-story-read" href={`#${newsPath(current)}`}>LEER NOTICIA COMPLETA →</a>
+        <button type="button" className="news-story-read" onClick={() => onOpen(current)}>LEER NOTICIA COMPLETA →</button>
         <small className="news-story-count">{index + 1} / {count}</small>
       </div>
     </div>
@@ -47,13 +48,20 @@ function NewsStories({ items, teams }) {
   </section>;
 }
 
-export function HomePage({ teams = [], navigate }) {
+// openNewsId llega desde un enlace directo (#/noticias/:id): se abre el modal sobre el inicio.
+export function HomePage({ teams = [], navigate, openNewsId, onCloseNews }) {
   const { news, loading } = useAutomaticNews();
+  const [selected, setSelected] = useState(null);
+  const linked = useNewsItem(openNewsId);
   useEffect(() => { rememberNews(news); }, [news]);
   const stories = news.slice(0, STORY_LIMIT);
+  const closeLinked = useCallback(() => onCloseNews?.(), [onCloseNews]);
+  const closeSelected = useCallback(() => setSelected(null), []);
   return <main className="newspaper home-news">
     <header className="home-news-masthead"><h1><span>KOINONIA <em>e-LEAGUE</em> NEWS</span></h1><p>FÚTBOL VIRTUAL. PASIÓN REAL.</p>{newsDate(news[0]) && <small>ÚLTIMA HORA · {formatDate(newsDate(news[0]))}</small>}</header>
-    {stories.length ? <NewsStories items={stories} teams={teams}/> : <div className="arcade-state">{loading ? 'CARGANDO NOTICIAS…' : 'AÚN NO HAY NOTICIAS PUBLICADAS.'}</div>}
+    {stories.length ? <NewsStories items={stories} teams={teams} onOpen={setSelected}/> : <div className="arcade-state">{loading ? 'CARGANDO NOTICIAS…' : 'AÚN NO HAY NOTICIAS PUBLICADAS.'}</div>}
     {news.length > 0 && <button type="button" className="home-news-all" onClick={() => navigate('/noticias')}>VER TODAS LAS NOTICIAS →</button>}
+    {selected && <NewsModal item={selected} teams={teams} onClose={closeSelected}/>}
+    {openNewsId && !selected && <NewsModal item={linked.item} loading={linked.loading} teams={teams} onClose={closeLinked}/>}
   </main>;
 }

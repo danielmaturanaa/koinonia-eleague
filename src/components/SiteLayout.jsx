@@ -16,7 +16,7 @@ export function SiteLayout({ route, navigate, children, sidebar, error, dismissE
         <MusicPlayer tracks={playlist}/>
       </div>
     </header>
-    <div className={`site-body ${sidebar ? 'with-sidebar' : ''} ${route.path === '/' ? 'home-body' : ''}`}>
+    <div className={`site-body ${sidebar ? 'with-sidebar' : ''} ${route.name === 'home' || route.name === 'newsArticle' ? 'home-body' : ''}`}>
       <div className="site-content">{children}</div>
       {sidebar}
     </div>

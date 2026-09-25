@@ -11,7 +11,6 @@ import { ActivityPage } from '../features/public/ActivityPage.jsx';
 import { MarketPage } from '../features/public/MarketPage.jsx';
 import { MatchesPage } from '../features/public/MatchesPage.jsx';
 import { NewsPage } from '../features/public/NewsPage.jsx';
-import { NewsArticlePage } from '../features/news/NewsArticlePage.jsx';
 import { PlayersPage, playersReturnQuery } from '../features/public/PlayersPage.jsx';
 import { PlayerProfilePage } from '../features/public/PlayerProfilePage.jsx';
 import { EfootballCardPage } from '../features/public/EfootballCard.jsx';
@@ -91,7 +90,7 @@ export function App() {
   } else if (route.path === '/sanciones') {
     page = <ActivityPage sanctionsOnly/>;
   } else if (route.name === 'newsArticle') {
-    page = <NewsArticlePage newsId={route.newsId} teams={league.teams} navigate={navigate}/>;
+    page = <HomePage teams={league.teams} navigate={navigate} openNewsId={route.newsId} onCloseNews={() => navigate('/')}/>;
   } else if (route.path === '/noticias') {
     page = <NewsPage teams={league.teams}/>;
   } else if (route.path === '/reglas') {
@@ -100,6 +99,6 @@ export function App() {
     page = <SectionPage path={route.path}/>;
   }
 
-  const sidebar = route.name === 'home' ? <MatchSidebar tournament={tournament} standings={league.standings} resolveTeam={resolveTeam} loading={state.loading} navigate={navigate}/> : null;
+  const sidebar = route.name === 'home' || route.name === 'newsArticle' ? <MatchSidebar tournament={tournament} standings={league.standings} resolveTeam={resolveTeam} loading={state.loading} navigate={navigate}/> : null;
   return <SiteLayout route={route} navigate={navigate} sidebar={sidebar} error={state.error} dismissError={dismissError} playlist={playlist} teams={league.teams}>{page}</SiteLayout>;
 }
