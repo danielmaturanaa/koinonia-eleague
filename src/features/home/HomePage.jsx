@@ -5,7 +5,7 @@ import { NewsArtwork } from '../../components/NewsArtwork.jsx';
 import { rememberNews } from '../news/newsCache.js';
 import { NewsModal, useNewsItem } from '../news/NewsModal.jsx';
 
-const STORY_LIMIT = 8;
+const STORY_LIMIT = 10;
 const newsDate = item => item?.publishedAt ?? item?.date;
 
 // Historias estilo Instagram: avance automático con barras de progreso, pausa al
