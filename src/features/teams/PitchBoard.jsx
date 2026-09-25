@@ -40,7 +40,7 @@ export function PitchBoard({ team, starters, substitutes = [], onChanged, readOn
   const busy = swap.loading || move.loading;
   const selected = starters.find(player => player.id === selectedId);
   const colors = team?.colors ?? {};
-  const cardColors = { '--card-primary': colors.primary ?? '#062764', '--card-secondary': colors.secondary ?? '#a90020' };
+  const cardColors = { '--card-primary': colors.primary ?? '#062764', '--card-secondary': colors.secondary ?? '#a90020', '--card-tertiary': colors.tertiary ?? colors.secondary ?? '#ffd42a' };
 
   const pointFor = event => {
     const rect = pitchRef.current.getBoundingClientRect();
