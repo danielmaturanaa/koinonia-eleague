@@ -2069,7 +2069,7 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .fixture-live .fixture-state, .fixture-pending .fixture-state, .fixture-finished .fixture-state, .fixture-cancelled .fixture-state { color: #4d4839; background: transparent; border-left-color: #d4c8ae; }
 .fixture-footer { display: flex; grid-column: 1 / -1; gap: 8px; padding: 5px 10px; overflow: hidden; border-top: 1px solid #d4c8ae; color: #625d4e; background: #efe6cf; font: 600 12px/1 'Oswald', sans-serif; letter-spacing: .3px; }
 .fixture-footer > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.fixture-footer > .match-venue { margin-left: auto; padding-left: 10px; border-left: 1px solid currentColor; }
+.fixture-footer > .match-venue { margin-left: auto; }
 .match-venue { color: inherit; font: 700 15px/1 'Oswald', sans-serif; letter-spacing: .35px; text-transform: none; }
 .match-venue.compact { display: block; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fixture-finished .match-venue { color: #fff; }
