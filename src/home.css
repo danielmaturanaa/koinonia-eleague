@@ -2063,10 +2063,10 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .fixture-team b { overflow: hidden; font: 700 15px/1.1 'Roboto Condensed', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
 .fixture-team strong { min-width: 18px; font: 400 20px/1 'Anton', sans-serif; text-align: right; }
 .fixture-team.lost b, .fixture-team.lost strong { color: #7a7462; font-weight: 500; }
-.fixture-footer { display: flex; grid-column: 1 / -1; gap: 8px; padding: 5px 10px; overflow: hidden; border-top: 1px solid #d4c8ae; color: #625d4e; background: #efe6cf; font: 600 12px/1 'Oswald', sans-serif; letter-spacing: .3px; }
+.fixture-footer { display: flex; grid-column: 1 / -1; gap: 8px; padding: 5px 10px; overflow: hidden; border-top: 1px solid #d4c8ae; color: #11120e !important; background: #efe6cf; font: 600 12px/1 'Oswald', sans-serif; letter-spacing: .3px; }
 .fixture-footer > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fixture-footer > .match-venue { margin-left: auto; }
-.match-venue { color: inherit; font: 700 15px/1 'Oswald', sans-serif; letter-spacing: .35px; text-transform: none; }
+.match-venue { color: #11120e !important; font: 700 15px/1 'Oswald', sans-serif; letter-spacing: .35px; text-transform: none; }
 .match-venue.compact { display: block; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 @media (max-width: 560px) {
   .fixture-grid { grid-template-columns: 1fr; }
