@@ -8,6 +8,25 @@ import { useApiQuery } from './useApiQuery.js';
 
 const labels = { pending: 'PENDIENTE', live: 'EN VIVO', finished: 'FINALIZADO', cancelled: 'CANCELADO' };
 
+const matchRound = match => match.roundNumber ?? match.round_number ?? match.matchday ?? match.match_day;
+
+// Tarjeta compacta estilo marcador: un equipo por línea, marcador a la derecha y
+// estado en una columna aparte, para ver muchos partidos sin hacer scroll.
+function FixtureCard({ match, resolveTeam, onSelect }) {
+  const finished = match.status === 'finished';
+  const live = match.status === 'live';
+  const hasScore = finished || live;
+  const home = Number(match.homeScore ?? 0);
+  const away = Number(match.awayScore ?? 0);
+  const winner = finished ? (home > away ? 'home' : away > home ? 'away' : match.winnerTeamId ? (match.winnerTeamId === match.homeTeam?.id ? 'home' : 'away') : '') : '';
+  const team = (side, value) => <span className={`fixture-team ${winner && winner !== side ? 'lost' : ''}`}><TeamMark team={resolveTeam(match[`${side}Team`])}/><b>{match[`${side}Team`]?.name ?? '—'}</b>{hasScore && <strong>{value}</strong>}</span>;
+  return <button type="button" className={`fixture-card fixture-${match.status}`} onClick={() => onSelect(match.id)}>
+    <span className="fixture-teams">{team('home', home)}{team('away', away)}</span>
+    <span className="fixture-state">{live ? <em><i aria-hidden="true"/>EN VIVO</em> : finished ? 'FINAL' : match.status === 'cancelled' ? 'CANCELADO' : 'POR JUGAR'}</span>
+    <small className="fixture-footer">{match.tournament?.name ?? 'TORNEO'}</small>
+  </button>;
+}
+
 const MULTI_SLOT_COUNT = 4;
 const MULTI_STORAGE_KEY = 'koinonia-multipartido';
 const MULTI_EMPTY_SLOT = { teamId: null, matchId: null };
@@ -94,9 +113,9 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
   const apiRows = Array.isArray(matches.data) ? matches.data : [];
   const roundGroups = useMemo(() => {
     if (!datePaginationView) return [];
-    const getRound = match => match.roundNumber ?? match.round_number ?? match.matchday ?? match.match_day;
+    const getRound = matchRound;
     const getDate = match => match.scheduledAt ?? match.scheduled_at ?? match.date ?? match.createdAt ?? match.created_at ?? '';
-    const sorted = [...apiRows].sort((left, right) => {
+    const sorted = apiRows.filter(match => match.status !== 'live').sort((left, right) => {
       const leftRound = Number(getRound(left));
       const rightRound = Number(getRound(right));
       if (Number.isFinite(leftRound) && Number.isFinite(rightRound) && leftRound !== rightRound) return leftRound - rightRound;
@@ -113,7 +132,7 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
     });
     return [...groups.values()];
   }, [datePaginationView, apiRows]);
-  const datesPerPage = allTeamsView ? 1 : 4;
+  const datesPerPage = 4;
   const roundPages = useMemo(() => {
     if (!datePaginationView) return [];
     const pages = [];
@@ -122,7 +141,16 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
     }
     return pages;
   }, [datePaginationView, datesPerPage, roundGroups]);
-  const rows = datePaginationView ? (roundPages[filters.page - 1] ?? []) : apiRows;
+  const rows = datePaginationView ? (roundPages[filters.page - 1] ?? []) : apiRows.filter(match => match.status !== 'live');
+  // Los partidos en vivo van siempre arriba, fuera de la paginación por fecha.
+  const liveRows = apiRows.filter(match => match.status === 'live');
+  const rowGroups = rows.reduce((groups, match) => {
+    const label = matchRoundLabel(match);
+    const last = groups.at(-1);
+    if (last && last.label === label) last.rows.push(match);
+    else groups.push({ label, rows: [match] });
+    return groups;
+  }, []);
   const roundPagination = datePaginationView && roundPages.length > 1 ? { totalPages: roundPages.length } : null;
 
   useEffect(() => saveMultiSlots(multiSlots), [multiSlots]);
@@ -201,7 +229,11 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
     </> : <>
       <TeamChipBar teams={teams} value={filters.team} onChange={selectTeamFilter}/>
       <div className="filter-bar"><select name="tournament" value={filters.tournament} onChange={change} aria-label="Torneo"><option value="">TORNEOS ACTIVOS</option>{(tournaments.data ?? []).map(item => <option value={item.id} key={item.id}>{item.name}</option>)}</select><select name="status" value={filters.status} onChange={change} aria-label="Estado"><option value="">TODOS LOS ESTADOS</option>{Object.entries(labels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select></div>
-      <DataState query={matches}/>{!matches.loading && !matches.error && <div className="data-list matches-full-list">{rows.map(match => <button className="match-card" key={match.id} onClick={() => selectMatch(match.id)}><small>{match.tournament?.name ?? 'TORNEO'} · {matchRoundLabel(match)}</small><span><TeamMark team={resolveTeam(match.homeTeam)}/><b>{match.homeTeam?.name}</b><strong>{match.homeScore ?? '–'} : {match.awayScore ?? '–'}</strong><b>{match.awayTeam?.name}</b><TeamMark team={resolveTeam(match.awayTeam)}/></span><i className={`status status-${match.status}`}>{labels[match.status] ?? match.status}</i></button>)}</div>}
+      <DataState query={matches}/>{!matches.loading && !matches.error && <div className="fixture-board">
+        {liveRows.length > 0 && <section className="fixture-group fixture-group-live"><h3><i aria-hidden="true"/>EN VIVO <small>{liveRows.length}</small></h3><div className="fixture-grid">{liveRows.map(match => <FixtureCard key={match.id} match={match} resolveTeam={resolveTeam} onSelect={selectMatch}/>)}</div></section>}
+        {rowGroups.map(group => <section className="fixture-group" key={group.label}><h3>{group.label} <small>{group.rows.length} PARTIDO{group.rows.length === 1 ? '' : 'S'}</small></h3><div className="fixture-grid">{group.rows.map(match => <FixtureCard key={match.id} match={match} resolveTeam={resolveTeam} onSelect={selectMatch}/>)}</div></section>)}
+        {!rows.length && !liveRows.length && <p className="empty-copy">NO HAY PARTIDOS CON ESTOS FILTROS.</p>}
+      </div>}
       {<Pagination pagination={datePaginationView ? roundPagination : matches.pagination} page={filters.page} onPage={page => setFilters(current => ({ ...current, page }))}/>}
     </>}
   </section></main>;

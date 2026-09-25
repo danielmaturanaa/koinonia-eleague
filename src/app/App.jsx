@@ -51,8 +51,6 @@ export function App() {
   const resolveTeam = team => ({ ...team, ...(indexedTeams.get(team?.id ?? team?.team_id) ?? {}) });
   const activeTournaments = [...list(league.home?.activeTournaments)].sort((a, b) => tournamentPriority(a) - tournamentPriority(b) || (a.name ?? '').localeCompare(b.name ?? '', 'es'));
   const tournament = activeTournaments.find(item => item.format === 'league') ?? activeTournaments[0];
-  const upcoming = league.upcomingMatches.length ? league.upcomingMatches : list(league.home?.upcomingMatches);
-  const completed = list(league.home?.recentMatches).slice(0, 7);
 
   if (route.name === 'scoreboard') {
     return <MatchScoreboardPage matchId={route.matchId} onBack={() => navigate(`/partidos/${encodeURIComponent(route.matchId)}`)}/>;
@@ -60,7 +58,7 @@ export function App() {
 
   let page;
   if (route.name === 'home') {
-    page = <HomePage tournament={tournament} lead={upcoming[0]} teams={league.teams}/>;
+    page = <HomePage teams={league.teams} navigate={navigate}/>;
   } else if (route.name === 'teams') {
     page = <TeamsPage teams={league.teams} loading={state.loading} onChoose={id => navigate(`/equipos/${encodeURIComponent(id)}`)} onChanged={refresh} navigate={navigate}/>;
   } else if (route.name === 'team') {
@@ -99,6 +97,6 @@ export function App() {
     page = <SectionPage path={route.path}/>;
   }
 
-  const sidebar = route.name === 'home' ? <MatchSidebar completed={completed} upcoming={upcoming} tournaments={activeTournaments} resolveTeam={resolveTeam} loading={state.loading} navigate={navigate}/> : null;
+  const sidebar = route.name === 'home' ? <MatchSidebar tournament={tournament} standings={league.standings} resolveTeam={resolveTeam} loading={state.loading} navigate={navigate}/> : null;
   return <SiteLayout route={route} navigate={navigate} sidebar={sidebar} error={state.error} dismissError={dismissError} playlist={playlist} teams={league.teams}>{page}</SiteLayout>;
 }

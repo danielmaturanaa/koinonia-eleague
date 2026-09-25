@@ -6,6 +6,7 @@ import { useApiMutation } from '../admin/useApiMutation.js';
 import { DataState, OverallBadge, PageHeader, Pagination, gp } from './DataStates.jsx';
 import { PLAYING_STYLES, skillLabel, STAT_GROUPS } from './EfootballCard.jsx';
 import { useApiQuery } from './useApiQuery.js';
+import { addToComparison, comparisonCandidate, readComparison, writeComparison } from '../../utils/playerComparison.js';
 
 const positions = ['PT','LD','DEC','LI','MC','MO','ED','EI','DC'];
 
@@ -135,10 +136,9 @@ function activeTags(filters, teams) {
   return tags;
 }
 
-const comparisonStatLabels = Object.fromEntries(STAT_GROUPS.flatMap(([, rows]) => rows));
-const comparisonValue = value => value == null || value === '' ? '—' : value;
 const comparisonSelectionKey = selection => selection ? `${selection.playerId ?? 'efootball'}:${selection.pesId ?? selection.key}:${selection.variation ?? 0}` : 'empty';
 const numericComparisonValue = value => {
+  if (value == null || value === '') return null;
   const number = Number(value);
   return Number.isFinite(number) ? number : null;
 };
@@ -150,14 +150,10 @@ const comparisonState = (value, otherValue) => {
   return own > other ? 'is-winner' : 'is-loser';
 };
 
-function ComparisonValue({ value, otherValue, children }) {
-  const state = comparisonState(value, otherValue);
-  return <dd className={`comparison-value ${state}`.trim()}>{children}{state && <small className="comparison-indicator" aria-label={state === 'is-winner' ? 'Mejor valor' : state === 'is-tie' ? 'Empate' : 'Valor inferior'}>{state === 'is-winner' ? '▲' : state === 'is-tie' ? '=' : '▼'}</small>}</dd>;
-}
-
 const comparisonWins = (stats, opponentStats) => Object.keys(stats).reduce((total, stat) => total + (comparisonState(stats[stat], opponentStats[stat]) === 'is-winner' ? 1 : 0), 0);
 
-function ComparePlayerCard({ selection, onRemove, opponentData, onData }) {
+// Carga ficha de liga + carta eFootball de un seleccionado y la reporta al comparador.
+function ComparisonLoader({ selection, onData }) {
   const key = comparisonSelectionKey(selection);
   const profile = useApiQuery(signal => selection.playerId
     ? endpoints.player(selection.playerId, signal)
@@ -166,53 +162,127 @@ function ComparePlayerCard({ selection, onRemove, opponentData, onData }) {
   const linkedCard = useApiQuery(signal => cardId
     ? endpoints.efootballCard(cardId, profile.data?.efootballVariation ?? 0, signal)
     : Promise.resolve(null), [cardId, profile.data?.efootballVariation]);
-  const player = profile.data;
+  const player = selection.playerId ? profile.data : null;
   const card = selection.playerId ? linkedCard.data : profile.data;
-  const stats = card?.stats ?? {};
-  const knownStats = new Set(STAT_GROUPS.flatMap(([, rows]) => rows.map(([stat]) => stat)));
-  const statGroups = [...STAT_GROUPS.map(([title, rows]) => [title, rows.filter(([stat]) => stats[stat] != null)]).filter(([, rows]) => rows.length), ...(Object.keys(stats).filter(stat => !knownStats.has(stat)).length ? [['OTRAS', Object.keys(stats).filter(stat => !knownStats.has(stat)).map(stat => [stat, comparisonStatLabels[stat] ?? stat])]] : [])];
-  const name = player?.name ?? card?.name ?? selection.name;
-  const faceUrl = player?.faceUrl ?? card?.faceUrl ?? selection.faceUrl;
   const loading = profile.loading || (Boolean(cardId) && linkedCard.loading);
-  const opponentPlayer = opponentData?.player;
-  const opponentCard = opponentData?.card;
-  const opponentStats = opponentCard?.stats ?? {};
-
-  useEffect(() => {
-    if (!loading && card && onData) onData(key, { player, card });
-  }, [card, key, loading, onData, player]);
-
-  return <article className="player-comparison-card">
-    <header className="player-comparison-card-header"><PlayerFace src={faceUrl} name={name} className="player-comparison-face"/><div><small>FICHA DEL JUGADOR</small><h3>{name}</h3>{opponentCard && <strong className="player-comparison-score">{comparisonWins(stats, opponentStats)} ATRIBUTOS SUPERIORES</strong>}</div><button type="button" className="player-comparison-remove" onClick={() => onRemove(selection)}>×</button></header>
-    {loading ? <div className="arcade-state compact">CARGANDO DATOS...</div> : profile.error ? <p className="empty-copy">NO SE PUDO CARGAR ESTE JUGADOR.</p> : <>
-      <dl className="player-comparison-facts">
-        <div><dt>EQUIPO</dt><dd>{player?.team?.name ?? card?.clubName ?? 'AGENTE LIBRE'}</dd></div>
-        <div><dt>POSICIÓN</dt><dd>{comparisonValue(player?.position ?? card?.position)}</dd></div>
-        <div><dt>MEDIA eFOOTBALL</dt><ComparisonValue value={card?.overall ?? player?.external?.overall} otherValue={opponentCard?.overall ?? opponentPlayer?.external?.overall}><OverallBadge value={card?.overall ?? player?.external?.overall}/></ComparisonValue></div>
-        <div><dt>NACIONALIDAD</dt><dd>{comparisonValue(player?.nationality ?? card?.nationality)}</dd></div>
-        <div><dt>EDAD</dt><dd>{player?.age ?? card?.age ? `${player?.age ?? card.age} AÑOS` : '—'}</dd></div>
-        <div><dt>VALOR LIGA</dt><ComparisonValue value={player?.gpValue} otherValue={opponentPlayer?.gpValue}>{gp(player?.gpValue)}</ComparisonValue></div>
-        <div><dt>GOLES HISTÓRICOS</dt><ComparisonValue value={player?.goals ?? 0} otherValue={opponentPlayer?.goals ?? 0}>{player?.goals ?? 0}</ComparisonValue></div>
-        <div><dt>VALOR eFOOTBALL</dt><ComparisonValue value={card?.gpPrice ?? player?.external?.gpPrice} otherValue={opponentCard?.gpPrice ?? opponentPlayer?.external?.gpPrice}>{gp(card?.gpPrice ?? player?.external?.gpPrice)}</ComparisonValue></div>
-        <div><dt>ALTURA</dt><dd>{card?.height ? `${card.height} CM` : '—'}</dd></div>
-        <div><dt>ESTILO DE JUEGO</dt><dd>{PLAYING_STYLES[card?.playingStyle] ?? '—'}</dd></div>
-        <div><dt>PIE HÁBIL</dt><dd>{card?.strongFoot === 1 ? 'IZQUIERDO' : card?.strongFoot === 0 ? 'DERECHO' : '—'}</dd></div>
-        <div><dt>USO PIE MALO</dt><dd>{card?.profile?.weakFootUsage != null ? `${card.profile.weakFootUsage}/4` : '—'}</dd></div>
-        <div><dt>PRECISIÓN PIE MALO</dt><dd>{card?.profile?.weakFootAccuracy != null ? `${card.profile.weakFootAccuracy}/4` : '—'}</dd></div>
-        <div><dt>FORMA</dt><dd>{card?.profile?.form != null ? `${card.profile.form}/8` : '—'}</dd></div>
-        <div><dt>RESIST. LESIONES</dt><dd>{card?.profile?.injuryResistance != null ? `${card.profile.injuryResistance}/3` : '—'}</dd></div>
-      </dl>
-      {player?.activeGoals?.length ? <section className="player-comparison-section"><h4>GOLES EN TORNEOS ACTIVOS</h4>{player.activeGoals.map(tournament => <p key={tournament.name}><span>{tournament.name}</span><b>{tournament.goals}</b></p>)}</section> : null}
-      {statGroups.length ? <section className="player-comparison-section"><h4>ESTADÍSTICAS eFOOTBALL</h4><div className="player-comparison-stat-groups">{statGroups.map(([title, rows]) => <div key={title}><h5>{title}</h5>{rows.map(([stat]) => { const state = comparisonState(stats[stat], opponentStats[stat]); return <p key={stat}><span>{comparisonStatLabels[stat] ?? stat.replaceAll('_', ' ')}</span><b className={`comparison-value ${state}`.trim()}>{stats[stat]}{state && <small className="comparison-indicator" aria-label={state === 'is-winner' ? 'Mejor valor' : state === 'is-tie' ? 'Empate' : 'Valor inferior'}>{state === 'is-winner' ? '▲' : state === 'is-tie' ? '=' : '▼'}</small>}</b></p>; })}</div>)}</div></section> : <p className="empty-copy">SIN ESTADÍSTICAS eFOOTBALL DISPONIBLES.</p>}
-      {card?.skills?.length ? <section className="player-comparison-section"><h4>HABILIDADES</h4><p className="player-comparison-skills">{card.skills.map(skillLabel).join(' · ')}</p></section> : null}
-    </>}
-  </article>;
+  const error = Boolean(profile.error);
+  useEffect(() => { onData(key, { player, card, loading, error }); }, [card, error, key, loading, onData, player]);
+  return null;
 }
 
-function PlayerComparator({ selections, onRemove }) {
+// Filas comparables: [etiqueta, lector, formato]. Los datos descriptivos (club,
+// nacionalidad, edad, estilo) van en la cabecera de cada jugador.
+const COMPARISON_FACTS = [
+  ['MEDIA eFOOTBALL', ({ player, card }) => card?.overall ?? player?.external?.overall],
+  ['VALOR LIGA', ({ player }) => player?.gpValue, gp],
+  ['VALOR eFOOTBALL', ({ player, card }) => card?.gpPrice ?? player?.external?.gpPrice, gp],
+  ['GOLES HISTÓRICOS', ({ player }) => player ? player.goals ?? 0 : null],
+  ['ALTURA', ({ card }) => card?.height, value => `${value} CM`],
+  ['USO PIE MALO', ({ card }) => card?.profile?.weakFootUsage, value => `${value}/4`],
+  ['PRECISIÓN PIE MALO', ({ card }) => card?.profile?.weakFootAccuracy, value => `${value}/4`],
+  ['FORMA', ({ card }) => card?.profile?.form, value => `${value}/8`],
+  ['RESIST. LESIONES', ({ card }) => card?.profile?.injuryResistance, value => `${value}/3`],
+];
+
+const comparisonProfile = data => {
+  const player = data?.player;
+  const card = data?.card;
+  const age = player?.age ?? card?.age;
+  return [
+    player?.nationality ?? card?.nationality,
+    age ? `${age} AÑOS` : null,
+    card?.strongFoot === 1 ? 'ZURDO' : card?.strongFoot === 0 ? 'DIESTRO' : null,
+    PLAYING_STYLES[card?.playingStyle],
+  ].filter(Boolean).join(' · ');
+};
+
+// Buscador dentro del comparador: usa el mismo directorio (liga + eFootballDB).
+function ComparisonSearch({ excludedKeys, onAdd }) {
+  const [search, setSearch] = useState('');
+  const [term, setTerm] = useState('');
+  useEffect(() => {
+    const timer = window.setTimeout(() => setTerm(search.trim()), 250);
+    return () => window.clearTimeout(timer);
+  }, [search]);
+  const results = useApiQuery(signal => term.length >= 2
+    ? endpoints.playerDirectory({ q: term, page: 1, pageSize: 6 }, signal)
+    : Promise.resolve({ data: [] }), [term]);
+  const rows = (Array.isArray(results.data) ? results.data : []).filter(player => !excludedKeys.has(player.playerId ?? `${player.pesId}-${player.variation ?? 0}`));
+  return <div className="h2h-player h2h-search">
+    <input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="Buscar jugador para comparar…" aria-label="Buscar jugador para comparar"/>
+    {search.trim().length >= 2 && <div className="h2h-search-results">{results.loading || term !== search.trim() ? <p>BUSCANDO…</p> : rows.length ? rows.map(player => <button type="button" key={player.playerId ?? `${player.pesId}-${player.variation}`} onClick={() => { onAdd(player); setSearch(''); }}><PlayerFace src={player.faceUrl} name={player.name} className="squad-simulator-face"/><span><b>{player.name}</b><small>{player.position ?? '—'} · OVR {player.overall ?? '—'} · {player.team?.name ?? player.clubName ?? 'AGENTE LIBRE'}</small></span><i aria-hidden="true">+</i></button>) : <p>SIN RESULTADOS.</p>}</div>}
+  </div>;
+}
+
+function ComparisonHead({ selection, data, wins, onRemove, excludedKeys, onAdd }) {
+  if (!selection) return <ComparisonSearch excludedKeys={excludedKeys} onAdd={onAdd}/>;
+  const name = data?.player?.name ?? data?.card?.name ?? selection.name;
+  const faceUrl = data?.player?.faceUrl ?? data?.card?.faceUrl ?? selection.faceUrl;
+  const team = data?.player?.team?.name ?? data?.card?.clubName ?? (data ? 'AGENTE LIBRE' : null);
+  const overall = data?.card?.overall ?? data?.player?.external?.overall;
+  return <div className="h2h-player">
+    <PlayerFace src={faceUrl} name={name} className="player-comparison-face"/>
+    <div><h3>{name}</h3><small>{[data?.player?.position ?? data?.card?.position, team].filter(Boolean).join(' · ') || 'CARGANDO…'}</small>{data && <p>{comparisonProfile(data)}</p>}{wins != null && <strong className="player-comparison-score">{wins} ATRIBUTOS SUPERIORES</strong>}</div>
+    {overall != null && <b className="h2h-overall" title="Media eFootball">{overall}</b>}
+    <button type="button" className="player-comparison-remove" onClick={() => onRemove(selection)} aria-label={`Quitar a ${name} del comparador`}>×</button>
+  </div>;
+}
+
+// Cada fila muestra ambos valores, quién gana y por cuánto (la diferencia va en el lado ganador).
+function ComparisonRow({ label, left, right, format = value => value, bar }) {
+  const empty = value => value == null || value === '';
+  const show = value => empty(value) ? '—' : format(value);
+  const leftNumber = numericComparisonValue(left);
+  const rightNumber = numericComparisonValue(right);
+  const diff = leftNumber != null && rightNumber != null ? leftNumber - rightNumber : null;
+  const side = (position, value, state, delta) => <span className={`h2h-value h2h-${position} ${state}`.trim()}>{bar && !empty(value) && <i style={{ width: `${Math.min(100, Number(value))}%` }}/>}<b>{show(value)}</b>{delta > 0 && <em>+{format === gp ? gp(delta) : delta}</em>}</span>;
+  return <div className="h2h-row">
+    {side('left', left, comparisonState(left, right), diff)}
+    <span className="h2h-label">{label}</span>
+    {side('right', right, comparisonState(right, left), diff == null ? null : -diff)}
+  </div>;
+}
+
+function PlayerComparator({ selections, onAdd, onRemove }) {
   const [comparisonData, setComparisonData] = useState({});
-  const onData = useCallback((key, data) => setComparisonData(current => current[key]?.card === data.card && current[key]?.player === data.player ? current : { ...current, [key]: data }), []);
-  return <section className="player-comparator"><header><div><h2>COMPARADOR DE JUGADORES</h2><p>Selecciona hasta dos jugadores para revisar sus datos, medias y estadísticas.</p></div><div className="player-comparison-legend"><span className="legend-winner">▲ MEJOR VALOR</span><span className="legend-tie">= EMPATE</span></div><small>{selections.length} / 2 SELECCIONADOS</small></header>{selections.length ? <div className="player-comparison-grid">{selections.map(selection => { const key = comparisonSelectionKey(selection); const opponent = selections.find(item => comparisonSelectionKey(item) !== key); return <ComparePlayerCard key={key} selection={selection} onRemove={onRemove} onData={onData} opponentData={opponent ? comparisonData[comparisonSelectionKey(opponent)] : null}/>; })}{selections.length === 1 && <div className="player-comparison-placeholder">ELIGE OTRO JUGADOR PARA COMPARARLO</div>}</div> : <p className="player-comparator-empty">Pulsa <b>COMPARAR</b> en dos fichas del directorio para comenzar.</p>}</section>;
+  const onData = useCallback((key, data) => setComparisonData(current => {
+    const previous = current[key];
+    return previous && previous.card === data.card && previous.player === data.player && previous.loading === data.loading && previous.error === data.error ? current : { ...current, [key]: data };
+  }), []);
+  const [leftSelection, rightSelection] = selections;
+  const left = leftSelection ? comparisonData[comparisonSelectionKey(leftSelection)] : null;
+  const right = rightSelection ? comparisonData[comparisonSelectionKey(rightSelection)] : null;
+  const leftStats = left?.card?.stats ?? {};
+  const rightStats = right?.card?.stats ?? {};
+  const both = Boolean(left?.card && right?.card);
+  const loading = [left, right].some(item => item?.loading) || selections.some(selection => !comparisonData[comparisonSelectionKey(selection)]);
+  const excludedKeys = new Set(selections.map(selection => selection.key));
+  const statGroups = STAT_GROUPS
+    .map(([title, rows]) => [title, rows.filter(([stat]) => leftStats[stat] != null || rightStats[stat] != null)])
+    .filter(([, rows]) => rows.length);
+  const groupAverage = (stats, rows) => {
+    const values = rows.map(([stat]) => numericComparisonValue(stats[stat])).filter(value => value != null);
+    return values.length ? Math.round(values.reduce((total, value) => total + value, 0) / values.length) : null;
+  };
+  const skills = data => (data?.card?.skills ?? []).map(skillLabel);
+  return <section className="player-comparator">
+    <header><div><h2>COMPARADOR DE JUGADORES</h2><p>Busca dos jugadores o agrégalos desde su ficha. En verde, el mejor valor y la diferencia.</p></div><small>{selections.length} / 2 SELECCIONADOS</small></header>
+    {selections.map(selection => <ComparisonLoader key={comparisonSelectionKey(selection)} selection={selection} onData={onData}/>)}
+    <div className="h2h">
+      <div className="h2h-heads">
+        <ComparisonHead selection={leftSelection} data={left} wins={both ? comparisonWins(leftStats, rightStats) : null} onRemove={onRemove} excludedKeys={excludedKeys} onAdd={onAdd}/>
+        <span className="h2h-versus">VS</span>
+        <ComparisonHead selection={rightSelection} data={right} wins={both ? comparisonWins(rightStats, leftStats) : null} onRemove={onRemove} excludedKeys={excludedKeys} onAdd={onAdd}/>
+      </div>
+      {selections.length > 0 && (loading ? <div className="arcade-state compact">CARGANDO DATOS...</div> : <>
+        {[left, right].some(item => item?.error) && <p className="empty-copy">NO SE PUDO CARGAR UNO DE LOS JUGADORES.</p>}
+        {both && statGroups.length > 0 && <section className="h2h-section"><h4>RESUMEN POR ÁREA</h4>{statGroups.map(([title, rows]) => <ComparisonRow key={title} label={title} left={groupAverage(leftStats, rows)} right={groupAverage(rightStats, rows)} bar/>)}</section>}
+        <section className="h2h-section"><h4>DATOS GENERALES</h4>{COMPARISON_FACTS.map(([label, read, format]) => <ComparisonRow key={label} label={label} left={left ? read(left) : null} right={right ? read(right) : null} format={format}/>)}</section>
+        {statGroups.map(([title, rows]) => <section className="h2h-section" key={title}><h4>{title}</h4>{rows.map(([stat, label]) => <ComparisonRow key={stat} label={label} left={leftStats[stat]} right={rightStats[stat]} bar/>)}</section>)}
+        {(skills(left).length > 0 || skills(right).length > 0) && <section className="h2h-section h2h-skills"><h4>HABILIDADES</h4><div><p>{skills(left).join(' · ') || '—'}</p><p>{skills(right).join(' · ') || '—'}</p></div></section>}
+      </>)}
+    </div>
+  </section>;
 }
 
 // Directorio único: plantilla de la liga y cartas de eFootballDB sin inscribir.
@@ -221,8 +291,9 @@ export function PlayersPage({ teams, initialQuery = {} }) {
   const [search, setSearch] = useState(initialQuery.q ?? '');
   const [showCreate, setShowCreate] = useState(false);
   const [panelOpen, setPanelOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('directory');
-  const [compareSelections, setCompareSelections] = useState([]);
+  const [activeTab, setActiveTab] = useState(initialQuery.tab === 'comparador' ? 'comparator' : 'directory');
+  const [compareSelections, setCompareSelections] = useState(readComparison);
+  useEffect(() => writeComparison(compareSelections), [compareSelections]);
   useEffect(() => {
     const timer = window.setTimeout(() => setFilters(current => current.q === search.trim() ? current : { ...current, q: search.trim(), page: 1 }), 300);
     return () => window.clearTimeout(timer);
@@ -240,13 +311,7 @@ export function PlayersPage({ teams, initialQuery = {} }) {
     if (player.variation) params.set('v', player.variation);
     return `#/efootball/${player.pesId}?${params.toString()}`;
   };
-  const comparisonCandidate = player => ({ key: player.playerId ?? `${player.pesId}-${player.variation ?? 0}`, playerId: player.playerId, pesId: player.pesId, variation: player.variation ?? 0, name: player.name, faceUrl: player.faceUrl });
-  const toggleCompare = player => {
-    const candidate = comparisonCandidate(player);
-    setCompareSelections(current => current.some(item => item.key === candidate.key)
-      ? current.filter(item => item.key !== candidate.key)
-      : current.length >= 2 ? [current[1], candidate] : [...current, candidate]);
-  };
+  const addCompare = player => setCompareSelections(current => addToComparison(current, comparisonCandidate(player)));
   const removeCompare = selection => setCompareSelections(current => current.filter(item => item.key !== selection.key));
   return <main className="newspaper data-page"><section className="data-paper players-paper">
     <PageHeader kicker="LIGA + eFOOTBALLDB" title="JUGADORES"><button className="page-action" onClick={() => setShowCreate(value => !value)}>{showCreate ? 'CERRAR ALTA' : '+ CREAR JUGADOR MANUAL'}</button></PageHeader>
@@ -266,18 +331,17 @@ export function PlayersPage({ teams, initialQuery = {} }) {
           {tags.length > 0 && <button type="button" className="club-link-button" onClick={() => { setSearch(''); setFilters(EMPTY_FILTERS); }}>LIMPIAR TODO</button>}
         </div>
         <DataState query={directory}/>
-        {!directory.loading && !directory.error && (rows.length ? <div className="player-card-grid">{rows.map(player => { const playerKey = player.playerId ?? `${player.pesId}-${player.variation}`; const selected = compareSelections.some(item => item.key === playerKey); return <article className={`player-card status-${player.status} ${selected ? 'is-comparison-selected' : ''}`} key={playerKey}>
+        {!directory.loading && !directory.error && (rows.length ? <div className="player-card-grid">{rows.map(player => { const playerKey = player.playerId ?? `${player.pesId}-${player.variation}`; return <article className={`player-card status-${player.status}`} key={playerKey}>
           <a className="player-card-link" href={open(player)}>
             <PlayerFace src={player.faceUrl} name={player.name} className="player-card-face"/>
             <span className="player-card-body"><b>{player.name}</b><small>{[player.nationality, player.age ? `${player.age} AÑOS` : null].filter(Boolean).join(' · ') || '—'}</small><span className="player-card-details"><em>{player.position ?? '—'}</em><OverallBadge value={player.overall}/><strong>{gp(player.price)}</strong></span></span>
             {player.status === 'owned' && player.team?.imageUrl ? <span className="player-card-team-mark" title={player.team.name}><img src={player.team.imageUrl} alt={`Emblema de ${player.team.name}`}/></span> : <span className="player-card-team-mark player-card-status-mark"><DirectoryStatus player={player}/></span>}
           </a>
-          <button type="button" className="player-card-compare" onClick={() => toggleCompare(player)}>{selected ? 'QUITAR DEL COMPARADOR' : 'COMPARAR'}</button>
         </article>; })}</div> : <p className="empty-copy">NINGÚN JUGADOR COINCIDE CON LOS FILTROS.</p>)}
         <Pagination pagination={directory.pagination} page={filters.page} onPage={page => { setFilters(current => ({ ...current, page })); window.scrollTo({ top: 0 }); }}/>
       </div>
     </div>
     </>}
-    {activeTab === 'comparator' && <PlayerComparator selections={compareSelections} onRemove={removeCompare}/>}
+    {activeTab === 'comparator' && <PlayerComparator selections={compareSelections} onAdd={addCompare} onRemove={removeCompare}/>}
   </section></main>;
 }

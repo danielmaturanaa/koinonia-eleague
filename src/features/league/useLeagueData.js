@@ -1,25 +1,25 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { getData } from '../../api/client.js';
 
 const list = value => Array.isArray(value) ? value : [];
 
 export function useLeagueData(teamId) {
   const [revision, setRevision] = useState(0);
-  const [league, setLeague] = useState({ home: null, teams: [], standings: [], standingsByTournament: {}, upcomingMatches: [] });
+  const [league, setLeague] = useState({ home: null, teams: [], standings: [], standingsByTournament: {} });
   const [teamDetail, setTeamDetail] = useState(null);
   const [squad, setSquad] = useState([]);
   const [teamMatches, setTeamMatches] = useState([]);
   const [teamHistory, setTeamHistory] = useState([]);
   const [teamHistoryError, setTeamHistoryError] = useState(null);
   const [state, setState] = useState({ loading: true, loadingTeam: false, error: '' });
+  const loadedTeamId = useRef(null);
 
   useEffect(() => {
     const controller = new AbortController();
     Promise.all([
       getData('/home', { signal: controller.signal }),
       getData('/teams', { query: { page: 1, pageSize: 100 }, signal: controller.signal }),
-      getData('/matches', { query: { page: 1, pageSize: 100, status: 'pending' }, signal: controller.signal }),
-    ]).then(async ([home, teams, upcomingMatches]) => {
+    ]).then(async ([home, teams]) => {
       const tournaments = list(home?.activeTournaments);
       const standingsEntries = await Promise.all(tournaments.map(async tournament => [
         tournament.id,
@@ -27,7 +27,7 @@ export function useLeagueData(teamId) {
       ]));
       const standingsByTournament = Object.fromEntries(standingsEntries);
       const primaryTournament = tournaments.find(tournament => tournament.format === 'league') ?? tournaments[0];
-      setLeague({ home, teams: list(teams), standings: standingsByTournament[primaryTournament?.id] ?? [], standingsByTournament, upcomingMatches: list(upcomingMatches) });
+      setLeague({ home, teams: list(teams), standings: standingsByTournament[primaryTournament?.id] ?? [], standingsByTournament });
       setState(current => ({ ...current, loading: false, error: '' }));
     }).catch(error => {
       if (error.code !== 'REQUEST_ABORTED') {
@@ -39,6 +39,7 @@ export function useLeagueData(teamId) {
 
   useEffect(() => {
     if (!teamId) {
+      loadedTeamId.current = null;
       setTeamDetail(null);
       setSquad([]);
       setTeamMatches([]);
@@ -49,12 +50,18 @@ export function useLeagueData(teamId) {
     }
 
     const controller = new AbortController();
-    setTeamDetail(null);
-    setSquad([]);
-    setTeamMatches([]);
-    setTeamHistory([]);
-    setTeamHistoryError(null);
-    setState(current => ({ ...current, loadingTeam: true }));
+    // Al cambiar de equipo se limpia la ficha; al refrescar el mismo equipo (tras
+    // editar formación, plantel, etc.) se conservan los datos hasta que llegan los nuevos.
+    const switchingTeam = loadedTeamId.current !== teamId;
+    loadedTeamId.current = teamId;
+    if (switchingTeam) {
+      setTeamDetail(null);
+      setSquad([]);
+      setTeamMatches([]);
+      setTeamHistory([]);
+      setTeamHistoryError(null);
+      setState(current => ({ ...current, loadingTeam: true }));
+    }
     Promise.all([
       getData(`/teams/${teamId}`, { signal: controller.signal }),
       getData(`/teams/${teamId}/squad`, { signal: controller.signal }),

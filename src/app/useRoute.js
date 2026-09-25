@@ -15,6 +15,7 @@ function matchRoute(path) {
   if (path === '/resultados' || path === '/multipartido') return { name: 'section', path: '/partidos' };
   if (path === '/clasificacion/rankings') return { name: 'section', path: '/equipos/rankings' };
   if (path === '/clasificacion') return { name: 'section', path: '/torneos' };
+  if (path === '/jugadores') return { name: 'section', path: '/equipos/jugadores' };
   const cardMatch = path.match(/^\/efootball\/(\d+)$/);
   if (cardMatch) return { name: 'card', path, pesId: Number(cardMatch[1]) };
   const playerMatch = path.match(/^\/jugadores\/([^/]+)$/);

@@ -7,6 +7,7 @@ import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { DataState, OverallBadge, gp } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
+import { addToComparison, comparisonCandidate, readComparison, writeComparison } from '../../utils/playerComparison.js';
 
 // Medias agrupadas como en eFootballDB, con los nombres en español del juego.
 export const STAT_GROUPS = [
@@ -68,7 +69,7 @@ export function EfootballCardPage({ pesId, variation = 0, navigate, onBack, back
   const card = useApiQuery(signal => endpoints.efootballCard(pesId, variation, signal), [pesId, variation]);
   const data = card.data;
   return <main className="newspaper data-page"><section className="data-paper">
-    <button className="back-button" onClick={onBack}>{backLabel}</button><DataState query={card}/>
+    <div className="player-profile-actions"><button className="back-button" onClick={onBack}>{backLabel}</button>{data && <button type="button" className="action-button" onClick={() => { writeComparison(addToComparison(readComparison(), comparisonCandidate({ pesId: data.pesId ?? pesId, variation: data.variation ?? variation, name: data.name, faceUrl: data.faceUrl }))); window.location.hash = '/equipos/jugadores?tab=comparador'; }}>⇄ COMPARAR</button>}</div><DataState query={card}/>
     {data && <article className="efootball-card-page">
       <header className="card-hero">
         <PlayerFace src={data.faceUrl} name={data.name} className="card-hero-face"/>

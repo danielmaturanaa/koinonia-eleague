@@ -3,8 +3,10 @@ import { navigationItems } from '../app/navigation.js';
 
 export function Navigation({ route, navigate, teams = [] }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  // Las fichas de jugador y cartas eFootball viven fuera de /equipos/jugadores, pero pertenecen a Jugadores.
+  const sectionPath = route.name === 'player' || route.name === 'card' ? '/equipos/jugadores' : route.path;
   const activeItemPath = navigationItems
-    .filter(item => item.path === '/' ? route.path === '/' : route.path === item.path || route.path.startsWith(`${item.path}/`))
+    .filter(item => item.path === '/' ? sectionPath === '/' : sectionPath === item.path || sectionPath.startsWith(`${item.path}/`))
     .sort((left, right) => right.path.length - left.path.length)[0]?.path;
 
   useEffect(() => {

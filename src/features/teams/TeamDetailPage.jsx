@@ -94,25 +94,20 @@ function PersonPhoto({ photo, name }) {
   return photo ? <img src={photo} alt={`Foto de ${name}`}/> : <div className="president-photo-placeholder" aria-label={`Foto de ${name} no publicada`}><b>{name.split(/\s+/).map(part => part[0]).join('').slice(0, 2).toUpperCase() || '—'}</b><small>FOTO NO PUBLICADA</small></div>;
 }
 
+// Foto a sangre con nombre, edad y país sobre un degradado inferior; la edición va en la esquina.
 function LeaderCard({ photo, name, age, country, customFields = [], role, onEdit }) {
-  return <article className="club-leader-card"><PersonPhoto photo={photo} name={name}/><div><small>{role}</small><h3>{name}</h3><dl><div><dt>EDAD</dt><dd>{age || '—'}</dd></div><div><dt>PAÍS</dt><dd>{country || '—'}</dd></div>{customFields.map(field => <div key={field.key}><dt>{field.label}</dt><dd>{field.value || '—'}</dd></div>)}</dl></div><button type="button" className="club-inline-edit club-leader-edit" onClick={onEdit} aria-label={`Editar ${role.toLowerCase()}`} title={`Editar ${role.toLowerCase()}`}>⚙</button></article>;
+  const details = [age ? `${age} AÑOS` : null, country, ...customFields.map(field => field.value ? `${field.label}: ${field.value}` : null)].filter(Boolean);
+  return <article className="club-person-card"><PersonPhoto photo={photo} name={name}/><div className="club-person-overlay"><small>{role}</small><h3>{name}</h3>{details.length > 0 && <p>{details.join(' · ')}</p>}</div><button type="button" className="club-inline-edit club-leader-edit" onClick={onEdit} aria-label={`Editar ${role.toLowerCase()}`} title={`Editar ${role.toLowerCase()}`}>⚙</button></article>;
 }
 
-function ClubLeadership({ president, onEditPresident }) {
-  return <section className="club-card club-leadership club-leadership-feature">
-    <h3>DIRECTIVA</h3>
-    <div className="club-leaders">
-      <LeaderCard {...president} onEdit={onEditPresident}/>
-    </div>
-  </section>;
+function ClubPeople({ president: { key: presidentKey, ...president }, coach: { key: coachKey, ...coach }, onEditPresident, onEditCoach }) {
+  return <section className="club-card club-people"><h3>DIRECTIVA Y CUERPO TÉCNICO</h3><div className="club-people-grid"><LeaderCard key={presidentKey} {...president} onEdit={onEditPresident}/><LeaderCard key={coachKey} {...coach} onEdit={onEditCoach}/></div></section>;
 }
 
-function ClubCoachPanel({ coach, onEditCoach }) {
-  return <section className="club-card club-overview-coach">
-    <h3>DIRECTOR TÉCNICO</h3>
-    <div className="club-leaders">
-      <LeaderCard {...coach} onEdit={onEditCoach}/>
-    </div>
+function ClubRecentResults({ matches, resolveTeam, teamId, onMore }) {
+  const played = finishedMatches(matches, teamId).slice(0, 3);
+  return <section className="club-card club-recent"><h3>ÚLTIMOS RESULTADOS {played.length > 0 && <button type="button" className="club-link-button" onClick={onMore}>VER TODOS →</button>}</h3>
+    {played.length ? <div className="club-match-list">{played.map(match => <ClubMatchRow match={match} resolveTeam={resolveTeam} teamId={teamId} key={match.id}/>)}</div> : <p className="empty-copy">AÚN NO JUEGA PARTIDOS.</p>}
   </section>;
 }
 
@@ -243,8 +238,11 @@ function AnthemEditor({ team, onChanged, onSaved }) {
 
 const simulatorPlayerId = player => String(player?.id ?? player?.playerId ?? '');
 const SIMULATOR_BUDGET_LIMIT = 2_000_000;
+const SIMULATOR_STARTERS = 11;
 const simulatorPlayerTeamId = player => String(player?.team?.id ?? player?.teamId ?? player?.team_id ?? '');
 const simulatorPlayerTeamName = player => player?.team?.name ?? player?.teamName ?? player?.team_name ?? '';
+const simulatorValue = player => Number(player?.gpValue ?? player?.price ?? 0) || 0;
+const signedGp = value => `${value > 0 ? '+' : value < 0 ? '−' : ''}${gp(Math.abs(value))} GP`;
 
 function normalizeSimulatorRoster(players) {
   return players
@@ -252,19 +250,79 @@ function normalizeSimulatorRoster(players) {
       ...player,
       id: player.id ?? player.playerId,
       squadOrder: player.squadOrder ?? index + 1,
-      section: player.section ?? ((player.squadOrder ?? index + 1) <= 11 ? 'starters' : 'substitutes'),
+      section: player.section ?? ((player.squadOrder ?? index + 1) <= SIMULATOR_STARTERS ? 'starters' : 'substitutes'),
     }))
     .filter(player => simulatorPlayerId(player));
 }
 
-function SimulatorRosterRow({ player, base, onRemove }) {
+// Buscador propio (no <datalist>): muestra foto, media, club y precio, y añade con un clic o Enter.
+function SimulatorPlayerSearch({ teamId, excludedIds, onAdd }) {
+  const [search, setSearch] = useState('');
+  const [open, setOpen] = useState(false);
+  const [highlighted, setHighlighted] = useState(0);
+  const term = useDebouncedValue(search.trim(), SIMULATOR_SEARCH_DELAY);
+  const query = useApiQuery(signal => term.length >= SIMULATOR_SEARCH_MIN_LENGTH
+    ? endpoints.players({ q: term, page: 1, pageSize: 25 }, signal)
+    : Promise.resolve({ data: [] }), [term]);
+  const results = (Array.isArray(query.data) ? query.data : [])
+    .filter(player => simulatorPlayerId(player) && !excludedIds.has(simulatorPlayerId(player)))
+    .slice(0, 8);
+  useEffect(() => setHighlighted(0), [term]);
+  const typed = search.trim();
+  const waiting = typed.length >= SIMULATOR_SEARCH_MIN_LENGTH && (typed !== term || query.loading);
+  const pick = player => {
+    if (!player) return;
+    onAdd(player);
+    setSearch('');
+    setOpen(false);
+  };
+  const onKeyDown = event => {
+    if (event.key === 'ArrowDown') { event.preventDefault(); setOpen(true); setHighlighted(index => Math.min(index + 1, results.length - 1)); }
+    else if (event.key === 'ArrowUp') { event.preventDefault(); setHighlighted(index => Math.max(index - 1, 0)); }
+    else if (event.key === 'Enter') { event.preventDefault(); if (!waiting) pick(results[highlighted]); }
+    else if (event.key === 'Escape') setOpen(false);
+  };
+  const status = typed.length < SIMULATOR_SEARCH_MIN_LENGTH ? 'ESCRIBE AL MENOS 2 LETRAS PARA BUSCAR.'
+    : waiting ? 'BUSCANDO JUGADORES…'
+      : query.error ? 'NO SE PUDIERON CARGAR LOS JUGADORES.'
+        : results.length ? '' : 'SIN RESULTADOS PARA ESA BÚSQUEDA.';
+  return <div className="squad-sim-search" onBlur={event => { if (!event.currentTarget.contains(event.relatedTarget)) setOpen(false); }}>
+    <label htmlFor="squad-sim-search-input">AÑADIR JUGADOR A LA SIMULACIÓN</label>
+    <input id="squad-sim-search-input" type="search" autoComplete="off" role="combobox" aria-expanded={open} aria-controls="squad-sim-search-results" value={search} placeholder="Busca por nombre: Mbappé, Rodri, Saka…" onChange={event => { setSearch(event.target.value); setOpen(true); }} onFocus={() => setOpen(true)} onKeyDown={onKeyDown}/>
+    {open && typed.length > 0 && <div className="squad-sim-results" id="squad-sim-search-results" role="listbox">
+      {status && <p className="squad-sim-results-status">{status}</p>}
+      {!waiting && results.map((player, index) => {
+        const { rest: name } = splitPlayerName(player.name);
+        const ownerId = simulatorPlayerTeamId(player);
+        const owner = simulatorPlayerTeamName(player);
+        return <button type="button" role="option" aria-selected={index === highlighted} key={simulatorPlayerId(player)} className={index === highlighted ? 'highlighted' : ''} onMouseEnter={() => setHighlighted(index)} onClick={() => pick(player)}>
+          <PlayerFace src={player.faceUrl} name={name} className="squad-simulator-face"/>
+          <span><b>{name}</b><small className={ownerId && ownerId !== String(teamId) ? 'taken' : ''}>{player.position ?? '—'} · OVR {player.overall ?? '—'} · {owner || 'AGENTE LIBRE'}</small></span>
+          <strong>{gp(simulatorValue(player))} GP</strong>
+          <i aria-hidden="true">+</i>
+        </button>;
+      })}
+    </div>}
+  </div>;
+}
+
+function SimulatorMeter({ label, value, detail, ratio, over }) {
+  return <div className={`squad-sim-meter ${over ? 'over-budget' : ''}`}>
+    <small>{label}</small>
+    <b>{value}</b>
+    {ratio !== undefined && <span className="squad-sim-meter-bar" aria-hidden="true"><i style={{ width: `${Math.min(100, Math.max(0, ratio * 100))}%` }}/></span>}
+    <em>{detail}</em>
+  </div>;
+}
+
+function SimulatorRosterRow({ player, isNew, highlighted, section, onMove, onRemove }) {
   const { rest: name } = splitPlayerName(player.name);
-  return <li className="squad-simulator-row">
-    <span><PlayerFace src={player.faceUrl} name={name} className="squad-simulator-face"/><b>{name || 'JUGADOR'}</b></span>
+  return <li className={`squad-simulator-row ${highlighted ? 'just-added' : ''}`}>
+    <span><PlayerFace src={player.faceUrl} name={name} className="squad-simulator-face"/><b>{name || 'JUGADOR'}</b>{isNew && <em>NUEVO</em>}</span>
     <small>{player.position ?? '—'}</small>
-    <strong>{gp(Number(player.gpValue ?? player.price ?? 0))} GP</strong>
-    <button type="button" className="squad-simulator-remove" onClick={onRemove} aria-label={`Quitar a ${name || 'jugador'} de la simulación`}>×</button>
-    {base && <em>BASE</em>}
+    <strong>{gp(simulatorValue(player))} GP</strong>
+    <button type="button" className="squad-simulator-move" onClick={onMove} title={section === 'starters' ? 'Pasar a suplentes' : 'Pasar a titulares'} aria-label={`${section === 'starters' ? 'Pasar a suplentes' : 'Pasar a titulares'} a ${name || 'jugador'}`}>{section === 'starters' ? '↓' : '↑'}</button>
+    <button type="button" className="squad-simulator-remove" onClick={onRemove} title="Quitar de la simulación" aria-label={`Quitar a ${name || 'jugador'} de la simulación`}>×</button>
   </li>;
 }
 
@@ -273,87 +331,79 @@ function SquadValueSimulator({ team, squad, balance }) {
   const baseSignature = baseRoster.map(player => `${simulatorPlayerId(player)}:${player.gpValue ?? player.price ?? ''}:${player.section ?? ''}:${player.squadOrder ?? ''}`).join('|');
   const [simulatedRoster, setSimulatedRoster] = useState(baseRoster);
   const [removedPlayers, setRemovedPlayers] = useState([]);
-  const [selectedPlayerId, setSelectedPlayerId] = useState('');
-  const [playerSearch, setPlayerSearch] = useState('');
-  const debouncedPlayerSearch = useDebouncedValue(playerSearch.trim(), SIMULATOR_SEARCH_DELAY);
-  const playersQuery = useApiQuery(signal => debouncedPlayerSearch.length >= SIMULATOR_SEARCH_MIN_LENGTH
-    ? endpoints.players({ q: debouncedPlayerSearch, page: 1, pageSize: 25 }, signal)
-    : Promise.resolve({ data: [] }), [debouncedPlayerSearch]);
+  const [lastAdded, setLastAdded] = useState(null);
+  const rostersRef = useRef(null);
 
   useEffect(() => {
     setSimulatedRoster(baseRoster);
     setRemovedPlayers([]);
-    setSelectedPlayerId('');
-    setPlayerSearch('');
+    setLastAdded(null);
   }, [team?.id, baseSignature]);
+
+  useEffect(() => {
+    if (!lastAdded) return undefined;
+    rostersRef.current?.querySelector('.just-added')?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    const timeout = window.setTimeout(() => setLastAdded(null), 4000);
+    return () => window.clearTimeout(timeout);
+  }, [lastAdded]);
 
   const baseIds = new Set(baseRoster.map(simulatorPlayerId));
   const simulatedIds = new Set(simulatedRoster.map(simulatorPlayerId));
-  const availablePlayers = (Array.isArray(playersQuery.data) ? playersQuery.data : [])
-    .filter(player => simulatorPlayerId(player) && !simulatedIds.has(simulatorPlayerId(player)))
-    .sort((left, right) => String(left.name ?? '').localeCompare(String(right.name ?? ''), 'es'));
-  const valueOf = player => Number(player.gpValue ?? player.price ?? 0) || 0;
-  const baseValue = baseRoster.reduce((total, player) => total + valueOf(player), 0);
-  const simulatedValue = simulatedRoster.reduce((total, player) => total + valueOf(player), 0);
+  const baseValue = baseRoster.reduce((total, player) => total + simulatorValue(player), 0);
+  const simulatedValue = simulatedRoster.reduce((total, player) => total + simulatorValue(player), 0);
+  const signings = simulatedRoster.filter(player => !baseIds.has(simulatorPlayerId(player)));
+  const departures = baseRoster.filter(player => !simulatedIds.has(simulatorPlayerId(player)));
+  const signingsCost = signings.reduce((total, player) => total + simulatorValue(player), 0);
+  const departuresValue = departures.reduce((total, player) => total + simulatorValue(player), 0);
   const movement = simulatedValue - baseValue;
   const projectedBalance = balance === null ? null : balance - movement;
-  const exceedsLimit = simulatedValue > SIMULATOR_BUDGET_LIMIT;
-  const overBudget = exceedsLimit || (projectedBalance !== null && projectedBalance < 0);
-  const starters = simulatedRoster.filter(player => player.section === 'starters' || (!player.section && player.squadOrder <= 11));
-  const substitutes = simulatedRoster.filter(player => player.section === 'substitutes' || (!player.section && player.squadOrder > 11));
+  const capRoom = SIMULATOR_BUDGET_LIMIT - simulatedValue;
+  const exceedsLimit = capRoom < 0;
+  const exceedsBalance = projectedBalance !== null && projectedBalance < 0;
+  const changed = signings.length > 0 || departures.length > 0 || simulatedRoster.some(player => baseRoster.find(base => simulatorPlayerId(base) === simulatorPlayerId(player))?.section !== player.section);
+  const starters = simulatedRoster.filter(player => player.section === 'starters');
+  const substitutes = simulatedRoster.filter(player => player.section !== 'starters');
 
   const addPlayerToSimulation = player => {
     if (!player) return;
-    setSimulatedRoster(current => [...current, { ...player, section: player.section ?? 'substitutes', squadOrder: player.squadOrder ?? current.length + 1 }]);
+    setSimulatedRoster(current => {
+      const section = current.filter(item => item.section === 'starters').length < SIMULATOR_STARTERS ? 'starters' : 'substitutes';
+      return [...current, { ...player, section: baseIds.has(simulatorPlayerId(player)) ? player.section ?? section : section, squadOrder: current.length + 1 }];
+    });
     setRemovedPlayers(current => current.filter(item => simulatorPlayerId(item) !== simulatorPlayerId(player)));
+    setLastAdded(simulatorPlayerId(player));
   };
-  const addPlayer = () => {
-    const player = availablePlayers.find(item => simulatorPlayerId(item) === selectedPlayerId);
-    if (!player) return;
-    addPlayerToSimulation(player);
-    setSelectedPlayerId('');
-    setPlayerSearch('');
-  };
+  const movePlayer = player => setSimulatedRoster(current => current.map(item => simulatorPlayerId(item) === simulatorPlayerId(player)
+    ? { ...item, section: item.section === 'starters' ? 'substitutes' : 'starters' }
+    : item));
   const removePlayer = player => {
     setSimulatedRoster(current => current.filter(item => simulatorPlayerId(item) !== simulatorPlayerId(player)));
-    setRemovedPlayers(current => current.some(item => simulatorPlayerId(item) === simulatorPlayerId(player)) ? current : [...current, player]);
+    if (baseIds.has(simulatorPlayerId(player))) setRemovedPlayers(current => current.some(item => simulatorPlayerId(item) === simulatorPlayerId(player)) ? current : [...current, player]);
   };
-  const forgetRemovedPlayer = player => setRemovedPlayers(current => current.filter(item => simulatorPlayerId(item) !== simulatorPlayerId(player)));
-  const reset = () => { setSimulatedRoster(baseRoster); setRemovedPlayers([]); setSelectedPlayerId(''); setPlayerSearch(''); };
-  const selectedPlayer = availablePlayers.find(player => simulatorPlayerId(player) === selectedPlayerId);
-  const selectedPlayerTeamId = simulatorPlayerTeamId(selectedPlayer);
-  const selectedPlayerTeamName = simulatorPlayerTeamName(selectedPlayer);
-  const isTakenByAnotherTeam = Boolean(selectedPlayer && selectedPlayerTeamId && selectedPlayerTeamId !== String(team?.id));
-  const playerOptionValue = player => player.name ?? 'JUGADOR';
-  const selectPlayerFromSearch = event => {
-    const value = event.target.value;
-    const selected = availablePlayers.find(player => playerOptionValue(player) === value);
-    setPlayerSearch(value);
-    setSelectedPlayerId(selected ? simulatorPlayerId(selected) : '');
-  };
+  const reset = () => { setSimulatedRoster(baseRoster); setRemovedPlayers([]); setLastAdded(null); };
+  const lastAddedPlayer = simulatedRoster.find(player => simulatorPlayerId(player) === lastAdded);
+  const statusMessage = exceedsLimit && exceedsBalance ? `SUPERA EL TOPE DE PLANTEL POR ${gp(-capRoom)} GP Y EL SALDO POR ${gp(-projectedBalance)} GP.`
+    : exceedsLimit ? `SUPERA EL TOPE DE PLANTEL POR ${gp(-capRoom)} GP.`
+      : exceedsBalance ? `FALTAN ${gp(-projectedBalance)} GP DE SALDO PARA ESTOS FICHAJES.`
+        : projectedBalance === null ? 'EL CLUB NO TIENE SALDO PUBLICADO: SOLO SE VALIDA EL TOPE DE PLANTEL.'
+          : 'PLANTEL VÁLIDO: DENTRO DEL TOPE Y DEL SALDO DISPONIBLE.';
+  const renderRow = section => player => <SimulatorRosterRow key={simulatorPlayerId(player)} player={player} section={section} isNew={!baseIds.has(simulatorPlayerId(player))} highlighted={simulatorPlayerId(player) === lastAdded} onMove={() => movePlayer(player)} onRemove={() => removePlayer(player)}/>;
 
   return <section className="club-card squad-value-simulator">
-    <header className="squad-simulator-header"><div><h3>SIMULADOR DE PLANTEL</h3><p>ARMADO FICTICIO · NO MODIFICA FICHAJES NI LA API.</p></div><button type="button" className="club-link-button" onClick={reset}>RESTABLECER PLANTEL BASE</button></header>
-    <div className="squad-simulator-controls">
-      <label>AÑADIR JUGADOR<input list="squad-simulator-player-options" value={playerSearch} onChange={selectPlayerFromSearch} placeholder="ESCRIBE AL MENOS 2 LETRAS…"/><datalist id="squad-simulator-player-options">{availablePlayers.map(player => <option key={simulatorPlayerId(player)} value={playerOptionValue(player)} label={`${gp(valueOf(player))} GP · ${simulatorPlayerTeamName(player) || 'AGENTE LIBRE'}`}/>)}</datalist></label>
-      <button type="button" className="action-button" disabled={!selectedPlayerId} onClick={addPlayer}>AÑADIR A SIMULACIÓN</button>
+    <header className="squad-simulator-header"><div><h3>SIMULADOR DE PLANTEL</h3><p>Prueba fichajes y salidas. Es solo una simulación: no modifica el plantel real.</p></div><button type="button" className="club-link-button" onClick={reset} disabled={!changed}>↺ RESTABLECER</button></header>
+    <div className="squad-sim-summary"><div className="squad-sim-meters" aria-label="Resumen del presupuesto simulado">
+      <SimulatorMeter label="VALOR DEL PLANTEL" value={`${gp(simulatedValue)} GP`} ratio={simulatedValue / SIMULATOR_BUDGET_LIMIT} over={exceedsLimit} detail={exceedsLimit ? `Excede el tope de ${gp(SIMULATOR_BUDGET_LIMIT)} GP en ${gp(-capRoom)} GP` : `Tope ${gp(SIMULATOR_BUDGET_LIMIT)} GP · quedan ${gp(capRoom)} GP`}/>
+      <SimulatorMeter label="SALDO TRAS LOS CAMBIOS" value={projectedBalance === null ? '—' : `${gp(projectedBalance)} GP`} over={exceedsBalance} detail={balance === null ? 'Saldo no publicado' : `Saldo actual ${gp(balance)} GP · movimiento ${signedGp(-movement)}`}/>
+      <SimulatorMeter label="CAMBIOS" value={`${signings.length} ALTA${signings.length === 1 ? '' : 'S'} · ${departures.length} BAJA${departures.length === 1 ? '' : 'S'}`} detail={signings.length || departures.length ? `Fichajes ${gp(signingsCost)} GP · salidas ${gp(departuresValue)} GP` : 'Sin cambios respecto del plantel real'}/>
     </div>
-    {selectedPlayer && <p className={`squad-simulator-player-note ${isTakenByAnotherTeam ? 'warning' : ''}`}>{isTakenByAnotherTeam ? `AVISO: ${selectedPlayer.name} ESTÁ INSCRITO EN ${selectedPlayerTeamName || 'OTRO EQUIPO'}. SE AÑADIRÁ SOLO A ESTA SIMULACIÓN.` : selectedPlayerTeamName ? `PERTENECE A ${selectedPlayerTeamName}.` : 'JUGADOR DISPONIBLE COMO AGENTE LIBRE.'}</p>}
-    {playerSearch.trim().length > 0 && playerSearch.trim().length < SIMULATOR_SEARCH_MIN_LENGTH && <p className="empty-copy">ESCRIBE AL MENOS 2 LETRAS PARA BUSCAR.</p>}
-    {playersQuery.loading && debouncedPlayerSearch.length >= SIMULATOR_SEARCH_MIN_LENGTH && <p className="empty-copy">BUSCANDO JUGADORES…</p>}
-    {playersQuery.error && <p className="empty-copy">NO SE PUDIERON CARGAR LOS JUGADORES.</p>}
-    <div className="squad-simulator-summary" aria-label="Resumen del presupuesto simulado">
-      <span>VALOR BASE <b>{gp(baseValue)} GP</b></span>
-      <span className={exceedsLimit ? 'over-budget' : ''}>VALOR TOTAL SIMULADO <b>{gp(simulatedValue)} GP</b></span>
-      <span>VALOR LÍMITE <b>{gp(SIMULATOR_BUDGET_LIMIT)} GP</b></span>
-      <span className={projectedBalance !== null && projectedBalance < 0 ? 'over-budget' : ''}>PRESUPUESTO RESTANTE <b>{projectedBalance === null ? '—' : `${gp(projectedBalance)} GP`}</b></span>
+    <p className={`squad-simulator-status ${exceedsLimit || exceedsBalance ? 'over-budget' : ''}`} role="status">{statusMessage}</p></div>
+    <SimulatorPlayerSearch teamId={team?.id} excludedIds={simulatedIds} onAdd={addPlayerToSimulation}/>
+    {lastAddedPlayer && <p className="squad-simulator-player-note" role="status">✓ {splitPlayerName(lastAddedPlayer.name).rest} AÑADIDO A {lastAddedPlayer.section === 'starters' ? 'TITULARES' : 'SUPLENTES'}{simulatorPlayerTeamId(lastAddedPlayer) && simulatorPlayerTeamId(lastAddedPlayer) !== String(team?.id) ? ` · HOY JUEGA EN ${simulatorPlayerTeamName(lastAddedPlayer)}` : ''}.</p>}
+    <div className="squad-simulator-rosters" ref={rostersRef}>
+      <section><h4>TITULARES <small className={starters.length !== SIMULATOR_STARTERS ? 'warning' : ''}>{starters.length} / {SIMULATOR_STARTERS}</small></h4><ul>{starters.length ? starters.map(renderRow('starters')) : <li className="empty-copy">SIN TITULARES.</li>}</ul></section>
+      <section><h4>SUPLENTES <small>{substitutes.length}</small></h4><ul>{substitutes.length ? substitutes.map(renderRow('substitutes')) : <li className="empty-copy">SIN SUPLENTES.</li>}</ul></section>
     </div>
-    <p className={`squad-simulator-status ${overBudget ? 'over-budget' : ''}`}>{exceedsLimit ? 'SOBREPASA EL LÍMITE DE 2.000.000 GP.' : projectedBalance === null ? 'CONFIGURA UN PRESUPUESTO PARA COMPARAR EL SALDO.' : projectedBalance < 0 ? 'SOBREPASA EL PRESUPUESTO DISPONIBLE.' : 'DENTRO DEL PRESUPUESTO DISPONIBLE.'}</p>
-    <div className="squad-simulator-rosters">
-      <section><h4>TITULARES <small>{starters.length}</small></h4><ul>{starters.length ? starters.map(player => <SimulatorRosterRow key={simulatorPlayerId(player)} player={player} base={baseIds.has(simulatorPlayerId(player))} onRemove={() => removePlayer(player)}/>) : <li className="empty-copy">SIN TITULARES.</li>}</ul></section>
-      <section><h4>SUPLENTES <small>{substitutes.length}</small></h4><ul>{substitutes.length ? substitutes.map(player => <SimulatorRosterRow key={simulatorPlayerId(player)} player={player} base={baseIds.has(simulatorPlayerId(player))} onRemove={() => removePlayer(player)}/>) : <li className="empty-copy">SIN SUPLENTES.</li>}</ul></section>
-    </div>
-    {removedPlayers.length > 0 && <section className="squad-simulator-removed"><h4>FUERA DE LA SIMULACIÓN <small>{removedPlayers.length}</small></h4><ul>{removedPlayers.map(player => { const { rest: name } = splitPlayerName(player.name); return <li key={simulatorPlayerId(player)}><span><PlayerFace src={player.faceUrl} name={name} className="squad-simulator-face"/><b>{name || 'JUGADOR'}</b></span><small>{player.position ?? '—'}</small><strong>{gp(valueOf(player))} GP</strong><div className="squad-simulator-removed-actions"><button type="button" className="squad-simulator-restore" onClick={() => addPlayerToSimulation(player)}>REINCORPORAR</button><button type="button" className="squad-simulator-forget" onClick={() => forgetRemovedPlayer(player)}>ELIMINAR</button></div></li>; })}</ul></section>}
+    {removedPlayers.length > 0 && <section className="squad-simulator-removed"><h4>SALIDAS SIMULADAS <small>{removedPlayers.length}</small></h4><ul>{removedPlayers.map(player => { const { rest: name } = splitPlayerName(player.name); return <li key={simulatorPlayerId(player)}><span><PlayerFace src={player.faceUrl} name={name} className="squad-simulator-face"/><b>{name || 'JUGADOR'}</b></span><small>{player.position ?? '—'}</small><strong>{gp(simulatorValue(player))} GP</strong><button type="button" className="squad-simulator-restore" onClick={() => addPlayerToSimulation(player)}>↩ DEVOLVER</button></li>; })}</ul></section>}
   </section>;
 }
 
@@ -419,22 +469,9 @@ const formatMoveDate = value => {
   return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('es-CL', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase();
 };
 
-const UPCOMING_STEP = 5;
-
-function UpcomingMatches({ matches, resolveTeam, teamId }) {
-  const [visible, setVisible] = useState(UPCOMING_STEP);
-  const upcoming = matches
-    .filter(match => match.status === 'pending' || match.status === 'live')
-    .sort((left, right) => (left.status === 'live' ? -1 : 0) - (right.status === 'live' ? -1 : 0) || (left.roundNumber ?? Number.MAX_SAFE_INTEGER) - (right.roundNumber ?? Number.MAX_SAFE_INTEGER));
-  return <section className="club-card club-overview-upcoming"><h3>PRÓXIMOS PARTIDOS <small>{upcoming.length}</small></h3>
-    {upcoming.length ? <div className="club-match-list">{upcoming.slice(0, visible).map(match => <ClubMatchRow match={match} resolveTeam={resolveTeam} teamId={teamId} key={match.id}/>)}</div> : <p className="empty-copy">SIN PARTIDOS PROGRAMADOS.</p>}
-    {upcoming.length > visible && <button type="button" className="club-more-button" onClick={() => setVisible(value => value + UPCOMING_STEP)}>MOSTRAR {Math.min(UPCOMING_STEP, upcoming.length - visible)} MÁS</button>}
-  </section>;
-}
-
-function ClubScorers({ teamId }) {
+function ClubScorers({ teamId, limit = 5 }) {
   const scorers = useApiQuery(signal => endpoints.teamScorers(teamId, {}, signal), [teamId]);
-  const rows = (Array.isArray(scorers.data) ? scorers.data : []).slice(0, 5);
+  const rows = (Array.isArray(scorers.data) ? scorers.data : []).slice(0, limit);
   return <section className="club-card"><h3>GOLEADORES <small>TORNEOS ACTIVOS</small></h3>
     {scorers.loading ? <p className="empty-copy">CARGANDO…</p> : scorers.error ? <p className="empty-copy">NO DISPONIBLE.</p> : rows.length ? <ol className="club-scorers">{rows.map((row, index) => <li key={row.playerId}><b>{index + 1}</b><PlayerFace src={row.faceUrl} name={row.name}/><EntityLink to="player" id={row.playerId}>{row.name}</EntityLink><strong>{row.goals} <small>GOL{row.goals === 1 ? '' : 'ES'}</small></strong></li>)}</ol> : <p className="empty-copy">AÚN SIN GOLES EN TORNEOS ACTIVOS.</p>}
   </section>;
@@ -491,23 +528,22 @@ export function TeamDetailPage({ team, teams = [], squad, standings, matches = [
       <header className="club-hero" style={heroStyle}>
         <div className="club-crest-wrap"><TeamMark team={team} className="club-crest"/><button type="button" className="club-crest-edit" onClick={() => setCrestEditorOpen(true)} aria-label="Editar escudo y nombre del club" title="Editar escudo y nombre">✎</button></div>
         <div className="club-hero-copy"><p>{team.kind === 'national_team' ? 'SELECCIÓN' : 'CLUB'}{team.currentDivision ? ` · ${team.currentDivision}` : ''}</p><h1>{team.name}</h1><div className="club-hero-meta">{rank > 0 && <span className="club-hero-rank"><b>{rank}°</b> EN LA LIGA{standing ? ` · ${standing.points} PTS` : ''}</span>}<FormPills matches={matches} teamId={team.id}/></div></div>
-        <div className="club-hero-value"><small>VALOR DEL PLANTEL</small><b>{gp(team.squadValue)}</b><span>GP · {team.playerCount ?? squad.length} JUGADORES</span></div>
+        <div className="club-hero-value"><small>VALOR DEL PLANTEL</small><b>{gp(team.squadValue)}</b><span>GP · {team.playerCount ?? squad.length} JUGADORES</span><dl className="club-hero-finance"><div><dt>SALDO</dt><dd>{balance === null ? '—' : gp(balance)}</dd></div><div><dt>PROMEDIO</dt><dd>{gp(team.averageValue)}</dd></div></dl></div>
       </header>
       <nav className="club-tabs" ref={tabsRef} role="tablist" aria-label="Secciones del club">{TABS.map(([id, label]) => <button type="button" role="tab" key={id} aria-selected={activeTab === id} className={activeTab === id ? 'active' : ''} onClick={() => onTab?.(id)}>{label}</button>)}</nav>
 
       <section className="club-tab-content" role="tabpanel">
         {activeTab === 'resumen' && <div className="club-overview club-overview-reorganized">
-          <section className="club-card club-overview-finance"><h3>FINANZAS</h3><div className="club-finance-stats"><span>VALOR PLANTEL <b>{gp(team.squadValue)} GP</b></span><span>SALDO DISPONIBLE <b>{balance === null ? '—' : `${gp(balance)} GP`}</b></span><span>PROMEDIO <b>{gp(team.averageValue)} GP</b></span></div></section>
           <div className="club-overview-secondary">
             <div className="club-overview-left-column">
-              <ClubLeadership
+              <ClubPeople
                 president={{ key: `president-${personRevision}`, photo, name: presidentName, age: presidentProfile.age, country: presidentProfile.country, customFields: team.president?.customFields, role: 'PRESIDENTE' }}
-                onEditPresident={() => setPersonEditor('president')}
-              />
-              <ClubCoachPanel
                 coach={{ key: `coach-${personRevision}`, photo: managerPhoto, name: coachName, age: coachProfile.age, country: coachProfile.country, customFields: team.coach?.customFields, role: 'DIRECTOR TÉCNICO' }}
+                onEditPresident={() => setPersonEditor('president')}
                 onEditCoach={() => setPersonEditor('coach')}
               />
+              <ClubScorers teamId={team.id} limit={3}/>
+              <ClubRecentResults matches={matches} resolveTeam={resolveTeam} teamId={team.id} onMore={() => onTab?.('partidos')}/>
             </div>
             <ClubOverviewRoster starters={starters} substitutes={substitutes}/>
           </div>

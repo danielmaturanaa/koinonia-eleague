@@ -1,40 +1,37 @@
+import { useEffect } from 'react';
+import { endpoints } from '../api/endpoints.js';
+import { useApiQuery } from '../features/public/useApiQuery.js';
+import { matchRoundLabel } from '../utils/matchPresentation.js';
 import { EntityLink } from './EntityLink.jsx';
 import { TeamMark } from './TeamMark.jsx';
-import { matchRoundLabel } from '../utils/matchPresentation.js';
 
-function Matches({ rows, title, resolveTeam, loading, showScore }) {
-  return <section className="score-panel"><h2>{title}</h2>{rows.length ? rows.map(match =>
-    <EntityLink to="match" id={match.id} className="result-match" key={match.id}>{showScore && <small>{[match.tournament?.name ?? 'TORNEO', matchRoundLabel(match, { leagueRound: 'JORNADA' })].join(' · ')}</small>}<div className="score-line"><TeamMark team={resolveTeam(match.homeTeam)}/><span className="home-name">{match.homeTeam.name}</span>{showScore ? <strong>{match.homeScore} - {match.awayScore}</strong> : <span className="versus">VS</span>}<span className="away-name">{match.awayTeam.name}</span><TeamMark team={resolveTeam(match.awayTeam)}/></div></EntityLink>)
-    : <p className="league-note">{loading ? 'CARGANDO...' : 'SIN PARTIDOS PUBLICADOS.'}</p>}</section>;
+const LIVE_REFRESH_MS = 30000;
+
+// Solo aparece cuando hay partidos jugándose; se refresca cada 30 segundos.
+function LiveMatches({ resolveTeam }) {
+  const live = useApiQuery(signal => endpoints.matches({ status: 'live', activeOnly: 1, page: 1, pageSize: 20 }, signal));
+  useEffect(() => {
+    const timer = window.setInterval(live.retry, LIVE_REFRESH_MS);
+    return () => window.clearInterval(timer);
+  }, [live.retry]);
+  const rows = (Array.isArray(live.data) ? live.data : []).filter(match => match.status === 'live');
+  if (!rows.length) return null;
+  return <section className="score-panel live-panel"><h2><span className="live-dot" aria-hidden="true"/>EN VIVO <small>{rows.length}</small></h2>{rows.map(match =>
+    <EntityLink to="match" id={match.id} className="result-match" key={match.id}><small>{[match.tournament?.name ?? 'TORNEO', matchRoundLabel(match, { leagueRound: 'JORNADA' })].join(' · ')}</small><div className="score-line"><TeamMark team={resolveTeam(match.homeTeam)}/><span className="home-name">{match.homeTeam.name}</span><strong>{match.homeScore ?? 0} - {match.awayScore ?? 0}</strong><span className="away-name">{match.awayTeam.name}</span><TeamMark team={resolveTeam(match.awayTeam)}/></div></EntityLink>)}
+  </section>;
 }
 
-const matchGroup = match => match.groupLabel ?? match.group_label ?? match.group?.label ?? '';
-
-function UpcomingMatch({ match, resolveTeam }) {
-  const tournamentName = match.tournament?.name ?? 'TORNEO';
-  const detail = [tournamentName, matchRoundLabel(match, { leagueRound: 'JORNADA' })].join(' · ');
-  return <EntityLink to="match" id={match.id} className="upcoming-match"><small>{detail}</small><div className="score-line"><TeamMark team={resolveTeam(match.homeTeam)}/><span className="home-name">{match.homeTeam.name}</span><span className="versus">VS</span><span className="away-name">{match.awayTeam.name}</span><TeamMark team={resolveTeam(match.awayTeam)}/></div></EntityLink>;
+function StandingsPanel({ tournament, standings, resolveTeam, loading, navigate }) {
+  return <section className="score-panel standings-home-panel"><h2>TABLA <small>{tournament?.name ?? ''}</small></h2>
+    {standings.length ? <table className="standings-home-table"><thead><tr><th>#</th><th>EQUIPO</th><th title="Partidos jugados">PJ</th><th title="Diferencia de goles">DG</th><th title="Puntos">PTS</th></tr></thead><tbody>{standings.map((row, index) => <tr key={row.team_id}><td>{index + 1}</td><td><EntityLink to="team" id={row.team_id} className="table-team-link"><TeamMark team={resolveTeam({ id: row.team_id, ...row })}/><span>{row.name}</span></EntityLink></td><td>{row.played}</td><td>{row.gd > 0 ? `+${row.gd}` : row.gd}</td><td><b>{row.points}</b></td></tr>)}</tbody></table>
+      : <p className="league-note">{loading ? 'CARGANDO...' : 'SIN TABLA PUBLICADA.'}</p>}
+    <button className="sidebar-more" type="button" onClick={() => navigate('/torneos')}>VER TORNEO COMPLETO →</button>
+  </section>;
 }
 
-const UPCOMING_LIMIT = 7;
-
-function UpcomingByTournament({ tournaments, upcoming, resolveTeam, loading, navigate }) {
-  const priority = new Map(tournaments.map((tournament, index) => [tournament.id, index]));
-  const matches = [...upcoming].sort((left, right) => {
-    const leftRound = left.roundNumber ?? left.round_number ?? Number.MAX_SAFE_INTEGER;
-    const rightRound = right.roundNumber ?? right.round_number ?? Number.MAX_SAFE_INTEGER;
-    if (leftRound !== rightRound) return leftRound - rightRound;
-    const leftTournament = left.tournament?.id ?? left.tournamentId ?? left.tournament_id;
-    const rightTournament = right.tournament?.id ?? right.tournamentId ?? right.tournament_id;
-    return (priority.get(leftTournament) ?? 99) - (priority.get(rightTournament) ?? 99);
-  });
-  return <section className="score-panel upcoming-panel"><h2>PRÓXIMOS PARTIDOS</h2><div className="upcoming-scroll">{matches.length ? matches.slice(0, UPCOMING_LIMIT).map(match => <UpcomingMatch match={match} resolveTeam={resolveTeam} key={match.id}/>)
-    : <p className="league-note">{loading ? 'CARGANDO...' : 'SIN PARTIDOS PENDIENTES.'}</p>}</div>{matches.length > UPCOMING_LIMIT && <button className="sidebar-more" type="button" onClick={() => navigate('/partidos/pendientes')}>VER LOS {matches.length} PARTIDOS PENDIENTES →</button>}</section>;
-}
-
-export function MatchSidebar({ completed, upcoming, tournaments = [], resolveTeam, loading, navigate }) {
+export function MatchSidebar({ tournament, standings = [], resolveTeam, loading, navigate }) {
   return <aside className="match-sidebar">
-    <UpcomingByTournament tournaments={tournaments} upcoming={upcoming} resolveTeam={resolveTeam} loading={loading} navigate={navigate}/>
-    <Matches rows={completed} title="ÚLTIMOS RESULTADOS" resolveTeam={resolveTeam} loading={loading} showScore/>
+    <LiveMatches resolveTeam={resolveTeam}/>
+    <StandingsPanel tournament={tournament} standings={standings} resolveTeam={resolveTeam} loading={loading} navigate={navigate}/>
   </aside>;
 }
