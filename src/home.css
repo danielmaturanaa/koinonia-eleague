@@ -2329,3 +2329,29 @@ a.news-read-more { display: inline-block; text-decoration: none; }
   .h2h-player h3 { white-space: normal; overflow-wrap: anywhere; font-size: 17px; line-height: 1.05; text-align: center; }
   .h2h-player small { white-space: normal; text-align: center; }
 }
+
+/* Cartas con más vida: blanco puro, amarillo brillante, franja con el color del club
+   y fondo de foto más saturado con brillo diagonal. */
+.pitch-card { border: 1px solid #ffffff55; background: linear-gradient(180deg, #232a3d, #10131c 70%); box-shadow: 0 5px 12px #0008, inset 0 1px 0 #ffffff30; }
+.pitch-card::before { content: ''; position: absolute; z-index: 2; top: 0; right: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--card-secondary), var(--card-primary)); }
+.pitch-card-stats b { color: #fff; font-weight: 700; text-shadow: 0 2px 6px #000a; }
+.pitch-card-stats small { color: #ffe14d; font-weight: 700; }
+.pitch-card-photo { background: linear-gradient(150deg, color-mix(in srgb, var(--card-secondary) 80%, #10131c) 0 38%, color-mix(in srgb, var(--card-primary) 60%, #10131c) 38% 100%); }
+.pitch-card-photo::before { content: ''; position: absolute; inset: 0; z-index: 1; background: linear-gradient(115deg, transparent 30%, #ffffff2e 45%, transparent 60%); pointer-events: none; }
+.pitch-card-face { position: relative; z-index: 0; }
+.pitch-card-name { color: #fff; background: linear-gradient(90deg, #0a0c12, #171c2a, #0a0c12); font-weight: 700; letter-spacing: .2px; }
+.pitch-card-name i { color: #ffe14d; }
+
+/* Cancha: línea de mitad de borde a borde y escudo del club como marca de agua central. */
+.pitch-halfway { right: 0; left: 0; }
+.pitch-watermark { position: absolute; z-index: 0; top: 50%; left: 50%; display: grid; width: 34%; aspect-ratio: 1; place-items: center; opacity: .22; pointer-events: none; transform: translate(-50%, -50%); }
+.pitch-watermark .team-mark { width: 100%; height: 100%; flex-basis: auto; object-fit: contain; filter: grayscale(1) brightness(1.8); }
+.pitch-circle { width: 26%; }
+.pitch-board-link { padding: 0; border: 0; color: #a90020; background: none; font: 700 14px/1.3 'Roboto Condensed', sans-serif; text-decoration: underline; cursor: pointer; }
+.pitch-board > header { min-height: 0; }
+
+/* Cancha dentro de la ficha de partido (solo lectura). */
+.pitch-board-bare { position: relative; z-index: 1; display: block; }
+.match-lineup .pitch-board-bare .pitch-card { --card-w: clamp(62px, 17%, 96px); }
+.club-squad-layout-list { grid-template-columns: 1fr; }
+.match-lineup .pitch-card-photo img.pitch-card-face { width: 100%; height: 100%; max-width: none; border: 0; border-radius: 0; background: transparent; }

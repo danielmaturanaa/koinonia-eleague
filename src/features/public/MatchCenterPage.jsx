@@ -1,14 +1,14 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { EntityLink } from '../../components/EntityLink.jsx';
 import { PlayerFace } from '../../components/PlayerFace.jsx';
 import { Scoreboard } from '../../components/Scoreboard.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
 import { matchRoundLabel } from '../../utils/matchPresentation.js';
-import { defaultFormationPositions, pitchPositionFor } from '../../utils/formationPositions.js';
 import { SanctionPanel } from '../admin/MatchAdminPanel.jsx';
 import { DataState, formatDate } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
+import { PitchBoard } from '../teams/PitchBoard.jsx';
 
 // Goles agrupados por jugador; los minutos solo aparecen si el acta los registró.
 function groupedGoals(goals, teamId) {
@@ -40,23 +40,11 @@ const isStarter = player => typeof player.isStarter === 'boolean' ? player.isSta
 
 function Lineup({ team }) {
   const [view, setView] = useState('squad');
-  const [plantelHeight, setPlantelHeight] = useState(null);
-  const lineupRef = useRef(null);
   const squad = useApiQuery(signal => team?.id ? endpoints.teamSquad(team.id, signal) : Promise.resolve({ data: [] }), [team?.id]);
   const starters = (Array.isArray(squad.data) ? squad.data : []).filter(isStarter).sort(byOrder);
-  const positions = defaultFormationPositions(starters);
-  useLayoutEffect(() => {
-    if (view !== 'squad' || !lineupRef.current) return undefined;
-    const syncHeight = () => setPlantelHeight(Math.ceil(lineupRef.current.getBoundingClientRect().height));
-    syncHeight();
-    if (typeof ResizeObserver === 'undefined') return undefined;
-    const observer = new ResizeObserver(syncHeight);
-    observer.observe(lineupRef.current);
-    return () => observer.disconnect();
-  }, [view, starters.length, team?.id]);
-  return <div className="match-lineup" ref={lineupRef} style={view === 'formation' && plantelHeight ? { height: `${plantelHeight}px` } : undefined}><div className="match-lineup-watermark" aria-hidden="true"><TeamMark team={team}/></div><h3>{team?.name ?? 'CLUB'}</h3>
+  return <div className="match-lineup"><div className="match-lineup-watermark" aria-hidden="true"><TeamMark team={team}/></div><h3>{team?.name ?? 'CLUB'}</h3>
     <nav className="match-lineup-tabs" aria-label={`Vista del ${team?.name ?? 'club'}`}><button type="button" className={view === 'squad' ? 'active' : ''} aria-pressed={view === 'squad'} onClick={() => setView('squad')}>PLANTEL</button><button type="button" className={view === 'formation' ? 'active' : ''} aria-pressed={view === 'formation'} onClick={() => setView('formation')}>FORMACIÓN</button></nav>
-    {squad.loading ? <p className="empty-copy">CARGANDO…</p> : view === 'formation' ? <div className="match-lineup-pitch"><div className="match-lineup-pitch-watermark" aria-hidden="true"><TeamMark team={team}/></div>{starters.map(player => { const position = pitchPositionFor(player, positions); return <span className="match-lineup-player" style={{ left: `${position.x}%`, top: `${position.y}%` }} key={player.id}><PlayerFace src={player.faceUrl} name={player.name} className="match-lineup-face"/><small>{player.name}</small></span>; })}</div> : starters.length ? <ol>{starters.map(player => <li key={player.id}><b>{player.jerseyNumber ?? '–'}</b><PlayerFace src={player.faceUrl} name={player.name}/><EntityLink to="player" id={player.id}>{player.name}</EntityLink><small>{player.position ?? ''}</small></li>)}</ol> : <p className="empty-copy">SIN TITULARES DEFINIDOS.</p>}
+    {squad.loading ? <p className="empty-copy">CARGANDO…</p> : view === 'formation' ? <PitchBoard team={team} starters={starters} readOnly bare/> : starters.length ? <ol>{starters.map(player => <li key={player.id}><b>{player.jerseyNumber ?? '–'}</b><PlayerFace src={player.faceUrl} name={player.name}/><EntityLink to="player" id={player.id}>{player.name}</EntityLink><small>{player.position ?? ''}</small></li>)}</ol> : <p className="empty-copy">SIN TITULARES DEFINIDOS.</p>}
   </div>;
 }
 

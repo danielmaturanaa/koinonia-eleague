@@ -3,7 +3,6 @@ import { endpoints } from '../../api/endpoints.js';
 import { TeamMark } from '../../components/TeamMark.jsx';
 import { EntityLink } from '../../components/EntityLink.jsx';
 import { PlayerFace } from '../../components/PlayerFace.jsx';
-import { defaultFormationPositions, pitchPositionFor } from '../../utils/formationPositions.js';
 import { teamBalance, teamCoachName, teamCoachPhoto } from '../../utils/teamPresentation.js';
 import { readPersonProfile } from '../../utils/personProfile.js';
 import { matchRoundLabel } from '../../utils/matchPresentation.js';
@@ -151,20 +150,6 @@ function publishedHistoryFor(team) {
     anthemLyrics: team?.anthemLyrics?.trim() || 'LETRA DEL HIMNO PENDIENTE DE PUBLICACIÓN.',
     anthemUrl: team?.anthemUrl?.trim() || '',
   };
-}
-
-function SquadPitch({ starters }) {
-  if (!starters.length) return <div className="club-pitch club-pitch-empty"><p className="empty-copy">NO HAY TITULARES DEFINIDOS.</p></div>;
-  const defaults = defaultFormationPositions(starters);
-  return <div className="club-pitch">
-    {starters.map(player => {
-      const { x, y } = pitchPositionFor(player, defaults);
-      const { flag, rest: name } = splitPlayerName(player.name);
-      return <button type="button" className="club-pitch-player" style={{ left: `${x}%`, top: `${y}%` }} key={player.id} onClick={() => { window.location.hash = `/jugadores/${encodeURIComponent(player.id)}`; }} aria-label={`Ver ficha de ${name}`}>
-        <PlayerFace src={player.faceUrl} name={name} className="club-pitch-face"/><span className="club-pitch-name"><b>{player.jerseyNumber ?? '–'}</b>{flag && <i className="club-pitch-flag">{flag}</i>} {name}</span>
-      </button>;
-    })}
-  </div>;
 }
 
 function TeamCoversModal({ team, onClose, onChanged }) {
@@ -487,12 +472,10 @@ function HonoursList({ honours, historyError }) {
 function SquadTab({ team, squad, starters, substitutes, onChanged }) {
   const [mode, setMode] = useState('view');
   return <div className="club-squad-tab">
-    <nav className="club-squad-modes" aria-label="Acciones del plantel">{[['view', 'VER PLANTEL'], ['formation', 'EDITAR FORMACIÓN'], ['edit', 'EDITAR PLANTEL']].map(([id, label]) => <button type="button" key={id} className={mode === id ? 'active' : ''} aria-pressed={mode === id} onClick={() => setMode(id)}>{label}</button>)}</nav>
-    {mode === 'view' && <div className="club-squad-layout">
-      <div className="club-squad-pitch"><h3>TITULARES EN CANCHA</h3><SquadPitch starters={starters}/></div>
+    <nav className="club-squad-modes" aria-label="Acciones del plantel">{[['view', 'VER PLANTEL'], ['edit', 'EDITAR PLANTEL']].map(([id, label]) => <button type="button" key={id} className={mode === id ? 'active' : ''} aria-pressed={mode === id} onClick={() => setMode(id)}>{label}</button>)}</nav>
+    {mode === 'view' && <div className="club-squad-layout club-squad-layout-list">
       <div className="roster-panel club-roster"><h3>TITULARES <small>{starters.length} / 11</small></h3><RosterHeader/><div className="roster-list">{starters.length ? starters.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay titulares definidos.</p>}</div><h3>SUPLENTES <small>{substitutes.length}</small></h3><div className="roster-list substitutes">{substitutes.length ? substitutes.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay suplentes registrados.</p>}</div></div>
     </div>}
-    {mode === 'formation' && <div className="club-formation-tab"><PitchBoard team={team} starters={starters} substitutes={substitutes} onChanged={onChanged}/></div>}
     {mode === 'edit' && <div className="club-squad-editor"><SquadEditor team={team} squad={squad} onChanged={onChanged}/></div>}
   </div>;
 }

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { PlayerFace } from '../../components/PlayerFace.jsx';
+import { TeamMark } from '../../components/TeamMark.jsx';
 import { defaultFormationPositions, pitchPositionFor } from '../../utils/formationPositions.js';
 import { shortPlayerName } from '../../utils/playerNames.js';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
@@ -18,14 +19,17 @@ function PitchCard({ player, selected, swappable, editing, style, onPointerDown,
   </button>;
 }
 
-// Cancha estilo FIFA: en modo edición se toca un titular y luego un suplente (cambio)
-// u otro titular (intercambian posiciones); también se puede arrastrar para ubicarlo.
-export function PitchBoard({ team, starters, substitutes, onChanged }) {
-  const [editing, setEditing] = useState(false);
+// Cancha estilo FIFA, editable de inmediato: se toca un titular y luego un suplente
+// (cambio) u otro titular (intercambian posiciones); también se puede arrastrar.
+// Con readOnly (ficha de partido) solo se muestra y cada carta abre la ficha del jugador.
+// Con bare se omiten cabecera, ayuda y banca.
+export function PitchBoard({ team, starters, substitutes = [], onChanged, readOnly = false, bare = false }) {
+  const editing = !readOnly;
   const [selectedId, setSelectedId] = useState(null);
   const [localPositions, setLocalPositions] = useState({});
   const pitchRef = useRef(null);
   const drag = useRef(null);
+  const justDragged = useRef(false);
   const signature = starters.map(player => `${player.id}:${player.pitchX}:${player.pitchY}`).join('|');
   useEffect(() => setLocalPositions({}), [signature]);
   const defaults = defaultFormationPositions(starters);
@@ -35,6 +39,8 @@ export function PitchBoard({ team, starters, substitutes, onChanged }) {
   const move = useApiMutation((updates, signal) => Promise.all(updates.map(({ id, x, y }) => endpoints.updateSquadMember(team.id, id, { pitchX: x, pitchY: y }, signal))), { onSuccess: done });
   const busy = swap.loading || move.loading;
   const selected = starters.find(player => player.id === selectedId);
+  const colors = team?.colors ?? {};
+  const cardColors = { '--card-primary': colors.primary ?? '#062764', '--card-secondary': colors.secondary ?? '#a90020' };
 
   const pointFor = event => {
     const rect = pitchRef.current.getBoundingClientRect();
@@ -59,10 +65,12 @@ export function PitchBoard({ team, starters, substitutes, onChanged }) {
     const current = drag.current;
     drag.current = null;
     if (!current?.moved) return;
+    justDragged.current = true;
     const { x, y } = pointFor(event);
     move.execute([{ id: player.id, x, y }]);
   };
   const onStarterClick = player => () => {
+    if (justDragged.current) { justDragged.current = false; return; }
     if (!editing) { openPlayer(player); return; }
     if (busy) return;
     if (!selectedId) { setSelectedId(player.id); return; }
@@ -77,19 +85,26 @@ export function PitchBoard({ team, starters, substitutes, onChanged }) {
     if (!editing) { openPlayer(player); return; }
     if (selectedId && !busy) swap.execute(player.id);
   };
-  const hint = !editing ? 'Toca un jugador para ver su ficha.'
-    : selected ? `${shortPlayerName(selected)} seleccionado: toca un suplente para hacer el cambio u otro titular para intercambiar posiciones.`
-      : 'Toca un titular para cambiarlo, o arrástralo para moverlo en la cancha.';
+  const hint = readOnly ? '' : selected
+    ? <>{shortPlayerName(selected)} seleccionado: toca un suplente para hacer el cambio u otro titular para intercambiar posiciones. <button type="button" className="pitch-board-link" onClick={() => openPlayer(selected)}>Ver ficha →</button> <button type="button" className="pitch-board-link" onClick={() => setSelectedId(null)}>Cancelar</button></>
+    : 'Toca un titular para cambiarlo por un suplente, o arrástralo para moverlo en la cancha.';
+  useEffect(() => {
+    if (!selectedId) return undefined;
+    const onKey = event => { if (event.key === 'Escape') setSelectedId(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectedId]);
+  const field = starters.length ? <div className="pitch-board-field" ref={pitchRef}>
+    <span className="pitch-line pitch-halfway" aria-hidden="true"/><span className="pitch-line pitch-circle" aria-hidden="true"/><span className="pitch-line pitch-box top" aria-hidden="true"/><span className="pitch-line pitch-box bottom" aria-hidden="true"/>
+    {team && <span className="pitch-watermark" aria-hidden="true"><TeamMark team={team}/></span>}
+    {starters.map(player => { const { x, y } = positionOf(player); return <PitchCard key={player.id} player={player} editing={editing} selected={selectedId === player.id} style={{ left: `${x}%`, top: `${y}%` }} onPointerDown={onPointerDown(player)} onPointerMove={onPointerMove(player)} onPointerUp={onPointerUp(player)} onClick={onStarterClick(player)}/>; })}
+  </div> : <p className="empty-copy">NO HAY TITULARES DEFINIDOS.</p>;
 
-  const colors = team?.colors ?? {};
-  const cardColors = { '--card-primary': colors.primary ?? '#062764', '--card-secondary': colors.secondary ?? '#a90020' };
-  return <section className={`club-card pitch-board ${editing ? 'is-editing' : ''}`} style={cardColors}>
-    <header><h3>ALINEACIÓN <small>{starters.length} TITULARES · {substitutes.length} SUPLENTES</small></h3><button type="button" className={`pitch-board-toggle ${editing ? 'active' : ''}`} onClick={() => { setEditing(value => !value); setSelectedId(null); }}>{editing ? '✓ LISTO' : '✎ EDITAR ALINEACIÓN'}</button></header>
+  if (bare) return <div className="pitch-board pitch-board-bare" style={cardColors}>{field}</div>;
+  return <section className="club-card pitch-board is-editing" style={cardColors}>
+    <header><h3>ALINEACIÓN <small>{starters.length} TITULARES · {substitutes.length} SUPLENTES</small></h3></header>
     <p className="pitch-board-hint" role="status">{busy ? 'GUARDANDO…' : hint}</p>
-    {starters.length ? <div className="pitch-board-field" ref={pitchRef}>
-      <span className="pitch-line pitch-halfway" aria-hidden="true"/><span className="pitch-line pitch-circle" aria-hidden="true"/><span className="pitch-line pitch-box top" aria-hidden="true"/><span className="pitch-line pitch-box bottom" aria-hidden="true"/>
-      {starters.map(player => { const { x, y } = positionOf(player); return <PitchCard key={player.id} player={player} editing={editing} selected={selectedId === player.id} style={{ left: `${x}%`, top: `${y}%` }} onPointerDown={onPointerDown(player)} onPointerMove={onPointerMove(player)} onPointerUp={onPointerUp(player)} onClick={onStarterClick(player)}/>; })}
-    </div> : <p className="empty-copy">NO HAY TITULARES DEFINIDOS.</p>}
+    {field}
     <div className="pitch-board-bench"><h4>BANCA</h4>{substitutes.length ? <div>{substitutes.map(player => <PitchCard key={player.id} bench player={player} editing={editing} swappable={Boolean(selectedId)} onClick={onBenchClick(player)}/>)}</div> : <p className="empty-copy">SIN SUPLENTES.</p>}</div>
     <FormFeedback mutation={swap}/><FormFeedback mutation={move}/>
   </section>;
