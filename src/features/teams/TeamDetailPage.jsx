@@ -536,7 +536,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
             <div className="club-overview-left-column">
               <ClubPeople
                 president={{ key: `president-${personRevision}`, photo, name: presidentName, age: presidentProfile.age, country: presidentProfile.country, customFields: team.president?.customFields, role: 'PRESIDENTE' }}
-                coach={{ key: `coach-${personRevision}`, photo: managerPhoto, name: coachName, age: coachProfile.age, country: coachProfile.country, customFields: team.coach?.customFields, role: 'DIRECTOR TÉCNICO' }}
+                coach={{ key: `coach-${personRevision}`, photo: managerPhoto, name: coachName, age: coachProfile.age, country: coachProfile.country, customFields: team.coach?.customFields, role: 'DT' }}
                 onEditPresident={() => setPersonEditor('president')}
                 onEditCoach={() => setPersonEditor('coach')}
               />
