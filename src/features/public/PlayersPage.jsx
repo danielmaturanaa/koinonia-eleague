@@ -243,6 +243,25 @@ function ComparisonRow({ label, left, right, format = value => value, bar }) {
   </div>;
 }
 
+// Radar de áreas: cada eje va de 40 a 100 (el rango útil de las medias eFootball).
+function ComparisonRadar({ axes }) {
+  const size = 260;
+  const center = size / 2;
+  const radius = 92;
+  const scale = value => Math.max(0, Math.min(1, ((value ?? 40) - 40) / 60));
+  const point = (index, ratio) => {
+    const angle = (Math.PI * 2 * index) / axes.length - Math.PI / 2;
+    return [center + Math.cos(angle) * radius * ratio, center + Math.sin(angle) * radius * ratio];
+  };
+  const polygon = key => axes.map((axis, index) => point(index, scale(axis[key])).join(',')).join(' ');
+  return <svg className="h2h-radar" viewBox={`0 0 ${size} ${size}`} role="img" aria-label={`Radar: ${axes.map(axis => `${axis.label} ${axis.left ?? '—'} contra ${axis.right ?? '—'}`).join(', ')}`}>
+    {[0.25, 0.5, 0.75, 1].map(ratio => <polygon key={ratio} className="h2h-radar-grid" points={axes.map((_, index) => point(index, ratio).join(',')).join(' ')}/>)}
+    {axes.map((axis, index) => { const [x, y] = point(index, 1); const [lx, ly] = point(index, 1.2); return <g key={axis.label}><line className="h2h-radar-axis" x1={center} y1={center} x2={x} y2={y}/><text x={lx} y={ly} textAnchor="middle" dominantBaseline="middle">{axis.label}</text></g>; })}
+    <polygon className="h2h-radar-left" points={polygon('left')}/>
+    <polygon className="h2h-radar-right" points={polygon('right')}/>
+  </svg>;
+}
+
 function PlayerComparator({ selections, onAdd, onRemove }) {
   const [comparisonData, setComparisonData] = useState({});
   const onData = useCallback((key, data) => setComparisonData(current => {
@@ -266,7 +285,7 @@ function PlayerComparator({ selections, onAdd, onRemove }) {
   };
   const skills = data => (data?.card?.skills ?? []).map(skillLabel);
   return <section className="player-comparator">
-    <header><div><h2>COMPARADOR DE JUGADORES</h2><p>Busca dos jugadores o agrégalos desde su ficha. En verde, el mejor valor y la diferencia.</p></div><small>{selections.length} / 2 SELECCIONADOS</small></header>
+    <header><div><h2>COMPARADOR DE JUGADORES</h2><p>Busca dos jugadores o agrégalos desde su ficha. Se destaca quién gana cada atributo y por cuánto.</p></div><small>{selections.length} / 2 SELECCIONADOS</small></header>
     {selections.map(selection => <ComparisonLoader key={comparisonSelectionKey(selection)} selection={selection} onData={onData}/>)}
     <div className="h2h">
       <div className="h2h-heads">
@@ -276,7 +295,7 @@ function PlayerComparator({ selections, onAdd, onRemove }) {
       </div>
       {selections.length > 0 && (loading ? <div className="arcade-state compact">CARGANDO DATOS...</div> : <>
         {[left, right].some(item => item?.error) && <p className="empty-copy">NO SE PUDO CARGAR UNO DE LOS JUGADORES.</p>}
-        {both && statGroups.length > 0 && <section className="h2h-section"><h4>RESUMEN POR ÁREA</h4>{statGroups.map(([title, rows]) => <ComparisonRow key={title} label={title} left={groupAverage(leftStats, rows)} right={groupAverage(rightStats, rows)} bar/>)}</section>}
+        {both && statGroups.length > 0 && <section className="h2h-section h2h-overview"><h4>RESUMEN POR ÁREA</h4><div><div className="h2h-overview-rows">{statGroups.map(([title, rows]) => <ComparisonRow key={title} label={title} left={groupAverage(leftStats, rows)} right={groupAverage(rightStats, rows)} bar/>)}</div><ComparisonRadar axes={statGroups.filter(([title]) => title !== 'PORTERO' || [left, right].some(item => (item?.card?.position ?? item?.player?.position) === 'PT')).map(([title, rows]) => ({ label: title, left: groupAverage(leftStats, rows), right: groupAverage(rightStats, rows) }))}/></div></section>}
         <section className="h2h-section"><h4>DATOS GENERALES</h4>{COMPARISON_FACTS.map(([label, read, format]) => <ComparisonRow key={label} label={label} left={left ? read(left) : null} right={right ? read(right) : null} format={format}/>)}</section>
         {statGroups.map(([title, rows]) => <section className="h2h-section" key={title}><h4>{title}</h4>{rows.map(([stat, label]) => <ComparisonRow key={stat} label={label} left={leftStats[stat]} right={rightStats[stat]} bar/>)}</section>)}
         {(skills(left).length > 0 || skills(right).length > 0) && <section className="h2h-section h2h-skills"><h4>HABILIDADES</h4><div><p>{skills(left).join(' · ') || '—'}</p><p>{skills(right).join(' · ') || '—'}</p></div></section>}
