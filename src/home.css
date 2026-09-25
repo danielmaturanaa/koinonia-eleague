@@ -2803,3 +2803,19 @@ a.news-read-more { display: inline-block; text-decoration: none; }
   .match-center-top { grid-template-columns: 1fr; }
   .match-center-top > .match-center-h2h > .match-card-panel { position: static; max-height: 480px; }
 }
+
+/* Buscador global por secciones: equipos, partidos (o el cruce) y jugadores. */
+.global-search-row { display: contents; }
+.global-search-heading { margin: 8px 0 2px; padding: 4px 10px; color: #a90020; background: #efe6cf; font: 600 12px/1.2 'Oswald', sans-serif; letter-spacing: .8px; }
+.global-search-heading:first-child { margin-top: 0; }
+.global-search-team .team-mark { width: 36px; height: 36px; flex: 0 0 36px; }
+.global-search-go { color: #062764; font: 700 18px/1 'Oswald', sans-serif; }
+.global-search-match { display: grid !important; grid-template-columns: 1fr; gap: 3px; }
+.global-search-fixture { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto minmax(0, 1fr) 24px; align-items: center; gap: 6px; }
+.global-search-fixture .team-mark { width: 24px; height: 24px; flex-basis: 24px; }
+.global-search-fixture b { overflow: hidden; font: 700 14px/1.1 'Roboto Condensed', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+.global-search-fixture b:first-of-type { text-align: right; }
+.global-search-fixture strong { padding: 0 6px; font: 400 18px/1 'Anton', sans-serif; }
+.global-search-match-state { color: #625d4e; font: 600 11px/1 'Oswald', sans-serif; letter-spacing: .4px; text-align: center; }
+.global-search-match-state.live { color: #d10020; }
+.global-search-match-state.pending { color: #062764; }
