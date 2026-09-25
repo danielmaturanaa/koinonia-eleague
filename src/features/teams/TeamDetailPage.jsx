@@ -7,10 +7,11 @@ import { defaultFormationPositions, pitchPositionFor } from '../../utils/formati
 import { teamBalance, teamCoachName, teamCoachPhoto } from '../../utils/teamPresentation.js';
 import { readPersonProfile } from '../../utils/personProfile.js';
 import { matchRoundLabel } from '../../utils/matchPresentation.js';
-import { CoachForm, FormationEditor, PresidentForm, ProfileForm, SquadEditor } from '../admin/TeamAdminPanel.jsx';
+import { CoachForm, PresidentForm, ProfileForm, SquadEditor } from '../admin/TeamAdminPanel.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { useApiQuery } from '../public/useApiQuery.js';
+import { PitchBoard } from './PitchBoard.jsx';
 
 const gp = value => typeof value === 'number' ? value.toLocaleString('es-CL') : '—';
 const FLAG_REGEX = /^(\p{Regional_Indicator}{2})\s*/u;
@@ -164,16 +165,6 @@ function SquadPitch({ starters }) {
       </button>;
     })}
   </div>;
-}
-
-function ClubOverviewRoster({ starters, substitutes }) {
-  const [mode, setMode] = useState('starters');
-  return <section className="club-card club-overview-pitch">
-    <h3>TITULARES</h3>
-    <nav className="club-overview-roster-tabs" aria-label="Vista del plantel"><button type="button" className={mode === 'starters' ? 'active' : ''} aria-pressed={mode === 'starters'} onClick={() => setMode('starters')}>TITULARES <small>{starters.length}</small></button><button type="button" className={mode === 'substitutes' ? 'active' : ''} aria-pressed={mode === 'substitutes'} onClick={() => setMode('substitutes')}>SUPLENTES <small>{substitutes.length}</small></button></nav>
-    {mode === 'starters' && <div className="club-overview-roster-panel"><SquadPitch starters={starters}/></div>}
-    {mode === 'substitutes' && <div className="club-overview-roster-panel"><h3>SUPLENTES <small>{substitutes.length}</small></h3><ul className="club-overview-substitutes">{substitutes.length ? substitutes.map(player => { const { rest: name } = splitPlayerName(player.name); return <li key={player.id}><EntityLink to="player" id={player.id}><PlayerFace src={player.faceUrl} name={name} className="club-overview-substitute-face"/><span><b>{name}</b><small>{player.position ?? '—'} · DORSAL {player.jerseyNumber ?? '—'}</small></span></EntityLink></li>; }) : <li className="empty-copy">SIN SUPLENTES REGISTRADOS.</li>}</ul></div>}
-  </section>;
 }
 
 function TeamCoversModal({ team, onClose, onChanged }) {
@@ -501,7 +492,7 @@ function SquadTab({ team, squad, starters, substitutes, onChanged }) {
       <div className="club-squad-pitch"><h3>TITULARES EN CANCHA</h3><SquadPitch starters={starters}/></div>
       <div className="roster-panel club-roster"><h3>TITULARES <small>{starters.length} / 11</small></h3><RosterHeader/><div className="roster-list">{starters.length ? starters.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay titulares definidos.</p>}</div><h3>SUPLENTES <small>{substitutes.length}</small></h3><div className="roster-list substitutes">{substitutes.length ? substitutes.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay suplentes registrados.</p>}</div></div>
     </div>}
-    {mode === 'formation' && <div className="club-formation-tab"><FormationEditor team={team} squad={squad} onChanged={onChanged}/></div>}
+    {mode === 'formation' && <div className="club-formation-tab"><PitchBoard team={team} starters={starters} substitutes={substitutes} onChanged={onChanged}/></div>}
     {mode === 'edit' && <div className="club-squad-editor"><SquadEditor team={team} squad={squad} onChanged={onChanged}/></div>}
   </div>;
 }
@@ -558,7 +549,7 @@ export function TeamDetailPage({ team, teams = [], squad, standings, matches = [
               <ClubScorers teamId={team.id} limit={3}/>
               <ClubRecentResults matches={matches} resolveTeam={resolveTeam} teamId={team.id} onMore={() => onTab?.('partidos')}/>
             </div>
-            <ClubOverviewRoster starters={starters} substitutes={substitutes}/>
+            <PitchBoard team={team} starters={starters} substitutes={substitutes} onChanged={onChanged}/>
           </div>
         </div>}
 
