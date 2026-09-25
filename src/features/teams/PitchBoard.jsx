@@ -88,10 +88,13 @@ export function PitchBoard({ team, starters, substitutes = [], onChanged, readOn
   const defaults = defaultFormationPositions(starters);
   const positionOf = player => localPositions[player.id] ?? pitchPositionFor(player, defaults);
   const done = () => { setSelectedId(null); onChanged?.(); };
-  const swap = useApiMutation((substituteId, signal) => endpoints.swapSquadMembers(team.id, selectedId, substituteId, signal), { onSuccess: done });
+  const swap = useApiMutation(({ starterId, substituteId }, signal) => endpoints.swapSquadMembers(team.id, starterId, substituteId, signal), { onSuccess: done });
+  // Reordena la banca intercambiando dos suplentes; los titulares mantienen su orden.
+  const reorder = useApiMutation((bench, signal) => endpoints.updateSquadOrder(team.id, [...starters, ...bench].map((player, index) => ({ playerId: player.id, squadOrder: index + 1 })), signal), { onSuccess: done });
   const move = useApiMutation((updates, signal) => Promise.all(updates.map(({ id, x, y }) => endpoints.updateSquadMember(team.id, id, { pitchX: x, pitchY: y }, signal))), { onSuccess: done });
-  const busy = swap.loading || move.loading;
-  const selected = starters.find(player => player.id === selectedId);
+  const busy = swap.loading || move.loading || reorder.loading;
+  const selected = starters.find(player => player.id === selectedId) ?? substitutes.find(player => player.id === selectedId);
+  const selectedIsBench = substitutes.some(player => player.id === selectedId);
   const colors = team?.colors ?? {};
   const cardColors = { '--card-primary': colors.primary ?? '#062764', '--card-secondary': colors.secondary ?? '#a90020', '--card-tertiary': colors.tertiary ?? colors.secondary ?? '#ffd42a' };
 
@@ -126,6 +129,7 @@ export function PitchBoard({ team, starters, substitutes = [], onChanged, readOn
     if (busy) return;
     if (!selectedId) { setSelectedId(player.id); return; }
     if (selectedId === player.id) { setSelectedId(null); return; }
+    if (selectedIsBench) { swap.execute({ starterId: player.id, substituteId: selectedId }); return; }
     // Dos titulares: intercambian su lugar en la cancha.
     const first = positionOf(selected);
     const second = positionOf(player);
@@ -134,11 +138,20 @@ export function PitchBoard({ team, starters, substitutes = [], onChanged, readOn
   };
   const onBenchClick = player => () => {
     if (!editing) { openPlayer(player); return; }
-    if (selectedId && !busy) swap.execute(player.id);
+    if (busy) return;
+    if (!selectedId) { setSelectedId(player.id); return; }
+    if (selectedId === player.id) { setSelectedId(null); return; }
+    if (!selectedIsBench) { swap.execute({ starterId: selectedId, substituteId: player.id }); return; }
+    // Dos suplentes: intercambian su lugar en la banca.
+    const bench = [...substitutes];
+    const from = bench.findIndex(item => item.id === selectedId);
+    const to = bench.findIndex(item => item.id === player.id);
+    [bench[from], bench[to]] = [bench[to], bench[from]];
+    reorder.execute(bench);
   };
   const hint = readOnly ? '' : selected
-    ? <>{shortPlayerName(selected)} seleccionado: toca un suplente para hacer el cambio u otro titular para intercambiar posiciones. <button type="button" className="pitch-board-link" onClick={() => openPlayer(selected)}>Ver ficha →</button> <button type="button" className="pitch-board-link" onClick={() => setSelectedId(null)}>Cancelar</button></>
-    : 'Toca un titular para cambiarlo por un suplente, o arrástralo para moverlo en la cancha.';
+    ? <>{shortPlayerName(selected)} seleccionado: {selectedIsBench ? 'toca un titular para que entre, u otro suplente para cambiar el orden de la banca.' : 'toca un suplente para hacer el cambio u otro titular para intercambiar posiciones.'} <button type="button" className="pitch-board-link" onClick={() => openPlayer(selected)}>Ver ficha →</button> <button type="button" className="pitch-board-link" onClick={() => setSelectedId(null)}>Cancelar</button></>
+    : 'Toca un titular y luego un suplente (o al revés) para hacer un cambio. Toca dos suplentes para reordenar la banca, o arrastra un titular para moverlo.';
   useEffect(() => {
     if (!selectedId) return undefined;
     const onKey = event => { if (event.key === 'Escape') setSelectedId(null); };
@@ -157,7 +170,7 @@ export function PitchBoard({ team, starters, substitutes = [], onChanged, readOn
     <header><h3>ALINEACIÓN <small>{starters.length} TITULARES · {substitutes.length} SUPLENTES</small></h3></header>
     <p className="pitch-board-hint" role="status">{busy ? 'GUARDANDO…' : hint}</p>
     {field}
-    <div className="pitch-board-bench"><h4>BANCA</h4>{substitutes.length ? <div>{substitutes.map(player => <PitchCard key={player.id} bench player={player} editing={editing} swappable={Boolean(selectedId)} onClick={onBenchClick(player)}/>)}</div> : <p className="empty-copy">SIN SUPLENTES.</p>}</div>
-    <FormFeedback mutation={swap}/><FormFeedback mutation={move}/>
+    <div className="pitch-board-bench"><h4>BANCA</h4>{substitutes.length ? <div>{substitutes.map(player => <PitchCard key={player.id} bench player={player} editing={editing} selected={selectedId === player.id} swappable={Boolean(selectedId) && selectedId !== player.id} onClick={onBenchClick(player)}/>)}</div> : <p className="empty-copy">SIN SUPLENTES.</p>}</div>
+    <FormFeedback mutation={swap}/><FormFeedback mutation={move}/><FormFeedback mutation={reorder}/>
   </section>;
 }
