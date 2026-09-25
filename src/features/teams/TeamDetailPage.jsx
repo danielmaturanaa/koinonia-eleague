@@ -129,7 +129,7 @@ function StadiumEditor({ team, onChanged }) {
   const mutation = useApiMutation((body, signal) => endpoints.updateTeam(team.id, body, signal), { onSuccess: onChanged });
   const submit = event => { event.preventDefault(); mutation.execute({ stadium }); };
   return <form className="club-stadium-editor" onSubmit={submit}>
-    <label><span>🏟️ ESTADIO</span><input value={stadium} maxLength={100} placeholder="Ej. Madness Arena" onChange={event => setStadium(event.target.value)}/></label>
+    <label><input aria-label="Estadio" value={stadium} maxLength={100} placeholder="ESTADIO" onChange={event => setStadium(event.target.value)}/></label>
     <button className="action-button" disabled={mutation.loading}>{mutation.loading ? 'GUARDANDO…' : 'GUARDAR ESTADIO'}</button>
     <FormFeedback mutation={mutation}/>
   </form>;
