@@ -11,6 +11,7 @@ import { ActivityPage } from '../features/public/ActivityPage.jsx';
 import { MarketPage } from '../features/public/MarketPage.jsx';
 import { MatchesPage } from '../features/public/MatchesPage.jsx';
 import { NewsPage } from '../features/public/NewsPage.jsx';
+import { NewsArticlePage } from '../features/news/NewsArticlePage.jsx';
 import { PlayersPage, playersReturnQuery } from '../features/public/PlayersPage.jsx';
 import { PlayerProfilePage } from '../features/public/PlayerProfilePage.jsx';
 import { EfootballCardPage } from '../features/public/EfootballCard.jsx';
@@ -89,6 +90,8 @@ export function App() {
     page = <MarketPage teams={league.teams}/>;
   } else if (route.path === '/sanciones') {
     page = <ActivityPage sanctionsOnly/>;
+  } else if (route.name === 'newsArticle') {
+    page = <NewsArticlePage newsId={route.newsId} teams={league.teams} navigate={navigate}/>;
   } else if (route.path === '/noticias') {
     page = <NewsPage teams={league.teams}/>;
   } else if (route.path === '/reglas') {

@@ -16,6 +16,8 @@ function matchRoute(path) {
   if (path === '/clasificacion/rankings') return { name: 'section', path: '/equipos/rankings' };
   if (path === '/clasificacion') return { name: 'section', path: '/torneos' };
   if (path === '/jugadores') return { name: 'section', path: '/equipos/jugadores' };
+  const newsMatch = path.match(/^\/noticias\/([^/]+)$/);
+  if (newsMatch) return { name: 'newsArticle', path, newsId: decodeURIComponent(newsMatch[1]) };
   const cardMatch = path.match(/^\/efootball\/(\d+)$/);
   if (cardMatch) return { name: 'card', path, pesId: Number(cardMatch[1]) };
   const playerMatch = path.match(/^\/jugadores\/([^/]+)$/);
@@ -59,6 +61,8 @@ export function useRoute() {
               ? 'Ficha de jugador'
             : route.name === 'card'
               ? 'Carta eFootball'
+            : route.name === 'newsArticle'
+              ? 'Noticia'
             : route.name === 'scoreboard'
               ? 'Marcador en vivo'
               : sectionContent[route.path]?.[0] ?? 'Koinonia e-League';
