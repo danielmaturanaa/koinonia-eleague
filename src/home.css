@@ -2362,3 +2362,4 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .pitch-card-photo::before { background: linear-gradient(115deg, transparent 35%, #ffffff26 48%, transparent 60%); }
 .pitch-card-photo::after { height: 22%; background: linear-gradient(transparent, #0006); }
 .pitch-card::before { height: 4px; background: linear-gradient(90deg, var(--card-primary) 0 40%, var(--card-tertiary) 40% 60%, var(--card-secondary) 60% 100%); }
+.pitch-card::before { content: none; }
