@@ -2068,9 +2068,6 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .fixture-footer > .match-venue { margin-left: auto; }
 .match-venue { color: inherit; font: 700 15px/1 'Oswald', sans-serif; letter-spacing: .35px; text-transform: none; }
 .match-venue.compact { display: block; margin-top: 3px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.fixture-finished .match-venue { color: #fff; }
-.fixture-finished .fixture-footer { color: #fff; border-top-color: #166332; background: #1c7a3e; }
-.fixture-pending .fixture-footer { color: #4d4839; border-top-color: #a9a292; background: #d8d3c7; }
 @media (max-width: 560px) {
   .fixture-grid { grid-template-columns: 1fr; }
   .team-chip-bar { grid-template-columns: repeat(6, minmax(0, 1fr)); }
