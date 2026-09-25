@@ -946,7 +946,6 @@ a.table-team-link:hover { text-decoration: underline; text-underline-offset: 3px
 .club-more-button:hover { background: #a90020; }
 .club-inline-edit { padding: 5px 9px; border: 2px solid #10285b; color: #062764; background: #e4d9c0; font: 600 13px/1 'Oswald', sans-serif; letter-spacing: .4px; }
 .club-inline-edit:hover { color: #fff; background: #a90020; }
-.club-leader-edit { position: absolute; right: 10px; bottom: 10px; display: grid; place-items: center; width: 36px; height: 36px; padding: 0; font-size: 21px; line-height: 1; }
 .club-history { display: grid; grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr); gap: 16px; align-items: start; }
 .club-history header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
 .club-history h3 { margin: 0; }
@@ -2107,16 +2106,14 @@ a.news-read-more { display: inline-block; text-decoration: none; }
    últimos resultados compactos, y la cancha a la derecha. */
 .club-people-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .club-person-entry { display: grid; gap: 6px; min-width: 0; }
-.club-person-role { margin: 0; color: #10285b; font: 700 18px/1 'Oswald', sans-serif; letter-spacing: .4px; text-transform: uppercase; }
+.club-person-role { display: flex; align-items: center; gap: 6px; margin: 0; color: #10285b; font: 700 18px/1 'Oswald', sans-serif; letter-spacing: .4px; text-transform: uppercase; }
+.club-person-role .club-leader-edit { display: grid; place-items: center; width: 25px; height: 25px; padding: 0; border-color: #10285b; font-size: 17px; line-height: 1; }
 .club-person-card { position: relative; overflow: hidden; aspect-ratio: 1 / 1; border: 2px solid #10285b; background: #062764; }
 .club-person-card > img, .club-person-card > .president-photo-placeholder { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; box-shadow: none; object-fit: cover; object-position: center 20%; }
 .club-person-card::after { content: ''; position: absolute; inset: 55% 0 0; background: linear-gradient(transparent, #0007 55%, #000b); pointer-events: none; }
 .club-person-overlay { position: absolute; z-index: 1; right: 0; bottom: 0; left: 0; display: grid; gap: 3px; padding: 12px; color: #fff; }
 .club-person-overlay h3 { margin: 0; font: 400 clamp(17px, 1.6vw, 23px)/1.02 'Anton', sans-serif; letter-spacing: .2px; text-shadow: 2px 2px 0 #000; overflow-wrap: anywhere; }
 .club-person-overlay p { margin: 0; color: #e6ecf8; font: 600 13px/1.2 'Oswald', sans-serif; letter-spacing: .4px; text-transform: uppercase; }
-.club-person-card .club-leader-edit { position: absolute; z-index: 2; top: 8px; right: 8px; bottom: auto; width: 32px; height: 32px; padding: 0; border: 1px solid #fff8; color: #fff; background: #0008; opacity: 0; transition: opacity 150ms ease; }
-@media (hover: none) { .club-person-card .club-leader-edit { opacity: .8; } }
-.club-person-card:hover .club-leader-edit, .club-person-card .club-leader-edit:focus-visible { opacity: 1; }
 .club-people > h3, .club-recent > h3 { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .club-recent .club-match-list { display: grid; gap: 6px; }
 .club-recent .club-match-row { padding: 6px 8px; }

@@ -94,10 +94,10 @@ function PersonPhoto({ photo, name }) {
   return photo ? <img src={photo} alt={`Foto de ${name}`}/> : <div className="president-photo-placeholder" aria-label={`Foto de ${name} no publicada`}><b>{name.split(/\s+/).map(part => part[0]).join('').slice(0, 2).toUpperCase() || '—'}</b><small>FOTO NO PUBLICADA</small></div>;
 }
 
-// Foto a sangre con nombre, edad y país sobre un degradado inferior; la edición va en la esquina.
+// Foto a sangre con nombre, edad y país sobre un degradado inferior; la edición queda junto al cargo.
 function LeaderCard({ photo, name, age, country, customFields = [], role, onEdit }) {
   const details = [age ? `${age} AÑOS` : null, country, ...customFields.map(field => field.value ? `${field.label}: ${field.value}` : null)].filter(Boolean);
-  return <div className="club-person-entry"><h3 className="club-person-role">{role}</h3><article className="club-person-card"><PersonPhoto photo={photo} name={name}/><div className="club-person-overlay"><h3>{name}</h3>{details.length > 0 && <p>{details.join(' · ')}</p>}</div><button type="button" className="club-inline-edit club-leader-edit" onClick={onEdit} aria-label={`Editar ${role.toLowerCase()}`} title={`Editar ${role.toLowerCase()}`}>⚙</button></article></div>;
+  return <div className="club-person-entry"><h3 className="club-person-role">{role}<button type="button" className="club-inline-edit club-leader-edit" onClick={onEdit} aria-label={`Editar ${role.toLowerCase()}`} title={`Editar ${role.toLowerCase()}`}>✎</button></h3><article className="club-person-card"><PersonPhoto photo={photo} name={name}/><div className="club-person-overlay"><h3>{name}</h3>{details.length > 0 && <p>{details.join(' · ')}</p>}</div></article></div>;
 }
 
 function ClubPeople({ president: { key: presidentKey, ...president }, coach: { key: coachKey, ...coach }, onEditPresident, onEditCoach }) {
