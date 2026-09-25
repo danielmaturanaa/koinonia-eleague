@@ -2049,24 +2049,20 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .fixture-group h3 { display: flex; align-items: baseline; gap: 10px; margin: 0 0 8px; padding-bottom: 5px; border-bottom: 2px solid #10285b; color: #062764; font: 400 22px/1 'Anton', sans-serif; letter-spacing: .4px; }
 .fixture-group h3 small { color: #625d4e; font: 600 13px/1 'Oswald', sans-serif; }
 .fixture-group-live h3 { color: #a90020; border-color: #a90020; }
-.fixture-group-live h3 > i, .fixture-state em i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #d10020; animation: live-dot 1.2s ease-in-out infinite; }
+.fixture-group-live h3 > i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #d10020; animation: live-dot 1.2s ease-in-out infinite; }
 .fixture-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 8px; }
-.fixture-card { display: grid; grid-template-columns: minmax(0, 1fr) 96px; grid-template-rows: auto auto; padding: 0; overflow: hidden; border: 2px solid #10285b; color: #11120e; background: #fff9e8; text-align: left; transition: transform 100ms ease, box-shadow 100ms ease; }
+.fixture-card { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: auto auto; padding: 0; overflow: hidden; border: 2px solid #10285b; border-left-width: 9px; color: #11120e; background: #fff9e8; text-align: left; transition: transform 100ms ease, box-shadow 100ms ease; }
 .fixture-card:hover { transform: translateY(-1px); box-shadow: 3px 3px 0 #10285b; }
-.fixture-live { border-color: #d10020; }
-.fixture-pending { border-color: #b18b16; }
-.fixture-finished { border-color: #536680; }
-.fixture-cancelled { border-color: #837d70; }
+.fixture-live { border-color: #10285b; border-left-color: #d10020; }
+.fixture-pending { border-color: #b18b16; border-left-color: #b18b16; }
+.fixture-finished { border-color: #536680; border-left-color: #1c7a3e; }
+.fixture-cancelled { border-color: #837d70; border-left-color: #837d70; }
 .fixture-teams { display: grid; gap: 6px; padding: 9px 10px; }
 .fixture-team { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; align-items: center; gap: 8px; }
 .fixture-team .team-mark { width: 26px; height: 26px; flex-basis: 26px; }
 .fixture-team b { overflow: hidden; font: 700 15px/1.1 'Roboto Condensed', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
 .fixture-team strong { min-width: 18px; font: 400 20px/1 'Anton', sans-serif; text-align: right; }
 .fixture-team.lost b, .fixture-team.lost strong { color: #7a7462; font-weight: 500; }
-.fixture-state { display: grid; place-items: center; padding: 6px; border-left: 1px solid #d4c8ae; color: #4d4839; font-family: 'Oswald', sans-serif; letter-spacing: .4px; text-align: center; }
-.fixture-state b { display: inline-flex; align-items: center; gap: 5px; font: 700 14px/1 'Oswald', sans-serif; }
-.fixture-state i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; background: currentColor; animation: live-dot 1.2s ease-in-out infinite; }
-.fixture-live .fixture-state, .fixture-pending .fixture-state, .fixture-finished .fixture-state, .fixture-cancelled .fixture-state { color: #4d4839; background: transparent; border-left-color: #d4c8ae; }
 .fixture-footer { display: flex; grid-column: 1 / -1; gap: 8px; padding: 5px 10px; overflow: hidden; border-top: 1px solid #d4c8ae; color: #625d4e; background: #efe6cf; font: 600 12px/1 'Oswald', sans-serif; letter-spacing: .3px; }
 .fixture-footer > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .fixture-footer > .match-venue { margin-left: auto; }
@@ -2345,8 +2341,7 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 @media (max-width: 560px) {
   .fixture-group h3 { flex-wrap: wrap; row-gap: 4px; font-size: 19px; }
   .fixture-group h3 em { margin-left: 0; }
-  .fixture-card { grid-template-columns: minmax(0, 1fr) 78px; }
-  .fixture-state { font-size: 11px; }
+  .fixture-card { border-left-width: 7px; }
   .club-standing-snippet th:nth-child(3), .club-standing-snippet td:nth-child(3) { display: none; }
 }
 
