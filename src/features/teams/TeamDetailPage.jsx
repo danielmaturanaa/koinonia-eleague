@@ -7,6 +7,7 @@ import { teamBalance, teamCoachName, teamCoachPhoto } from '../../utils/teamPres
 import { readPersonProfile } from '../../utils/personProfile.js';
 import { matchRoundLabel } from '../../utils/matchPresentation.js';
 import { CoachForm, PresidentForm, ProfileForm, SquadEditor } from '../admin/TeamAdminPanel.jsx';
+import { useAuth } from '../../app/AuthGate.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { useApiQuery } from '../public/useApiQuery.js';
@@ -97,7 +98,7 @@ function PersonPhoto({ photo, name }) {
 // Foto a sangre con nombre, edad y país sobre un degradado inferior; la edición queda junto al cargo.
 function LeaderCard({ photo, name, age, country, customFields = [], role, onEdit }) {
   const details = [age ? `${age} AÑOS` : null, country, ...customFields.map(field => field.value ? `${field.label}: ${field.value}` : null)].filter(Boolean);
-  return <div className="club-person-entry"><h3 className="club-person-role">{role}<button type="button" className="club-inline-edit club-leader-edit" onClick={onEdit} aria-label={`Editar ${role.toLowerCase()}`} title={`Editar ${role.toLowerCase()}`}>✎</button></h3><article className="club-person-card"><PersonPhoto photo={photo} name={name}/><div className="club-person-overlay"><h3>{name}</h3>{details.length > 0 && <p>{details.join(' · ')}</p>}</div></article></div>;
+  return <div className="club-person-entry"><h3 className="club-person-role">{role}{onEdit && <button type="button" className="club-inline-edit club-leader-edit" onClick={onEdit} aria-label={`Editar ${role.toLowerCase()}`} title={`Editar ${role.toLowerCase()}`}>✎</button>}</h3><article className="club-person-card"><PersonPhoto photo={photo} name={name}/><div className="club-person-overlay"><h3>{name}</h3>{details.length > 0 && <p>{details.join(' · ')}</p>}</div></article></div>;
 }
 
 function ClubPeople({ president: { key: presidentKey, ...president }, coach: { key: coachKey, ...coach }, onEditPresident, onEditCoach }) {
@@ -181,8 +182,8 @@ function ClubHistory({ team, onEdit }) {
   const [expanded, setExpanded] = useState(false);
   const longReview = content.review.length > 900;
   return <div className="club-history">
-    <article className="club-history-review"><header><h3>RESEÑA HISTÓRICA</h3><button type="button" className="club-inline-edit" onClick={() => onEdit('review')}>✎ EDITAR</button></header><p className={longReview && !expanded ? 'clamped' : ''}>{content.review}</p>{longReview && <button type="button" className="club-more-button" onClick={() => setExpanded(value => !value)}>{expanded ? 'MOSTRAR MENOS' : 'LEER RESEÑA COMPLETA'}</button>}</article>
-    <aside className="club-history-anthem"><header><h3>HIMNO DEL CLUB</h3><button type="button" className="club-inline-edit" onClick={() => onEdit('anthem')}>✎ EDITAR</button></header>{content.anthemUrl ? <audio controls preload="metadata" src={content.anthemUrl}/> : <p className="empty-copy">AUDIO PENDIENTE DE PUBLICACIÓN.</p>}<details><summary>VER LETRA</summary><div className="anthem-lyrics">{stanzas.map((stanza, index) => <p key={index}>{stanza}</p>)}</div></details></aside>
+    <article className="club-history-review"><header><h3>RESEÑA HISTÓRICA</h3>{onEdit && <button type="button" className="club-inline-edit" onClick={() => onEdit('review')}>✎ EDITAR</button>}</header><p className={longReview && !expanded ? 'clamped' : ''}>{content.review}</p>{longReview && <button type="button" className="club-more-button" onClick={() => setExpanded(value => !value)}>{expanded ? 'MOSTRAR MENOS' : 'LEER RESEÑA COMPLETA'}</button>}</article>
+    <aside className="club-history-anthem"><header><h3>HIMNO DEL CLUB</h3>{onEdit && <button type="button" className="club-inline-edit" onClick={() => onEdit('anthem')}>✎ EDITAR</button>}</header>{content.anthemUrl ? <audio controls preload="metadata" src={content.anthemUrl}/> : <p className="empty-copy">AUDIO PENDIENTE DE PUBLICACIÓN.</p>}<details><summary>VER LETRA</summary><div className="anthem-lyrics">{stanzas.map((stanza, index) => <p key={index}>{stanza}</p>)}</div></details></aside>
   </div>;
 }
 
@@ -482,17 +483,21 @@ function HonoursList({ honours, historyError }) {
 }
 
 function SquadTab({ team, squad, starters, substitutes, onChanged }) {
+  const { canEditTeam } = useAuth();
+  const canEdit = canEditTeam(team.id);
   const [mode, setMode] = useState('view');
   return <div className="club-squad-tab">
-    <nav className="club-squad-modes" aria-label="Acciones del plantel">{[['view', 'VER PLANTEL'], ['edit', 'EDITAR PLANTEL']].map(([id, label]) => <button type="button" key={id} className={mode === id ? 'active' : ''} aria-pressed={mode === id} onClick={() => setMode(id)}>{label}</button>)}</nav>
+    <nav className="club-squad-modes" aria-label="Acciones del plantel">{[['view', 'VER PLANTEL'], ...(canEdit ? [['edit', 'EDITAR PLANTEL']] : [])].map(([id, label]) => <button type="button" key={id} className={mode === id ? 'active' : ''} aria-pressed={mode === id} onClick={() => setMode(id)}>{label}</button>)}</nav>
     {mode === 'view' && <div className="club-squad-layout club-squad-layout-list">
       <div className="roster-panel club-roster"><h3>TITULARES <small>{starters.length} / 11</small></h3><RosterHeader/><div className="roster-list">{starters.length ? starters.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay titulares definidos.</p>}</div><h3>SUPLENTES <small>{substitutes.length}</small></h3><div className="roster-list substitutes">{substitutes.length ? substitutes.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay suplentes registrados.</p>}</div></div>
     </div>}
-    {mode === 'edit' && <div className="club-squad-editor"><SquadEditor team={team} squad={squad} onChanged={onChanged}/></div>}
+    {mode === 'edit' && canEdit && <div className="club-squad-editor"><SquadEditor team={team} squad={squad} onChanged={onChanged}/></div>}
   </div>;
 }
 
 export function TeamDetailPage({ team, teams = [], tournaments = [], squad, standings, matches = [], history = [], historyError, loading, tab = 'resumen', onTab, onBack, onChanged }) {
+  const { canEditTeam } = useAuth();
+  const canEdit = canEditTeam(team?.id);
   const [historyEditor, setHistoryEditor] = useState('');
   const [personEditor, setPersonEditor] = useState('');
   const [personRevision, setPersonRevision] = useState(0);
@@ -521,10 +526,10 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
   const colors = team?.colors ?? {};
   const heroStyle = { '--club-primary': colors.primary ?? '#062764', '--club-secondary': colors.secondary ?? '#0b3f8d', '--club-tertiary': colors.tertiary ?? '#ffd42a' };
 
-  return <main className="newspaper club-page"><section className="club-paper"><div className="club-actions"><button className="back-button" onClick={onBack}>← VOLVER A EQUIPOS</button><button className="action-button club-covers-button" onClick={() => setCoversOpen(true)}>▣ PORTADAS</button></div>
+  return <main className="newspaper club-page"><section className="club-paper"><div className="club-actions"><button className="back-button" onClick={onBack}>← VOLVER A EQUIPOS</button>{canEdit && <button className="action-button club-covers-button" onClick={() => setCoversOpen(true)}>▣ PORTADAS</button>}</div>
     {loading || !team ? <div className="arcade-state">CARGANDO FICHA...</div> : <>
       <header className="club-hero" style={heroStyle}>
-        <div className="club-crest-wrap"><TeamMark team={team} className="club-crest"/><button type="button" className="club-crest-edit" onClick={() => setCrestEditorOpen(true)} aria-label="Editar escudo y nombre del club" title="Editar escudo y nombre">✎</button></div>
+        <div className="club-crest-wrap"><TeamMark team={team} className="club-crest"/>{canEdit && <button type="button" className="club-crest-edit" onClick={() => setCrestEditorOpen(true)} aria-label="Editar escudo y nombre del club" title="Editar escudo y nombre">✎</button>}</div>
         <div className="club-hero-copy"><p>{team.kind === 'national_team' ? 'SELECCIÓN' : 'CLUB'}{team.currentDivision ? ` · ${team.currentDivision}` : ''}</p><h1>{team.name}</h1><div className="club-hero-meta">{rank > 0 && <span className="club-hero-rank"><b>{rank}°</b> EN LA LIGA{standing ? ` · ${standing.points} PTS` : ''}</span>}<FormPills matches={matches} teamId={team.id}/></div></div>
         <dl className="club-hero-value"><div><dt>VALOR DEL PLANTEL</dt><dd>{gp(team.squadValue)}</dd><small>GP · {team.playerCount ?? squad.length} JUGADORES</small></div><div><dt>SALDO DISPONIBLE</dt><dd>{balance === null ? '—' : gp(balance)}</dd><small>GP PARA FICHAJES</small></div></dl>
       </header>
@@ -537,15 +542,15 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
               <ClubPeople
                 president={{ key: `president-${personRevision}`, photo, name: presidentName, age: presidentProfile.age, country: presidentProfile.country, customFields: team.president?.customFields, role: 'PRESIDENTE' }}
                 coach={{ key: `coach-${personRevision}`, photo: managerPhoto, name: coachName, age: coachProfile.age, country: coachProfile.country, customFields: team.coach?.customFields, role: 'DT' }}
-                onEditPresident={() => setPersonEditor('president')}
-                onEditCoach={() => setPersonEditor('coach')}
+                onEditPresident={canEdit ? () => setPersonEditor('president') : undefined}
+                onEditCoach={canEdit ? () => setPersonEditor('coach') : undefined}
               />
               <ClubStandingSnippet standings={standings} teamId={team.id} teams={teams} onMore={() => onTab?.('tabla')}/>
               <ClubRecentResults matches={matches} resolveTeam={resolveTeam} teamId={team.id} onMore={() => onTab?.('partidos')}/>
               <ClubScorers teamId={team.id} limit={3} tournaments={tournaments}/>
             </div>
             <div className="club-overview-right-column">
-              <PitchBoard team={team} starters={starters} substitutes={substitutes} onChanged={onChanged}/>
+              <PitchBoard team={team} starters={starters} substitutes={substitutes} onChanged={onChanged} readOnly={!canEdit}/>
               <StadiumEditor team={team} onChanged={onChanged}/>
             </div>
           </div>
@@ -555,7 +560,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
         {activeTab === 'partidos' && <ClubMatches matches={matches} teams={teams} teamId={team.id}/>}
         {activeTab === 'tabla' && <ClubTable standings={standings} teamId={team.id} teams={teams}/>}
         {activeTab === 'fichajes' && <ClubTransfers teamId={team.id}/>}
-        {activeTab === 'historia' && <div className="club-history-tab-content"><HonoursList honours={honours} historyError={historyError}/><ClubHistory team={team} onEdit={setHistoryEditor}/></div>}
+        {activeTab === 'historia' && <div className="club-history-tab-content"><HonoursList honours={honours} historyError={historyError}/><ClubHistory team={team} onEdit={canEdit ? setHistoryEditor : undefined}/></div>}
         {activeTab === 'finanzas' && <div className="club-budget-tab"><SquadValueSimulator team={team} squad={squad} balance={balance}/></div>}
       </section>
 

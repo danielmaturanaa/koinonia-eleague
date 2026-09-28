@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
+import { useAuth } from '../../app/AuthGate.jsx';
 import { EntityLink } from '../../components/EntityLink.jsx';
 import { PlayerFace } from '../../components/PlayerFace.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
@@ -66,6 +67,7 @@ function RegisterCard({ card, onRegistered }) {
 }
 
 export function EfootballCardPage({ pesId, variation = 0, navigate, onBack, backLabel = '← VOLVER A JUGADORES' }) {
+  const { isAdmin } = useAuth();
   const card = useApiQuery(signal => endpoints.efootballCard(pesId, variation, signal), [pesId, variation]);
   const data = card.data;
   return <main className="newspaper data-page"><section className="data-paper">
@@ -81,7 +83,7 @@ export function EfootballCardPage({ pesId, variation = 0, navigate, onBack, back
         <span>VALOR EN LA LIGA <b>{gp(data.league.gpValue)}</b></span>
         <EntityLink to="player" id={data.league.playerId} className="club-link-button">VER FICHA EN LA LIGA →</EntityLink>
         {data.league.team && <EntityLink to="team" id={data.league.team.id} className="card-team-link"><TeamMark team={data.league.team}/></EntityLink>}
-      </> : <RegisterCard card={data} onRegistered={id => id && navigate(`/jugadores/${encodeURIComponent(id)}`)}/>}</div>
+      </> : isAdmin ? <RegisterCard card={data} onRegistered={id => id && navigate(`/jugadores/${encodeURIComponent(id)}`)}/> : <p className="card-register">NADIE LO TIENE Y AÚN NO ESTÁ INSCRITO EN LA LIGA.</p>}</div>
       <EfootballCardDetails card={data}/>
     </article>}
   </section></main>;

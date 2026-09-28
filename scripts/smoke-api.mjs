@@ -79,5 +79,5 @@ if (failures.length) {
 } else {
   const unavailable = results.filter(item => item.estado === 'NO PUBLICADO').length;
   const protectedEndpoints = results.filter(item => item.estado === 'PROTEGIDO').length;
-  console.log(`Prueba de humo superada: ${results.length - unavailable - protectedEndpoints}/${results.length} disponibles; ${protectedEndpoints} protegidos por el desafío; ${unavailable} documentados aún no publicados.`);
+  console.log(`Prueba de humo superada: ${results.length - unavailable - protectedEndpoints}/${results.length} disponibles; ${protectedEndpoints} protegidos por el login; ${unavailable} documentados aún no publicados.`);
 }

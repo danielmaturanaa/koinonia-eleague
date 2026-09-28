@@ -87,10 +87,13 @@ export default async function handler(request, response) {
       },
       body,
       signal: controller.signal,
+      redirect: 'manual',
     });
     const headers = { 'Content-Type': upstream.headers.get('content-type') ?? 'application/json' };
     const cookies = upstream.headers.getSetCookie?.() ?? (upstream.headers.get('set-cookie') ? [upstream.headers.get('set-cookie')] : []);
     if (cookies.length) headers['Set-Cookie'] = cookies;
+    const location = upstream.headers.get('location');
+    if (location) headers.Location = location;
     const retryAfter = upstream.headers.get('retry-after');
     if (retryAfter) headers['Retry-After'] = retryAfter;
     response.writeHead(upstream.status, headers);

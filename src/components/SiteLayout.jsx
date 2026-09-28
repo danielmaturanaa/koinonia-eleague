@@ -1,3 +1,4 @@
+import { AccountMenu } from './AccountMenu.jsx';
 import { ApiStatus } from './ApiStatus.jsx';
 import { GlobalSearch } from './GlobalSearch.jsx';
 import { MusicPlayer } from './MusicPlayer.jsx';
@@ -14,6 +15,7 @@ export function SiteLayout({ route, navigate, children, sidebar, error, dismissE
         <Navigation route={route} navigate={navigate} teams={teams}/>
         <GlobalSearch navigate={navigate} teams={teams}/>
         <MusicPlayer tracks={playlist}/>
+        <AccountMenu/>
       </div>
     </header>
     <div className={`site-body ${sidebar ? 'with-sidebar' : ''} ${route.name === 'home' || route.name === 'newsArticle' ? 'home-body' : ''}`}>

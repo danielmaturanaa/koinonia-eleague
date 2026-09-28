@@ -3,11 +3,13 @@ import { EntityLink } from '../../components/EntityLink.jsx';
 import { PlayerFace } from '../../components/PlayerFace.jsx';
 import { DataState, OverallBadge, gp } from './DataStates.jsx';
 import { PlayerActions, PlayerAdmin } from './PlayersPage.jsx';
+import { useAuth } from '../../app/AuthGate.jsx';
 import { LinkedCardDetails } from './EfootballCard.jsx';
 import { useApiQuery } from './useApiQuery.js';
 import { addToComparison, comparisonCandidate, readComparison, writeComparison } from '../../utils/playerComparison.js';
 
 export function PlayerProfilePage({ playerId, teams = [], onBack, backLabel = '← VOLVER A JUGADORES' }) {
+  const { isAdmin } = useAuth();
   const profile = useApiQuery(signal => endpoints.player(playerId, signal), [playerId]);
   const player = profile.data;
   const colors = player?.team?.colors ?? {};
@@ -24,7 +26,7 @@ export function PlayerProfilePage({ playerId, teams = [], onBack, backLabel = '�
       <section className="player-tournament-form"><header><h2>RENDIMIENTO EN TORNEOS ACTIVOS</h2><small>GOLES REGISTRADOS</small></header>{player.activeGoals?.length ? <div>{player.activeGoals.map(tournament => <article key={tournament.name}><b>{tournament.name}</b><strong>{tournament.goals} GOL{tournament.goals === 1 ? '' : 'ES'}</strong></article>)}</div> : <p>AÚN NO REGISTRA GOLES EN UN TORNEO ACTIVO.</p>}</section>
       {player.efootballPesId && <p className="player-data-source-note">FICHA, FOTO Y MEDIA SE ACTUALIZAN CON EL CATÁLOGO eFOOTBALLDB. EL VALOR GP DE LA LIGA SE MANTIENE SIN CAMBIOS.</p>}
       {player.efootballPesId && <LinkedCardDetails pesId={player.efootballPesId} variation={player.efootballVariation ?? 0}/>}
-      <details className="player-management"><summary>GESTIÓN DEL JUGADOR</summary><div><PlayerActions key={`actions-${player.team?.id ?? 'free'}`} player={player} teams={teams} onChanged={() => profile.retry()}/><PlayerAdmin key={`admin-${player.id}-${player.gpValue}`} player={player} onChanged={() => profile.retry()}/></div></details>
+      {isAdmin && <details className="player-management"><summary>GESTIÓN DEL JUGADOR</summary><div><PlayerActions key={`actions-${player.team?.id ?? 'free'}`} player={player} teams={teams} onChanged={() => profile.retry()}/><PlayerAdmin key={`admin-${player.id}-${player.gpValue}`} player={player} onChanged={() => profile.retry()}/></div></details>}
     </article>}
   </section></main>;
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
+import { useAuth } from '../../app/AuthGate.jsx';
 import { EntityLink } from '../../components/EntityLink.jsx';
 import { PlayerFace } from '../../components/PlayerFace.jsx';
 import { teamBalance } from '../../utils/teamPresentation.js';
@@ -130,16 +131,18 @@ function PlayerList({ title, hint, status, teams, allHref }) {
 }
 
 function PendingTrades({ trades, players, teams, onChanged }) {
+  const { isAdmin } = useAuth();
   const pending = asList(trades.data).filter(item => String(item.status ?? '').toLowerCase() === 'pending');
   if (!pending.length) return null;
   const playersById = new Map(asList(players.data).map(player => [player.id, player]));
   const teamsById = new Map(teams.map(team => [team.id, team]));
   return <section className="market-section market-pending"><header><h2>PENDIENTES DE APROBACIÓN <small>{pending.length}</small></h2></header>
-    {pending.map(item => <article className="market-item" key={item.id}><b>{relatedName(item, 'from', 'Player', playersById) ?? 'Jugador'} ⇄ {relatedName(item, 'to', 'Player', playersById) ?? 'Jugador'}</b><span>{relatedName(item, 'from', 'Team', teamsById) ?? 'Origen'} / {relatedName(item, 'to', 'Team', teamsById) ?? 'Destino'}</span><TradeActions item={item} onChanged={onChanged}/></article>)}
+    {pending.map(item => <article className="market-item" key={item.id}><b>{relatedName(item, 'from', 'Player', playersById) ?? 'Jugador'} ⇄ {relatedName(item, 'to', 'Player', playersById) ?? 'Jugador'}</b><span>{relatedName(item, 'from', 'Team', teamsById) ?? 'Origen'} / {relatedName(item, 'to', 'Team', teamsById) ?? 'Destino'}</span>{isAdmin && <TradeActions item={item} onChanged={onChanged}/>}</article>)}
   </section>;
 }
 
 export function MarketPage({ teams }) {
+  const { isAdmin } = useAuth();
   const [managing, setManaging] = useState(false);
   const [revision, setRevision] = useState(0);
   const trades = useApiQuery(signal => endpoints.trades({ page: 1, pageSize: 100 }, signal), [revision]);
@@ -147,8 +150,8 @@ export function MarketPage({ teams }) {
   const players = useApiQuery(signal => managing || hasPending ? loadAllPlayers(signal) : Promise.resolve({ data: [] }), [managing, hasPending, revision]);
   const refresh = () => setRevision(value => value + 1);
   return <main className="newspaper data-page"><section className="data-paper">
-    <PageHeader kicker="JUGADORES DISPONIBLES" title="MERCADO"><button className="page-action" onClick={() => setManaging(value => !value)}>{managing ? 'CERRAR GESTIÓN' : '⚙ GESTIONAR'}</button></PageHeader>
-    {managing && <section className="market-section market-manual"><header><h2>REGISTRAR OPERACIÓN MANUAL</h2><p>Los traspasos y trueques normalmente se hacen por Discord; usa esto solo para corregir o registrar algo a mano.</p></header><MarketAdmin teams={teams} players={asList(players.data)} onChanged={refresh}/></section>}
+    <PageHeader kicker="JUGADORES DISPONIBLES" title="MERCADO">{isAdmin && <button className="page-action" onClick={() => setManaging(value => !value)}>{managing ? 'CERRAR GESTIÓN' : '⚙ GESTIONAR'}</button>}</PageHeader>
+    {managing && isAdmin && <section className="market-section market-manual"><header><h2>REGISTRAR OPERACIÓN MANUAL</h2><p>Los traspasos y trueques normalmente se hacen por Discord; usa esto solo para corregir o registrar algo a mano.</p></header><MarketAdmin teams={teams} players={asList(players.data)} onChanged={refresh}/></section>}
     <PendingTrades trades={trades} players={players} teams={teams} onChanged={refresh}/>
     <div className="market-layout">
       <div className="market-main">

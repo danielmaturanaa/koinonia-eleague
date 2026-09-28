@@ -46,7 +46,7 @@ La séptima etapa cierra la integración con controles operativos: indicador de 
 
 ## Configuración de API
 
-Copia `.env.example` como `.env` y completa `API_BASE_URL` y `API_KEY`. Si `API_BASE_URL` termina en `/v1`, las rutas del cliente se escriben sin repetir ese prefijo; `/api/health` se dirige correctamente a `/health`. El primer acceso muestra un equipo desenfocado y entrega una cookie de siete días al elegir su nombre correctamente.
+Copia `.env.example` como `.env` y completa `API_BASE_URL` y `API_KEY`. Si `API_BASE_URL` termina en `/v1`, las rutas del cliente se escriben sin repetir ese prefijo; `/api/health` se dirige correctamente a `/health`. El acceso es con Discord (`/api/auth/discord/login`): solo entran miembros del servidor y la API entrega una cookie de sesión de siete días. Los administradores gestionan todo, cada presidente edita únicamente su equipo y el resto solo lee; los controles de edición se ocultan según el rol, pero quien decide es la API. El proxy deja pasar las redirecciones (`redirect: 'manual'`) para que el navegador llegue a Discord y vuelva con la sesión. Ver `cheeto/docs/API.md`.
 
 ### Despliegue en Vercel
 

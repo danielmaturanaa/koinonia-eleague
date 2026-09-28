@@ -1,5 +1,4 @@
 const DEFAULT_API_PREFIX = '/api';
-const WRITE_METHODS = new Set(['POST', 'PATCH', 'PUT', 'DELETE']);
 
 export class ApiError extends Error {
   constructor(message, { status = 0, code = 'REQUEST_ERROR', details = null } = {}) {
@@ -12,6 +11,11 @@ export class ApiError extends Error {
 }
 
 const apiPrefix = (import.meta.env.VITE_API_PROXY_URL || DEFAULT_API_PREFIX).replace(/\/$/, '');
+
+/** URL pública de una ruta de la API; sirve también para navegar (login), no solo para fetch. */
+export function apiUrl(path) {
+  return `${apiPrefix}${path}`;
+}
 
 function buildUrl(path, query) {
   if (!path.startsWith('/')) throw new TypeError(`La ruta de API debe comenzar con "/": ${path}`);
@@ -33,7 +37,7 @@ async function parseResponse(response) {
 }
 
 export async function apiRequest(path, {
-  method = 'GET', query, body, actor, signal, timeoutMs = 15000,
+  method = 'GET', query, body, signal, timeoutMs = 15000,
 } = {}) {
   const normalizedMethod = method.toUpperCase();
   const controller = new AbortController();
@@ -41,12 +45,9 @@ export async function apiRequest(path, {
   const abort = () => controller.abort(signal?.reason);
   signal?.addEventListener('abort', abort, { once: true });
 
-  let payload = body;
+  // El actor de la auditoría lo pone la API desde la sesión; el cuerpo ya no lo lleva.
+  const payload = body;
   const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
-  if (WRITE_METHODS.has(normalizedMethod) && actor && body && typeof body === 'object' && !Array.isArray(body) && !isFormData) {
-    payload = { ...body, actor };
-  }
-  if (isFormData && actor && !payload.has('actor')) payload.append('actor', actor);
 
   try {
     const response = await fetch(buildUrl(path, query), {
@@ -64,6 +65,7 @@ export async function apiRequest(path, {
 
     if (!response.ok) {
       const error = result?.error ?? {};
+      if (response.status === 401 && error.code === 'AUTH_REQUIRED') window.dispatchEvent(new Event('koinonia:auth-required'));
       throw new ApiError(error.message || `La API respondió con HTTP ${response.status}.`, {
         status: response.status,
         code: error.code || 'HTTP_ERROR',

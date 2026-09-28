@@ -4,6 +4,7 @@ import { EntityLink } from '../../components/EntityLink.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { TournamentAdminPanel, TournamentAwardsPanel } from '../admin/TournamentAdminPanel.jsx';
+import { useAuth } from '../../app/AuthGate.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { DataState, PageHeader, gp } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
@@ -98,6 +99,7 @@ function PlayoffsSection({ tournamentId, resolveTeam }) {
 }
 
 function TournamentWorkspace({ tournamentId, teams, onChanged, onDeleted }) {
+  const { isAdmin } = useAuth();
   const [managing, setManaging] = useState(false);
   const [workspaceTab, setWorkspaceTab] = useState('standings');
   const detail = useApiQuery(signal => endpoints.tournament(tournamentId, signal), [tournamentId]);
@@ -121,13 +123,13 @@ function TournamentWorkspace({ tournamentId, teams, onChanged, onDeleted }) {
     : null;
 
   return <section className="tournament-workspace"><DataState query={detail}/>{data && <>
-    <header className="tournament-header"><div><small>{data.format === 'league' ? 'LIGA' : data.format === 'knockout' ? 'ELIMINACIÓN DIRECTA' : 'GRUPOS + ELIMINACIÓN'}{data.format === 'league' ? ` · CAMPEONES: ${data.championPolicy === 'both' ? 'LIGA REGULAR + PLAYOFFS' : data.championPolicy === 'playoffs' ? 'PLAYOFFS' : 'TABLA'}` : ''}</small><h2>{data.name}</h2></div><b className={`status status-${data.status}`}>{statusLabel}</b><button type="button" className={`tournament-manage-button ${managing ? 'active' : ''}`} aria-pressed={managing} onClick={() => setManaging(value => !value)}>{managing ? '← VOLVER A LA TABLA' : '⚙ GESTIONAR TORNEO'}</button></header>
-    {managing ? <TournamentAdminPanel key={data.id} tournament={data} teams={teams} onChanged={refresh} onDeleted={onDeleted}/> : <>
+    <header className="tournament-header"><div><small>{data.format === 'league' ? 'LIGA' : data.format === 'knockout' ? 'ELIMINACIÓN DIRECTA' : 'GRUPOS + ELIMINACIÓN'}{data.format === 'league' ? ` · CAMPEONES: ${data.championPolicy === 'both' ? 'LIGA REGULAR + PLAYOFFS' : data.championPolicy === 'playoffs' ? 'PLAYOFFS' : 'TABLA'}` : ''}</small><h2>{data.name}</h2></div><b className={`status status-${data.status}`}>{statusLabel}</b>{isAdmin && <button type="button" className={`tournament-manage-button ${managing ? 'active' : ''}`} aria-pressed={managing} onClick={() => setManaging(value => !value)}>{managing ? '← VOLVER A LA TABLA' : '⚙ GESTIONAR TORNEO'}</button>}</header>
+    {managing && isAdmin ? <TournamentAdminPanel key={data.id} tournament={data} teams={teams} onChanged={refresh} onDeleted={onDeleted}/> : <>
       <nav className="tournament-subtabs" aria-label="Secciones del torneo" role="tablist">
         <button type="button" role="tab" aria-selected={workspaceTab === 'standings'} className={workspaceTab === 'standings' ? 'active' : ''} onClick={() => setWorkspaceTab('standings')}>TABLA DE POSICIONES</button>
         <button type="button" role="tab" aria-selected={workspaceTab === 'scorers'} className={workspaceTab === 'scorers' ? 'active' : ''} onClick={() => setWorkspaceTab('scorers')}>GOLEADORES</button>
         <button type="button" role="tab" aria-selected={workspaceTab === 'playoffs'} className={workspaceTab === 'playoffs' ? 'active' : ''} onClick={() => setWorkspaceTab('playoffs')} disabled={data.format !== 'league'}>PLAYOFFS</button>
-        {data.status === 'completed' && <button type="button" role="tab" aria-selected={workspaceTab === 'awards'} className={workspaceTab === 'awards' ? 'active' : ''} onClick={() => setWorkspaceTab('awards')}>GESTIÓN DE PREMIOS</button>}
+        {data.status === 'completed' && isAdmin && <button type="button" role="tab" aria-selected={workspaceTab === 'awards'} className={workspaceTab === 'awards' ? 'active' : ''} onClick={() => setWorkspaceTab('awards')}>GESTIÓN DE PREMIOS</button>}
       </nav>
       <div className="tournament-main">
         {workspaceTab === 'standings' && (groupLabels.length > 0
@@ -135,7 +137,7 @@ function TournamentWorkspace({ tournamentId, teams, onChanged, onDeleted }) {
           : <section className="workspace-panel standings-workspace-panel"><h3>TABLA DE POSICIONES</h3><DataState query={standings}/>{standingRows.length > 0 && <StandingsTable rows={standingRows} resolveTeam={resolveTeam}/>} {regularChampion && <div className="playoff-champion" role="status"><span aria-hidden="true">🏆</span><TeamMark team={regularChampion}/><strong>CAMPEÓN: {regularChampion.name}</strong></div>}</section>)}
         {workspaceTab === 'scorers' && <ScorersPanel query={scorers}/>}
         {workspaceTab === 'playoffs' && data.format === 'league' && <PlayoffsSection tournamentId={tournamentId} resolveTeam={resolveTeam}/>}
-        {workspaceTab === 'awards' && data.status === 'completed' && <TournamentAwardsPanel tournament={data} onChanged={refresh}/>}
+        {workspaceTab === 'awards' && data.status === 'completed' && isAdmin && <TournamentAwardsPanel tournament={data} onChanged={refresh}/>}
       </div>
     </>}
   </>}</section>;
@@ -145,6 +147,7 @@ export function TournamentsPage({ teams = [] }) {
   const tournaments = useApiQuery(signal => endpoints.tournaments({ page: 1, pageSize: 100 }, signal));
   const [selectedId, setSelectedId] = useState(null);
   const [tournamentTab, setTournamentTab] = useState('active');
+  const { isAdmin } = useAuth();
   const [showCreate, setShowCreate] = useState(false);
   const all = Array.isArray(tournaments.data) ? tournaments.data : [];
   const priority = tournament => tournament.format === 'league' || /liga/i.test(tournament.name ?? '') ? 0 : 1;
@@ -159,8 +162,8 @@ export function TournamentsPage({ teams = [] }) {
   const deleted = () => { setSelectedId(null); tournaments.retry(); };
   const selectedCompletedId = completed.some(item => item.id === selectedId) ? selectedId : '';
   return <main className="newspaper data-page"><section className="data-paper">
-    <PageHeader kicker="COMPETICIONES OFICIALES" title="TORNEOS"><button className="page-action" onClick={() => setShowCreate(value => !value)}>{showCreate ? 'CERRAR ALTA' : '+ CREAR TORNEO'}</button></PageHeader>
-    {showCreate && <CreateTournamentForm teams={teams} onChanged={() => { setShowCreate(false); tournaments.retry(); }}/>}
+    <PageHeader kicker="COMPETICIONES OFICIALES" title="TORNEOS">{isAdmin && <button className="page-action" onClick={() => setShowCreate(value => !value)}>{showCreate ? 'CERRAR ALTA' : '+ CREAR TORNEO'}</button>}</PageHeader>
+    {showCreate && isAdmin && <CreateTournamentForm teams={teams} onChanged={() => { setShowCreate(false); tournaments.retry(); }}/>}
     <DataState query={tournaments}/>
     {all.length > 0 && <>
       <nav className="tournament-tabs" aria-label="Secciones de torneos" role="tablist">

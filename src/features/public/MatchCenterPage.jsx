@@ -9,6 +9,7 @@ import { SanctionPanel } from '../admin/MatchAdminPanel.jsx';
 import { DataState, formatDate } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
 import { PitchBoard } from '../teams/PitchBoard.jsx';
+import { useAuth } from '../../app/AuthGate.jsx';
 
 // Goles agrupados por jugador; los minutos solo aparecen si el acta los registró.
 function groupedGoals(goals, teamId) {
@@ -72,6 +73,7 @@ function HeadToHead({ match, resolveTeam }) {
 // Centro de partido: marcador con sus controles, incidencias, alineaciones y
 // cara a cara. Las sanciones administrativas quedan plegadas al final.
 export function MatchCenterPage({ matchId, teams = [], navigate }) {
+  const { canOperateMatches } = useAuth();
   const [revision, setRevision] = useState(0);
   const detail = useApiQuery(signal => endpoints.match(matchId, signal), [matchId, revision]);
   const match = detail.data;
@@ -95,7 +97,7 @@ export function MatchCenterPage({ matchId, teams = [], navigate }) {
     </div>
     {match && <>
       <section className="match-card-panel"><h2>ALINEACIONES <small>TITULARES ACTUALES DE CADA CLUB</small></h2><div className="match-lineups"><Lineup team={resolveTeam(match.homeTeam)}/><Lineup team={resolveTeam(match.awayTeam)}/></div></section>
-      <details className="match-corrections"><summary>SANCIONES Y CORRECCIONES</summary><div><SanctionPanel key={`${match.id}-${revision}`} match={match} onChanged={bump}/></div></details>
+      {canOperateMatches && <details className="match-corrections"><summary>SANCIONES Y CORRECCIONES</summary><div><SanctionPanel key={`${match.id}-${revision}`} match={match} onChanged={bump}/></div></details>}
     </>}
   </section></main>;
 }

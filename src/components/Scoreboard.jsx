@@ -4,6 +4,7 @@ import { useApiMutation } from '../features/admin/useApiMutation.js';
 import { useApiQuery } from '../features/public/useApiQuery.js';
 import { goalPlayerName, goalTeamId, groupGoals } from '../utils/goals.js';
 import { TeamMark } from './TeamMark.jsx';
+import { useAuth } from '../app/AuthGate.jsx';
 import { matchRoundLabel } from '../utils/matchPresentation.js';
 
 const STATUS_LABEL = { pending: 'POR JUGAR', live: 'EN VIVO', finished: 'FINAL', cancelled: 'CANCELADO' };
@@ -213,7 +214,9 @@ function ScoreboardActa({ match }) {
   </div>;
 }
 
-export function Scoreboard({ matchId, mode = 'view', density = 'tile', onOpen, onFinished, onChanged, refreshKey = 0, showActa = true, teams = [] }) {
+export function Scoreboard({ matchId, mode: requestedMode = 'view', density = 'tile', onOpen, onFinished, onChanged, refreshKey = 0, showActa = true, teams = [] }) {
+  const { canOperateMatches } = useAuth();
+  const mode = requestedMode === 'manage' && canOperateMatches ? 'manage' : 'view';
   const detail = useApiQuery(signal => matchId ? endpoints.match(matchId, signal) : Promise.resolve({ data: null }), [matchId, refreshKey]);
   const match = detail.data;
   const teamIndex = new Map(teams.map(team => [team.id, team]));
