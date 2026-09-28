@@ -34,6 +34,14 @@ function FixtureCard({ match, resolveTeam, onSelect, showRound }) {
   </button>;
 }
 
+// Fecha en que el equipo filtrado descansa: mismo tamaño que un partido, con borde punteado.
+function RestCard({ rest }) {
+  return <div className="fixture-card fixture-rest" role="note" aria-label={`Fecha ${rest.roundNumber}: libre`}>
+    <span className="fixture-rest-label">LIBRE</span>
+    <small className="fixture-footer"><span>{matchRoundLabel(rest)}</span></small>
+  </div>;
+}
+
 // Una vuelta de liga en la vista "Todos": sus fechas en columnas, cada una con sus
 // partidos y quién queda libre (con equipos impares siempre descansa alguien).
 function RoundColumns({ rows, restingFor, resolveTeam, onSelect }) {
@@ -42,7 +50,7 @@ function RoundColumns({ rows, restingFor, resolveTeam, onSelect }) {
   return <div className="round-columns">{[...rounds].sort(([left], [right]) => left - right).map(([round, matches]) => {
     const resting = restingFor(matches[0]);
     return <div className="turn-block" key={round}>
-      <h4><span>FECHA {round}</span>{resting.length > 0 && <span className="turn-rest">{resting.length === 1 ? 'LIBRE' : 'LIBRES'}: {resting.map(team => <i key={team.id}><TeamMark team={resolveTeam(team)}/>{team.name}</i>)}</span>}</h4>
+      <h4><span>FECHA {round}</span>{resting.length > 0 && <span className="turn-rest">LIBRE {resting.map(team => <i key={team.id}><TeamMark team={resolveTeam(team)}/>{team.name}</i>)}</span>}</h4>
       <div className="turn-matches">{matches.map(match => <FixtureCard key={match.id} match={match} showRound resolveTeam={resolveTeam} onSelect={onSelect}/>)}</div>
     </div>;
   })}</div>;
@@ -158,7 +166,11 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
       if (!leftDate && rightDate) return 1;
       return byRound(left, right);
     };
-    const ordered = [...apiRows].sort((left, right) => {
+    // Filtrando por un equipo (sin rival ni estado), sus fechas libres entran a la grilla como una tarjeta más.
+    const restRows = filters.team && !filters.opponent && !filters.status
+      ? restingFor.restRounds(filters.team).filter(rest => !filters.tournament || rest.tournament.id === filters.tournament)
+      : [];
+    const ordered = [...apiRows, ...restRows].sort((left, right) => {
       const live = Number(right.status === 'live') - Number(left.status === 'live');
       return live || chronology(left, right);
     });
@@ -173,11 +185,7 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
     const legRoundsFor = id => {
       const tournament = tournamentsById.get(id);
       if (!tournament || tournament.format !== 'league' || !tournament.teamCount) return null;
-      // Con calendario diario cada fecha es un turno del día: la vuelta ocupa más fechas.
-      const schedule = tournament.rules?.schedule;
-      const perLeg = schedule?.turnsPerDay
-        ? schedule.turnsPerDay * (tournament.teamCount - 1) / schedule.matchesPerTeamPerDay
-        : tournament.teamCount % 2 ? tournament.teamCount : tournament.teamCount - 1;
+      const perLeg = tournament.teamCount % 2 ? tournament.teamCount : tournament.teamCount - 1;
       return (maxRound.get(id) ?? 0) > perLeg ? perLeg : null;
     };
     const sectionOf = match => {
@@ -199,7 +207,7 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
       groups.get(section.key).rows.push(match);
     });
     return [...groups.values()].sort((left, right) => left.order - right.order);
-  }, [apiRows, tournaments.data]);
+  }, [apiRows, tournaments.data, restingFor, filters.team, filters.opponent, filters.status, filters.tournament]);
 
   useEffect(() => saveMultiSlots(multiSlots), [multiSlots]);
 
@@ -278,7 +286,7 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
       <TeamChipBar teams={teams} value={filters.team} onChange={selectTeamFilter}/>
       <div className="filter-bar"><select name="tournament" value={filters.tournament} onChange={change} aria-label="Torneo"><option value="">TORNEOS ACTIVOS</option>{(tournaments.data ?? []).map(item => <option value={item.id} key={item.id}>{item.name}</option>)}</select><select name="status" value={filters.status} onChange={change} aria-label="Estado"><option value="">TODOS LOS ESTADOS</option>{Object.entries(labels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select>{filters.team && <select name="opponent" value={filters.opponent} onChange={change} aria-label="Rival para cruce directo"><option value="">CONTRA CUALQUIER RIVAL</option>{[...teams].filter(team => team.id !== filters.team).sort((a, b) => a.name.localeCompare(b.name, 'es')).map(team => <option value={team.id} key={team.id}>VS {team.name}</option>)}</select>}</div>
       <DataState query={matches}/>{!matches.loading && !matches.error && (sections.length
-        ? <div className="fixture-board">{sections.map(section => <section className="fixture-group" key={section.key}>{section.label && <h3>{section.label} <small>{section.rows.filter(match => match.status === 'finished').length} / {section.rows.length} JUGADOS</small></h3>}{!filters.team && !filters.opponent && section.rows[0].stage !== 'playoffs' && restingFor(section.rows[0]) ? <RoundColumns rows={section.rows} restingFor={restingFor} resolveTeam={resolveTeam} onSelect={selectMatch}/> : <div className="fixture-grid">{section.rows.map(match => <FixtureCard key={match.id} match={match} showRound resolveTeam={resolveTeam} onSelect={selectMatch}/>)}</div>}</section>)}</div>
+        ? <div className="fixture-board">{sections.map(section => <section className="fixture-group" key={section.key}>{section.label && <h3>{section.label} <small>{section.rows.filter(match => match.status === 'finished').length} / {section.rows.filter(match => !match.rest).length} JUGADOS</small></h3>}{!filters.team && !filters.opponent && section.rows[0].stage !== 'playoffs' && restingFor(section.rows[0]) ? <RoundColumns rows={section.rows} restingFor={restingFor} resolveTeam={resolveTeam} onSelect={selectMatch}/> : <div className="fixture-grid">{section.rows.map(match => match.rest ? <RestCard key={match.id} rest={match}/> : <FixtureCard key={match.id} match={match} showRound resolveTeam={resolveTeam} onSelect={selectMatch}/>)}</div>}</section>)}</div>
         : <p className="empty-copy">NO HAY PARTIDOS CON ESTOS FILTROS.</p>)}
     </>}
   </section></main>;
