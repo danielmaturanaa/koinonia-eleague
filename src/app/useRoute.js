@@ -28,7 +28,7 @@ function matchRoute(path) {
     return { name: 'team', path, teamId: decodeURIComponent(teamMatch[1]) };
   }
   const matchMatch = path.match(/^\/partidos\/([^/]+)$/);
-  const reservedMatchSections = new Set(['jugados', 'pendientes']);
+  const reservedMatchSections = new Set(['jugados', 'pendientes', 'calendario']);
   if (matchMatch && !reservedMatchSections.has(matchMatch[1])) {
     return { name: 'match', path, matchId: decodeURIComponent(matchMatch[1]) };
   }

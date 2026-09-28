@@ -13,6 +13,7 @@ export const navigationItems = [
 export const sectionContent = {
   '/partidos': ['CENTRO DE PARTIDOS', 'Calendario completo de la liga, encuentros en vivo y próximos cruces.'],
   '/partidos/jugados': ['PARTIDOS JUGADOS', 'Historial de encuentros finalizados con acceso a cada acta.'],
+  '/partidos/calendario': ['CALENDARIO', 'Partidos de la liga repartidos por día.'],
   '/partidos/pendientes': ['PRÓXIMOS PARTIDOS', 'Programación pendiente organizada por torneo y fecha.'],
   '/clasificacion': ['TORNEOS', 'Tabla, goleadores y playoffs de cada torneo.'],
   '/equipos/rankings': ['RANKINGS Y DIVISIONES', 'Valor de planteles y estructura divisional.'],

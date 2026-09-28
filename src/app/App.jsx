@@ -10,6 +10,7 @@ import { TeamsPage } from '../features/teams/TeamsPage.jsx';
 import { ActivityPage } from '../features/public/ActivityPage.jsx';
 import { MarketPage } from '../features/public/MarketPage.jsx';
 import { MatchesPage } from '../features/public/MatchesPage.jsx';
+import { CalendarPage } from '../features/public/CalendarPage.jsx';
 import { NewsPage } from '../features/public/NewsPage.jsx';
 import { PlayersPage, playersReturnQuery } from '../features/public/PlayersPage.jsx';
 import { PlayerProfilePage } from '../features/public/PlayerProfilePage.jsx';
@@ -71,6 +72,8 @@ export function App() {
   } else if (route.path === '/partidos' || route.path === '/partidos/jugados' || route.path === '/partidos/pendientes') {
     const matchesMode = route.path.endsWith('jugados') ? 'played' : route.path.endsWith('pendientes') ? 'pending' : 'all';
     page = <MatchesPage key={matchesMode} mode={matchesMode} teams={league.teams} navigate={navigate}/>;
+  } else if (route.path === '/partidos/calendario') {
+    page = <CalendarPage teams={league.teams} navigate={navigate}/>;
   } else if (route.name === 'match') {
     page = <MatchCenterPage key={route.matchId} matchId={route.matchId} teams={league.teams} navigate={navigate}/>;
   } else if (route.path === '/torneos') {
