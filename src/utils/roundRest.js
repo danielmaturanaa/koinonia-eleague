@@ -22,11 +22,13 @@ export function restingByRound(fixtures) {
     if (!busy) return null;
     return [...participants.get(match.tournament.id).values()].filter(team => !busy.has(team.id));
   };
-  // Fechas en que descansa un equipo, con la forma de un partido para ordenarlas junto a los demás.
-  restingFor.restRounds = teamId => [...playing].flatMap(([key, busy]) => {
+  // Descansos con la forma de un partido, para ordenarlos junto a los demás: los de un
+  // equipo (sin `team`) o, con teamId null, uno por cada equipo libre en cada fecha.
+  restingFor.rests = teamId => [...playing].flatMap(([key, busy]) => {
     const [tournamentId, round] = key.split(':');
-    if (busy.has(teamId) || !participants.get(tournamentId).has(teamId)) return [];
-    return [{ id: `rest-${key}`, rest: true, stage: 'league', status: 'rest', tournament: tournaments.get(tournamentId), roundNumber: Number(round) }];
+    const base = { rest: true, stage: 'league', status: 'rest', tournament: tournaments.get(tournamentId), roundNumber: Number(round) };
+    if (teamId) return busy.has(teamId) || !participants.get(tournamentId).has(teamId) ? [] : [{ ...base, id: `rest-${key}` }];
+    return [...participants.get(tournamentId).values()].filter(team => !busy.has(team.id)).map(team => ({ ...base, id: `rest-${key}-${team.id}`, team }));
   });
   return restingFor;
 }
