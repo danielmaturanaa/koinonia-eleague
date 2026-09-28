@@ -34,13 +34,13 @@ function FixtureCard({ match, resolveTeam, onSelect, showRound }) {
   </button>;
 }
 
-// Un día de liga con calendario diario: avance de cada equipo y, por turno, sus
-// partidos y quién queda libre. Con un equipo filtrado también muestra su descanso.
+// Un día de liga con calendario diario: avance de cada equipo y sus fechas lado a lado,
+// cada una con sus partidos y quién queda libre. Con un equipo filtrado muestra su descanso.
 function DaySection({ section, daily, focusTeamId, resolveTeam, onSelect }) {
   const today = daily?.date === chileToday();
   const rowsByTurn = new Map();
   section.rows.forEach(match => rowsByTurn.set(match.schedule.turn, [...(rowsByTurn.get(match.schedule.turn) ?? []), match]));
-  const turns = (daily?.turns ?? [...rowsByTurn.keys()].sort((a, b) => a - b).map(turn => ({ turn, resting: [] })))
+  const turns = (daily?.turns ?? [...rowsByTurn.keys()].sort((a, b) => a - b).map(turn => ({ turn, round: rowsByTurn.get(turn)[0].roundNumber, resting: [] })))
     .map(turn => ({ ...turn, rows: rowsByTurn.get(turn.turn) ?? [], focusRests: Boolean(focusTeamId) && turn.resting.includes(focusTeamId) }))
     .filter(turn => turn.rows.length || turn.focusRests);
   const played = daily ? daily.matches.filter(match => match.status === 'finished').length : section.rows.filter(match => match.status === 'finished').length;
@@ -49,11 +49,13 @@ function DaySection({ section, daily, focusTeamId, resolveTeam, onSelect }) {
   return <section className={`fixture-group fixture-day ${today ? 'fixture-day-today' : ''}`}>
     <h3>{section.label}{daily?.date && <> · {scheduleDateLabel(daily.date)}</>} <small>{played} / {total} JUGADOS</small>{today && <em>HOY</em>}</h3>
     {daily && <ul className="day-progress" aria-label="Partidos jugados por equipo en el día">{daily.progress.map(row => <li key={row.teamId} className={`${row.played === row.total ? 'done' : ''} ${row.teamId === focusTeamId ? 'focus' : ''}`} title={`${teamName(row.teamId)}: ${row.played} de ${row.total}`}><TeamMark team={resolveTeam({ id: row.teamId })}/><b>{row.played}/{row.total}</b></li>)}</ul>}
-    {turns.map(turn => <div className="turn-block" key={turn.turn}>
-      <h4><span>TURNO {turn.turn}</span>{turn.resting.length > 0 && <span className="turn-rest">{turn.resting.length === 1 ? 'LIBRE' : 'LIBRES'}: {turn.resting.map(id => <i key={id} className={id === focusTeamId ? 'focus' : ''}><TeamMark team={resolveTeam({ id })}/>{teamName(id)}</i>)}</span>}</h4>
-      {turn.rows.length > 0 && <div className="fixture-grid">{turn.rows.map(match => <FixtureCard key={match.id} match={match} showRound resolveTeam={resolveTeam} onSelect={onSelect}/>)}</div>}
-      {turn.focusRests && !turn.rows.length && <p className="turn-rest-note">{teamName(focusTeamId)} DESCANSA EN ESTE TURNO.</p>}
-    </div>)}
+    <div className="turn-columns" style={{ '--turns': turns.length }}>{turns.map(turn => <div className="turn-block" key={turn.turn}>
+      <h4><span>FECHA {turn.round}</span>{turn.resting.length > 0 && <span className="turn-rest">{turn.resting.length === 1 ? 'LIBRE' : 'LIBRES'}: {turn.resting.map(id => <i key={id} className={id === focusTeamId ? 'focus' : ''}><TeamMark team={resolveTeam({ id })}/>{teamName(id)}</i>)}</span>}</h4>
+      <div className="turn-matches">
+        {turn.rows.map(match => <FixtureCard key={match.id} match={match} showRound resolveTeam={resolveTeam} onSelect={onSelect}/>)}
+        {turn.focusRests && !turn.rows.length && <p className="turn-rest-note">{teamName(focusTeamId)} DESCANSA EN ESTA FECHA.</p>}
+      </div>
+    </div>)}</div>
   </section>;
 }
 
@@ -139,7 +141,7 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
     return { data: [first, ...rest].flatMap(page => Array.isArray(page?.data) ? page.data : []) };
   }, [filters.tournament, filters.team, filters.opponent, filters.status]);
   // Fixture completo de las ligas con calendario diario, para saber quién queda libre
-  // en cada turno aunque la lista esté filtrada por equipo o estado.
+  // en cada fecha aunque la lista esté filtrada por equipo o estado.
   const dailyTournamentIds = (tournaments.data ?? []).filter(item => item.rules?.schedule?.turnsPerDay).map(item => item.id);
   const dailyFixtures = useApiQuery(signal => Promise.all(dailyTournamentIds.map(id => endpoints.fixtures(id, signal)))
     .then(pages => ({ data: pages.flatMap(page => Array.isArray(page?.data) ? page.data : []) })), [dailyTournamentIds.join(','), matches.data]);

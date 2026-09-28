@@ -5,7 +5,6 @@ export function matchRoundLabel(match, { leagueRound = 'FECHA' } = {}) {
     if (slot.startsWith('F')) return 'PLAYOFFS · FINAL';
     return 'PLAYOFFS';
   }
-  if (match.schedule) return `DÍA ${match.schedule.day} · TURNO ${match.schedule.turn}`;
   const group = match.groupLabel ?? match.group_label;
   if (group) return `GRUPO ${group}`;
   return `${leagueRound} ${match.roundNumber ?? match.round_number ?? '—'}`;

@@ -1,5 +1,5 @@
-// Ligas con calendario diario: cada día tiene turnos de partidos simultáneos y,
-// con equipos impares, cada equipo descansa en uno de ellos. A partir del fixture
+// Ligas con calendario diario: cada día agrupa varias fechas de partidos simultáneos y,
+// con equipos impares, cada equipo descansa en una de ellas. A partir del fixture
 // completo se calcula quién queda libre por turno y cuánto lleva jugado cada uno.
 
 const dayKey = (tournamentId, day) => `${tournamentId}:${day}`;
@@ -30,8 +30,9 @@ export function buildDailyIndex(fixtures) {
     const teamIds = [...participants.get(entry.tournamentId)];
     const turnNumbers = [...new Set(entry.matches.map(match => match.schedule.turn))].sort((a, b) => a - b);
     entry.turns = turnNumbers.map(turn => {
-      const playing = new Set(entry.matches.filter(match => match.schedule.turn === turn).flatMap(match => [match.homeTeam?.id, match.awayTeam?.id]));
-      return { turn, resting: teamIds.filter(id => !playing.has(id)) };
+      const games = entry.matches.filter(match => match.schedule.turn === turn);
+      const playing = new Set(games.flatMap(match => [match.homeTeam?.id, match.awayTeam?.id]));
+      return { turn, round: games[0].roundNumber, resting: teamIds.filter(id => !playing.has(id)) };
     });
     entry.progress = teamIds.map(teamId => {
       const own = entry.matches.filter(match => match.homeTeam?.id === teamId || match.awayTeam?.id === teamId);

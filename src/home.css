@@ -2479,7 +2479,8 @@ a.news-read-more { display: inline-block; text-decoration: none; }
   .pitch-price { min-width: 0; }
 }
 
-/* Ligas con calendario diario: avance del día por equipo y turnos con quién queda libre. */
+/* Ligas con calendario diario: avance del día por equipo y sus fechas en columnas, con quién queda libre.
+   Las columnas comparten filas (subgrid) para que las tarjetas partan a la misma altura. */
 .fixture-day-today h3 { color: #a90020; border-color: #a90020; }
 .day-progress { display: grid; grid-template-columns: repeat(auto-fill, minmax(64px, 1fr)); gap: 5px; margin: 0 0 10px; padding: 0; list-style: none; }
 .day-progress li { display: flex; align-items: center; justify-content: center; gap: 5px; padding: 4px 5px; border: 2px solid #b18b16; background: #fff9e8; }
@@ -2488,10 +2489,13 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .day-progress li.done { border-color: #1c7a3e; background: #e3efd9; }
 .day-progress li.done b { color: #1c7a3e; }
 .day-progress li.focus { outline: 3px solid var(--yellow); }
-.turn-block + .turn-block { margin-top: 10px; }
-.turn-block h4 { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin: 0 0 6px; color: #062764; font: 600 14px/1 'Oswald', sans-serif; letter-spacing: .5px; }
+.turn-columns { display: grid; grid-template-columns: repeat(var(--turns, 5), minmax(0, 1fr)); column-gap: 10px; row-gap: 6px; }
+@media (max-width: 1180px) { .turn-columns { grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); } }
+.turn-block { display: grid; grid-row: span 2; grid-template-rows: subgrid; row-gap: 6px; min-width: 0; }
+.turn-matches { display: grid; align-content: start; gap: 8px; padding-bottom: 10px; }
+.turn-block h4 { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; margin: 0; padding-bottom: 5px; border-bottom: 1px solid #b4a990; color: #062764; font: 600 14px/1 'Oswald', sans-serif; letter-spacing: .5px; }
 .turn-block h4 > span:first-child { padding: 3px 7px; color: #fff9e8; background: #10285b; }
-.turn-rest { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; color: #625d4e; font: 600 13px/1 'Oswald', sans-serif; }
+.turn-rest { display: flex; flex-wrap: wrap; align-items: center; gap: 3px 8px; color: #625d4e; font: 600 13px/1 'Oswald', sans-serif; }
 .turn-rest i { display: inline-flex; align-items: center; gap: 4px; color: #11120e; font-style: normal; }
 .turn-rest i.focus { padding: 1px 5px; background: var(--yellow); }
 .turn-rest .team-mark { width: 18px; height: 18px; flex: 0 0 18px; font-size: 14px; }
