@@ -46,6 +46,19 @@ function DaySection({ section, daily, focusTeamId, resolveTeam, onSelect }) {
   const played = daily ? daily.matches.filter(match => match.status === 'finished').length : section.rows.filter(match => match.status === 'finished').length;
   const total = daily?.matches.length ?? section.rows.length;
   const teamName = id => resolveTeam({ id }).name ?? 'Equipo';
+  // Con un equipo filtrado cada día es una sola fila: la etiqueta del día y sus fechas al lado,
+  // con el descanso en su propia casilla.
+  if (focusTeamId) {
+    const own = daily?.progress.find(row => row.teamId === focusTeamId);
+    return <section className={`fixture-day fixture-day-focus ${today ? 'fixture-day-today' : ''}`}>
+      <header className="focus-day-label"><b>DÍA {section.day}</b>{daily?.date && <small>{scheduleDateLabel(daily.date)}</small>}{today && <em>HOY</em>}{own && <span className={own.played === own.total ? 'done' : ''}>{own.played}/{own.total} JUGADOS</span>}</header>
+      <div className="turn-columns" style={{ '--turns': turns.length }}>{turns.map(turn => <div className="turn-cell" key={turn.turn}>
+        <h4><span>FECHA {turn.round}</span></h4>
+        {turn.rows.map(match => <FixtureCard key={match.id} match={match} showRound resolveTeam={resolveTeam} onSelect={onSelect}/>)}
+        {turn.focusRests && !turn.rows.length && <p className="turn-rest-note">DESCANSA</p>}
+      </div>)}</div>
+    </section>;
+  }
   return <section className={`fixture-group fixture-day ${today ? 'fixture-day-today' : ''}`}>
     <h3>{section.label}{daily?.date && <> · {scheduleDateLabel(daily.date)}</>} <small>{played} / {total} JUGADOS</small>{today && <em>HOY</em>}</h3>
     {daily && <ul className="day-progress" aria-label="Partidos jugados por equipo en el día">{daily.progress.map(row => <li key={row.teamId} className={`${row.played === row.total ? 'done' : ''} ${row.teamId === focusTeamId ? 'focus' : ''}`} title={`${teamName(row.teamId)}: ${row.played} de ${row.total}`}><TeamMark team={resolveTeam({ id: row.teamId })}/><b>{row.played}/{row.total}</b></li>)}</ul>}

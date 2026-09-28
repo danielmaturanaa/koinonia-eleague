@@ -2507,3 +2507,24 @@ a.news-read-more { display: inline-block; text-decoration: none; }
   .day-progress li .team-mark { width: 20px; height: 20px; flex-basis: 20px; }
   .day-progress li b { font-size: 14px; }
 }
+
+/* Centro de partidos filtrado por equipo: una fila por día, etiqueta a la izquierda y sus fechas al lado. */
+.fixture-board:has(.fixture-day-focus) { gap: 10px; }
+.fixture-day-focus { display: grid; grid-template-columns: 110px minmax(0, 1fr); gap: 10px; padding-top: 10px; border-top: 2px solid #10285b; }
+.fixture-day-focus.fixture-day-today { border-top-color: #a90020; }
+.focus-day-label { display: flex; flex-direction: column; align-items: flex-start; gap: 5px; color: #062764; }
+.focus-day-label b { font: 400 26px/1 'Anton', sans-serif; letter-spacing: .4px; }
+.fixture-day-today .focus-day-label b { color: #a90020; }
+.focus-day-label small { color: #625d4e; font: 600 13px/1 'Oswald', sans-serif; }
+.focus-day-label em { padding: 3px 7px; color: #062764; background: var(--yellow); font: 600 12px/1 'Oswald', sans-serif; font-style: normal; }
+.focus-day-label span { padding: 3px 6px; border: 2px solid #b18b16; background: #fff9e8; font: 600 12px/1 'Oswald', sans-serif; }
+.focus-day-label span.done { border-color: #1c7a3e; color: #1c7a3e; background: #e3efd9; }
+.turn-cell { display: grid; grid-template-rows: auto 1fr; gap: 5px; min-width: 0; }
+.turn-cell h4 { margin: 0; font: 600 13px/1 'Oswald', sans-serif; letter-spacing: .5px; }
+.turn-cell h4 span { display: inline-block; padding: 3px 7px; color: #fff9e8; background: #10285b; }
+.turn-cell .turn-rest-note { display: grid; place-items: center; min-height: 100px; background: #f3ecd8; letter-spacing: 1px; }
+@media (max-width: 700px) {
+  .fixture-day-focus { grid-template-columns: 1fr; }
+  .focus-day-label { flex-direction: row; flex-wrap: wrap; align-items: center; }
+  .turn-cell .turn-rest-note { min-height: 0; padding: 12px; }
+}
