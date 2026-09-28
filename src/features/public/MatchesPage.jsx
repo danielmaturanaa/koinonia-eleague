@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { Scoreboard } from '../../components/Scoreboard.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
+import { buildDailyIndex, chileToday, scheduleDateLabel } from '../../utils/dailySchedule.js';
 import { matchRoundLabel } from '../../utils/matchPresentation.js';
 import { DataState, PageHeader } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
@@ -31,6 +32,29 @@ function FixtureCard({ match, resolveTeam, onSelect, showRound }) {
     <span className="fixture-teams">{team('home', home)}{team('away', away)}</span>
     <small className="fixture-footer"><span>{showRound ? matchRoundLabel(match) : 'FECHA POR DEFINIR'}</span>{match.homeTeam?.stadium && <span className="match-venue" title={`Estadio de ${match.homeTeam.name}`}>🏟️ {match.homeTeam.stadium}</span>}</small>
   </button>;
+}
+
+// Un día de liga con calendario diario: avance de cada equipo y, por turno, sus
+// partidos y quién queda libre. Con un equipo filtrado también muestra su descanso.
+function DaySection({ section, daily, focusTeamId, resolveTeam, onSelect }) {
+  const today = daily?.date === chileToday();
+  const rowsByTurn = new Map();
+  section.rows.forEach(match => rowsByTurn.set(match.schedule.turn, [...(rowsByTurn.get(match.schedule.turn) ?? []), match]));
+  const turns = (daily?.turns ?? [...rowsByTurn.keys()].sort((a, b) => a - b).map(turn => ({ turn, resting: [] })))
+    .map(turn => ({ ...turn, rows: rowsByTurn.get(turn.turn) ?? [], focusRests: Boolean(focusTeamId) && turn.resting.includes(focusTeamId) }))
+    .filter(turn => turn.rows.length || turn.focusRests);
+  const played = daily ? daily.matches.filter(match => match.status === 'finished').length : section.rows.filter(match => match.status === 'finished').length;
+  const total = daily?.matches.length ?? section.rows.length;
+  const teamName = id => resolveTeam({ id }).name ?? 'Equipo';
+  return <section className={`fixture-group fixture-day ${today ? 'fixture-day-today' : ''}`}>
+    <h3>{section.label}{daily?.date && <> · {scheduleDateLabel(daily.date)}</>} <small>{played} / {total} JUGADOS</small>{today && <em>HOY</em>}</h3>
+    {daily && <ul className="day-progress" aria-label="Partidos jugados por equipo en el día">{daily.progress.map(row => <li key={row.teamId} className={`${row.played === row.total ? 'done' : ''} ${row.teamId === focusTeamId ? 'focus' : ''}`} title={`${teamName(row.teamId)}: ${row.played} de ${row.total}`}><TeamMark team={resolveTeam({ id: row.teamId })}/><b>{row.played}/{row.total}</b></li>)}</ul>}
+    {turns.map(turn => <div className="turn-block" key={turn.turn}>
+      <h4><span>TURNO {turn.turn}</span>{turn.resting.length > 0 && <span className="turn-rest">{turn.resting.length === 1 ? 'LIBRE' : 'LIBRES'}: {turn.resting.map(id => <i key={id} className={id === focusTeamId ? 'focus' : ''}><TeamMark team={resolveTeam({ id })}/>{teamName(id)}</i>)}</span>}</h4>
+      {turn.rows.length > 0 && <div className="fixture-grid">{turn.rows.map(match => <FixtureCard key={match.id} match={match} showRound resolveTeam={resolveTeam} onSelect={onSelect}/>)}</div>}
+      {turn.focusRests && !turn.rows.length && <p className="turn-rest-note">{teamName(focusTeamId)} DESCANSA EN ESTE TURNO.</p>}
+    </div>)}
+  </section>;
 }
 
 const MULTI_SLOT_COUNT = 4;
@@ -114,6 +138,12 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
     const rest = await Promise.all(Array.from({ length: totalPages - 1 }, (_, index) => endpoints.matches({ ...query, page: index + 2 }, signal)));
     return { data: [first, ...rest].flatMap(page => Array.isArray(page?.data) ? page.data : []) };
   }, [filters.tournament, filters.team, filters.opponent, filters.status]);
+  // Fixture completo de las ligas con calendario diario, para saber quién queda libre
+  // en cada turno aunque la lista esté filtrada por equipo o estado.
+  const dailyTournamentIds = (tournaments.data ?? []).filter(item => item.rules?.schedule?.turnsPerDay).map(item => item.id);
+  const dailyFixtures = useApiQuery(signal => Promise.all(dailyTournamentIds.map(id => endpoints.fixtures(id, signal)))
+    .then(pages => ({ data: pages.flatMap(page => Array.isArray(page?.data) ? page.data : []) })), [dailyTournamentIds.join(','), matches.data]);
+  const dailyIndex = useMemo(() => buildDailyIndex(dailyFixtures.data ?? []), [dailyFixtures.data]);
   const multiMatchesQuery = useApiQuery(signal => showMulti ? endpoints.matches({ activeOnly: 1, pageSize: 100, page: 1 }, signal) : Promise.resolve({ data: [] }), [showMulti]);
   const multiMatches = useMemo(() => (Array.isArray(multiMatchesQuery.data) ? multiMatchesQuery.data : []).filter(match => match.status === 'pending' || match.status === 'live'), [multiMatchesQuery.data]);
   const teamIndex = useMemo(() => new Map(teams.map(team => [team.id, team])), [teams]);
@@ -159,8 +189,10 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
       const tournamentName = match.tournament?.name ?? 'TORNEO';
       const tournamentKey = match.tournament?.id ?? tournamentName;
       const section = match.stage === 'playoffs'
-        ? { key: 'playoffs', label: 'PLAYOFFS', order: 3 }
-        : (() => {
+        ? { key: 'playoffs', label: 'PLAYOFFS', order: 99 }
+        : match.schedule
+          ? { key: `day-${match.schedule.day}`, label: `DÍA ${match.schedule.day}`, order: match.schedule.day, day: match.schedule.day }
+          : (() => {
           const perLeg = legRoundsFor(match.tournament?.id);
           if (!perLeg) return { key: 'all', label: '', order: 0 };
           return Number(matchRound(match)) > perLeg ? { key: 'second', label: 'SEGUNDA VUELTA', order: 2 } : { key: 'first', label: 'PRIMERA VUELTA', order: 1 };
@@ -253,7 +285,7 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
       <TeamChipBar teams={teams} value={filters.team} onChange={selectTeamFilter}/>
       <div className="filter-bar"><select name="tournament" value={filters.tournament} onChange={change} aria-label="Torneo"><option value="">TORNEOS ACTIVOS</option>{(tournaments.data ?? []).map(item => <option value={item.id} key={item.id}>{item.name}</option>)}</select><select name="status" value={filters.status} onChange={change} aria-label="Estado"><option value="">TODOS LOS ESTADOS</option>{Object.entries(labels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select>{filters.team && <select name="opponent" value={filters.opponent} onChange={change} aria-label="Rival para cruce directo"><option value="">CONTRA CUALQUIER RIVAL</option>{[...teams].filter(team => team.id !== filters.team).sort((a, b) => a.name.localeCompare(b.name, 'es')).map(team => <option value={team.id} key={team.id}>VS {team.name}</option>)}</select>}</div>
       <DataState query={matches}/>{!matches.loading && !matches.error && (sections.length
-        ? <div className="fixture-board">{sections.map(section => <section className="fixture-group" key={section.key}>{section.label && <h3>{section.label} <small>{section.rows.filter(match => match.status === 'finished').length} / {section.rows.length} JUGADOS</small></h3>}<div className="fixture-grid">{section.rows.map(match => <FixtureCard key={match.id} match={match} showRound resolveTeam={resolveTeam} onSelect={selectMatch}/>)}</div></section>)}</div>
+        ? <div className="fixture-board">{sections.map(section => section.day ? <DaySection key={section.key} section={section} daily={dailyIndex.get(section.rows[0].tournament?.id, section.day)} focusTeamId={filters.team} resolveTeam={resolveTeam} onSelect={selectMatch}/> : <section className="fixture-group" key={section.key}>{section.label && <h3>{section.label} <small>{section.rows.filter(match => match.status === 'finished').length} / {section.rows.length} JUGADOS</small></h3>}<div className="fixture-grid">{section.rows.map(match => <FixtureCard key={match.id} match={match} showRound resolveTeam={resolveTeam} onSelect={selectMatch}/>)}</div></section>)}</div>
         : <p className="empty-copy">NO HAY PARTIDOS CON ESTOS FILTROS.</p>)}
     </>}
   </section></main>;
