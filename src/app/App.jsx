@@ -18,6 +18,7 @@ import { RulesPage } from '../features/public/RulesPage.jsx';
 import { RankingsPage, TournamentsPage } from '../features/public/TournamentsPage.jsx';
 import { TeamsDirectoryPage } from '../features/public/TeamsDirectoryPage.jsx';
 import { MatchScoreboardPage } from '../features/public/MatchScoreboardPage.jsx';
+import { PeoplePage } from '../features/admin/PeoplePage.jsx';
 import { MatchCenterPage } from '../features/public/MatchCenterPage.jsx';
 import { useRoute } from './useRoute.js';
 
@@ -93,6 +94,8 @@ export function App() {
     page = <HomePage teams={league.teams} navigate={navigate} openNewsId={route.newsId} onCloseNews={() => navigate('/')}/>;
   } else if (route.path === '/noticias') {
     page = <NewsPage teams={league.teams}/>;
+  } else if (route.path === '/personas') {
+    page = <PeoplePage teams={league.teams}/>;
   } else if (route.path === '/reglas') {
     page = <RulesPage/>;
   } else {

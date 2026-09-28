@@ -28,5 +28,6 @@ export const sectionContent = {
   '/sanciones': ['SANCIONES', 'Expulsiones y suspensiones registradas en las actas.'],
   '/torneos': ['TORNEOS', 'Tabla, goleadores y playoffs de cada torneo.'],
   '/noticias': ['ACTIVIDAD DE LA LIGA', 'Novedades generadas por la actividad oficial de Koinonia e-League.'],
+  '/personas': ['PERSONAS Y PERMISOS', 'Quién ha entrado a la web, sus equipos y sus permisos.'],
   '/reglas': ['REGLAS DEL TORNEO', 'Reglamento oficial, condiciones de competencia y criterios deportivos de Koinonia e-League.'],
 };

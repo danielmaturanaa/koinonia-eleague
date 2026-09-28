@@ -1,3 +1,4 @@
+import { useMediaQuery } from '../app/useMediaQuery.js';
 import { AccountMenu } from './AccountMenu.jsx';
 import { ApiStatus } from './ApiStatus.jsx';
 import { GlobalSearch } from './GlobalSearch.jsx';
@@ -6,6 +7,8 @@ import { Navigation } from './Navigation.jsx';
 import { TransparentLogo } from './TransparentLogo.jsx';
 
 export function SiteLayout({ route, navigate, children, sidebar, error, dismissError, playlist = [], teams = [] }) {
+  // La radio no se monta en mobile (mismo corte que el resto del diseño responsive).
+  const mobile = useMediaQuery('(max-width: 900px)');
   return <div className="site">
     <header className="site-header">
       <div className="site-header-inner">
@@ -14,8 +17,8 @@ export function SiteLayout({ route, navigate, children, sidebar, error, dismissE
         </button>
         <Navigation route={route} navigate={navigate} teams={teams}/>
         <GlobalSearch navigate={navigate} teams={teams}/>
-        <MusicPlayer tracks={playlist}/>
-        <AccountMenu/>
+        {!mobile && <MusicPlayer tracks={playlist}/>}
+        <AccountMenu navigate={navigate} teams={teams}/>
       </div>
     </header>
     <div className={`site-body ${sidebar ? 'with-sidebar' : ''} ${route.name === 'home' || route.name === 'newsArticle' ? 'home-body' : ''}`}>
