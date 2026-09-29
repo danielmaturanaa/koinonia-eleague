@@ -1,6 +1,6 @@
 export function LiveTableStatus({ rows = [] }) {
   const live = rows.some(row => row.hasLiveMatches);
-  return live ? <small className="live-table-status" role="status"><i aria-hidden="true"/>TABLA EN VIVO · PROVISORIA</small> : null;
+  return live ? <small className="live-table-status" role="status"><i aria-hidden="true"/>TABLA EN VIVO</small> : null;
 }
 
 export function LivePosition({ position }) {
