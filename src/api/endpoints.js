@@ -122,5 +122,8 @@ export const endpoints = {
   deleteMatchGoal: (matchId, goalId, signal) => apiClient.delete(`/matches/${matchId}/goals/${goalId}`, {}, { actor: 'web', signal }),
   addMatchRedCard: (matchId, body, signal) => apiClient.post(`/matches/${matchId}/red-cards`, body, { actor: 'web', signal }),
   deleteMatchRedCard: (matchId, redCardId, signal) => apiClient.delete(`/matches/${matchId}/red-cards/${redCardId}`, {}, { actor: 'web', signal }),
+  matchSimulationPreview: (matchId, signal) => get(`/matches/${matchId}/simulation/preview`, null, signal),
+  matchSimulation: (matchId, signal) => get(`/matches/${matchId}/simulation`, null, signal),
+  simulateMatch: (matchId, body, signal) => apiClient.post(`/matches/${matchId}/simulate`, body, { actor: 'web', signal }),
   setMatchWinner: (matchId, body, signal) => apiClient.post(`/matches/${matchId}/winner`, body, { actor: 'web', signal }),
 };

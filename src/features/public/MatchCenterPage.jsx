@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { EntityLink } from '../../components/EntityLink.jsx';
 import { PlayerFace } from '../../components/PlayerFace.jsx';
 import { Scoreboard } from '../../components/Scoreboard.jsx';
 import { SanctionBadge } from '../../components/SanctionBadge.jsx';
+import { SimulationBanner, SimulationPreview, SimulationReplay, replayEndsAt } from './MatchSimulation.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
 import { matchRoundLabel } from '../../utils/matchPresentation.js';
 import { SanctionPanel } from '../admin/MatchAdminPanel.jsx';
@@ -81,6 +82,16 @@ export function MatchCenterPage({ matchId, teams = [], navigate }) {
   const teamIndex = new Map(teams.map(team => [team.id, team]));
   const resolveTeam = team => team ? { ...team, ...(teamIndex.get(team.id) ?? {}) } : team;
   const bump = () => setRevision(value => value + 1);
+  const simulationQuery = useApiQuery(signal => match?.simulated ? endpoints.matchSimulation(matchId, signal) : Promise.resolve({ data: null }), [matchId, match?.simulated, revision]);
+  const simulation = match?.simulated ? simulationQuery.data : null;
+  // Transmisión compartida mientras dura (todos ven el mismo minuto) o repetición pedida por quien mira.
+  const [localReplay, setLocalReplay] = useState(null);
+  const [, setReplayEnded] = useState(0);
+  const onSharedReplayEnded = useCallback(() => setReplayEnded(value => value + 1), []);
+  const sharedReplay = simulation && simulation.durationSeconds > 0 && Date.now() < replayEndsAt(simulation);
+  const replaying = Boolean(simulation && (sharedReplay || localReplay));
+  // Mientras llega la simulación no se muestra el marcador final: sería spoiler de la transmisión.
+  const loadingSimulation = Boolean(match?.simulated && !simulationQuery.data && simulationQuery.loading);
   // En vivo, las incidencias se refrescan al mismo ritmo que el marcador (goles cargados desde Discord).
   useEffect(() => {
     if (match?.status !== 'live') return undefined;
@@ -93,7 +104,14 @@ export function MatchCenterPage({ matchId, teams = [], navigate }) {
     {/* Marcador + incidencias a la izquierda y cara a cara a la derecha, con el mismo alto:
         el historial se desplaza dentro de su columna en vez de estirar la página. */}
     <div className="match-center-top">
-      <div className="match-center-main"><div className="match-center-score"><Scoreboard matchId={matchId} mode="manage" density="full" teams={teams} refreshKey={revision} onChanged={bump} showActa={false}/>{match?.sanctioned && <p className="match-sanction-banner"><SanctionBadge match={match}/> RESULTADO ADMINISTRATIVO 0-3: EL PARTIDO NO SE JUGÓ.</p>}</div>{match && <Incidents match={match}/>}</div>
+      <div className="match-center-main">{loadingSimulation
+        ? <div className="match-center-score"><article className="scoreboard scoreboard-full scoreboard-loading"><p>SINTONIZANDO LA TRANSMISIÓN…</p></article></div>
+        : replaying
+        ? <div className="match-center-score">{sharedReplay
+          ? <SimulationReplay match={match} simulation={simulation} resolveTeam={resolveTeam} startsAt={new Date(simulation.replayStartsAt).getTime()} durationSeconds={simulation.durationSeconds} onEnded={onSharedReplayEnded}/>
+          : <><SimulationReplay key={localReplay.startsAt} match={match} simulation={simulation} resolveTeam={resolveTeam} startsAt={localReplay.startsAt} durationSeconds={localReplay.durationSeconds}/><button type="button" className="sim-replay-close" onClick={() => setLocalReplay(null)}>✕ CERRAR REPETICIÓN</button></>}</div>
+        : <><div className="match-center-score"><Scoreboard matchId={matchId} mode="manage" density="full" teams={teams} refreshKey={revision} onChanged={bump} showActa={false}/>{match?.sanctioned && <p className="match-sanction-banner"><SanctionBadge match={match}/> RESULTADO ADMINISTRATIVO 0-3: EL PARTIDO NO SE JUGÓ.</p>}{match?.simulated && <SimulationBanner match={match} simulation={simulation} onReplay={durationSeconds => setLocalReplay({ startsAt: Date.now(), durationSeconds })}/>}</div>
+          {match?.status === 'pending' ? <SimulationPreview key={revision} match={match} onSimulated={bump}/> : match && <Incidents match={match}/>}</>}</div>
       {match && <div className="match-center-h2h"><HeadToHead match={match} resolveTeam={resolveTeam}/></div>}
     </div>
     {match && <>
