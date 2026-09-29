@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { TeamMark } from '../../components/TeamMark.jsx';
 import { SanctionBadge } from '../../components/SanctionBadge.jsx';
@@ -375,6 +375,13 @@ const BAND_LABELS = { gk: 'ARQ', def: 'DEF', mid: 'MED', att: 'DEL' };
 function SimulatorTable({ starters, substitutes, simulation }) {
   const byLine = players => [...players].sort((left, right) => BAND_ORDER[bandFor(left.position)] - BAND_ORDER[bandFor(right.position)]);
   const startersFull = starters.length >= SIMULATOR_STARTERS;
+  // Con 11 titulares, "↑ TITULAR" pide a quién reemplaza (los de su misma línea primero).
+  const [choosing, setChoosing] = useState(null);
+  const promote = player => {
+    if (!startersFull) { simulation.onToggleSection(player); return; }
+    setChoosing(current => current === simulatorPlayerId(player) ? null : simulatorPlayerId(player));
+  };
+  const replacementsFor = player => [...starters].sort((left, right) => Number(bandFor(right.position) === bandFor(player.position)) - Number(bandFor(left.position) === bandFor(player.position)) || BAND_ORDER[bandFor(left.position)] - BAND_ORDER[bandFor(right.position)]);
   const section = (title, players, isStarters) => <section className="squad-sim-group" key={title}>
     <header><h4>{title} <small>{players.length}</small></h4><span>{gp(players.reduce((total, player) => total + simulation.priceOf(player), 0))} GP</span></header>
     {players.length ? players.map(player => {
@@ -383,7 +390,8 @@ function SimulatorTable({ starters, substitutes, simulation }) {
       const price = simulation.priceOf(player);
       const delta = price - real;
       const band = bandFor(player.position);
-      return <div key={simulatorPlayerId(player)} className={`squad-sim-row ${simulation.isNew(player) ? 'is-new' : ''} ${simulation.isHighlighted(player) ? 'just-added' : ''}`}>
+      const asking = !isStarters && startersFull && choosing === simulatorPlayerId(player);
+      return <Fragment key={simulatorPlayerId(player)}><div className={`squad-sim-row ${simulation.isNew(player) ? 'is-new' : ''} ${simulation.isHighlighted(player) ? 'just-added' : ''}`}>
         <span className="squad-sim-player"><PlayerFace src={player.faceUrl} name={name} className="squad-simulator-face"/><span><b>{name || 'JUGADOR'}</b><small>{simulation.isNew(player) && <em className="squad-sim-tag new">NUEVO</em>}{simulation.isEdited(player) && <em className="squad-sim-tag edited">EDITADO</em>}</small></span></span>
         <i className={`squad-sim-pos band-${band}`} title={BAND_LABELS[band]}>{player.position ?? '—'}</i>
         <b className="squad-sim-ovr">{player.overall ?? '—'}</b>
@@ -392,8 +400,13 @@ function SimulatorTable({ starters, substitutes, simulation }) {
           <SimulationTools name={name} value={price} edited={simulation.isEdited(player)} onPrice={value => simulation.onPrice(player, value)} onReset={() => simulation.onResetPrice(player)} onRemove={() => simulation.onRemove(player)}/>
           {delta !== 0 && <small className={delta > 0 ? 'up' : 'down'}>{delta > 0 ? '▲' : '▼'} {gp(Math.abs(delta))}</small>}
         </span>
-        <button type="button" className={`squad-sim-move ${isStarters ? 'to-bench' : 'to-pitch'}`} disabled={!isStarters && startersFull} onClick={() => simulation.onToggleSection(player)} title={isStarters ? `Mandar a ${name} a la banca` : startersFull ? 'Ya hay 11 titulares: manda a alguien a la banca primero' : `Hacer titular a ${name}`} aria-label={isStarters ? `Mandar a ${name} a la banca` : `Hacer titular a ${name}`}>{isStarters ? '↓ BANCA' : '↑ TITULAR'}</button>
-      </div>;
+        <button type="button" className={`squad-sim-move ${isStarters ? 'to-bench' : 'to-pitch'}`} aria-expanded={isStarters ? undefined : asking} onClick={() => isStarters ? simulation.onToggleSection(player) : promote(player)} title={isStarters ? `Mandar a ${name} a la banca` : startersFull ? `Elegir a quién reemplaza ${name}` : `Hacer titular a ${name}`} aria-label={isStarters ? `Mandar a ${name} a la banca` : `Hacer titular a ${name}`}>{isStarters ? '↓ BANCA' : '↑ TITULAR'}</button>
+      </div>
+      {asking && <div className="squad-sim-replace" role="group" aria-label={`Elegir a quién reemplaza ${name}`}>
+        <p>¿A QUIÉN REEMPLAZA <b>{name}</b>? <button type="button" onClick={() => setChoosing(null)}>CANCELAR</button></p>
+        <div>{replacementsFor(player).map(starter => <button type="button" key={simulatorPlayerId(starter)} onClick={() => { simulation.onReplace(starter, player); setChoosing(null); }}><i className={`squad-sim-pos band-${bandFor(starter.position)}`}>{starter.position ?? '—'}</i><span>{splitPlayerName(starter.name).rest}</span></button>)}</div>
+      </div>}
+      </Fragment>;
     }) : <p className="empty-copy">SIN JUGADORES.</p>}
   </section>;
   return <div className="squad-sim-table" role="table" aria-label="Plantel simulado">
@@ -536,6 +549,7 @@ function SquadValueSimulator({ team, squad, balance }) {
     onResetPrice: player => setPrice(player, simulatorOriginalValue(player)),
     onRemove: removePlayer,
     onToggleSection: toggleSection,
+    onReplace: (starter, substitute) => swapPlayers({ starterId: idOf(starter), substituteId: idOf(substitute), position: pitchPositionFor(starter, defaultFormationPositions(starters)) }),
   };
 
   return <section className="club-card squad-value-simulator">

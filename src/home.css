@@ -2486,6 +2486,14 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .squad-sim-price .pitch-price { padding: 4px 8px; font-size: 13px; }
 .squad-sim-price .pitch-tool { padding: 4px 7px; font-size: 13px; }
 .squad-sim-price > small { min-width: 54px; font: 700 11px/1 'Oswald', sans-serif; text-align: right; white-space: nowrap; }
+.squad-sim-replace { display: grid; gap: 8px; padding: 10px 12px; border-top: 1px solid #1c7a3e; background: #1c7a3e14; }
+.squad-sim-replace p { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; color: #062764; font: 600 12px/1.2 'Oswald', sans-serif; letter-spacing: .5px; }
+.squad-sim-replace p button { padding: 4px 8px; border: 1px solid #a90020; color: #a90020; background: #fff9e8; font: 700 10px/1 'Oswald', sans-serif; cursor: pointer; }
+.squad-sim-replace > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.squad-sim-replace > div button { display: flex; align-items: center; gap: 6px; max-width: 100%; padding: 4px 10px 4px 4px; border: 1px solid #062764; border-radius: 2px; color: #062764; background: #fff9e8; font: 700 14px/1 'Roboto Condensed', sans-serif; cursor: pointer; }
+.squad-sim-replace > div button:hover { color: #fff; background: #062764; }
+.squad-sim-replace > div button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.squad-sim-replace .squad-sim-pos { min-width: 34px; padding: 4px 0; }
 .squad-sim-move { padding: 6px 4px; border: 1px solid #062764; border-radius: 2px; color: #062764; background: #fff9e8; font: 700 11px/1 'Oswald', sans-serif; letter-spacing: .4px; white-space: nowrap; cursor: pointer; }
 .squad-sim-move.to-pitch { border-color: #1c7a3e; color: #1c7a3e; }
 .squad-sim-move:hover:not(:disabled) { color: #fff; background: #062764; }
