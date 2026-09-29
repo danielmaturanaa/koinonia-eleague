@@ -13,7 +13,8 @@ export const endpoints = {
   teams: (query, signal) => get('/teams', query, signal),
   team: (teamId, signal) => get(`/teams/${teamId}`, null, signal),
   teamSquad: (teamId, signal) => get(`/teams/${teamId}/squad`, null, signal),
-  teamMatches: (teamId, signal) => get(`/teams/${teamId}/matches`, null, signal),
+  // La API pagina de 20 en 20; la ficha del club necesita todo su historial (máximo permitido: 100).
+  teamMatches: (teamId, signal) => get(`/teams/${teamId}/matches`, { pageSize: 100 }, signal),
   teamMoves: (teamId, signal) => get(`/teams/${teamId}/moves`, null, signal),
   teamScorers: (teamId, query, signal) => get(`/teams/${teamId}/scorers`, query, signal),
   presidents: (query, signal) => get('/presidents', query, signal),
