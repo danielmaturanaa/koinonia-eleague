@@ -2839,3 +2839,5 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 @keyframes coach-shine { 0%, 62% { background-position: 100% 0; } 84%, 100% { background-position: 0 0; } }
 @media (prefers-reduced-motion: reduce) { .pitch-card-stats .pitch-card-ovr.coach { animation: none; background-position: 100% 0; } }
 @media (max-width: 560px) { .pitch-card-stats .pitch-card-ovr.coach { font-size: 14px; } .pitch-card-base { font-size: 8px; } }
+.person-editor-form .manager-style-select, .manager-picker { grid-column: 1 / -1; }
+.manager-style-select select { width: 100%; min-width: 0; }

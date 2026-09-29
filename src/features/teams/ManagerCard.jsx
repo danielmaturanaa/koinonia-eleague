@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
-import { STYLE_LABELS, boosterText, bonusText } from '../../utils/managerBoosters.js';
+import { STYLE_LABELS, boosterText, bonusText, managerFactor } from '../../utils/managerBoosters.js';
 import { useApiQuery } from '../public/useApiQuery.js';
 
 /** Los 5 dominios de estilo del DT (0–99) y sus potenciadores. */
@@ -16,6 +16,18 @@ export function ManagerSummary({ manager, compact = false }) {
       ? manager.boosters.map((booster, index) => <span className="manager-booster" key={`${booster.stat}-${index}`}>{boosterText(booster)}</span>)
       : <span className="manager-booster none">SIN POTENCIADORES</span>}</p>
   </div>;
+}
+
+/** Elige con qué estilo juega el club: cada uno da un bono distinto según cuánto lo domine el DT. */
+export function PlayStyleSelect({ manager, value, onChange }) {
+  if (!manager) return null;
+  const best = STYLE_LABELS.map(([key, label]) => ({ key, label, value: manager.styles?.[key] ?? 0 })).sort((a, b) => b.value - a.value)[0];
+  return <label className="manager-style-select">ESTILO DE JUEGO DEL CLUB
+    <select value={value ?? ''} onChange={event => onChange(event.target.value || null)}>
+      <option value="">AUTOMÁTICO · EL MEJOR DEL DT ({best.label} {best.value} · {bonusText(managerFactor(best.value))})</option>
+      {STYLE_LABELS.map(([key, label]) => <option key={key} value={key}>{label} · {manager.styles?.[key] ?? '—'} · {bonusText(managerFactor(manager.styles?.[key] ?? 0))}</option>)}
+    </select>
+  </label>;
 }
 
 /** Buscador de DT por nombre, sin tildes ni mayúsculas (lo resuelve el servidor). */

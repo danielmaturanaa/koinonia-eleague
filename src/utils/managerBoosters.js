@@ -26,5 +26,8 @@ export function overallText(player) {
 
 export const hasCoachBoost = player => player?.overall != null && player.overallWithCoach != null && player.overallWithCoach > player.overall;
 
+/** Mismo cálculo del servidor (getManagerBoost de eFootballDB) para mostrar el bono de cada estilo antes de guardar. */
+export const managerFactor = value => value ? (-38 * ((127 & value) - 99) ** 2 / 99 / 99 + 104) / 100 : 1;
+
 /** Bono de estilo del DT como porcentaje: ×1,037 → "+3,7 %". */
 export const bonusText = factor => `${factor >= 1 ? '+' : '−'}${Math.abs((factor - 1) * 100).toLocaleString('es-CL', { maximumFractionDigits: 1 })} %`;
