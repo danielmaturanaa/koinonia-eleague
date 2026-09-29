@@ -994,7 +994,7 @@ a.table-team-link:hover { text-decoration: underline; text-underline-offset: 3px
 .club-roster h3:not(:first-child) { margin-top: 12px; }
 .club-roster .roster-row { min-height: 38px; padding: 5px 8px; font-size: 15px; }
 .club-roster .roster-row:hover { background: #fff3c4; }
-.roster-table-scroll { min-width: 0; }
+.roster-table-scroll { width: 100%; min-width: 0; max-width: 100%; }
 /* La ficha del club usa columnas explícitas: OVR y precio nunca compiten por
    el mismo espacio, incluso con nombres o valores largos. */
 .club-roster .roster-columns, .club-roster .roster-row { grid-template-columns: 64px minmax(240px, 1fr) minmax(185px, max-content) minmax(140px, max-content); gap: 10px; }
@@ -1037,14 +1037,19 @@ a.table-team-link:hover { text-decoration: underline; text-underline-offset: 3px
   .club-matches,
   .club-history { grid-template-columns: 1fr; }
   .club-squad-pitch .club-pitch { max-width: 420px; margin: 0 auto; }
-  .club-roster .roster-table-scroll { overflow-x: auto; overscroll-behavior-x: contain; padding-bottom: 5px; scrollbar-color: #a90020 #d9cfb8; }
-  .club-roster .roster-columns, .club-roster .roster-list { min-width: 650px; }
+  /* El desplazamiento vive sólo aquí; nunca debe ensanchar la ficha ni la página. */
+  .club-squad-layout-list { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+  .club-roster { width: 100%; min-width: 0; }
+  .club-roster .roster-table-scroll { display: block; width: 100%; max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; padding-bottom: 7px; -webkit-overflow-scrolling: touch; scrollbar-color: #a90020 #d9cfb8; box-shadow: inset -10px 0 8px -10px #062764; }
+  .club-roster .roster-columns, .club-roster .roster-list { min-width: 540px; }
   .club-roster .roster-columns { display: grid; }
-  .club-roster .roster-columns, .club-roster .roster-row { grid-template-columns: 58px minmax(250px, 1fr) 190px 135px; grid-template-areas: none; gap: 10px; }
-  .club-roster .roster-row { min-height: 44px; padding: 6px 10px; }
+  .club-roster .roster-columns, .club-roster .roster-row { grid-template-columns: 44px minmax(170px, 1fr) 165px 110px; grid-template-areas: none; gap: 7px; }
+  .club-roster .roster-columns { padding-right: 8px; padding-left: 8px; font-size: 11px; }
+  .club-roster .roster-row { min-height: 42px; padding: 6px 8px; }
   .club-roster .roster-row > b, .club-roster .roster-row > span, .club-roster .roster-row > small, .club-roster .roster-row > strong { grid-area: auto; }
-  .club-roster .roster-row > span { overflow: hidden; font-size: 16px; font-weight: 700; white-space: nowrap; overflow-wrap: normal; }
-  .club-roster .roster-row > small { text-align: right; }
+  .club-roster .roster-row > span { overflow: hidden; font-size: 15px; font-weight: 700; white-space: nowrap; overflow-wrap: normal; }
+  .club-roster .roster-row > small { min-width: 0; font-size: 12px; text-align: right; }
+  .club-roster .roster-row > strong { min-width: 0; font-size: 13px; }
 }
 
 .roster-row .player-flag { margin-right: 6px; }
