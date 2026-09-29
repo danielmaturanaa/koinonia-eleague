@@ -2773,7 +2773,8 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .needs-conditional i.best { border-color: #07502a; color: #fff; background: #07502a; }
 .needs-best { grid-column: 1 / 3; color: #07502a; font: 600 12px/1.1 'Oswald', sans-serif; letter-spacing: .3px; }
 .needs-key-matches li .action-button { grid-column: 3; grid-row: 1 / span 2; }
-.club-projection-button { margin-left: auto; margin-right: 8px; }
+.club-projection-button { margin-left: auto; }
+.club-covers-button + .club-projection-button { margin-left: 0; }
 @media (max-width: 900px) {
   .scenario-layout { grid-template-columns: minmax(0, 1fr); }
   .scenario-table { position: static; }
