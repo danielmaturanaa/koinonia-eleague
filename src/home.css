@@ -2502,14 +2502,10 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .calendar-status.error { border-color: #a90020; background: #f6dcd6; }
 .calendar-board { display: grid; grid-template-columns: repeat(var(--days), minmax(230px, 1fr)); gap: 10px; overflow-x: auto; padding-bottom: 6px; }
 .calendar-day { display: grid; grid-template-rows: auto 1fr; min-width: 0; border: 2px solid #10285b; background: #efe6cf; transition: background 120ms ease, border-color 120ms ease; }
-.calendar-day.today { border-color: #a90020; }
 .calendar-day.unscheduled { border-style: dashed; border-color: #837d70; }
 .calendar-day.drag-over { border-color: #ffd42a; background: #fff3c4; }
 .calendar-day header { position: sticky; top: 0; z-index: 1; display: grid; gap: 4px; padding: 8px; border-bottom: 2px solid #10285b; background: #fff9e8; }
-.calendar-day.today header { border-bottom-color: #a90020; }
 .calendar-day h3 { display: flex; align-items: center; gap: 8px; margin: 0; color: #062764; font: 400 18px/1 'Anton', sans-serif; letter-spacing: .4px; }
-.calendar-day.today h3 { color: #a90020; }
-.calendar-day h3 em { padding: 2px 6px; color: #062764; background: var(--yellow); font: 600 11px/1 'Oswald', sans-serif; font-style: normal; }
 .calendar-day header small { color: #625d4e; font: 600 12px/1 'Oswald', sans-serif; }
 .calendar-ok { margin: 0; color: #1c7a3e; font: 600 12px/1 'Oswald', sans-serif; }
 .calendar-warn { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; }

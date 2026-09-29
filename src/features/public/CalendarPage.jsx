@@ -7,10 +7,6 @@ import { useApiQuery } from './useApiQuery.js';
 
 const UNSCHEDULED = 'sin-dia';
 
-const chileToday = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Santiago' }).format(new Date());
-const addDays = (date, days) => new Date(Date.parse(`${date}T12:00:00Z`) + days * 86400000).toISOString().slice(0, 10);
-const dayLabel = date => new Intl.DateTimeFormat('es-CL', { weekday: 'long', day: 'numeric', month: 'short', timeZone: 'UTC' })
-  .format(new Date(`${date}T12:00:00Z`)).replace(/[.,]/g, '').toUpperCase();
 
 // Revisión de un día: cuántos juega cada equipo (debería ser `perDay`) y cruces repetidos.
 function dayWarnings(matches, teams, perDay) {
@@ -53,7 +49,6 @@ export function CalendarPage({ teams, navigate }) {
   const [focusTeam, setFocusTeam] = useState('');
   const [dragOver, setDragOver] = useState(null);
   const [perDay, setPerDay] = useState(4);
-  const [startDate, setStartDate] = useState(chileToday);
   const [confirmAuto, setConfirmAuto] = useState(false);
   const [status, setStatus] = useState({ busy: false, error: '', message: '' });
 
@@ -63,33 +58,34 @@ export function CalendarPage({ teams, navigate }) {
   const resolveTeam = team => ({ ...team, ...(teamIndex.get(team?.id) ?? {}) });
   const matches = useMemo(() => (Array.isArray(fixtures.data) ? fixtures.data : [])
     .filter(match => match.stage !== 'playoffs' && match.status !== 'cancelled')
-    .map(match => (match.id in overrides ? { ...match, scheduledDate: overrides[match.id] } : match)), [fixtures.data, overrides]);
+    .map(match => (match.id in overrides ? { ...match, calendarDay: overrides[match.id] } : match)), [fixtures.data, overrides]);
   const participants = useMemo(() => {
     const byId = new Map();
     matches.forEach(match => [match.homeTeam, match.awayTeam].forEach(team => byId.set(team.id, team)));
     return [...byId.values()].sort((left, right) => left.name.localeCompare(right.name, 'es'));
   }, [matches]);
   const columns = useMemo(() => {
-    const dates = [...new Set([...matches.map(match => match.scheduledDate).filter(Boolean), ...extraDays])].sort();
-    const byRound = (left, right) => (left.roundNumber ?? 0) - (right.roundNumber ?? 0);
-    const list = dates.map(date => ({ key: date, date, rows: matches.filter(match => match.scheduledDate === date).sort(byRound) }));
-    const unscheduled = matches.filter(match => !match.scheduledDate).sort(byRound);
-    return unscheduled.length ? [{ key: UNSCHEDULED, date: null, rows: unscheduled }, ...list] : list;
-  }, [matches, extraDays]);
-  const scheduledCount = matches.filter(match => match.scheduledDate).length;
-  const today = chileToday();
+    const days = [...new Set([...matches.map(match => match.calendarDay).filter(Boolean), ...extraDays])].sort((left, right) => left - right);
+    // Resaltando un equipo, sus partidos suben al principio de cada día; el resto sigue por fecha del fixture.
+    const involves = match => Boolean(focusTeam) && (match.homeTeam.id === focusTeam || match.awayTeam.id === focusTeam);
+    const order = (left, right) => Number(involves(right)) - Number(involves(left)) || (left.roundNumber ?? 0) - (right.roundNumber ?? 0);
+    const list = days.map(day => ({ key: String(day), day, rows: matches.filter(match => match.calendarDay === day).sort(order) }));
+    const unscheduled = matches.filter(match => !match.calendarDay).sort(order);
+    return unscheduled.length ? [{ key: UNSCHEDULED, day: null, rows: unscheduled }, ...list] : list;
+  }, [matches, extraDays, focusTeam]);
+  const scheduledCount = matches.filter(match => match.calendarDay).length;
 
-  const move = async (matchId, date) => {
+  const move = async (matchId, day) => {
     const match = matches.find(item => item.id === matchId);
-    const target = date === UNSCHEDULED ? null : date;
+    const target = day ?? null;
     setSelected(null);
-    if (!match || (match.scheduledDate ?? null) === target) return;
+    if (!match || (match.calendarDay ?? null) === target) return;
     setOverrides(current => ({ ...current, [matchId]: target }));
     setStatus({ busy: false, error: '', message: '' });
     try {
-      await endpoints.setMatchSchedule(matchId, target);
+      await endpoints.setMatchCalendarDay(matchId, target);
     } catch (error) {
-      setOverrides(current => ({ ...current, [matchId]: match.scheduledDate ?? null }));
+      setOverrides(current => ({ ...current, [matchId]: match.calendarDay ?? null }));
       setStatus({ busy: false, error: error.message, message: '' });
     }
   };
@@ -97,7 +93,7 @@ export function CalendarPage({ teams, navigate }) {
     setConfirmAuto(false);
     setStatus({ busy: true, error: '', message: '' });
     try {
-      const result = await endpoints.scheduleCalendar(activeId, { startDate, matchesPerDay: Number(perDay) });
+      const result = await endpoints.scheduleCalendar(activeId, { matchesPerDay: Number(perDay) });
       const days = result?.data?.days;
       const conflicts = result?.data?.conflicts ?? 0;
       setStatus({ busy: false, error: '', message: `CALENDARIO ARMADO EN ${days} DÍAS${conflicts ? ` · ${conflicts} CRUCES NO CUADRARON: REVISA LOS AVISOS` : ''}.` });
@@ -106,14 +102,11 @@ export function CalendarPage({ teams, navigate }) {
       setStatus({ busy: false, error: error.message, message: '' });
     }
   };
-  const addDay = () => {
-    const last = columns.filter(column => column.date).at(-1)?.date ?? startDate;
-    setExtraDays(current => [...current, columns.some(column => column.date) ? addDays(last, 1) : last]);
-  };
-  const dropProps = key => isAdmin ? {
+  const addDay = () => setExtraDays(current => [...current, Math.max(0, ...columns.map(column => column.day ?? 0)) + 1]);
+  const dropProps = (key, day) => isAdmin ? {
     onDragOver: event => { event.preventDefault(); setDragOver(key); },
     onDragLeave: () => setDragOver(current => (current === key ? null : current)),
-    onDrop: event => { event.preventDefault(); setDragOver(null); move(event.dataTransfer.getData('text/plain'), key); },
+    onDrop: event => { event.preventDefault(); setDragOver(null); move(event.dataTransfer.getData('text/plain'), day); },
   } : {};
 
   return <main className="newspaper data-page"><section className="data-paper">
@@ -123,7 +116,6 @@ export function CalendarPage({ teams, navigate }) {
       {leagues.length > 1 && <select value={activeId} onChange={event => setTournamentId(event.target.value)} aria-label="Torneo">{leagues.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select>}
       <select value={focusTeam} onChange={event => setFocusTeam(event.target.value)} aria-label="Resaltar equipo"><option value="">RESALTAR EQUIPO…</option>{participants.map(team => <option key={team.id} value={team.id}>{team.name}</option>)}</select>
       {isAdmin && <>
-        <label className="calendar-field">DESDE<input type="date" value={startDate} onChange={event => setStartDate(event.target.value)}/></label>
         <label className="calendar-field">POR DÍA<input type="number" min="1" max="20" value={perDay} onChange={event => setPerDay(event.target.value)}/></label>
         {confirmAuto
           ? <span className="calendar-confirm">¿REEMPLAZAR LOS DÍAS ACTUALES?<button className="action-button" onClick={autoSchedule}>SÍ, ARMAR</button><button className="action-button" onClick={() => setConfirmAuto(false)}>NO</button></span>
@@ -137,15 +129,15 @@ export function CalendarPage({ teams, navigate }) {
     <DataState query={fixtures}/>
     {!fixtures.loading && !fixtures.error && (columns.length
       ? <div className="calendar-board" style={{ '--days': columns.length }}>{columns.map(column => {
-        const { offCount, repeated } = column.date ? dayWarnings(column.rows, participants, Number(perDay)) : { offCount: [], repeated: false };
-        return <section key={column.key} className={`calendar-day ${column.date === today ? 'today' : ''} ${dragOver === column.key ? 'drag-over' : ''} ${column.date ? '' : 'unscheduled'}`} {...dropProps(column.key)}>
+        const { offCount, repeated } = column.day ? dayWarnings(column.rows, participants, Number(perDay)) : { offCount: [], repeated: false };
+        return <section key={column.key} className={`calendar-day ${dragOver === column.key ? 'drag-over' : ''} ${column.day ? '' : 'unscheduled'}`} {...dropProps(column.key, column.day)}>
           <header>
-            <h3>{column.date ? dayLabel(column.date) : 'SIN DÍA'}{column.date === today && <em>HOY</em>}</h3>
+            <h3>{column.day ? `DÍA ${column.day}` : 'SIN DÍA'}</h3>
             <small>{column.rows.filter(match => match.status === 'finished').length} / {column.rows.length} JUGADOS</small>
-            {column.date && column.rows.length > 0 && (offCount.length || repeated
+            {column.day && column.rows.length > 0 && (offCount.length || repeated
               ? <p className="calendar-warn">{repeated && <span>CRUCE REPETIDO</span>}{offCount.map(row => <span key={row.team.id} title={row.team.name}><TeamMark team={resolveTeam(row.team)}/>{row.games}</span>)}</p>
               : <p className="calendar-ok">✓ TODOS JUEGAN {perDay}</p>)}
-            {isAdmin && selected && <button className="calendar-move-here" onClick={() => move(selected, column.key)}>MOVER AQUÍ</button>}
+            {isAdmin && selected && <button className="calendar-move-here" onClick={() => move(selected, column.day)}>MOVER AQUÍ</button>}
           </header>
           <div className="calendar-blocks">{column.rows.map(match => <CalendarBlock key={match.id} match={match} resolveTeam={resolveTeam} canMove={isAdmin}
             selected={selected === match.id} dimmed={Boolean(focusTeam) && match.homeTeam.id !== focusTeam && match.awayTeam.id !== focusTeam}
