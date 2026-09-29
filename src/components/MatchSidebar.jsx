@@ -7,16 +7,9 @@ import { TeamMark } from './TeamMark.jsx';
 import { LivePosition, LiveTableStatus, liveRowClass } from './LiveStandings.jsx';
 import { useLiveStandings } from '../features/public/useLiveStandings.js';
 
-const LIVE_REFRESH_MS = 30000;
+const LIVE_REFRESH_MS = 12000;
 
-// Solo aparece cuando hay partidos jugándose; se refresca cada 30 segundos.
-function LiveMatches({ resolveTeam }) {
-  const live = useApiQuery(signal => endpoints.matches({ status: 'live', activeOnly: 1, page: 1, pageSize: 20 }, signal));
-  useEffect(() => {
-    const timer = window.setInterval(live.retry, LIVE_REFRESH_MS);
-    return () => window.clearInterval(timer);
-  }, [live.retry]);
-  const rows = (Array.isArray(live.data) ? live.data : []).filter(match => match.status === 'live');
+function LiveMatches({ rows, resolveTeam }) {
   if (!rows.length) return null;
   return <section className="score-panel live-panel"><h2><span className="live-dot" aria-hidden="true"/>EN VIVO <small>{rows.length}</small></h2>{rows.map(match =>
     <EntityLink to="match" id={match.id} className="result-match" key={match.id}><small>{[match.tournament?.name ?? 'TORNEO', matchRoundLabel(match, { leagueRound: 'JORNADA' })].join(' · ')}</small><div className="score-line"><TeamMark team={resolveTeam(match.homeTeam)}/><span className="home-name">{match.homeTeam.name}</span><strong>{match.homeScore ?? 0} - {match.awayScore ?? 0}</strong><span className="away-name">{match.awayTeam.name}</span><TeamMark team={resolveTeam(match.awayTeam)}/></div>{match.homeTeam?.stadium && <span className="match-venue compact">🏟️ {match.homeTeam.stadium}</span>}</EntityLink>)}
@@ -34,8 +27,18 @@ function StandingsPanel({ tournament, standings, resolveTeam, loading, navigate 
 }
 
 export function MatchSidebar({ tournament, standings = [], resolveTeam, loading, navigate }) {
+  const live = useApiQuery(signal => endpoints.matches({ status: 'live', activeOnly: 1, page: 1, pageSize: 20 }, signal));
+  useEffect(() => {
+    const timer = window.setInterval(live.retry, LIVE_REFRESH_MS);
+    return () => window.clearInterval(timer);
+  }, [live.retry]);
+  const liveMatches = (Array.isArray(live.data) ? live.data : []).filter(match => match.status === 'live');
+  // Si hay un encuentro activo, su torneo manda: no tiene sentido mostrar una
+  // tabla de otra edición mientras el marcador anuncia la actual.
+  const liveTournament = liveMatches.find(match => match.tournament?.id)?.tournament ?? tournament;
+  const fallbackStandings = String(liveTournament?.id) === String(tournament?.id) ? standings : [];
   return <aside className="match-sidebar">
-    <LiveMatches resolveTeam={resolveTeam}/>
-    <StandingsPanel tournament={tournament} standings={standings} resolveTeam={resolveTeam} loading={loading} navigate={navigate}/>
+    <LiveMatches rows={liveMatches} resolveTeam={resolveTeam}/>
+    <StandingsPanel tournament={liveTournament} standings={fallbackStandings} resolveTeam={resolveTeam} loading={loading} navigate={navigate}/>
   </aside>;
 }
