@@ -15,7 +15,7 @@ export function SanctionPanel({ match, onChanged }) {
   const sanctionedName = sanctionedTeamId === homeId ? match.homeTeam?.name : match.awayTeam?.name;
   const submit = event => {
     event.preventDefault();
-    const body = sanctionedTeamId === homeId ? { homeScore: 0, awayScore: 3 } : { homeScore: 3, awayScore: 0 };
+    const body = sanctionedTeamId === homeId ? { homeScore: 0, awayScore: 3, sanctionedTeamId } : { homeScore: 3, awayScore: 0, sanctionedTeamId };
     if (window.confirm(`¿APLICAR CASTIGO 0-3 A ${sanctionedName?.toUpperCase()}? EL PARTIDO QUEDA FINALIZADO.`)) mutation.execute(body);
   };
   return <form className="admin-form match-sanction-form" onSubmit={submit}>

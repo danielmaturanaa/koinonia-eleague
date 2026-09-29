@@ -238,7 +238,7 @@ export function Scoreboard({ matchId, mode: requestedMode = 'view', density = 't
     <header className="scoreboard-bezel" onClick={onOpen} role={onOpen ? 'button' : undefined} tabIndex={onOpen ? 0 : undefined}>
       {match.status === 'live' && <i className="scoreboard-live-dot" aria-hidden="true"/>}
       <span className="scoreboard-meta">{match.tournament?.name ?? 'TORNEO'} · {matchRoundLabel(match)}</span>
-      <i className={`scoreboard-tag scoreboard-tag-${match.status}`}>{STATUS_LABEL[match.status] ?? match.status}</i>
+      <i className={`scoreboard-tag scoreboard-tag-${match.status}`}>{match.sanctioned && match.status === 'finished' ? 'CASTIGO' : STATUS_LABEL[match.status] ?? match.status}</i>
     </header>
     {match.homeTeam?.stadium && <div className="scoreboard-venue" title={`Estadio de ${match.homeTeam.name}`}>🏟️ {match.homeTeam.stadium}</div>}
     <div className="scoreboard-teams">

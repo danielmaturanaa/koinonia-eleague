@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { TeamMark } from '../../components/TeamMark.jsx';
+import { SanctionBadge } from '../../components/SanctionBadge.jsx';
 import { EntityLink } from '../../components/EntityLink.jsx';
 import { PlayerFace } from '../../components/PlayerFace.jsx';
 import { teamBalance, teamCoachName, teamCoachPhoto } from '../../utils/teamPresentation.js';
@@ -58,7 +59,7 @@ function ClubMatchRow({ match, resolveTeam, teamId }) {
   const finished = match.status === 'finished';
   const result = resultFor(match, teamId);
   return <EntityLink to="match" id={match.id} className={`club-match-row ${{ G: 'won', P: 'lost', E: 'drawn' }[result] ?? ''}`}>
-    <small>{match.tournament?.name ?? 'TORNEO'} · {matchRoundLabel(match, { leagueRound: 'JORNADA' })}{match.homeTeam?.stadium ? <span className="match-venue compact"> · 🏟️ {match.homeTeam.stadium}</span> : null}</small>
+    <small><SanctionBadge match={match} compact/>{match.tournament?.name ?? 'TORNEO'} · {matchRoundLabel(match, { leagueRound: 'JORNADA' })}{match.homeTeam?.stadium ? <span className="match-venue compact"> · 🏟️ {match.homeTeam.stadium}</span> : null}</small>
     <div><span><TeamMark team={resolveTeam(match.homeTeam)}/><b>{match.homeTeam?.name ?? 'LOCAL'}</b></span><strong>{finished ? `${match.homeScore ?? 0} - ${match.awayScore ?? 0}` : 'VS'}</strong><span><b>{match.awayTeam?.name ?? 'VISITA'}</b><TeamMark team={resolveTeam(match.awayTeam)}/></span></div>
   </EntityLink>;
 }

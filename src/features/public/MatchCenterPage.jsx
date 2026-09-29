@@ -3,6 +3,7 @@ import { endpoints } from '../../api/endpoints.js';
 import { EntityLink } from '../../components/EntityLink.jsx';
 import { PlayerFace } from '../../components/PlayerFace.jsx';
 import { Scoreboard } from '../../components/Scoreboard.jsx';
+import { SanctionBadge } from '../../components/SanctionBadge.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
 import { matchRoundLabel } from '../../utils/matchPresentation.js';
 import { SanctionPanel } from '../admin/MatchAdminPanel.jsx';
@@ -92,7 +93,7 @@ export function MatchCenterPage({ matchId, teams = [], navigate }) {
     {/* Marcador + incidencias a la izquierda y cara a cara a la derecha, con el mismo alto:
         el historial se desplaza dentro de su columna en vez de estirar la página. */}
     <div className="match-center-top">
-      <div className="match-center-main"><div className="match-center-score"><Scoreboard matchId={matchId} mode="manage" density="full" teams={teams} refreshKey={revision} onChanged={bump} showActa={false}/></div>{match && <Incidents match={match}/>}</div>
+      <div className="match-center-main"><div className="match-center-score"><Scoreboard matchId={matchId} mode="manage" density="full" teams={teams} refreshKey={revision} onChanged={bump} showActa={false}/>{match?.sanctioned && <p className="match-sanction-banner"><SanctionBadge match={match}/> RESULTADO ADMINISTRATIVO 0-3: EL PARTIDO NO SE JUGÓ.</p>}</div>{match && <Incidents match={match}/>}</div>
       {match && <div className="match-center-h2h"><HeadToHead match={match} resolveTeam={resolveTeam}/></div>}
     </div>
     {match && <>

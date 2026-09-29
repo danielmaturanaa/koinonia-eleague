@@ -2531,3 +2531,12 @@ a.news-read-more { display: inline-block; text-decoration: none; }
   .calendar-board { grid-template-columns: repeat(var(--days), minmax(78vw, 1fr)); scroll-snap-type: x mandatory; }
   .calendar-day { scroll-snap-align: start; }
 }
+
+/* Partidos castigados (0-3 administrativo) */
+.sanction-badge { display: inline-block; padding: 2px 6px; border: 1px solid #7a0016; color: #fff; background: #a90020; font: 700 11px/1 'Oswald', sans-serif; font-style: normal; letter-spacing: .6px; vertical-align: middle; white-space: nowrap; }
+.fixture-sanctioned { border-left-color: #a90020 !important; }
+.fixture-team.sanctioned b { text-decoration: line-through; text-decoration-thickness: 2px; text-decoration-color: #a90020; }
+.fixture-footer > .sanction-badge { flex: none; }
+.club-match-row > small .sanction-badge { margin-right: 6px; }
+.timeline .sanction-badge { margin-left: 8px; }
+.match-sanction-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0 0; padding: 8px 10px; border: 2px solid #a90020; color: #7a0016; background: #fff1f0; font: 600 13px/1.2 'Oswald', sans-serif; letter-spacing: .3px; }
