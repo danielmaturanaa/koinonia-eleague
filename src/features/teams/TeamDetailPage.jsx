@@ -4,7 +4,7 @@ import { TeamMark } from '../../components/TeamMark.jsx';
 import { SanctionBadge } from '../../components/SanctionBadge.jsx';
 import { SimulatedBadge } from '../../components/SimulatedBadge.jsx';
 import { EntityLink } from '../../components/EntityLink.jsx';
-import { LivePosition, LiveTableStatus, liveRowClass } from '../../components/LiveStandings.jsx';
+import { LiveMovement, LivePosition, LiveTableStatus, liveRowClass } from '../../components/LiveStandings.jsx';
 import { PlayerFace } from '../../components/PlayerFace.jsx';
 import { teamBalance, teamCoachName, teamCoachPhoto } from '../../utils/teamPresentation.js';
 import { readPersonProfile } from '../../utils/personProfile.js';
@@ -121,7 +121,7 @@ function ClubStandingSnippet({ standings, teamId, teams, onMore }) {
   const rows = standings.slice(start, start + 3);
   const teamIndex = new Map(teams.map(team => [team.id, team]));
   return <section className="club-card club-standing-snippet"><h3>TABLA <button type="button" className="club-link-button" onClick={onMore}>VER COMPLETA →</button></h3><LiveTableStatus rows={standings}/>
-    <table><thead><tr><th>#</th><th>EQUIPO</th><th>PJ</th><th>DG</th><th>PTS</th></tr></thead><tbody>{rows.map(row => { const position = standings.indexOf(row) + 1; return <tr key={row.team_id} className={liveRowClass(row, row.team_id === teamId ? 'current-team' : '')}><td><LivePosition row={row} position={position}/></td><td><EntityLink to="team" id={row.team_id} className="table-team-link"><TeamMark team={{ ...row, ...(teamIndex.get(row.team_id) ?? {}) }}/><span>{row.name}</span>{row.isPlayingLive && <em className="live-team-tag">EN VIVO</em>}</EntityLink></td><td>{row.played}</td><td>{row.gd > 0 ? `+${row.gd}` : row.gd}</td><td><b>{row.points}</b></td></tr>; })}</tbody></table>
+    <table><thead><tr><th>#</th><th>EQUIPO</th><th>PJ</th><th>DG</th><th>PTS</th></tr></thead><tbody>{rows.map(row => { const position = standings.indexOf(row) + 1; return <tr key={row.team_id} className={liveRowClass(row, row.team_id === teamId ? 'current-team' : '')}><td><LivePosition position={position}/></td><td><EntityLink to="team" id={row.team_id} className="table-team-link"><LiveMovement row={row}/><TeamMark team={{ ...row, ...(teamIndex.get(row.team_id) ?? {}) }}/><span>{row.name}</span>{row.isPlayingLive && <em className="live-team-tag">EN VIVO</em>}</EntityLink></td><td>{row.played}</td><td>{row.gd > 0 ? `+${row.gd}` : row.gd}</td><td><b>{row.points}</b></td></tr>; })}</tbody></table>
   </section>;
 }
 
@@ -591,7 +591,7 @@ function FormPills({ matches, teamId }) {
 function ClubTable({ standings, teamId, teams }) {
   const teamIndex = new Map(teams.map(team => [team.id, team]));
   if (!standings.length) return <p className="empty-copy">SIN TABLA PUBLICADA.</p>;
-  return <><LiveTableStatus rows={standings}/><div className="table-scroll"><table className="league-table club-league-table"><thead><tr><th>#</th><th>EQUIPO</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>DG</th><th>PTS</th></tr></thead><tbody>{standings.map((row, index) => <tr key={row.team_id} className={liveRowClass(row, row.team_id === teamId ? 'current-team' : '')}><td><LivePosition row={row} position={index + 1}/></td><td><EntityLink to="team" id={row.team_id} className="table-team-link"><TeamMark team={{ ...row, ...(teamIndex.get(row.team_id) ?? {}) }}/>{row.name}{row.isPlayingLive && <em className="live-team-tag">EN VIVO</em>}</EntityLink></td><td>{row.played}</td><td>{row.wins}</td><td>{row.draws}</td><td>{row.losses}</td><td>{row.gd > 0 ? `+${row.gd}` : row.gd}</td><td><b>{row.points}</b></td></tr>)}</tbody></table></div></>;
+  return <><LiveTableStatus rows={standings}/><div className="table-scroll"><table className="league-table club-league-table"><thead><tr><th>#</th><th>EQUIPO</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>DG</th><th>PTS</th></tr></thead><tbody>{standings.map((row, index) => <tr key={row.team_id} className={liveRowClass(row, row.team_id === teamId ? 'current-team' : '')}><td><LivePosition position={index + 1}/></td><td><EntityLink to="team" id={row.team_id} className="table-team-link"><LiveMovement row={row}/><TeamMark team={{ ...row, ...(teamIndex.get(row.team_id) ?? {}) }}/>{row.name}{row.isPlayingLive && <em className="live-team-tag">EN VIVO</em>}</EntityLink></td><td>{row.played}</td><td>{row.wins}</td><td>{row.draws}</td><td>{row.losses}</td><td>{row.gd > 0 ? `+${row.gd}` : row.gd}</td><td><b>{row.points}</b></td></tr>)}</tbody></table></div></>;
 }
 
 const MOVE_LABELS = { purchase: 'COMPRA', assignment: 'ASIGNADO', transfer: 'TRASPASO', release: 'LIBERADO', trade: 'TRUEQUE' };

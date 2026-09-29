@@ -453,10 +453,11 @@ body { min-width: 0; overflow-x: hidden; background: #001344; }
 .league-table .team-mark { width: 20px; height: 20px; }
 .live-table-status { display: inline-flex; align-items: center; gap: 6px; margin: -2px 0 7px; color: #a90020; font: 700 11px/1 'Oswald', sans-serif; letter-spacing: .6px; }
 .live-table-status i { width: 8px; height: 8px; border-radius: 50%; background: #d10020; box-shadow: 0 0 5px #d10020; animation: live-dot 1.2s ease-in-out infinite; }
-.live-position { display: inline-flex; align-items: center; justify-content: center; gap: 2px; min-width: 25px; }
-.live-position i { font: 800 15px/1 sans-serif; }
-.live-position.up { color: #087437; }
-.live-position.down { color: #b40025; }
+.live-position { display: inline-flex; align-items: center; justify-content: center; min-width: 25px; }
+.live-movement { display: inline-flex; flex: 0 0 16px; width: 16px; align-items: center; justify-content: center; color: transparent; }
+.live-movement i { color: currentColor; font: 800 22px/.65 Arial, sans-serif; font-style: normal; }
+.live-movement.up { color: #087437; }
+.live-movement.down { color: #b40025; }
 .league-table tr.is-playing-live td, .standings-home-table tr.is-playing-live td, .club-standing-snippet tr.is-playing-live td { background-color: #fff0f1; }
 .league-table tr.is-playing-live td:first-child, .standings-home-table tr.is-playing-live td:first-child, .club-standing-snippet tr.is-playing-live td:first-child { box-shadow: inset 4px 0 0 #d10020; }
 .league-table tr.position-up td, .standings-home-table tr.position-up td, .club-standing-snippet tr.position-up td { animation: standings-rise .8s ease-out; }
@@ -2098,7 +2099,7 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .standings-home-table td { padding: 5px 4px; border-top: 1px solid #b8b199; font-size: 15px; text-align: center; }
 .standings-home-table td:first-child { width: 26px; color: #4d4839; font-weight: 700; }
 .standings-home-table tr:nth-child(-n + 4) td:first-child { color: #fff; background: #1c7a3e; }
-.standings-home-table tr:nth-child(-n + 4) .live-position { color: #fff; text-shadow: 0 1px 1px #0005; }
+.standings-home-table tr:nth-child(-n + 4) .live-movement { color: #fff; text-shadow: 0 1px 1px #0005; }
 .standings-home-table td:nth-child(2) { text-align: left; }
 .standings-home-table .table-team-link { display: flex; align-items: center; gap: 7px; min-width: 0; color: inherit; font-weight: 600; text-decoration: none; }
 .standings-home-table .table-team-link:hover { color: #a90020; }

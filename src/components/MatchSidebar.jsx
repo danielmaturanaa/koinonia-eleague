@@ -4,7 +4,7 @@ import { useApiQuery } from '../features/public/useApiQuery.js';
 import { matchRoundLabel } from '../utils/matchPresentation.js';
 import { EntityLink } from './EntityLink.jsx';
 import { TeamMark } from './TeamMark.jsx';
-import { LivePosition, LiveTableStatus, liveRowClass } from './LiveStandings.jsx';
+import { LiveMovement, LivePosition, LiveTableStatus, liveRowClass } from './LiveStandings.jsx';
 import { useLiveStandings } from '../features/public/useLiveStandings.js';
 
 const LIVE_REFRESH_MS = 12000;
@@ -20,7 +20,7 @@ function StandingsPanel({ tournament, standings, resolveTeam, loading, navigate 
   const liveStandings = useLiveStandings(tournament?.id);
   const rows = Array.isArray(liveStandings.data) && liveStandings.data.length ? liveStandings.data : standings;
   return <section className="score-panel standings-home-panel"><h2>TABLA <small>{tournament?.name ?? ''}</small></h2>
-    <LiveTableStatus rows={rows}/>{rows.length ? <table className="standings-home-table"><thead><tr><th>#</th><th>EQUIPO</th><th title="Partidos jugados">PJ</th><th title="Diferencia de goles">DG</th><th title="Puntos">PTS</th></tr></thead><tbody>{rows.map((row, index) => <tr key={row.team_id} className={liveRowClass(row)}><td><LivePosition row={row} position={index + 1}/></td><td><EntityLink to="team" id={row.team_id} className="table-team-link"><TeamMark team={resolveTeam({ id: row.team_id, ...row })}/><span>{row.name}</span>{row.isPlayingLive && <em className="live-team-tag">EN VIVO</em>}</EntityLink></td><td>{row.played}</td><td>{row.gd > 0 ? `+${row.gd}` : row.gd}</td><td><b>{row.points}</b></td></tr>)}</tbody></table>
+    <LiveTableStatus rows={rows}/>{rows.length ? <table className="standings-home-table"><thead><tr><th>#</th><th>EQUIPO</th><th title="Partidos jugados">PJ</th><th title="Diferencia de goles">DG</th><th title="Puntos">PTS</th></tr></thead><tbody>{rows.map((row, index) => <tr key={row.team_id} className={liveRowClass(row)}><td><LivePosition position={index + 1}/></td><td><EntityLink to="team" id={row.team_id} className="table-team-link"><LiveMovement row={row}/><TeamMark team={resolveTeam({ id: row.team_id, ...row })}/><span>{row.name}</span>{row.isPlayingLive && <em className="live-team-tag">EN VIVO</em>}</EntityLink></td><td>{row.played}</td><td>{row.gd > 0 ? `+${row.gd}` : row.gd}</td><td><b>{row.points}</b></td></tr>)}</tbody></table>
       : <p className="league-note">{loading || liveStandings.loading ? 'CARGANDO...' : 'SIN TABLA PUBLICADA.'}</p>}
     <button className="sidebar-more" type="button" onClick={() => navigate('/torneos')}>VER TORNEO COMPLETO →</button>
   </section>;
