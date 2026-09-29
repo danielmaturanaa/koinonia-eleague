@@ -4,6 +4,7 @@ import { TeamMark } from '../../components/TeamMark.jsx';
 import { SanctionBadge } from '../../components/SanctionBadge.jsx';
 import { SimulatedBadge } from '../../components/SimulatedBadge.jsx';
 import { EntityLink } from '../../components/EntityLink.jsx';
+import { LivePosition, LiveTableStatus, liveRowClass } from '../../components/LiveStandings.jsx';
 import { PlayerFace } from '../../components/PlayerFace.jsx';
 import { teamBalance, teamCoachName, teamCoachPhoto } from '../../utils/teamPresentation.js';
 import { readPersonProfile } from '../../utils/personProfile.js';
@@ -15,6 +16,7 @@ import { useAuth } from '../../app/AuthGate.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { useApiQuery } from '../public/useApiQuery.js';
+import { useLiveStandings } from '../public/useLiveStandings.js';
 import { PitchBoard } from './PitchBoard.jsx';
 import { SimulationTools } from './SimulationTools.jsx';
 import { bandFor, defaultFormationPositions, pitchPositionFor } from '../../utils/formationPositions.js';
@@ -118,8 +120,8 @@ function ClubStandingSnippet({ standings, teamId, teams, onMore }) {
   const start = Math.max(0, Math.min(index - 1, standings.length - 3));
   const rows = standings.slice(start, start + 3);
   const teamIndex = new Map(teams.map(team => [team.id, team]));
-  return <section className="club-card club-standing-snippet"><h3>TABLA <button type="button" className="club-link-button" onClick={onMore}>VER COMPLETA →</button></h3>
-    <table><thead><tr><th>#</th><th>EQUIPO</th><th>PJ</th><th>DG</th><th>PTS</th></tr></thead><tbody>{rows.map(row => { const position = standings.indexOf(row) + 1; return <tr key={row.team_id} className={row.team_id === teamId ? 'current-team' : ''}><td>{position}</td><td><EntityLink to="team" id={row.team_id} className="table-team-link"><TeamMark team={{ ...row, ...(teamIndex.get(row.team_id) ?? {}) }}/><span>{row.name}</span></EntityLink></td><td>{row.played}</td><td>{row.gd > 0 ? `+${row.gd}` : row.gd}</td><td><b>{row.points}</b></td></tr>; })}</tbody></table>
+  return <section className="club-card club-standing-snippet"><h3>TABLA <button type="button" className="club-link-button" onClick={onMore}>VER COMPLETA →</button></h3><LiveTableStatus rows={standings}/>
+    <table><thead><tr><th>#</th><th>EQUIPO</th><th>PJ</th><th>DG</th><th>PTS</th></tr></thead><tbody>{rows.map(row => { const position = standings.indexOf(row) + 1; return <tr key={row.team_id} className={liveRowClass(row, row.team_id === teamId ? 'current-team' : '')}><td><LivePosition row={row} position={position}/></td><td><EntityLink to="team" id={row.team_id} className="table-team-link"><TeamMark team={{ ...row, ...(teamIndex.get(row.team_id) ?? {}) }}/><span>{row.name}</span>{row.isPlayingLive && <em className="live-team-tag">EN JUEGO</em>}</EntityLink></td><td>{row.played}</td><td>{row.gd > 0 ? `+${row.gd}` : row.gd}</td><td><b>{row.points}</b></td></tr>; })}</tbody></table>
   </section>;
 }
 
@@ -589,7 +591,7 @@ function FormPills({ matches, teamId }) {
 function ClubTable({ standings, teamId, teams }) {
   const teamIndex = new Map(teams.map(team => [team.id, team]));
   if (!standings.length) return <p className="empty-copy">SIN TABLA PUBLICADA.</p>;
-  return <div className="table-scroll"><table className="league-table club-league-table"><thead><tr><th>#</th><th>EQUIPO</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>DG</th><th>PTS</th></tr></thead><tbody>{standings.map((row, index) => <tr key={row.team_id} className={row.team_id === teamId ? 'current-team' : ''}><td>{index + 1}</td><td><EntityLink to="team" id={row.team_id} className="table-team-link"><TeamMark team={{ ...row, ...(teamIndex.get(row.team_id) ?? {}) }}/>{row.name}</EntityLink></td><td>{row.played}</td><td>{row.wins}</td><td>{row.draws}</td><td>{row.losses}</td><td>{row.gd > 0 ? `+${row.gd}` : row.gd}</td><td><b>{row.points}</b></td></tr>)}</tbody></table></div>;
+  return <><LiveTableStatus rows={standings}/><div className="table-scroll"><table className="league-table club-league-table"><thead><tr><th>#</th><th>EQUIPO</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>DG</th><th>PTS</th></tr></thead><tbody>{standings.map((row, index) => <tr key={row.team_id} className={liveRowClass(row, row.team_id === teamId ? 'current-team' : '')}><td><LivePosition row={row} position={index + 1}/></td><td><EntityLink to="team" id={row.team_id} className="table-team-link"><TeamMark team={{ ...row, ...(teamIndex.get(row.team_id) ?? {}) }}/>{row.name}{row.isPlayingLive && <em className="live-team-tag">EN JUEGO</em>}</EntityLink></td><td>{row.played}</td><td>{row.wins}</td><td>{row.draws}</td><td>{row.losses}</td><td>{row.gd > 0 ? `+${row.gd}` : row.gd}</td><td><b>{row.points}</b></td></tr>)}</tbody></table></div></>;
 }
 
 const MOVE_LABELS = { purchase: 'COMPRA', assignment: 'ASIGNADO', transfer: 'TRASPASO', release: 'LIBERADO', trade: 'TRUEQUE' };
@@ -652,13 +654,13 @@ function SquadTab({ team, squad, starters, substitutes, onChanged }) {
   return <div className="club-squad-tab">
     <nav className="club-squad-modes" aria-label="Acciones del plantel">{[['view', 'VER PLANTEL'], ...(canEdit ? [['edit', 'EDITAR PLANTEL']] : [])].map(([id, label]) => <button type="button" key={id} className={mode === id ? 'active' : ''} aria-pressed={mode === id} onClick={() => setMode(id)}>{label}</button>)}</nav>
     {mode === 'view' && <div className="club-squad-layout club-squad-layout-list">
-      <div className="roster-panel club-roster"><h3>TITULARES <small>{starters.length} / 11</small></h3><RosterHeader/><div className="roster-list">{starters.length ? starters.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay titulares definidos.</p>}</div><h3>SUPLENTES <small>{substitutes.length}</small></h3><div className="roster-list substitutes">{substitutes.length ? substitutes.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay suplentes registrados.</p>}</div></div>
+      <div className="roster-panel club-roster"><h3>TITULARES <small>{starters.length} / 11</small></h3><div className="roster-table-scroll"><RosterHeader/><div className="roster-list">{starters.length ? starters.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay titulares definidos.</p>}</div></div><h3>SUPLENTES <small>{substitutes.length}</small></h3><div className="roster-table-scroll"><RosterHeader/><div className="roster-list substitutes">{substitutes.length ? substitutes.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay suplentes registrados.</p>}</div></div></div>
     </div>}
     {mode === 'edit' && canEdit && <div className="club-squad-editor"><SquadEditor team={team} squad={squad} onChanged={onChanged}/></div>}
   </div>;
 }
 
-export function TeamDetailPage({ team, teams = [], tournaments = [], squad, standings, matches = [], history = [], historyError, loading, tab = 'resumen', onTab, onBack, onChanged, onProjection = null }) {
+export function TeamDetailPage({ team, teams = [], tournaments = [], squad, standings, standingsTournamentId = null, matches = [], history = [], historyError, loading, tab = 'resumen', onTab, onBack, onChanged, onProjection = null }) {
   const { canEditTeam } = useAuth();
   const canEdit = canEditTeam(team?.id);
   const [historyEditor, setHistoryEditor] = useState('');
@@ -667,14 +669,16 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
   const [crestEditorOpen, setCrestEditorOpen] = useState(false);
   const [coversOpen, setCoversOpen] = useState(false);
   const activeTab = TABS.some(([id]) => id === tab) ? tab : 'resumen';
+  const liveStandings = useLiveStandings(standingsTournamentId);
+  const displayStandings = Array.isArray(liveStandings.data) && liveStandings.data.length ? liveStandings.data : standings;
   const tabsRef = useRef(null);
   // En pantallas angostas las pestañas se desplazan: la activa siempre queda a la vista.
   useEffect(() => { tabsRef.current?.querySelector('.active')?.scrollIntoView({ block: 'nearest', inline: 'nearest' }); }, [activeTab, loading]);
   const roster = [...squad].sort((a, b) => (a.squadOrder ?? 999) - (b.squadOrder ?? 999));
   const starters = roster.filter(player => player.section === 'starters' || (!player.section && player.squadOrder <= 11));
   const substitutes = roster.filter(player => player.section === 'substitutes' || (!player.section && player.squadOrder > 11));
-  const rank = standings.findIndex(row => row.team_id === team?.id) + 1;
-  const standing = standings.find(row => row.team_id === team?.id);
+  const rank = displayStandings.findIndex(row => row.team_id === team?.id) + 1;
+  const standing = displayStandings.find(row => row.team_id === team?.id);
   const photo = team ? presidentPhoto(team) : '';
   const presidentName = team?.president?.name ?? team?.presidentName ?? 'Sin asignar';
   const coachName = teamCoachName(team);
@@ -708,7 +712,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
                 onEditPresident={canEdit ? () => setPersonEditor('president') : undefined}
                 onEditCoach={canEdit ? () => setPersonEditor('coach') : undefined}
               />
-              <ClubStandingSnippet standings={standings} teamId={team.id} teams={teams} onMore={() => onTab?.('tabla')}/>
+              <ClubStandingSnippet standings={displayStandings} teamId={team.id} teams={teams} onMore={() => onTab?.('tabla')}/>
               <ClubRecentResults matches={matches} resolveTeam={resolveTeam} teamId={team.id} onMore={() => onTab?.('partidos')}/>
               <ClubScorers teamId={team.id} limit={3} tournaments={tournaments}/>
             </div>
@@ -721,7 +725,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
 
         {activeTab === 'plantel' && <SquadTab team={team} squad={squad} starters={starters} substitutes={substitutes} onChanged={onChanged}/>}
         {activeTab === 'partidos' && <ClubMatches matches={matches} teams={teams} teamId={team.id}/>}
-        {activeTab === 'tabla' && <ClubTable standings={standings} teamId={team.id} teams={teams}/>}
+        {activeTab === 'tabla' && <ClubTable standings={displayStandings} teamId={team.id} teams={teams}/>}
         {activeTab === 'fichajes' && <ClubTransfers teamId={team.id}/>}
         {activeTab === 'historia' && <div className="club-history-tab-content"><HonoursList honours={honours} historyError={historyError}/><ClubHistory team={team} onEdit={canEdit ? setHistoryEditor : undefined}/></div>}
         {activeTab === 'finanzas' && <div className="club-budget-tab"><SquadValueSimulator team={team} squad={squad} balance={balance}/></div>}

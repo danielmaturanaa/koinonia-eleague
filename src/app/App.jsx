@@ -68,7 +68,7 @@ export function App() {
   } else if (route.name === 'team') {
     // La liga activa que juega este club (para "¿qué necesita?").
     const projectionTournament = activeTournaments.find(item => item.format === 'league' && (league.standingsByTournament?.[item.id] ?? []).some(row => row.team_id === route.teamId));
-    page = <TeamDetailPage team={teamDetail} teams={league.teams} tournaments={activeTournaments} squad={squad} standings={league.standings} matches={teamMatches} history={teamHistory} historyError={teamHistoryError} loading={state.loadingTeam} tab={route.query.tab} onTab={tab => navigate(`/equipos/${encodeURIComponent(route.teamId)}${tab === 'resumen' ? '' : `?tab=${tab}`}`)} onBack={() => navigate('/equipos')} onChanged={refresh}
+    page = <TeamDetailPage team={teamDetail} teams={league.teams} tournaments={activeTournaments} squad={squad} standings={league.standings} standingsTournamentId={projectionTournament?.id ?? tournament?.id ?? null} matches={teamMatches} history={teamHistory} historyError={teamHistoryError} loading={state.loadingTeam} tab={route.query.tab} onTab={tab => navigate(`/equipos/${encodeURIComponent(route.teamId)}${tab === 'resumen' ? '' : `?tab=${tab}`}`)} onBack={() => navigate('/equipos')} onChanged={refresh}
       onProjection={projectionTournament ? () => navigate(projectionLink(projectionTournament.id, route.teamId)) : null}/>;
   } else if (route.name === 'player') {
     const fromMarket = route.query.from === 'mercado';

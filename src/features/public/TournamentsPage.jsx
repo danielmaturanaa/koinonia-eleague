@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { EntityLink } from '../../components/EntityLink.jsx';
+import { LivePosition, LiveTableStatus, liveRowClass } from '../../components/LiveStandings.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { TournamentAdminPanel, TournamentAwardsPanel } from '../admin/TournamentAdminPanel.jsx';
@@ -8,14 +9,14 @@ import { useAuth } from '../../app/AuthGate.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { DataState, PageHeader, gp } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
-import { ProjectionPanel } from './ProjectionPanel.jsx';
+import { useLiveStandings } from './useLiveStandings.js';
 
 function StandingsTable({ rows, resolveTeam }) {
-  return <div className="table-scroll"><table className="league-table"><colgroup><col className="rank-column"/><col className="team-column"/><col className="stat-column" span="8"/></colgroup><thead><tr><th>#</th><th>EQUIPO</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th className="optional-stat">GF</th><th className="optional-stat">GC</th><th className="optional-stat">DG</th><th>PTS</th></tr></thead><tbody>{rows.map((row, index) => <tr key={row.team_id ?? row.id}><td>{index + 1}</td><td><EntityLink to="team" id={row.team_id ?? row.id} className="table-team-link"><TeamMark team={resolveTeam(row)}/>{row.name}</EntityLink></td><td>{row.played}</td><td>{row.wins}</td><td>{row.draws}</td><td>{row.losses}</td><td className="optional-stat">{row.gf}</td><td className="optional-stat">{row.ga}</td><td className="optional-stat">{row.gd}</td><td><b>{row.points}</b></td></tr>)}</tbody></table></div>;
+  return <><LiveTableStatus rows={rows}/><div className="table-scroll"><table className="league-table"><colgroup><col className="rank-column"/><col className="team-column"/><col className="stat-column" span="8"/></colgroup><thead><tr><th>#</th><th>EQUIPO</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th className="optional-stat">GF</th><th className="optional-stat">GC</th><th className="optional-stat">DG</th><th>PTS</th></tr></thead><tbody>{rows.map((row, index) => <tr key={row.team_id ?? row.id} className={liveRowClass(row)}><td><LivePosition row={row} position={index + 1}/></td><td><EntityLink to="team" id={row.team_id ?? row.id} className="table-team-link"><TeamMark team={resolveTeam(row)}/>{row.name}{row.isPlayingLive && <em className="live-team-tag">EN JUEGO</em>}</EntityLink></td><td>{row.played}</td><td>{row.wins}</td><td>{row.draws}</td><td>{row.losses}</td><td className="optional-stat">{row.gf}</td><td className="optional-stat">{row.ga}</td><td className="optional-stat">{row.gd}</td><td><b>{row.points}</b></td></tr>)}</tbody></table></div></>;
 }
 
 function GroupStandings({ tournamentId, groupLabel, resolveTeam }) {
-  const standings = useApiQuery(signal => endpoints.standings(tournamentId, { group: groupLabel }, signal), [tournamentId, groupLabel]);
+  const standings = useLiveStandings(tournamentId, groupLabel);
   const rows = Array.isArray(standings.data) ? standings.data : [];
   return <section className="workspace-panel"><h4>GRUPO {groupLabel}</h4><DataState query={standings}/>{rows.length > 0 && <StandingsTable rows={rows} resolveTeam={resolveTeam}/>}</section>;
 }
@@ -99,12 +100,12 @@ function PlayoffsSection({ tournamentId, resolveTeam }) {
   return <section className="workspace-panel playoff-workspace"><h3>PLAYOFFS <small>TOP 4 · SEMIFINALES {data.semifinalLegs === 1 ? 'A PARTIDO ÚNICO' : 'IDA Y VUELTA'} · FINAL {data.finalLegs === 1 ? 'A PARTIDO ÚNICO' : 'IDA Y VUELTA'}</small></h3><div className="playoff-bracket"><div className="playoff-semi-rounds">{semis.map(series => <section className="playoff-round" key={series.id}><h4>SEMIFINAL {series.slot}</h4><PlayoffSeriesCard series={series} resolveTeam={resolveTeam}/></section>)}</div><div className="playoff-connector" aria-hidden="true"/><section className="playoff-round playoff-final-round"><h4>FINAL</h4>{final ? <PlayoffSeriesCard series={final} resolveTeam={resolveTeam} showWinner={false}/> : <p className="playoff-awaiting">ESPERANDO FINALISTAS</p>}</section></div>{champion && <div className="playoff-champion" role="status"><span aria-hidden="true">🏆</span><strong>CAMPEÓN: {champion.name}</strong></div>}</section>;
 }
 
-function TournamentWorkspace({ tournamentId, teams, onChanged, onDeleted, initialTab = 'standings', projectionTeamId = null }) {
+function TournamentWorkspace({ tournamentId, teams, onChanged, onDeleted, initialTab = 'standings' }) {
   const { isAdmin } = useAuth();
   const [managing, setManaging] = useState(false);
   const [workspaceTab, setWorkspaceTab] = useState(initialTab);
   const detail = useApiQuery(signal => endpoints.tournament(tournamentId, signal), [tournamentId]);
-  const standings = useApiQuery(signal => endpoints.standings(tournamentId, {}, signal), [tournamentId]);
+  const standings = useLiveStandings(tournamentId);
   const scorers = useApiQuery(signal => endpoints.scorers(tournamentId, signal), [tournamentId]);
   const standingRows = Array.isArray(standings.data) ? standings.data : [];
   const teamIndex = useMemo(() => new Map(teams.map(team => [team.id, team])), [teams]);
