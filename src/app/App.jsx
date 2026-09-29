@@ -17,6 +17,7 @@ import { PlayerProfilePage } from '../features/public/PlayerProfilePage.jsx';
 import { EfootballCardPage } from '../features/public/EfootballCard.jsx';
 import { RulesPage } from '../features/public/RulesPage.jsx';
 import { RankingsPage, TournamentsPage } from '../features/public/TournamentsPage.jsx';
+import { projectionLink } from '../features/public/ProjectionPanel.jsx';
 import { TeamsDirectoryPage } from '../features/public/TeamsDirectoryPage.jsx';
 import { MatchScoreboardPage } from '../features/public/MatchScoreboardPage.jsx';
 import { PeoplePage } from '../features/admin/PeoplePage.jsx';
@@ -64,7 +65,10 @@ export function App() {
   } else if (route.name === 'teams') {
     page = <TeamsPage teams={league.teams} loading={state.loading} onChoose={id => navigate(`/equipos/${encodeURIComponent(id)}`)} onChanged={refresh} navigate={navigate}/>;
   } else if (route.name === 'team') {
-    page = <TeamDetailPage team={teamDetail} teams={league.teams} tournaments={activeTournaments} squad={squad} standings={league.standings} matches={teamMatches} history={teamHistory} historyError={teamHistoryError} loading={state.loadingTeam} tab={route.query.tab} onTab={tab => navigate(`/equipos/${encodeURIComponent(route.teamId)}${tab === 'resumen' ? '' : `?tab=${tab}`}`)} onBack={() => navigate('/equipos')} onChanged={refresh}/>;
+    // La liga activa que juega este club (para "¿qué necesita?").
+    const projectionTournament = activeTournaments.find(item => item.format === 'league' && (league.standingsByTournament?.[item.id] ?? []).some(row => row.team_id === route.teamId));
+    page = <TeamDetailPage team={teamDetail} teams={league.teams} tournaments={activeTournaments} squad={squad} standings={league.standings} matches={teamMatches} history={teamHistory} historyError={teamHistoryError} loading={state.loadingTeam} tab={route.query.tab} onTab={tab => navigate(`/equipos/${encodeURIComponent(route.teamId)}${tab === 'resumen' ? '' : `?tab=${tab}`}`)} onBack={() => navigate('/equipos')} onChanged={refresh}
+      onProjection={projectionTournament ? () => navigate(projectionLink(projectionTournament.id, route.teamId)) : null}/>;
   } else if (route.name === 'player') {
     const fromMarket = route.query.from === 'mercado';
     const fromPlayers = route.query.from === 'jugadores';
@@ -77,7 +81,8 @@ export function App() {
   } else if (route.name === 'match') {
     page = <MatchCenterPage key={route.matchId} matchId={route.matchId} teams={league.teams} navigate={navigate}/>;
   } else if (route.path === '/torneos') {
-    page = <TournamentsPage teams={league.teams}/>;
+    const projection = route.query.proyeccion ? { tournamentId: route.query.proyeccion, teamId: route.query.equipo ?? null } : null;
+    page = <TournamentsPage key={route.query.proyeccion ? `${route.query.proyeccion}:${route.query.equipo ?? ''}` : 'torneos'} teams={league.teams} projection={projection}/>;
   } else if (route.path === '/equipos/rankings') {
     page = <RankingsPage teams={league.teams} navigate={navigate}/>;
   } else if (route.name === 'card') {
