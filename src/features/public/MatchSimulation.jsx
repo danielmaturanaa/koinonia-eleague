@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { boosterText } from '../../utils/managerBoosters.js';
 import { endpoints } from '../../api/endpoints.js';
 import { EntityLink } from '../../components/EntityLink.jsx';
 import { SimulatedBadge } from '../../components/SimulatedBadge.jsx';
@@ -163,6 +164,7 @@ function SimulationBasis({ simulation }) {
       <div><dt>Cartas ataque / defensa</dt><dd>{Math.round(team.cardAttack)} / {Math.round(team.cardDefense)}</dd></div>
       <div><dt>Partidos en su historial</dt><dd>{team.historyMatches}</dd></div>
     </dl>
+    <p className="sim-lineup-used"><b>DT:</b> {team.coach ? `${team.coach.name} · ${team.coach.boosters.length ? team.coach.boosters.map(boosterText).join(' · ') : 'sin potenciadores'} (se suman a las stats base de sus jugadores)` : 'sin DT del catálogo vinculado'}</p>
     <p className="sim-lineup-used"><b>TITULARES:</b> {team.lineup.map(player => `${player.position} ${player.name}`).join(' · ')}</p>
     {team.bench?.length > 0 && <p className="sim-lineup-used"><b>BANCO:</b> {team.bench.map(player => `${player.position} ${player.name}`).join(' · ')}</p>}
   </div>;

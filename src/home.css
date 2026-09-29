@@ -2793,3 +2793,34 @@ a.news-read-more { display: inline-block; text-decoration: none; }
   .club-projection-button { margin: 0; font-size: 12px; }
 }
 .sim-feed li.sub { color: #d8e3fb; background: #0b3a7a; }
+
+/* DT de eFootballDB: dominios de estilo, potenciadores y media "CON DT" */
+.manager-summary { display: grid; gap: 6px; padding: 8px 9px; border: 2px solid #10285b; background: #fff9e8; color: #062764; }
+.manager-summary-title { display: grid; gap: 2px; margin: 0; }
+.manager-summary-title b { font: 400 16px/1.05 'Anton', sans-serif; letter-spacing: .2px; }
+.manager-summary-title small { color: #4d4839; font: 500 11px/1.2 'Oswald', sans-serif; letter-spacing: .4px; }
+.manager-styles { display: grid; gap: 3px; margin: 0; padding: 0; list-style: none; }
+.manager-styles li { display: grid; grid-template-columns: minmax(90px, 1.2fr) minmax(50px, 1fr) 26px; align-items: center; gap: 6px; }
+.manager-styles span { font: 500 11px/1.1 'Oswald', sans-serif; letter-spacing: .3px; }
+.manager-styles i { display: block; height: 7px; border: 1px solid #10285b; background: #e9dfc7; }
+.manager-styles i b { display: block; height: 100%; background: #8c0019; }
+.manager-styles em { font: 700 12px/1 'Oswald', sans-serif; font-style: normal; text-align: right; }
+.manager-boosters { display: flex; flex-wrap: wrap; gap: 4px; margin: 0; }
+.manager-booster { padding: 3px 6px; color: #062764; background: #ffd42a; border: 1px solid #10285b; font: 700 11px/1 'Oswald', sans-serif; letter-spacing: .4px; }
+.manager-booster.none { color: #4d4839; background: transparent; border-style: dashed; }
+.manager-summary.compact .manager-styles { display: none; }
+.manager-picker { position: relative; display: grid; gap: 6px; }
+.manager-picker > label { color: #8c0019; font: 600 14px/1 'Oswald', sans-serif; letter-spacing: .4px; }
+.manager-picker input { width: 100%; min-width: 0; padding: 11px 12px; border: 2px solid #092e77; color: #062764; background: #fff; font: 500 16px/1.1 'Roboto Condensed', sans-serif; }
+.manager-picked { display: grid; gap: 6px; }
+.manager-results { display: grid; max-height: 300px; overflow-y: auto; border: 2px solid #092e77; background: #fff9e8; box-shadow: 4px 5px 0 #0003; }
+.manager-results p { margin: 0; padding: 12px; color: #4d4839; font: 600 13px/1 'Oswald', sans-serif; letter-spacing: .4px; }
+.manager-results button { display: grid; gap: 3px; padding: 8px 10px; border: 0; border-top: 1px solid #10285b22; color: #062764; background: transparent; text-align: left; }
+.manager-results button:hover { background: #fff3c4; }
+.manager-results b { font: 400 15px/1.05 'Anton', sans-serif; }
+.manager-results small { display: block; color: #4d4839; font: 500 11px/1.2 'Oswald', sans-serif; letter-spacing: .3px; }
+.manager-results em { color: #8c0019; font: 700 11px/1.2 'Oswald', sans-serif; font-style: normal; letter-spacing: .3px; }
+.ovr-coach { color: #0a7a2f; font-weight: 700; }
+.ovr-coach-note { color: #0a7a2f; font: 600 14px/1 'Oswald', sans-serif; letter-spacing: .4px; }
+.pitch-card-coach { color: #7dff9e; font: 700 clamp(8px, .7vw, 10px)/1 'Oswald', sans-serif; font-style: normal; text-shadow: 1px 1px 0 #000; }
+.club-people-grid { align-items: start; }

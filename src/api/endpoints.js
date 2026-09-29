@@ -26,6 +26,7 @@ export const endpoints = {
   divisions: signal => get('/divisions', null, signal),
   players: (query, signal) => get('/players', query, signal),
   efootballPlayers: (query, signal) => get('/efootball/players', query, signal),
+  efootballManagers: (query, signal) => get('/efootball/managers', query, signal),
   efootballCard: (pesId, variation, signal) => get(`/efootball/cards/${pesId}`, { variation }, signal),
   playerDirectory: (query, signal) => get('/player-directory', query, signal),
   player: (playerId, signal) => get(`/players/${playerId}`, null, signal),

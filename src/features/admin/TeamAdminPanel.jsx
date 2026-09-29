@@ -5,6 +5,7 @@ import { readPersonProfile, savePersonProfile } from '../../utils/personProfile.
 import { fallbackKitColors } from '../news/newsSceneRenderer.js';
 import { FormFeedback } from './FormFeedback.jsx';
 import { useApiMutation } from './useApiMutation.js';
+import { ManagerPicker } from '../teams/ManagerCard.jsx';
 
 const numberOrUndefined = value => value === '' ? undefined : Number(value);
 
@@ -109,6 +110,7 @@ export function CoachForm({ team, onChanged, onSaved }) {
     imageUrl: presentedPhoto,
     age: metadata.age,
     country: metadata.country, customFields: coach?.customFields ?? [],
+    manager: coach?.manager ?? null,
   });
   useEffect(() => {
     const nextMetadata = readPersonProfile('coach', coach);
@@ -117,6 +119,7 @@ export function CoachForm({ team, onChanged, onSaved }) {
       imageUrl: presentedPhoto,
       age: nextMetadata.age,
       country: nextMetadata.country, customFields: coach?.customFields ?? [],
+      manager: coach?.manager ?? null,
     });
   }, [coachId, presentedName, presentedPhoto]);
   const mutation = useApiMutation((body, signal) => coachId
@@ -126,7 +129,7 @@ export function CoachForm({ team, onChanged, onSaved }) {
       onChanged?.(result);
       onSaved?.();
     } });
-  return <form className="admin-form person-editor-form" onSubmit={event => { event.preventDefault(); mutation.execute({ name: form.name.trim(), imageUrl: form.imageUrl, age: form.age === '' ? null : Number(form.age), nationality: form.country, customFields: customFieldsPayload(form.customFields) }); }}><label>NOMBRE DEL DT<input required value={form.name} onChange={event => setForm(current => ({ ...current, name: event.target.value }))} placeholder="DIRECTOR TÉCNICO"/></label><label>EDAD<input type="number" min="1" max="120" value={form.age} onChange={event => setForm(current => ({ ...current, age: event.target.value }))}/></label><label>PAÍS<input value={form.country} onChange={event => setForm(current => ({ ...current, country: event.target.value }))} placeholder="PAÍS"/></label><CustomFieldsEditor fields={form.customFields} onChange={customFields => setForm(current => ({ ...current, customFields }))}/><MediaImageField label="SUBIR FOTO DEL DT" entityType="coach" entityId={coachId} onUploaded={imageUrl => setForm(current => ({ ...current, imageUrl }))}/><button className="action-button" disabled={!form.name.trim() || mutation.loading}>GUARDAR DT</button><FormFeedback mutation={mutation}/></form>;
+  return <form className="admin-form person-editor-form" onSubmit={event => { event.preventDefault(); mutation.execute({ name: form.name.trim(), imageUrl: form.imageUrl, age: form.age === '' ? null : Number(form.age), nationality: form.country, efootballManagerPesId: form.manager?.pesId ?? null, customFields: customFieldsPayload(form.customFields) }); }}><ManagerPicker value={form.manager} onChange={manager => setForm(current => ({ ...current, manager, name: current.name.trim() || !manager ? current.name : manager.name, age: current.age === '' && manager?.age ? manager.age : current.age, country: current.country || manager?.country || '' }))}/><label>NOMBRE DEL DT<input required value={form.name} onChange={event => setForm(current => ({ ...current, name: event.target.value }))} placeholder="DIRECTOR TÉCNICO"/></label><label>EDAD<input type="number" min="1" max="120" value={form.age} onChange={event => setForm(current => ({ ...current, age: event.target.value }))}/></label><label>PAÍS<input value={form.country} onChange={event => setForm(current => ({ ...current, country: event.target.value }))} placeholder="PAÍS"/></label><CustomFieldsEditor fields={form.customFields} onChange={customFields => setForm(current => ({ ...current, customFields }))}/><MediaImageField label="SUBIR FOTO DEL DT" entityType="coach" entityId={coachId} onUploaded={imageUrl => setForm(current => ({ ...current, imageUrl }))}/><button className="action-button" disabled={!form.name.trim() || mutation.loading}>GUARDAR DT</button><FormFeedback mutation={mutation}/></form>;
 }
 
 function TeamProfileEditor({ team, onChanged }) {

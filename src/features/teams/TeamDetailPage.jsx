@@ -9,6 +9,8 @@ import { teamBalance, teamCoachName, teamCoachPhoto } from '../../utils/teamPres
 import { readPersonProfile } from '../../utils/personProfile.js';
 import { matchRoundLabel } from '../../utils/matchPresentation.js';
 import { CoachForm, PresidentForm, ProfileForm, SquadEditor } from '../admin/TeamAdminPanel.jsx';
+import { ManagerSummary } from './ManagerCard.jsx';
+import { hasCoachBoost, overallText } from '../../utils/managerBoosters.js';
 import { useAuth } from '../../app/AuthGate.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
@@ -40,7 +42,7 @@ function splitPlayerName(name) {
 
 function PlayerRow({ player }) {
   const { rest: name } = splitPlayerName(player.name);
-  return <button type="button" className="roster-row roster-player-link" onClick={() => { window.location.hash = `/jugadores/${encodeURIComponent(player.id)}`; }}><b>{player.jerseyNumber ?? '—'}</b><span><PlayerFace src={player.faceUrl} name={name} className="roster-player-face"/><i>{player.flag && <em className="player-flag">{player.flag}</em>}{name}</i></span><small>{player.position ?? '—'} · {player.overall ?? '—'}</small><strong>{gp(player.gpValue)} GP</strong></button>;
+  return <button type="button" className="roster-row roster-player-link" onClick={() => { window.location.hash = `/jugadores/${encodeURIComponent(player.id)}`; }}><b>{player.jerseyNumber ?? '—'}</b><span><PlayerFace src={player.faceUrl} name={name} className="roster-player-face"/><i>{player.flag && <em className="player-flag">{player.flag}</em>}{name}</i></span><small className={hasCoachBoost(player) ? 'ovr-coach' : ''} title={hasCoachBoost(player) ? 'Media base → media con los potenciadores del DT' : undefined}>{player.position ?? '—'} · {overallText(player)}</small><strong>{gp(player.gpValue)} GP</strong></button>;
 }
 
 function RosterHeader() {
@@ -100,9 +102,9 @@ function PersonPhoto({ photo, name }) {
 }
 
 // Foto a sangre con nombre, edad y país sobre un degradado inferior; la edición queda junto al cargo.
-function LeaderCard({ photo, name, age, country, customFields = [], role, onEdit }) {
+function LeaderCard({ photo, name, age, country, customFields = [], role, onEdit, manager }) {
   const details = [age ? `${age} AÑOS` : null, country, ...customFields.map(field => field.value ? `${field.label}: ${field.value}` : null)].filter(Boolean);
-  return <div className="club-person-entry"><h3 className="club-person-role">{role}{onEdit && <button type="button" className="club-inline-edit club-leader-edit" onClick={onEdit} aria-label={`Editar ${role.toLowerCase()}`} title={`Editar ${role.toLowerCase()}`}>✎</button>}</h3><article className="club-person-card"><PersonPhoto photo={photo} name={name}/><div className="club-person-overlay"><h3>{name}</h3>{details.length > 0 && <p>{details.join(' · ')}</p>}</div></article></div>;
+  return <div className="club-person-entry"><h3 className="club-person-role">{role}{onEdit && <button type="button" className="club-inline-edit club-leader-edit" onClick={onEdit} aria-label={`Editar ${role.toLowerCase()}`} title={`Editar ${role.toLowerCase()}`}>✎</button>}</h3><article className="club-person-card"><PersonPhoto photo={photo} name={name}/><div className="club-person-overlay"><h3>{name}</h3>{details.length > 0 && <p>{details.join(' · ')}</p>}</div></article>{manager && <ManagerSummary manager={manager}/>}</div>;
 }
 
 function ClubPeople({ president: { key: presidentKey, ...president }, coach: { key: coachKey, ...coach }, onEditPresident, onEditCoach }) {
@@ -702,7 +704,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
             <div className="club-overview-left-column">
               <ClubPeople
                 president={{ key: `president-${personRevision}`, photo, name: presidentName, age: presidentProfile.age, country: presidentProfile.country, customFields: team.president?.customFields, role: 'PRESIDENTE' }}
-                coach={{ key: `coach-${personRevision}`, photo: managerPhoto, name: coachName, age: coachProfile.age, country: coachProfile.country, customFields: team.coach?.customFields, role: 'DT' }}
+                coach={{ key: `coach-${personRevision}`, photo: managerPhoto, name: coachName, age: coachProfile.age, country: coachProfile.country, customFields: team.coach?.customFields, role: 'DT', manager: team.coach?.manager }}
                 onEditPresident={canEdit ? () => setPersonEditor('president') : undefined}
                 onEditCoach={canEdit ? () => setPersonEditor('coach') : undefined}
               />
