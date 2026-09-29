@@ -2098,6 +2098,7 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .standings-home-table td { padding: 5px 4px; border-top: 1px solid #b8b199; font-size: 15px; text-align: center; }
 .standings-home-table td:first-child { width: 26px; color: #4d4839; font-weight: 700; }
 .standings-home-table tr:nth-child(-n + 4) td:first-child { color: #fff; background: #1c7a3e; }
+.standings-home-table tr:nth-child(-n + 4) .live-position { color: #fff; text-shadow: 0 1px 1px #0005; }
 .standings-home-table td:nth-child(2) { text-align: left; }
 .standings-home-table .table-team-link { display: flex; align-items: center; gap: 7px; min-width: 0; color: inherit; font-weight: 600; text-decoration: none; }
 .standings-home-table .table-team-link:hover { color: #a90020; }
