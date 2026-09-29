@@ -54,7 +54,7 @@ function SimulateDialog({ match, onClose, onDone }) {
     <div className="sim-dialog" role="dialog" aria-modal="true" aria-labelledby="sim-dialog-title" onClick={event => event.stopPropagation()}>
       <h3 id="sim-dialog-title">SIMULAR PARTIDO OFICIAL</h3>
       <p className="sim-dialog-teams">{match.homeTeam?.name} <span>vs</span> {match.awayTeam?.name}</p>
-      <p>El resultado queda registrado en la tabla, con goles, rojas y suspensiones. <b>Es definitivo y no se repite:</b> la simulación se guarda con su semilla y cualquiera puede ver cómo se calculó.</p>
+      <p>El resultado queda registrado en la tabla, con goles, rojas y suspensiones. <b>Cada simulación es al azar</b> y queda guardada con su semilla: cualquiera puede ver cómo se calculó.</p>
       <fieldset className="sim-durations"><legend>DURACIÓN DE LA TRANSMISIÓN</legend>
         {DURATIONS.map(([seconds, label]) => <button key={seconds} type="button" className={duration === seconds ? 'active' : ''} aria-pressed={duration === seconds} onClick={() => setDuration(seconds)}>{label}</button>)}
       </fieldset>
@@ -151,7 +151,7 @@ export function SimulationReplay({ match, simulation, resolveTeam, startsAt, dur
   </article>;
 }
 
-/** Datos de una simulación ya registrada: cómo se calculó, reproducible con su semilla. */
+/** Datos de una simulación ya registrada: cómo se calculó, reproducible con su semilla guardada. */
 function SimulationBasis({ simulation }) {
   const { basis } = simulation;
   const side = team => <div><h3>{team.name}</h3>
@@ -165,7 +165,7 @@ function SimulationBasis({ simulation }) {
     <p className="sim-lineup-used">{team.lineup.map(player => `${player.position} ${player.name}`).join(' · ')}</p>
   </div>;
   return <details className="sim-basis"><summary>CÓMO SE CALCULÓ</summary><div>
-    <p>Motor v{simulation.engineVersion} · semilla <code>{simulation.seed}</code> · {basis.historyMatches} partidos de historial sin castigos · promedio de la liga {basis.leagueMeanGoals} goles por equipo · ventaja de local ×{basis.homeAdvantage}. Las cartas usan sus stats base (sin progresión de nivel). Con los mismos datos, el motor da siempre este mismo partido.</p>
+    <p>Motor v{simulation.engineVersion} · semilla <code>{simulation.seed}</code> · {basis.historyMatches} partidos de historial sin castigos · promedio de la liga {basis.leagueMeanGoals} goles por equipo · ventaja de local ×{basis.homeAdvantage}. Las cartas usan sus stats base (sin progresión de nivel). Con esta semilla y estos datos, el motor reproduce exactamente este partido.</p>
     <div className="sim-basis-teams">{side(basis.home)}{side(basis.away)}</div>
     {simulation.previousVoided > 0 && <p>Este partido tiene {simulation.previousVoided} simulación{simulation.previousVoided === 1 ? '' : 'es'} anterior{simulation.previousVoided === 1 ? '' : 'es'} anulada{simulation.previousVoided === 1 ? '' : 's'}.</p>}
   </div></details>;
