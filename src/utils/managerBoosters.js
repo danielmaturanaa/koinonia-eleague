@@ -25,3 +25,6 @@ export function overallText(player) {
 }
 
 export const hasCoachBoost = player => player?.overall != null && player.overallWithCoach != null && player.overallWithCoach > player.overall;
+
+/** Bono de estilo del DT como porcentaje: ×1,037 → "+3,7 %". */
+export const bonusText = factor => `${factor >= 1 ? '+' : '−'}${Math.abs((factor - 1) * 100).toLocaleString('es-CL', { maximumFractionDigits: 1 })} %`;

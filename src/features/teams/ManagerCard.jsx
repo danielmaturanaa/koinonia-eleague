@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
-import { STYLE_LABELS, boosterText } from '../../utils/managerBoosters.js';
+import { STYLE_LABELS, boosterText, bonusText } from '../../utils/managerBoosters.js';
 import { useApiQuery } from '../public/useApiQuery.js';
 
 /** Los 5 dominios de estilo del DT (0–99) y sus potenciadores. */
@@ -11,6 +11,7 @@ export function ManagerSummary({ manager, compact = false }) {
     <ul className="manager-styles" aria-label="Dominios de estilo">
       {STYLE_LABELS.map(([key, label]) => <li key={key}><span>{label}</span><i aria-hidden="true"><b style={{ width: `${Math.min(manager.styles?.[key] ?? 0, 99)}%` }}/></i><em>{manager.styles?.[key] ?? '—'}</em></li>)}
     </ul>
+    {manager.proficiency && <p className="manager-style-bonus">JUEGA CON <b>{STYLE_LABELS.find(([key]) => key === manager.proficiency.style)?.[1] ?? manager.proficiency.style} ({manager.proficiency.value})</b> · {bonusText(manager.proficiency.factor)} EN TODAS LAS STATS</p>}
     <p className="manager-boosters">{manager.boosters?.length
       ? manager.boosters.map((booster, index) => <span className="manager-booster" key={`${booster.stat}-${index}`}>{boosterText(booster)}</span>)
       : <span className="manager-booster none">SIN POTENCIADORES</span>}</p>
