@@ -2792,3 +2792,4 @@ a.news-read-more { display: inline-block; text-decoration: none; }
   .scenario-away { text-align: right; }
   .club-projection-button { margin: 0; font-size: 12px; }
 }
+.sim-feed li.sub { color: #d8e3fb; background: #0b3a7a; }

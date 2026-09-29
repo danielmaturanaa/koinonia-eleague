@@ -99,6 +99,7 @@ export function SimulationPreview({ match, onSimulated }) {
 function narrate(event, match) {
   const team = event.side === 'home' ? match.homeTeam?.name : match.awayTeam?.name;
   if (event.type === 'red') return { icon: '🟥', text: `ROJA DIRECTA A ${event.playerName?.toUpperCase()} (${team?.toUpperCase()})` };
+  if (event.type === 'sub') return { icon: event.reason === 'injury' ? '🩹' : '🔁', text: `${event.reason === 'injury' ? 'SE LESIONA' : 'CAMBIO EN'} ${team?.toUpperCase()}: ENTRA ${event.playerInName?.toUpperCase()} POR ${event.playerOutName?.toUpperCase()}`, sub: true };
   if (event.ownGoal) return { icon: '⚽', text: `¡AUTOGOL DE ${event.playerName?.toUpperCase()}! SUMA ${team?.toUpperCase()}`, goal: true };
   return { icon: '⚽', text: `¡GOOOL DE ${team?.toUpperCase()}! ${event.playerName?.toUpperCase() ?? ''}`, goal: true };
 }
@@ -147,7 +148,7 @@ export function SimulationReplay({ match, simulation, resolveTeam, startsAt, dur
       <div className="scoreboard-team"><TeamMark team={resolveTeam(match.awayTeam)}/><b>{match.awayTeam?.name}</b></div>
     </div>
     <div className="sim-progress" aria-hidden="true"><i style={{ width: `${progress * 100}%` }}/><b style={{ left: `${(clock.halfTime / clock.total) * 100}%` }}/></div>
-    <ol className="sim-feed">{ordered.map(item => <li key={item.key} className={item.goal ? 'goal' : ''}><time>{item.clock}</time><span aria-hidden="true">{item.icon}</span><p>{item.text}</p></li>)}</ol>
+    <ol className="sim-feed">{ordered.map(item => <li key={item.key} className={item.goal ? 'goal' : item.sub ? 'sub' : ''}><time>{item.clock}</time><span aria-hidden="true">{item.icon}</span><p>{item.text}</p></li>)}</ol>
   </article>;
 }
 
@@ -162,10 +163,11 @@ function SimulationBasis({ simulation }) {
       <div><dt>Cartas ataque / defensa</dt><dd>{Math.round(team.cardAttack)} / {Math.round(team.cardDefense)}</dd></div>
       <div><dt>Partidos en su historial</dt><dd>{team.historyMatches}</dd></div>
     </dl>
-    <p className="sim-lineup-used">{team.lineup.map(player => `${player.position} ${player.name}`).join(' · ')}</p>
+    <p className="sim-lineup-used"><b>TITULARES:</b> {team.lineup.map(player => `${player.position} ${player.name}`).join(' · ')}</p>
+    {team.bench?.length > 0 && <p className="sim-lineup-used"><b>BANCO:</b> {team.bench.map(player => `${player.position} ${player.name}`).join(' · ')}</p>}
   </div>;
   return <details className="sim-basis"><summary>CÓMO SE CALCULÓ</summary><div>
-    <p>Motor v{simulation.engineVersion} · semilla <code>{simulation.seed}</code> · {basis.historyMatches} partidos de historial sin castigos · promedio de la liga {basis.leagueMeanGoals} goles por equipo · ventaja de local ×{basis.homeAdvantage}. Las cartas usan sus stats base (sin progresión de nivel). Con esta semilla y estos datos, el motor reproduce exactamente este partido.</p>
+    <p>Motor v{simulation.engineVersion} · semilla <code>{simulation.seed}</code> · {basis.historyMatches} partidos de historial sin castigos · promedio de la liga {basis.leagueMeanGoals} goles por equipo · ventaja de local ×{basis.homeAdvantage}. Las cartas usan sus 26 stats base (sin progresión de nivel), su perfil y sus habilidades; hay cansancio y cambios desde el banco. Con esta semilla y estos datos, el motor reproduce exactamente este partido.</p>
     <div className="sim-basis-teams">{side(basis.home)}{side(basis.away)}</div>
     {simulation.previousVoided > 0 && <p>Este partido tiene {simulation.previousVoided} simulación{simulation.previousVoided === 1 ? '' : 'es'} anterior{simulation.previousVoided === 1 ? '' : 'es'} anulada{simulation.previousVoided === 1 ? '' : 's'}.</p>}
   </div></details>;
