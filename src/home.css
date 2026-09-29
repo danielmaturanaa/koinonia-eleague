@@ -2823,7 +2823,6 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .manager-results em { color: #8c0019; font: 700 11px/1.2 'Oswald', sans-serif; font-style: normal; letter-spacing: .3px; }
 .ovr-coach { color: #0a7a2f; font-weight: 700; }
 .ovr-coach-note { color: #0a7a2f; font: 600 14px/1 'Oswald', sans-serif; letter-spacing: .4px; }
-.pitch-card-coach { color: #7dff9e; font: 700 clamp(8px, .7vw, 10px)/1 'Oswald', sans-serif; font-style: normal; text-shadow: 1px 1px 0 #000; }
 .club-people-grid { align-items: start; }
 
 /* El resumen del DT flota sobre la ficha al pasar el mouse (o enfocar) por la foto: no agranda la tarjeta. */
@@ -2833,3 +2832,10 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .club-person-card[tabindex] { cursor: help; outline-offset: 2px; }
 .manager-style-bonus { margin: 0; color: #4d4839; font: 500 11px/1.25 'Oswald', sans-serif; letter-spacing: .3px; }
 .manager-style-bonus b { color: #062764; }
+
+/* Media con DT: más grande que la base y con un brillo pasajero cada pocos segundos. */
+.pitch-card-stats .pitch-card-ovr.coach { font-size: clamp(19px, 1.75vw, 26px); color: #7dff9e; background: linear-gradient(105deg, #35e07a 0 42%, #fff 50%, #35e07a 58% 100%) 100% 0 / 300% 100% no-repeat; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; filter: drop-shadow(0 1px 0 #000) drop-shadow(0 0 4px #35e07a99); animation: coach-shine 5s ease-in-out infinite; }
+.pitch-card-base { color: #ffffffb3; font: 600 clamp(9px, .75vw, 11px)/1 'Oswald', sans-serif; font-style: normal; text-decoration: line-through; text-decoration-thickness: 1px; }
+@keyframes coach-shine { 0%, 62% { background-position: 100% 0; } 84%, 100% { background-position: 0 0; } }
+@media (prefers-reduced-motion: reduce) { .pitch-card-stats .pitch-card-ovr.coach { animation: none; background-position: 100% 0; } }
+@media (max-width: 560px) { .pitch-card-stats .pitch-card-ovr.coach { font-size: 16px; } .pitch-card-base { font-size: 8px; } }
