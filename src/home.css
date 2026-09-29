@@ -2834,7 +2834,7 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .manager-style-bonus b { color: #062764; }
 
 /* Media con DT: más grande que la base y con un brillo pasajero cada pocos segundos. */
-.pitch-card-stats .pitch-card-ovr.coach { font-size: clamp(16px, 1.45vw, 22px); color: #ffd42a; background: linear-gradient(105deg, #ffd42a 0 42%, #fffbe6 50%, #ffd42a 58% 100%) 100% 0 / 300% 100% no-repeat; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: coach-shine 5s ease-in-out infinite; }
+.pitch-card-stats .pitch-card-ovr.coach { font-size: clamp(16px, 1.45vw, 22px); text-shadow: none; color: #ffe600; background: linear-gradient(105deg, #ffe600 0 42%, #ffffff 50%, #ffe600 58% 100%) 100% 0 / 300% 100% no-repeat; -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: coach-shine 5s ease-in-out infinite; }
 .pitch-card-base { color: #ffffffb3; font: 600 clamp(9px, .75vw, 11px)/1 'Oswald', sans-serif; font-style: normal; }
 @keyframes coach-shine { 0%, 62% { background-position: 100% 0; } 84%, 100% { background-position: 0 0; } }
 @media (prefers-reduced-motion: reduce) { .pitch-card-stats .pitch-card-ovr.coach { animation: none; background-position: 100% 0; } }
