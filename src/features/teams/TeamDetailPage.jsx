@@ -367,25 +367,39 @@ function saveSimulatorView(view) {
   }
 }
 
+const BAND_ORDER = { gk: 0, def: 1, mid: 2, att: 3 };
+const BAND_LABELS = { gk: 'ARQ', def: 'DEF', mid: 'MED', att: 'DEL' };
+
 // Mismo plantel simulado que la cancha, en filas: el precio se edita igual (clic, Enter, Esc).
+// Los titulares se ordenan por línea (arquero a delantero); cada sección muestra su subtotal.
 function SimulatorTable({ starters, substitutes, simulation }) {
-  const section = (title, players) => <tbody key={title}>
-    <tr className="squad-sim-table-section"><th colSpan="5">{title} <small>{players.length}</small></th></tr>
+  const byLine = players => [...players].sort((left, right) => BAND_ORDER[bandFor(left.position)] - BAND_ORDER[bandFor(right.position)]);
+  const startersFull = starters.length >= SIMULATOR_STARTERS;
+  const section = (title, players, isStarters) => <section className="squad-sim-group" key={title}>
+    <header><h4>{title} <small>{players.length}</small></h4><span>{gp(players.reduce((total, player) => total + simulation.priceOf(player), 0))} GP</span></header>
     {players.length ? players.map(player => {
       const { rest: name } = splitPlayerName(player.name);
-      return <tr key={simulatorPlayerId(player)} className={`${simulation.isNew(player) ? 'sim-new' : ''} ${simulation.isHighlighted(player) ? 'just-added' : ''}`}>
-        <td className="squad-sim-table-number">{player.jerseyNumber ?? '—'}</td>
-        <td className="squad-sim-table-name"><PlayerFace src={player.faceUrl} name={name} className="squad-simulator-face"/><span>{name || 'JUGADOR'}</span></td>
-        <td>{player.position ?? '—'}</td>
-        <td>{player.overall ?? '—'}</td>
-        <td className="squad-sim-table-price"><SimulationTools name={name} value={simulation.priceOf(player)} edited={simulation.isEdited(player)} onPrice={value => simulation.onPrice(player, value)} onReset={() => simulation.onResetPrice(player)} onRemove={() => simulation.onRemove(player)}/></td>
-      </tr>;
-    }) : <tr><td colSpan="5" className="empty-copy">SIN JUGADORES.</td></tr>}
-  </tbody>;
-  return <div className="table-scroll"><table className="league-table squad-sim-table">
-    <thead><tr><th>N°</th><th>NOMBRE</th><th>POS.</th><th>OVR</th><th>PRECIO (GP)</th></tr></thead>
-    {section('TITULARES', starters)}{section('SUPLENTES', substitutes)}
-  </table></div>;
+      const real = simulatorOriginalValue(player);
+      const price = simulation.priceOf(player);
+      const delta = price - real;
+      const band = bandFor(player.position);
+      return <div key={simulatorPlayerId(player)} className={`squad-sim-row ${simulation.isNew(player) ? 'is-new' : ''} ${simulation.isHighlighted(player) ? 'just-added' : ''}`}>
+        <span className="squad-sim-player"><PlayerFace src={player.faceUrl} name={name} className="squad-simulator-face"/><span><b>{name || 'JUGADOR'}</b><small>{simulation.isNew(player) && <em className="squad-sim-tag new">NUEVO</em>}{simulation.isEdited(player) && <em className="squad-sim-tag edited">EDITADO</em>}</small></span></span>
+        <i className={`squad-sim-pos band-${band}`} title={BAND_LABELS[band]}>{player.position ?? '—'}</i>
+        <b className="squad-sim-ovr">{player.overall ?? '—'}</b>
+        <span className="squad-sim-real"><small>REAL</small>{gp(real)}</span>
+        <span className="squad-sim-price">
+          <SimulationTools name={name} value={price} edited={simulation.isEdited(player)} onPrice={value => simulation.onPrice(player, value)} onReset={() => simulation.onResetPrice(player)} onRemove={() => simulation.onRemove(player)}/>
+          {delta !== 0 && <small className={delta > 0 ? 'up' : 'down'}>{delta > 0 ? '▲' : '▼'} {gp(Math.abs(delta))}</small>}
+        </span>
+        <button type="button" className={`squad-sim-move ${isStarters ? 'to-bench' : 'to-pitch'}`} disabled={!isStarters && startersFull} onClick={() => simulation.onToggleSection(player)} title={isStarters ? `Mandar a ${name} a la banca` : startersFull ? 'Ya hay 11 titulares: manda a alguien a la banca primero' : `Hacer titular a ${name}`} aria-label={isStarters ? `Mandar a ${name} a la banca` : `Hacer titular a ${name}`}>{isStarters ? '↓ BANCA' : '↑ TITULAR'}</button>
+      </div>;
+    }) : <p className="empty-copy">SIN JUGADORES.</p>}
+  </section>;
+  return <div className="squad-sim-table" role="table" aria-label="Plantel simulado">
+    <div className="squad-sim-table-head" aria-hidden="true"><span>JUGADOR</span><span>POS.</span><span>OVR</span><span>PRECIO REAL</span><span>PRECIO SIMULADO</span><span>ACCIÓN</span></div>
+    {section('TITULARES', byLine(starters), true)}{section('SUPLENTES', byLine(substitutes), false)}
+  </div>;
 }
 
 function SquadValueSimulator({ team, squad, balance }) {
@@ -476,6 +490,16 @@ function SquadValueSimulator({ team, squad, balance }) {
     next[to] = { ...current[from], section: 'substitutes', pitchX: null, pitchY: null };
     return next;
   });
+  // Titular ↔ banca sin tocar el resto: al volver a titular recupera su lugar si sigue libre.
+  const toggleSection = player => setSimulatedRoster(current => {
+    const target = current.find(item => idOf(item) === idOf(player));
+    if (!target) return current;
+    if (target.section === 'starters') return current.map(item => item === target ? { ...item, section: 'substitutes' } : item);
+    const currentStarters = current.filter(item => item.section === 'starters');
+    if (currentStarters.length >= SIMULATOR_STARTERS) return current;
+    const spot = startingSpot(target, currentStarters);
+    return current.map(item => item === target ? { ...item, section: 'starters', pitchX: spot.x, pitchY: spot.y } : item);
+  });
   const moveOnPitch = updates => setSimulatedRoster(current => current.map(item => {
     const update = updates.find(candidate => String(candidate.id) === idOf(item));
     return update ? { ...item, pitchX: update.x, pitchY: update.y } : item;
@@ -511,6 +535,7 @@ function SquadValueSimulator({ team, squad, balance }) {
     onPrice: setPrice,
     onResetPrice: player => setPrice(player, simulatorOriginalValue(player)),
     onRemove: removePlayer,
+    onToggleSection: toggleSection,
   };
 
   return <section className="club-card squad-value-simulator">
