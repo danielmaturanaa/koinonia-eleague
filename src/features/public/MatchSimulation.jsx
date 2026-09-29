@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { boosterText } from '../../utils/managerBoosters.js';
+import { boosterText, STYLE_LABELS } from '../../utils/managerBoosters.js';
 import { endpoints } from '../../api/endpoints.js';
 import { EntityLink } from '../../components/EntityLink.jsx';
 import { SimulatedBadge } from '../../components/SimulatedBadge.jsx';
@@ -156,20 +156,29 @@ export function SimulationReplay({ match, simulation, resolveTeam, startsAt, dur
 /** Datos de una simulación ya registrada: cómo se calculó, reproducible con su semilla guardada. */
 function SimulationBasis({ simulation }) {
   const { basis } = simulation;
-  const side = team => <div><h3>{team.name}</h3>
+  const enabled = basis.factors ?? {};
+  const styleName = style => STYLE_LABELS.find(([key]) => key === style)?.[1] ?? style;
+  const side = team => {
+    const ratedBench = team.bench?.filter(player => player.overallWithCoach != null) ?? [];
+    const benchAverage = ratedBench.length ? Math.round(ratedBench.reduce((sum, player) => sum + player.overallWithCoach, 0) / ratedBench.length) : null;
+    return <div><h3>{team.name}</h3>
     <dl>
       <div><dt>Goles esperados</dt><dd>{team.expectedGoals.toFixed(2)}</dd></div>
       <div><dt>Ataque histórico</dt><dd>{Math.round(team.attack * 100)}</dd></div>
       <div><dt>Goles recibidos (hist.)</dt><dd>{Math.round(team.defense * 100)}</dd></div>
       <div><dt>Cartas ataque / defensa</dt><dd>{Math.round(team.cardAttack)} / {Math.round(team.cardDefense)}</dd></div>
       <div><dt>Partidos en su historial</dt><dd>{team.historyMatches}</dd></div>
+      <div><dt>Formación</dt><dd>{team.formation}</dd></div>
+      {enabled.day && <div><dt>Factor del día</dt><dd>×{team.dayFactor.toFixed(3)}</dd></div>}
+      {enabled.headToHead && <div><dt>Historial directo ({team.headToHeadMatches})</dt><dd>×{team.headToHead.toFixed(3)}</dd></div>}
     </dl>
-    <p className="sim-lineup-used"><b>DT:</b> {team.coach ? `${team.coach.name} · ${team.coach.boosters.length ? team.coach.boosters.map(boosterText).join(' · ') : 'sin potenciadores'} (se suman a las stats base de sus jugadores)` : 'sin DT del catálogo vinculado'}</p>
+    <p className="sim-lineup-used"><b>DT:</b> {team.coach ? `${team.coach.name} · ${team.coach.proficiency ? `${styleName(team.coach.proficiency.style)} (${team.coach.proficiency.value})` : 'sin estilo'} · ${team.coach.boosters.length ? team.coach.boosters.map(boosterText).join(' · ') : 'sin potenciadores'} (se suman a las stats base de sus jugadores)` : 'sin DT del catálogo vinculado'}</p>
     <p className="sim-lineup-used"><b>TITULARES:</b> {team.lineup.map(player => `${player.position} ${player.name}`).join(' · ')}</p>
-    {team.bench?.length > 0 && <p className="sim-lineup-used"><b>BANCO:</b> {team.bench.map(player => `${player.position} ${player.name}`).join(' · ')}</p>}
+    {team.bench?.length > 0 && <p className="sim-lineup-used"><b>BANCO{benchAverage != null ? ` · MEDIA ${benchAverage}` : ''}:</b> {team.bench.map(player => `${player.position} ${player.name}`).join(' · ')}</p>}
   </div>;
+  };
   return <details className="sim-basis"><summary>CÓMO SE CALCULÓ</summary><div>
-    <p>Motor v{simulation.engineVersion} · semilla <code>{simulation.seed}</code> · {basis.historyMatches} partidos de historial sin castigos · promedio de la liga {basis.leagueMeanGoals} goles por equipo · ventaja de local ×{basis.homeAdvantage}. Las cartas usan sus 26 stats base (sin progresión de nivel), su perfil y sus habilidades; hay cansancio y cambios desde el banco. Con esta semilla y estos datos, el motor reproduce exactamente este partido.</p>
+    <p>Motor v{simulation.engineVersion} · semilla <code>{simulation.seed}</code> · {basis.historyMatches} partidos de historial sin castigos · promedio de la liga {basis.leagueMeanGoals} goles por equipo · ventaja de local ×{basis.homeAdvantage}. Las cartas usan sus 26 stats base (sin progresión de nivel), su perfil y sus habilidades; el estilo elegido del DT potencia las cartas.{enabled.formation && ' La pizarra define la formación y el puesto si los once están ubicados.'}{enabled.day && ' El factor del día (±5%) ajusta los goles esperados.'}{enabled.headToHead && ' El historial directo, muy suavizado hacia el promedio, ajusta los goles esperados.'} Hay cansancio y cambios desde el banco. Con esta semilla y estos datos, el motor reproduce exactamente este partido.</p>
     <div className="sim-basis-teams">{side(basis.home)}{side(basis.away)}</div>
     {simulation.previousVoided > 0 && <p>Este partido tiene {simulation.previousVoided} simulación{simulation.previousVoided === 1 ? '' : 'es'} anterior{simulation.previousVoided === 1 ? '' : 'es'} anulada{simulation.previousVoided === 1 ? '' : 's'}.</p>}
   </div></details>;
