@@ -73,6 +73,29 @@ function saveMultiSlots(slots) {
   }
 }
 
+// Los filtros se recuerdan por vista (todos, jugados, pendientes): al entrar a un
+// partido y volver, la lista queda como estaba.
+const FILTERS_STORAGE_KEY = 'koinonia-filtros-partidos';
+
+function loadFilters(mode, initialStatus) {
+  const defaults = { tournament: '', team: '', opponent: '', status: initialStatus, page: 1 };
+  try {
+    const stored = JSON.parse(window.localStorage.getItem(`${FILTERS_STORAGE_KEY}:${mode}`) ?? '{}');
+    const pick = key => typeof stored[key] === 'string' ? stored[key] : defaults[key];
+    return { ...defaults, tournament: pick('tournament'), team: pick('team'), opponent: pick('opponent'), status: pick('status') };
+  } catch {
+    return defaults;
+  }
+}
+
+function saveFilters(mode, { tournament, team, opponent, status }) {
+  try {
+    window.localStorage.setItem(`${FILTERS_STORAGE_KEY}:${mode}`, JSON.stringify({ tournament, team, opponent, status }));
+  } catch {
+    // el navegador no permite guardar preferencias locales; no es crítico.
+  }
+}
+
 function TeamChipBar({ teams, value, onChange }) {
   return <div className="team-chip-bar" role="group" aria-label="Filtrar por equipo">
     <button className={`team-chip ${value === '' ? 'active' : ''}`} onClick={() => onChange('')}>TODOS</button>
@@ -115,7 +138,7 @@ function MultiSlot({ index, teamId, matchId, matches, teams, onSelectTeam, onSel
 
 export function MatchesPage({ mode = 'all', teams, navigate }) {
   const initialStatus = mode === 'played' ? 'finished' : mode === 'pending' ? 'pending' : '';
-  const [filters, setFilters] = useState({ tournament: '', team: '', opponent: '', status: initialStatus, page: 1 });
+  const [filters, setFilters] = useState(() => loadFilters(mode, initialStatus));
   const [showMulti, setShowMulti] = useState(false);
   const [multiSlots, setMultiSlots] = useState(loadMultiSlots);
   const [multiFullscreen, setMultiFullscreen] = useState(false);
@@ -207,6 +230,22 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
   }, [apiRows, tournaments.data, restingFor, filters.team, filters.opponent, filters.status, filters.tournament]);
 
   useEffect(() => saveMultiSlots(multiSlots), [multiSlots]);
+  useEffect(() => saveFilters(mode, filters), [mode, filters]);
+  // Un filtro guardado puede apuntar a un torneo que ya no está activo o a un equipo que ya no existe.
+  useEffect(() => {
+    if (!tournaments.data) return;
+    const activeIds = new Set(tournaments.data.map(item => item.id));
+    const teamIds = new Set(teams.map(team => team.id));
+    setFilters(current => {
+      const stale = {
+        tournament: current.tournament && !activeIds.has(current.tournament),
+        team: current.team && teams.length && !teamIds.has(current.team),
+        opponent: current.opponent && teams.length && !teamIds.has(current.opponent),
+      };
+      if (!stale.tournament && !stale.team && !stale.opponent) return current;
+      return { ...current, ...(stale.tournament && { tournament: '' }), ...(stale.team && { team: '', opponent: '' }), ...(stale.opponent && { opponent: '' }) };
+    });
+  }, [tournaments.data, teams]);
 
   useEffect(() => {
     const onFullscreenChange = () => setMultiFullscreen(Boolean(document.fullscreenElement));
