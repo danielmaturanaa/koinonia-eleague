@@ -14,6 +14,7 @@ import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { useApiQuery } from '../public/useApiQuery.js';
 import { PitchBoard } from './PitchBoard.jsx';
+import { SimulationTools } from './SimulationTools.jsx';
 import { bandFor, defaultFormationPositions, pitchPositionFor } from '../../utils/formationPositions.js';
 
 const gp = value => typeof value === 'number' ? value.toLocaleString('es-CL') : '—';
@@ -325,6 +326,68 @@ function SimulatorMeter({ label, value, detail, ratio, over }) {
   </div>;
 }
 
+const SIMULATOR_VIEW_KEY = 'koinonia-simulador-vista';
+const SIMULATOR_VIEWS = [['pitch', 'VISTA CANCHA'], ['table', 'VISTA TABLA']];
+
+const simulatorDraftKey = teamId => `koinonia-simulador-plantel:${teamId}`;
+
+// El borrador solo vale mientras el plantel real siga igual: si cambió, se descarta.
+function loadSimulatorDraft(teamId, signature) {
+  try {
+    const draft = JSON.parse(window.localStorage.getItem(simulatorDraftKey(teamId)) ?? 'null');
+    return draft?.signature === signature && Array.isArray(draft.roster) && Array.isArray(draft.removed) ? draft : null;
+  } catch {
+    return null;
+  }
+}
+
+function saveSimulatorDraft(teamId, draft) {
+  try {
+    if (draft) window.localStorage.setItem(simulatorDraftKey(teamId), JSON.stringify(draft));
+    else window.localStorage.removeItem(simulatorDraftKey(teamId));
+  } catch {
+    // el navegador no permite guardar preferencias locales; no es crítico.
+  }
+}
+
+function loadSimulatorView() {
+  try {
+    const stored = window.localStorage.getItem(SIMULATOR_VIEW_KEY);
+    return SIMULATOR_VIEWS.some(([id]) => id === stored) ? stored : 'pitch';
+  } catch {
+    return 'pitch';
+  }
+}
+
+function saveSimulatorView(view) {
+  try {
+    window.localStorage.setItem(SIMULATOR_VIEW_KEY, view);
+  } catch {
+    // el navegador no permite guardar preferencias locales; no es crítico.
+  }
+}
+
+// Mismo plantel simulado que la cancha, en filas: el precio se edita igual (clic, Enter, Esc).
+function SimulatorTable({ starters, substitutes, simulation }) {
+  const section = (title, players) => <tbody key={title}>
+    <tr className="squad-sim-table-section"><th colSpan="5">{title} <small>{players.length}</small></th></tr>
+    {players.length ? players.map(player => {
+      const { rest: name } = splitPlayerName(player.name);
+      return <tr key={simulatorPlayerId(player)} className={`${simulation.isNew(player) ? 'sim-new' : ''} ${simulation.isHighlighted(player) ? 'just-added' : ''}`}>
+        <td className="squad-sim-table-number">{player.jerseyNumber ?? '—'}</td>
+        <td className="squad-sim-table-name"><PlayerFace src={player.faceUrl} name={name} className="squad-simulator-face"/><span>{name || 'JUGADOR'}</span></td>
+        <td>{player.position ?? '—'}</td>
+        <td>{player.overall ?? '—'}</td>
+        <td className="squad-sim-table-price"><SimulationTools name={name} value={simulation.priceOf(player)} edited={simulation.isEdited(player)} onPrice={value => simulation.onPrice(player, value)} onReset={() => simulation.onResetPrice(player)} onRemove={() => simulation.onRemove(player)}/></td>
+      </tr>;
+    }) : <tr><td colSpan="5" className="empty-copy">SIN JUGADORES.</td></tr>}
+  </tbody>;
+  return <div className="table-scroll"><table className="league-table squad-sim-table">
+    <thead><tr><th>N°</th><th>NOMBRE</th><th>POS.</th><th>OVR</th><th>PRECIO (GP)</th></tr></thead>
+    {section('TITULARES', starters)}{section('SUPLENTES', substitutes)}
+  </table></div>;
+}
+
 function SquadValueSimulator({ team, squad, balance }) {
   const baseRoster = normalizeSimulatorRoster(squad);
   const baseSignature = baseRoster.map(player => `${simulatorPlayerId(player)}:${player.gpValue ?? player.price ?? ''}:${player.section ?? ''}:${player.squadOrder ?? ''}:${player.pitchX ?? ''}:${player.pitchY ?? ''}`).join('|');
@@ -332,10 +395,16 @@ function SquadValueSimulator({ team, squad, balance }) {
   const [removedPlayers, setRemovedPlayers] = useState([]);
   const [lastAdded, setLastAdded] = useState(null);
   const rostersRef = useRef(null);
+  const [view, setView] = useState(loadSimulatorView);
+  const changeView = next => { setView(next); saveSimulatorView(next); };
 
+  // Tras cargar otro equipo o plantel, el efecto de guardado del mismo render se salta para no pisar su borrador.
+  const skipSave = useRef(true);
   useEffect(() => {
-    setSimulatedRoster(baseRoster);
-    setRemovedPlayers([]);
+    const draft = team?.id ? loadSimulatorDraft(team.id, baseSignature) : null;
+    skipSave.current = true;
+    setSimulatedRoster(draft?.roster ?? baseRoster);
+    setRemovedPlayers(draft?.removed ?? []);
     setLastAdded(null);
   }, [team?.id, baseSignature]);
 
@@ -363,6 +432,11 @@ function SquadValueSimulator({ team, squad, balance }) {
   const changed = simulatorLayoutSignature(simulatedRoster) !== simulatorLayoutSignature(baseRoster) || removedPlayers.length > 0;
   const starters = simulatedRoster.filter(player => player.section === 'starters');
   const substitutes = simulatedRoster.filter(player => player.section !== 'starters');
+  useEffect(() => {
+    if (skipSave.current) { skipSave.current = false; return; }
+    if (!team?.id) return;
+    saveSimulatorDraft(team.id, changed ? { signature: baseSignature, roster: simulatedRoster, removed: removedPlayers } : null);
+  }, [simulatedRoster, removedPlayers]);
   const idOf = simulatorPlayerId;
 
   // Dónde ubica la cancha a alguien que entra como titular: su lugar previo si está libre,
@@ -440,7 +514,7 @@ function SquadValueSimulator({ team, squad, balance }) {
   };
 
   return <section className="club-card squad-value-simulator">
-    <header className="squad-simulator-header"><div><h3>SIMULADOR DE PLANTEL</h3><p>Prueba fichajes y salidas sobre la misma alineación del resumen. Es solo una simulación: no modifica el plantel real.</p></div><button type="button" className="club-link-button" onClick={reset} disabled={!changed}>↺ RESTABLECER</button></header>
+    <header className="squad-simulator-header"><div><h3>SIMULADOR DE PLANTEL</h3><p>Prueba fichajes y salidas sobre la misma alineación del resumen. Es solo una simulación: no modifica el plantel real y se guarda en este navegador.</p></div><button type="button" className="club-link-button" onClick={reset} disabled={!changed}>↺ RESTABLECER</button></header>
     <div className="squad-sim-summary"><div className="squad-sim-meters" aria-label="Resumen del presupuesto simulado">
       <SimulatorMeter label="VALOR DEL PLANTEL" value={`${gp(simulatedValue)} GP`} ratio={simulatedValue / SIMULATOR_BUDGET_LIMIT} over={exceedsLimit} detail={exceedsLimit ? `Excede el tope de ${gp(SIMULATOR_BUDGET_LIMIT)} GP en ${gp(-capRoom)} GP` : `Tope ${gp(SIMULATOR_BUDGET_LIMIT)} GP · quedan ${gp(capRoom)} GP`}/>
       <SimulatorMeter label="SALDO TRAS LOS CAMBIOS" value={projectedBalance === null ? '—' : `${gp(projectedBalance)} GP`} over={exceedsBalance} detail={balance === null ? 'Saldo no publicado' : `Saldo actual ${gp(balance)} GP · movimiento ${signedGp(-movement)}`}/>
@@ -450,7 +524,8 @@ function SquadValueSimulator({ team, squad, balance }) {
     {starters.length !== SIMULATOR_STARTERS && <p className="squad-simulator-status over-budget" role="status">TITULARES: {starters.length} / {SIMULATOR_STARTERS}. LA ALINEACIÓN DEBERÍA TENER {SIMULATOR_STARTERS}.</p>}</div>
     <SimulatorPlayerSearch teamId={team?.id} excludedIds={simulatedIds} onAdd={addPlayerToSimulation}/>
     {lastAddedPlayer && <p className="squad-simulator-player-note" role="status">✓ {splitPlayerName(lastAddedPlayer.name).rest} AÑADIDO A {lastAddedPlayer.section === 'starters' ? 'TITULARES' : 'SUPLENTES'}{simulatorPlayerTeamId(lastAddedPlayer) && simulatorPlayerTeamId(lastAddedPlayer) !== String(team?.id) ? ` · HOY JUEGA EN ${simulatorPlayerTeamName(lastAddedPlayer)}` : ''}.</p>}
-    <div className="squad-simulator-board" ref={rostersRef}><PitchBoard team={team} starters={starters} substitutes={substitutes} simulation={simulation}/></div>
+    <nav className="club-squad-modes squad-sim-views" aria-label="Vista del simulador">{SIMULATOR_VIEWS.map(([id, label]) => <button type="button" key={id} className={view === id ? 'active' : ''} aria-pressed={view === id} onClick={() => changeView(id)}>{label}</button>)}</nav>
+    <div className="squad-simulator-board" ref={rostersRef}>{view === 'table' ? <SimulatorTable starters={starters} substitutes={substitutes} simulation={simulation}/> : <PitchBoard team={team} starters={starters} substitutes={substitutes} simulation={simulation}/>}</div>
     {removedPlayers.length > 0 && <section className="squad-simulator-removed"><h4>SALIDAS SIMULADAS <small>{removedPlayers.length}</small></h4><ul>{removedPlayers.map(player => { const { rest: name } = splitPlayerName(player.name); return <li key={idOf(player)}><span><PlayerFace src={player.faceUrl} name={name} className="squad-simulator-face"/><b>{name || 'JUGADOR'}</b></span><small>{player.position ?? '—'}</small><strong>{gp(simulatorValue(player))} GP</strong><button type="button" className="squad-simulator-restore" onClick={() => addPlayerToSimulation(player)}>↩ DEVOLVER</button></li>; })}</ul></section>}
   </section>;
 }
@@ -542,7 +617,7 @@ function SquadTab({ team, squad, starters, substitutes, onChanged }) {
   </div>;
 }
 
-export function TeamDetailPage({ team, teams = [], tournaments = [], squad, standings, matches = [], history = [], historyError, loading, tab = 'resumen', onTab, onBack, onChanged }) {
+export function TeamDetailPage({ team, teams = [], tournaments = [], squad, standings, matches = [], history = [], historyError, loading, tab = 'resumen', onTab, onBack, onChanged, onProjection = null }) {
   const { canEditTeam } = useAuth();
   const canEdit = canEditTeam(team?.id);
   const [historyEditor, setHistoryEditor] = useState('');
@@ -573,7 +648,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
   const colors = team?.colors ?? {};
   const heroStyle = { '--club-primary': colors.primary ?? '#062764', '--club-secondary': colors.secondary ?? '#0b3f8d', '--club-tertiary': colors.tertiary ?? '#ffd42a' };
 
-  return <main className="newspaper club-page"><section className="club-paper"><div className="club-actions"><button className="back-button" onClick={onBack}>← VOLVER A EQUIPOS</button>{canEdit && <button className="action-button club-covers-button" onClick={() => setCoversOpen(true)}>▣ PORTADAS</button>}</div>
+  return <main className="newspaper club-page"><section className="club-paper"><div className="club-actions"><button className="back-button" onClick={onBack}>← VOLVER A EQUIPOS</button>{onProjection && team && <button type="button" className="action-button club-projection-button" onClick={onProjection}>¿QUÉ NECESITA {team.name}?</button>}{canEdit && <button className="action-button club-covers-button" onClick={() => setCoversOpen(true)}>▣ PORTADAS</button>}</div>
     {loading || !team ? <div className="arcade-state">CARGANDO FICHA...</div> : <>
       <header className="club-hero" style={heroStyle}>
         <div className="club-crest-wrap"><TeamMark team={team} className="club-crest"/>{canEdit && <button type="button" className="club-crest-edit" onClick={() => setCrestEditorOpen(true)} aria-label="Editar escudo y nombre del club" title="Editar escudo y nombre">✎</button>}</div>
