@@ -17,6 +17,7 @@ import { PlayerProfilePage } from '../features/public/PlayerProfilePage.jsx';
 import { EfootballCardPage } from '../features/public/EfootballCard.jsx';
 import { RulesPage } from '../features/public/RulesPage.jsx';
 import { RankingsPage, TournamentsPage } from '../features/public/TournamentsPage.jsx';
+import { CalculatorPage } from '../features/public/CalculatorPage.jsx';
 import { projectionLink } from '../features/public/ProjectionPanel.jsx';
 import { TeamsDirectoryPage } from '../features/public/TeamsDirectoryPage.jsx';
 import { MatchScoreboardPage } from '../features/public/MatchScoreboardPage.jsx';
@@ -81,8 +82,11 @@ export function App() {
   } else if (route.name === 'match') {
     page = <MatchCenterPage key={route.matchId} matchId={route.matchId} teams={league.teams} navigate={navigate}/>;
   } else if (route.path === '/torneos') {
-    const projection = route.query.proyeccion ? { tournamentId: route.query.proyeccion, teamId: route.query.equipo ?? null } : null;
-    page = <TournamentsPage key={route.query.proyeccion ? `${route.query.proyeccion}:${route.query.equipo ?? ''}` : 'torneos'} teams={league.teams} projection={projection}/>;
+    page = <TournamentsPage teams={league.teams}/>;
+  } else if (route.path === '/calculadora') {
+    const requestedId = route.query.torneo;
+    const calculatorTournament = activeTournaments.find(item => String(item.id) === String(requestedId)) ?? tournament;
+    page = <CalculatorPage tournament={calculatorTournament} teams={league.teams} initialTeamId={route.query.equipo ?? null}/>;
   } else if (route.path === '/equipos/rankings') {
     page = <RankingsPage teams={league.teams} navigate={navigate}/>;
   } else if (route.name === 'card') {

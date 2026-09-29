@@ -114,9 +114,6 @@ function TournamentWorkspace({ tournamentId, teams, onChanged, onDeleted, initia
   const refresh = () => { detail.retry(); standings.retry(); scorers.retry(); onChanged?.(); };
   useEffect(() => { setManaging(false); setWorkspaceTab(initialTab); }, [tournamentId]);
   const data = detail.data;
-  const canProject = data?.format === 'league' && data?.status === 'active';
-  useEffect(() => { if (data && workspaceTab === 'projection' && !canProject) setWorkspaceTab('standings'); }, [data, canProject, workspaceTab]);
-  const participantIds = useMemo(() => (data?.teams ?? []).map(team => team.id ?? team.teamId), [data]);
   const statusLabel = { active: 'EN JUEGO', completed: 'TERMINADO', draft: 'EN PREPARACIÓN' }[data?.status] ?? data?.status;
   const regularChampionId = data?.championTeamId ?? data?.champion_team_id;
   const regularChampionRow = regularChampionId
@@ -133,7 +130,6 @@ function TournamentWorkspace({ tournamentId, teams, onChanged, onDeleted, initia
         <button type="button" role="tab" aria-selected={workspaceTab === 'standings'} className={workspaceTab === 'standings' ? 'active' : ''} onClick={() => setWorkspaceTab('standings')}>TABLA DE POSICIONES</button>
         <button type="button" role="tab" aria-selected={workspaceTab === 'scorers'} className={workspaceTab === 'scorers' ? 'active' : ''} onClick={() => setWorkspaceTab('scorers')}>GOLEADORES</button>
         <button type="button" role="tab" aria-selected={workspaceTab === 'playoffs'} className={workspaceTab === 'playoffs' ? 'active' : ''} onClick={() => setWorkspaceTab('playoffs')} disabled={data.format !== 'league'}>PLAYOFFS</button>
-        {canProject && <button type="button" role="tab" aria-selected={workspaceTab === 'projection'} className={workspaceTab === 'projection' ? 'active' : ''} onClick={() => setWorkspaceTab('projection')}>PROYECCIÓN</button>}
         {data.status === 'completed' && isAdmin && <button type="button" role="tab" aria-selected={workspaceTab === 'awards'} className={workspaceTab === 'awards' ? 'active' : ''} onClick={() => setWorkspaceTab('awards')}>GESTIÓN DE PREMIOS</button>}
       </nav>
       <div className="tournament-main">
@@ -142,17 +138,15 @@ function TournamentWorkspace({ tournamentId, teams, onChanged, onDeleted, initia
           : <section className="workspace-panel standings-workspace-panel"><h3>TABLA DE POSICIONES</h3><DataState query={standings}/>{standingRows.length > 0 && <StandingsTable rows={standingRows} resolveTeam={resolveTeam}/>} {regularChampion && <div className="playoff-champion" role="status"><span aria-hidden="true">🏆</span><TeamMark team={regularChampion}/><strong>CAMPEÓN: {regularChampion.name}</strong></div>}</section>)}
         {workspaceTab === 'scorers' && <ScorersPanel query={scorers}/>}
         {workspaceTab === 'playoffs' && data.format === 'league' && <PlayoffsSection tournamentId={tournamentId} resolveTeam={resolveTeam}/>}
-        {workspaceTab === 'projection' && canProject && <ProjectionPanel tournamentId={tournamentId} participantIds={participantIds} initialTeamId={projectionTeamId} initialView={projectionTeamId ? 'needs' : 'odds'} resolveTeam={resolveTeam}/>}
         {workspaceTab === 'awards' && data.status === 'completed' && isAdmin && <TournamentAwardsPanel tournament={data} onChanged={refresh}/>}
       </div>
     </>}
   </>}</section>;
 }
 
-export function TournamentsPage({ teams = [], projection = null }) {
+export function TournamentsPage({ teams = [] }) {
   const tournaments = useApiQuery(signal => endpoints.tournaments({ page: 1, pageSize: 100 }, signal));
-  // Desde la ficha del club: #/torneos?proyeccion=<torneo>&equipo=<club> abre directo "¿qué necesita?".
-  const [selectedId, setSelectedId] = useState(projection?.tournamentId ?? null);
+  const [selectedId, setSelectedId] = useState(null);
   const [tournamentTab, setTournamentTab] = useState('active');
   const { isAdmin } = useAuth();
   const [showCreate, setShowCreate] = useState(false);
@@ -187,8 +181,7 @@ export function TournamentsPage({ teams = [], projection = null }) {
         </div>}
     </>}
     {!tournaments.loading && !all.length && <p className="empty-copy">AÚN NO HAY TORNEOS.</p>}
-    {selectedId && <TournamentWorkspace key={selectedId} tournamentId={selectedId} teams={teams} onChanged={() => tournaments.retry()} onDeleted={deleted}
-      {...(projection?.tournamentId === selectedId && { initialTab: 'projection', projectionTeamId: projection.teamId })}/>}
+    {selectedId && <TournamentWorkspace key={selectedId} tournamentId={selectedId} teams={teams} onChanged={() => tournaments.retry()} onDeleted={deleted}/>}
   </section></main>;
 }
 

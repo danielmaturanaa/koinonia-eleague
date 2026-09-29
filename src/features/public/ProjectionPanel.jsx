@@ -29,7 +29,7 @@ function useDebounced(value, delay) {
   return debounced;
 }
 
-function ProbabilityTable({ group, resolveTeam, focusTeamId, onPick }) {
+function ProbabilityTable({ group, resolveTeam, focusTeamId, onPick, scenario = false }) {
   const size = group.teams.length;
   const zoneOf = position => group.zones.find(zone => position >= zone.from && position <= zone.to);
   const rows = [...group.teams].sort((a, b) => b.expectedPoints - a.expectedPoints || a.position - b.position);
@@ -40,7 +40,7 @@ function ProbabilityTable({ group, resolveTeam, focusTeamId, onPick }) {
     </tr></thead>
     <tbody>{rows.map(row => <tr key={row.teamId} className={row.teamId === focusTeamId ? 'is-focus' : ''}>
       <td className="projection-team-col"><button type="button" onClick={() => onPick?.(row.teamId)} title={`¿Qué necesita ${row.name}?`}><TeamMark team={resolveTeam({ id: row.teamId, name: row.name, emoji: row.emoji })}/><span>{row.name}</span></button></td>
-      <td>{row.points}</td><td><b>{row.expectedPoints.toFixed(1)}</b></td><td className="projection-range">{row.minPoints}–{row.maxPoints}</td>
+      <td className={scenario && row.scenarioPoints !== row.points ? 'projection-scenario-points' : ''} title={scenario ? 'Puntos considerando los resultados fijados' : 'Puntos oficiales'}>{scenario ? row.scenarioPoints : row.points}</td><td><b>{row.expectedPoints.toFixed(1)}</b></td><td className="projection-range">{row.minPoints}–{row.maxPoints}</td>
       {group.zones.map(zone => <td key={zone.key} className="projection-zone-cell"><b>{pct(row.zones[zone.key])}</b></td>)}
       {row.positions.map((value, index) => <td key={index} className={`projection-heat ${value >= 0.5 ? 'is-dark' : ''}`} style={heat(value)}>{value > 0 ? pct(value) : '·'}</td>)}
     </tr>)}</tbody>
@@ -156,7 +156,9 @@ function NeedsView({ group, teams, focusTeamId, setFocusTeamId, resolveTeam, onF
 export function ProjectionPanel({ tournamentId, participantIds = [], initialTeamId = null, initialView = 'odds', resolveTeam }) {
   const { teamId: myTeamId } = useAuth();
   const participants = useMemo(() => new Set(participantIds.map(String)), [participantIds]);
-  const validTeam = id => (id && participants.has(String(id)) ? id : null);
+  // En la página independiente los participantes se conocen al responder la proyección;
+  // mientras tanto se conserva el equipo del enlace y la API confirma que participe.
+  const validTeam = id => (id && (!participants.size || participants.has(String(id)) || participants.has(id)) ? id : null);
   const [view, setView] = useState(initialView);
   const [focusTeamId, setFocusTeamId] = useState(() => validTeam(initialTeamId) ?? validTeam(myTeamId));
   const [fixed, setFixed] = useState({});
@@ -177,8 +179,11 @@ export function ProjectionPanel({ tournamentId, participantIds = [], initialTeam
   const stale = projection.loading || request.fixed !== fixed || request.teamId !== focusTeamId;
 
   return <section className="workspace-panel projection-panel">
-    <h3>PROYECCIÓN <small>{data ? `${data.runs.toLocaleString('es-CL')} SIMULACIONES` : 'CALCULANDO…'}</small></h3>
+    <h3>CALCULADORA <small>{data ? `${data.runs.toLocaleString('es-CL')} SIMULACIONES` : 'CALCULANDO…'}</small></h3>
     <p className="projection-disclaimer" role="note"><b>NO ES UN RESULTADO OFICIAL.</b> PROBABILIDADES CALCULADAS SIMULANDO LOS PARTIDOS PENDIENTES CON EL MOTOR DEL SIMULADOR. NO SE GUARDA NADA.</p>
+    {data && <label className="projection-team-picker">EQUIPO A ANALIZAR<select value={focusTeamId ?? ''} onChange={event => setFocusTeamId(event.target.value || null)}>
+      <option value="">ELEGIR EQUIPO…</option>{allTeams.map(team => <option key={team.teamId} value={team.teamId}>{team.name}</option>)}
+    </select></label>}
     <nav className="projection-tabs" role="tablist" aria-label="Vistas de la proyección">
       {[['odds', 'PROBABILIDADES'], ['scenarios', `ESCENARIOS${fixedCount ? ` (${fixedCount})` : ''}`], ['needs', '¿QUÉ NECESITA?']].map(([key, label]) =>
         <button type="button" role="tab" key={key} aria-selected={view === key} className={view === key ? 'active' : ''} onClick={() => setView(key)}>{label}</button>)}
@@ -195,7 +200,7 @@ export function ProjectionPanel({ tournamentId, participantIds = [], initialTeam
       {view === 'scenarios' && groups.map(group => <section key={group.groupLabel ?? 'liga'} className="projection-group scenario-layout">
         {group.groupLabel && <h4>DIVISIÓN {group.groupLabel}</h4>}
         <ScenarioBoard group={group} fixed={fixed} setFixed={setFixed} winnerTeam={group.teams.some(team => team.teamId === winnerTeam?.teamId) ? winnerTeam : null}/>
-        <div className="scenario-table"><h4>TABLA PROYECTADA</h4><ProbabilityTable group={group} resolveTeam={resolveTeam} focusTeamId={focusTeamId} onPick={pick}/></div>
+        <div className="scenario-table"><h4>TABLA PROYECTADA <small>{fixedCount ? 'PTS INCLUYE RESULTADOS FIJADOS' : 'PTS OFICIALES'}</small></h4><ProbabilityTable group={group} resolveTeam={resolveTeam} focusTeamId={focusTeamId} onPick={pick} scenario/></div>
       </section>)}
       {view === 'needs' && <NeedsView group={focusGroup} teams={allTeams} focusTeamId={focusTeamId} setFocusTeamId={setFocusTeamId} resolveTeam={resolveTeam} onFix={fix}/>}
     </div>}
@@ -203,5 +208,5 @@ export function ProjectionPanel({ tournamentId, participantIds = [], initialTeam
 }
 
 export function projectionLink(tournamentId, teamId) {
-  return `/torneos?proyeccion=${encodeURIComponent(tournamentId)}${teamId ? `&equipo=${encodeURIComponent(teamId)}` : ''}`;
+  return `/calculadora?torneo=${encodeURIComponent(tournamentId)}${teamId ? `&equipo=${encodeURIComponent(teamId)}` : ''}`;
 }
