@@ -454,7 +454,7 @@ body { min-width: 0; overflow-x: hidden; background: #001344; }
 .live-table-status { display: inline-flex; align-items: center; gap: 6px; margin: -2px 0 7px; color: #a90020; font: 700 11px/1 'Oswald', sans-serif; letter-spacing: .6px; }
 .live-table-status i { width: 8px; height: 8px; border-radius: 50%; background: #d10020; box-shadow: 0 0 5px #d10020; animation: live-dot 1.2s ease-in-out infinite; }
 .live-position { display: inline-flex; align-items: center; justify-content: center; min-width: 25px; }
-.live-movement { display: inline-flex; flex: 0 0 16px; width: 16px; align-items: center; justify-content: center; color: transparent; }
+.live-movement { display: inline-flex; flex: 0 0 24px; width: 24px; align-items: center; justify-content: center; color: transparent; }
 .live-movement i { display: block; width: 10px; height: 10px; border-top: 3px solid currentColor; border-left: 3px solid currentColor; }
 .live-movement.up { color: #087437; }
 .live-movement.down { color: #b40025; }
