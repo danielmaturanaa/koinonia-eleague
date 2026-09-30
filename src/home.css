@@ -455,11 +455,10 @@ body { min-width: 0; overflow-x: hidden; background: #001344; }
 .live-table-status i { width: 8px; height: 8px; border-radius: 50%; background: #d10020; box-shadow: 0 0 5px #d10020; animation: live-dot 1.2s ease-in-out infinite; }
 .live-position { display: inline-flex; align-items: center; justify-content: center; min-width: 25px; }
 .live-movement { display: inline-flex; flex: 0 0 24px; width: 24px; align-items: center; justify-content: center; color: transparent; }
-.live-movement i { display: block; width: 7px; height: 7px; border-top: 2px solid currentColor; border-left: 2px solid currentColor; }
+.live-movement svg { display: block; width: 16px; height: 16px; overflow: visible; }
+.live-movement path { fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: round; stroke-linejoin: round; }
 .live-movement.up { color: #087437; }
 .live-movement.down { color: #b40025; }
-.live-movement.up i { transform: rotate(45deg); }
-.live-movement.down i { transform: rotate(-135deg); }
 .league-table tr.is-playing-live td, .standings-home-table tr.is-playing-live td, .club-standing-snippet tr.is-playing-live td { background-color: #fff0f1; }
 .league-table tr.is-playing-live td:first-child, .standings-home-table tr.is-playing-live td:first-child, .club-standing-snippet tr.is-playing-live td:first-child { box-shadow: inset 4px 0 0 #d10020; }
 .league-table tr.position-up td, .standings-home-table tr.position-up td, .club-standing-snippet tr.position-up td { animation: standings-rise .8s ease-out; }

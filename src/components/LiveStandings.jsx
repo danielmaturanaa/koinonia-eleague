@@ -12,7 +12,8 @@ export function LiveMovement({ row }) {
   if (!change) return <span className="live-movement" aria-hidden="true"/>;
   const up = change > 0;
   const label = up ? `Sube ${change} ${change === 1 ? 'puesto' : 'puestos'} provisionalmente` : `Baja ${Math.abs(change)} ${Math.abs(change) === 1 ? 'puesto' : 'puestos'} provisionalmente`;
-  return <span className={`live-movement ${up ? 'up' : 'down'}`} aria-label={label}><i aria-hidden="true"/></span>;
+  const path = up ? 'M2 10 L8 4 L14 10' : 'M2 6 L8 12 L14 6';
+  return <span className={`live-movement ${up ? 'up' : 'down'}`} aria-label={label}><svg viewBox="0 0 16 16" aria-hidden="true"><path d={path}/></svg></span>;
 }
 
 export function liveRowClass(row, extra = '') {
