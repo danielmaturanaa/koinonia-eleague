@@ -3,7 +3,7 @@ import { hasCoachBoost } from '../../utils/managerBoosters.js';
 import { endpoints } from '../../api/endpoints.js';
 import { PlayerFace } from '../../components/PlayerFace.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
-import { defaultFormationPositions, pitchPositionFor } from '../../utils/formationPositions.js';
+import { applyFormation, defaultFormationPositions, detectFormation, FORMATIONS, pitchPositionFor } from '../../utils/formationPositions.js';
 import { shortPlayerName } from '../../utils/playerNames.js';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
@@ -163,6 +163,21 @@ export function PitchBoard({ team, starters, substitutes = [], onChanged, readOn
     [bench[from], bench[to]] = [bench[to], bench[from]];
     reorder.execute(bench);
   };
+  const currentFormation = detectFormation(starters, positionOf);
+  const onFormation = event => {
+    const formation = FORMATIONS.find(item => item.key === event.target.value);
+    if (!formation || busy) return;
+    const placed = applyFormation(starters, formation, positionOf);
+    setLocalPositions(placed);
+    setSelectedId(null);
+    move.execute(Object.entries(placed).map(([id, { x, y }]) => ({ id: starters.find(player => String(player.id) === id).id, x, y })));
+  };
+  const formationPicker = editing && starters.length > 0 && <label className="pitch-board-formation">FORMACIÓN
+    <select value={currentFormation ?? ''} onChange={onFormation} disabled={busy}>
+      <option value="" disabled>Personalizada</option>
+      {FORMATIONS.map(item => <option key={item.key} value={item.key}>{item.key}</option>)}
+    </select>
+  </label>;
   const hint = readOnly ? '' : selected
     ? <>{shortPlayerName(selected)} seleccionado: {selectedIsBench ? 'toca un titular para que entre, u otro suplente para cambiar el orden de la banca.' : 'toca un suplente para hacer el cambio u otro titular para intercambiar posiciones.'} {!simulation && <><button type="button" className="pitch-board-link" onClick={() => openPlayer(selected)}>Ver ficha →</button> </>}<button type="button" className="pitch-board-link" onClick={() => setSelectedId(null)}>Cancelar</button></>
     : simulation ? 'Arrastra las cartas para moverlas, toca dos para intercambiarlas y toca el precio para editarlo. Nada de esto modifica el plantel real.' : '';
@@ -190,6 +205,7 @@ export function PitchBoard({ team, starters, substitutes = [], onChanged, readOn
   return <section className={`club-card pitch-board is-editing ${className}`} style={cardColors}>
     <header><h3>ALINEACIÓN <small>{starters.length} TITULARES · {substitutes.length} SUPLENTES</small></h3></header>
     {(busy || hint) && <p className="pitch-board-hint" role="status">{busy ? 'GUARDANDO…' : hint}</p>}
+    {formationPicker}
     {field}
     <div className="pitch-board-bench"><h4>BANCA</h4>{substitutes.length ? <div>{substitutes.map(player => {
       const card = <PitchCard bench player={player} editing={editing} selected={selectedId === player.id} swappable={Boolean(selectedId) && selectedId !== player.id} isNew={simulation?.isNew(player)} highlighted={simulation?.isHighlighted(player)} onClick={onBenchClick(player)}/>;
