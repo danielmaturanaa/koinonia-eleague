@@ -34,7 +34,9 @@ export function TrophyCase({ teams = [] }) {
     <ul className="trophy-list">{rows.map(({ club, stars }) => <li key={club.id}>
       <EntityLink to="team" id={club.id} className="trophy-team"><TeamMark team={club}/><span>{club.name}</span></EntityLink>
       <span className="trophy-stars" aria-label={`${stars.length} título${stars.length === 1 ? '' : 's'}`}>{stars.map(star =>
-        <span key={star.id} className="trophy-star" title={star.name}><i aria-hidden="true">★</i><small>{star.text}</small></span>)}</span>
+        <svg key={star.id} className="trophy-star" viewBox="-6 -6 112 108" role="img" aria-label={star.name}><title>{star.name}</title>
+          <polygon points="50,2 62,36 98,37 69,59 80,94 50,73 20,94 31,59 2,37 38,36" />
+          <text x="50" y="62" textAnchor="middle">{star.text}</text></svg>)}</span>
     </li>)}</ul>
   </section>;
 }
