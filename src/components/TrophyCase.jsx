@@ -12,13 +12,16 @@ export function starLabel(name = '') {
   return { text: initials || '★', order: 1000 };
 }
 
+const latest = row => Math.max(...row.stars.map(star => star.order === 1000 ? -1 : star.order));
+
 export function buildShowcase(clubs, titleLists) {
   return clubs.map((club, index) => ({
     club,
     stars: (titleLists[index] ?? []).map(title => ({ id: title.id, name: title.name, ...starLabel(title.name) }))
       .sort((a, b) => a.order - b.order || String(a.name).localeCompare(b.name)),
   })).filter(row => row.stars.length)
-    .sort((a, b) => b.stars.length - a.stars.length || a.club.name.localeCompare(b.club.name));
+    // Más títulos primero; a igual cantidad, gana el campeón más reciente (mayor edición).
+    .sort((a, b) => b.stars.length - a.stars.length || latest(b) - latest(a) || a.club.name.localeCompare(b.club.name));
 }
 
 // Vitrina del inicio: cada campeón con una estrella por título (LT, v1, v2…).
