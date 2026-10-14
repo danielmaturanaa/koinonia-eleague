@@ -2884,3 +2884,17 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 @media (max-width: 560px) { .pitch-card-stats .pitch-card-ovr.coach { font-size: 14px; } .pitch-card-base { font-size: 8px; } }
 .person-editor-form .manager-style-select, .manager-picker { grid-column: 1 / -1; }
 .manager-style-select select { width: 100%; min-width: 0; }
+
+/* Vitrina: campeones con una estrella por título; el escudo a la izquierda y las estrellas al final. */
+.trophy-panel h2 small { margin: 0 0 0 auto; color: #b8d8f0; }
+.trophy-list { display: grid; margin: 0; padding: 0; list-style: none; }
+.trophy-list li { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 6px 4px; border-top: 1px solid #b8b199; }
+.trophy-list li:first-child { border-top: 0; }
+.trophy-team { display: flex; align-items: center; gap: 8px; min-width: 0; color: inherit; font: 600 15px/1.1 'Roboto Condensed', sans-serif; text-decoration: none; }
+.trophy-team:hover { color: #a90020; }
+.trophy-team span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.trophy-team .team-mark { width: 26px; height: 26px; flex: 0 0 26px; }
+.trophy-stars { display: flex; flex: 0 0 auto; flex-wrap: wrap; justify-content: flex-end; gap: 4px 6px; }
+.trophy-star { display: grid; justify-items: center; min-width: 26px; line-height: 1; }
+.trophy-star i { color: #f2b705; font-size: 22px; font-style: normal; text-shadow: 1px 1px 0 #7a5400, -1px -1px 0 #7a5400, 1px -1px 0 #7a5400, -1px 1px 0 #7a5400; }
+.trophy-star small { margin-top: 1px; color: #062764; font: 600 11px/1 'Oswald', sans-serif; letter-spacing: .3px; }

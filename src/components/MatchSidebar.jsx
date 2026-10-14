@@ -6,6 +6,7 @@ import { EntityLink } from './EntityLink.jsx';
 import { TeamMark } from './TeamMark.jsx';
 import { LiveMovement, LivePosition, LiveTableStatus, liveRowClass } from './LiveStandings.jsx';
 import { useLiveStandings } from '../features/public/useLiveStandings.js';
+import { TrophyCase } from './TrophyCase.jsx';
 
 const LIVE_REFRESH_MS = 12000;
 
@@ -26,7 +27,7 @@ function StandingsPanel({ tournament, standings, resolveTeam, loading, navigate 
   </section>;
 }
 
-export function MatchSidebar({ tournament, standings = [], resolveTeam, loading, navigate }) {
+export function MatchSidebar({ tournament, standings = [], teams = [], resolveTeam, loading, navigate }) {
   const live = useApiQuery(signal => endpoints.matches({ status: 'live', activeOnly: 1, page: 1, pageSize: 20 }, signal));
   useEffect(() => {
     const timer = window.setInterval(live.retry, LIVE_REFRESH_MS);
@@ -40,5 +41,6 @@ export function MatchSidebar({ tournament, standings = [], resolveTeam, loading,
   return <aside className="match-sidebar">
     <LiveMatches rows={liveMatches} resolveTeam={resolveTeam}/>
     <StandingsPanel tournament={liveTournament} standings={fallbackStandings} resolveTeam={resolveTeam} loading={loading} navigate={navigate}/>
+    <TrophyCase teams={teams}/>
   </aside>;
 }
