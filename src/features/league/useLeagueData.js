@@ -65,14 +65,16 @@ export function useLeagueData(teamId) {
     Promise.all([
       getData(`/teams/${teamId}`, { signal: controller.signal }),
       getData(`/teams/${teamId}/squad`, { signal: controller.signal }),
-      getData(`/teams/${teamId}/matches`, { query: { page: 1, pageSize: 100 }, signal: controller.signal }),
+      // La API pagina de a 100 (tope) y un club ya pasa los 150 partidos: se piden dos páginas para no perder los más recientes.
+      Promise.all([1, 2].map(page => getData(`/teams/${teamId}/matches`, { query: { page, pageSize: 100 }, signal: controller.signal })))
+        .then(pages => pages.flatMap(list)),
       getData(`/history/team/${teamId}`, { signal: controller.signal })
         .then(data => ({ data: list(data), error: null }))
         .catch(error => ({ data: [], error })),
     ]).then(([team, roster, matches, history]) => {
       setTeamDetail(team);
       setSquad(list(roster));
-      setTeamMatches(list(matches));
+      setTeamMatches(matches);
       setTeamHistory(history.data);
       setTeamHistoryError(history.error);
       setState(current => ({ ...current, loadingTeam: false }));
