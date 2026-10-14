@@ -1,3 +1,6 @@
+import { endpoints } from '../../api/endpoints.js';
+import { useApiQuery } from './useApiQuery.js';
+
 const MatchRules = () => <section className="rules-section">
   <h2>1. Configuración de Partidos y Jugabilidad</h2>
   <ul>
@@ -26,7 +29,7 @@ const Divisions = () => <section className="rules-section">
   </tbody></table>
 </section>;
 
-const Transfers = () => <section className="rules-section">
+const Transfers = ({ squadValueLimit }) => <section className="rules-section">
   <h2>4. Mercado de Fichajes, Contratos y Traspasos</h2>
   <h3>4.1 Negociaciones y Trueques</h3>
   <ul>
@@ -45,7 +48,7 @@ const Transfers = () => <section className="rules-section">
   <p>Si dos o más presidentes desean adquirir al mismo jugador libre al final de la temporada, la operación se resolverá mediante una <strong>subasta</strong> entre los clubes interesados.</p>
   <h3>4.4 Fair Play Financiero</h3>
   <ul>
-    <li>El valor total de una plantilla no podrá superar <strong>2.000.000 GP</strong> (valor a definir por la liga).</li>
+    <li>El valor total de una plantilla no podrá superar <strong>{squadValueLimit === null ? 'el tope definido por la liga' : `${squadValueLimit.toLocaleString('es-CL')} GP`}</strong> (valor a definir por la liga).</li>
     <li>Para este cálculo siempre se utilizará el valor de mercado base del jugador, independientemente del precio pagado en una negociación.</li>
   </ul>
 </section>;
@@ -65,9 +68,11 @@ const Prizes = () => <>
 </>;
 
 export function RulesPage() {
+  const rules = useApiQuery(signal => endpoints.leagueRules(signal), []);
+  const squadValueLimit = Number(rules.data?.squadValueLimit) > 0 ? Number(rules.data.squadValueLimit) : null;
   return <main className="newspaper"><article className="data-paper rules-paper">
     <header className="rules-header"><p>KOINONIA e-LEAGUE · DOCUMENTO OFICIAL</p><h1>Reglamento Oficial de la Liga eFootball</h1></header>
     <p className="rules-intro">Este documento establece la normativa oficial para el desarrollo de la liga, incluyendo reglas de jugabilidad, sanciones, sistema de divisiones, mercado de fichajes y sistema de premiación. Todos los presidentes y participantes están obligados a cumplir estas normativas.</p>
-    <MatchRules/><Sanctions/><Divisions/><Transfers/><Prizes/>
+    <MatchRules/><Sanctions/><Divisions/><Transfers squadValueLimit={squadValueLimit}/><Prizes/>
   </article></main>;
 }

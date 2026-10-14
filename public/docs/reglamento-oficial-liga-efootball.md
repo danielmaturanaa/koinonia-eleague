@@ -44,7 +44,7 @@ El flujo entre divisiones se define al concluir la temporada de la siguiente man
 
 ### **4.4 Fair Play Financiero**
 
-> * Para mantener la equidad competitiva, se establece un sistema de **Fair Play Financiero**. El valor total de la plantilla de un equipo no podrá superar una cantidad máxima de **2.000.000 GP** (valor a definir por la liga).  
+> * Para mantener la equidad competitiva, se establece un sistema de **Fair Play Financiero**. El valor total de la plantilla de un equipo no podrá superar una cantidad máxima de **1.250.000 GP** (valor a definir por la liga).  
 > * Para el cálculo de este límite de plantilla, **siempre mandará el valor de mercado base del jugador** (el precio estándar del juego). Da lo mismo a cuánto se compró el jugador si es que se negoció con otro presidente; para el Fair Play solo se sumará su valor nominal o de mercado.
 
 ## **5\. Sistema de Premios: Ligas Regulares**

@@ -246,7 +246,6 @@ function AnthemEditor({ team, onChanged, onSaved }) {
 }
 
 const simulatorPlayerId = player => String(player?.id ?? player?.playerId ?? '');
-const SIMULATOR_BUDGET_LIMIT = 2_000_000;
 const SIMULATOR_STARTERS = 11;
 const simulatorPlayerTeamId = player => String(player?.team?.id ?? player?.teamId ?? player?.team_id ?? '');
 const simulatorPlayerTeamName = player => player?.team?.name ?? player?.teamName ?? player?.team_name ?? '';
@@ -457,8 +456,10 @@ function SquadValueSimulator({ team, squad, balance }) {
   // Cambiar el precio de alguien que ya está en el plantel mueve el valor del plantel, no el saldo.
   const movement = signingsCost - departuresValue;
   const projectedBalance = balance === null ? null : balance - movement;
-  const capRoom = SIMULATOR_BUDGET_LIMIT - simulatedValue;
-  const exceedsLimit = capRoom < 0;
+  // El tope lo publica el servidor (squadValueLimit en la ficha del equipo); sin él no se valida.
+  const budgetLimit = Number(team?.squadValueLimit) > 0 ? Number(team.squadValueLimit) : null;
+  const capRoom = budgetLimit === null ? null : budgetLimit - simulatedValue;
+  const exceedsLimit = capRoom !== null && capRoom < 0;
   const exceedsBalance = projectedBalance !== null && projectedBalance < 0;
   const changed = simulatorLayoutSignature(simulatedRoster) !== simulatorLayoutSignature(baseRoster) || removedPlayers.length > 0;
   const starters = simulatedRoster.filter(player => player.section === 'starters');
@@ -559,7 +560,7 @@ function SquadValueSimulator({ team, squad, balance }) {
   return <section className="club-card squad-value-simulator">
     <header className="squad-simulator-header"><div><h3>SIMULADOR DE PLANTEL</h3><p>Prueba fichajes y salidas sobre la misma alineación del resumen. Es solo una simulación: no modifica el plantel real y se guarda en este navegador.</p></div><button type="button" className="club-link-button" onClick={reset} disabled={!changed}>↺ RESTABLECER</button></header>
     <div className="squad-sim-summary"><div className="squad-sim-meters" aria-label="Resumen del presupuesto simulado">
-      <SimulatorMeter label="VALOR DEL PLANTEL" value={`${gp(simulatedValue)} GP`} ratio={simulatedValue / SIMULATOR_BUDGET_LIMIT} over={exceedsLimit} detail={exceedsLimit ? `Excede el tope de ${gp(SIMULATOR_BUDGET_LIMIT)} GP en ${gp(-capRoom)} GP` : `Tope ${gp(SIMULATOR_BUDGET_LIMIT)} GP · quedan ${gp(capRoom)} GP`}/>
+      <SimulatorMeter label="VALOR DEL PLANTEL" value={`${gp(simulatedValue)} GP`} ratio={budgetLimit === null ? undefined : simulatedValue / budgetLimit} over={exceedsLimit} detail={budgetLimit === null ? 'Tope no publicado' : exceedsLimit ? `Excede el tope de ${gp(budgetLimit)} GP en ${gp(-capRoom)} GP` : `Tope ${gp(budgetLimit)} GP · quedan ${gp(capRoom)} GP`}/>
       <SimulatorMeter label="SALDO TRAS LOS CAMBIOS" value={projectedBalance === null ? '—' : `${gp(projectedBalance)} GP`} over={exceedsBalance} detail={balance === null ? 'Saldo no publicado' : `Saldo actual ${gp(balance)} GP · movimiento ${signedGp(-movement)}`}/>
       <SimulatorMeter label="CAMBIOS" value={`${signings.length} ALTA${signings.length === 1 ? '' : 'S'} · ${removedPlayers.length} BAJA${removedPlayers.length === 1 ? '' : 'S'}`} detail={changesDetail}/>
     </div>

@@ -25,6 +25,7 @@ export const endpoints = {
   squadRankings: (query, signal) => get('/rankings/squads', query, signal),
   history: (entityType, entityId, query, signal) => get(`/history/${entityType}/${entityId}`, query, signal),
   divisions: signal => get('/divisions', null, signal),
+  leagueRules: signal => get('/league/rules', null, signal),
   players: (query, signal) => get('/players', query, signal),
   efootballPlayers: (query, signal) => get('/efootball/players', query, signal),
   efootballManagers: (query, signal) => get('/efootball/managers', query, signal),
