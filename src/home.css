@@ -2895,6 +2895,7 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .trophy-team span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .trophy-team .team-mark { width: 26px; height: 26px; flex: 0 0 26px; }
 .trophy-stars { display: flex; flex: 0 0 auto; flex-wrap: wrap; justify-content: flex-end; gap: 4px 6px; }
-.trophy-star { display: block; width: 46px; height: 44px; flex: 0 0 46px; overflow: visible; }
-.trophy-star polygon { fill: #f2b705; stroke: #7a5400; stroke-width: 6; stroke-linejoin: round; }
-.trophy-star text { fill: #062764; font: 700 30px 'Oswald', sans-serif; letter-spacing: -.5px; }
+.trophy-star { display: grid; justify-items: center; gap: 1px; min-width: 22px; }
+.trophy-star svg { display: block; width: 20px; height: 19px; overflow: visible; }
+.trophy-star polygon { fill: #f2b705; stroke: #7a5400; stroke-width: 7; stroke-linejoin: round; }
+.trophy-star small { color: #062764; font: 600 10px/1 'Oswald', sans-serif; letter-spacing: .2px; }
