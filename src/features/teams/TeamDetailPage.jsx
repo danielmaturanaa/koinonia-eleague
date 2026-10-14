@@ -661,7 +661,7 @@ function SquadTab({ team, squad, starters, substitutes, onChanged }) {
   </div>;
 }
 
-export function TeamDetailPage({ team, teams = [], tournaments = [], squad, standings, standingsTournamentId = null, matches = [], history = [], historyError, loading, tab = 'resumen', onTab, onBack, onChanged, onProjection = null }) {
+export function TeamDetailPage({ team, teams = [], tournaments = [], squad, standings, standingsTournamentId = null, matches = [], recentMatches = [], history = [], historyError, loading, tab = 'resumen', onTab, onBack, onChanged, onProjection = null }) {
   const { canEditTeam } = useAuth();
   const canEdit = canEditTeam(team?.id);
   const [historyEditor, setHistoryEditor] = useState('');
@@ -698,7 +698,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
     {loading || !team ? <div className="arcade-state">CARGANDO FICHA...</div> : <>
       <header className="club-hero" style={heroStyle}>
         <div className="club-crest-wrap"><TeamMark team={team} className="club-crest"/>{canEdit && <button type="button" className="club-crest-edit" onClick={() => setCrestEditorOpen(true)} aria-label="Editar escudo y nombre del club" title="Editar escudo y nombre">✎</button>}</div>
-        <div className="club-hero-copy"><p>{team.kind === 'national_team' ? 'SELECCIÓN' : 'CLUB'}{team.currentDivision ? ` · ${team.currentDivision}` : ''}</p><h1>{team.name}</h1><div className="club-hero-meta">{rank > 0 && <span className="club-hero-rank"><b>{rank}°</b> EN LA LIGA{standing ? ` · ${standing.points} PTS` : ''}</span>}<FormPills matches={matches} teamId={team.id}/></div></div>
+        <div className="club-hero-copy"><p>{team.kind === 'national_team' ? 'SELECCIÓN' : 'CLUB'}{team.currentDivision ? ` · ${team.currentDivision}` : ''}</p><h1>{team.name}</h1><div className="club-hero-meta">{rank > 0 && <span className="club-hero-rank"><b>{rank}°</b> EN LA LIGA{standing ? ` · ${standing.points} PTS` : ''}</span>}<FormPills matches={recentMatches} teamId={team.id}/></div></div>
         <dl className="club-hero-value"><div><dt>VALOR DEL PLANTEL</dt><dd>{gp(team.squadValue)}</dd><small>GP · {team.playerCount ?? squad.length} JUGADORES</small></div><div><dt>SALDO DISPONIBLE</dt><dd>{balance === null ? '—' : gp(balance)}</dd><small>GP PARA FICHAJES</small></div></dl>
       </header>
       <nav className="club-tabs" ref={tabsRef} role="tablist" aria-label="Secciones del club">{TABS.map(([id, label]) => <button type="button" role="tab" key={id} aria-selected={activeTab === id} className={activeTab === id ? 'active' : ''} onClick={() => onTab?.(id)}>{label}</button>)}</nav>
@@ -714,7 +714,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
                 onEditCoach={canEdit ? () => setPersonEditor('coach') : undefined}
               />
               <ClubStandingSnippet standings={displayStandings} teamId={team.id} teams={teams} onMore={() => onTab?.('tabla')}/>
-              <ClubRecentResults matches={matches} resolveTeam={resolveTeam} teamId={team.id} onMore={() => onTab?.('partidos')}/>
+              <ClubRecentResults matches={recentMatches} resolveTeam={resolveTeam} teamId={team.id} onMore={() => onTab?.('partidos')}/>
               <ClubScorers teamId={team.id} limit={3} tournaments={tournaments}/>
             </div>
             <div className="club-overview-right-column">

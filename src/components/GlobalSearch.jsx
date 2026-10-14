@@ -130,7 +130,7 @@ export function GlobalSearch({ navigate, teams = [] }) {
       Promise.all([
         endpoints.players({ q: term, pageSize: 10 }, controller.signal),
         crossing ? Promise.resolve({ data: [] }) : endpoints.efootballPlayers({ q: term }, controller.signal),
-        matchTeams.length ? endpoints.matches({ team: matchTeams[0].id, page: 1, pageSize: 100 }, controller.signal) : Promise.resolve({ data: [] }),
+        matchTeams.length ? endpoints.matches({ team: matchTeams[0].id, ...(matchTeams[1] ? { opponent: matchTeams[1].id } : {}), order: 'recent', page: 1, pageSize: 20 }, controller.signal) : Promise.resolve({ data: [] }),
       ]).then(([league, catalog, teamMatches]) => {
         setActive(0);
         const players = mergeResults(league?.data ?? [], catalog?.data ?? []).map(result => ({ ...result, type: 'player' }));

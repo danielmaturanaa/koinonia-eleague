@@ -54,7 +54,7 @@ function Lineup({ team }) {
 function HeadToHead({ match, resolveTeam }) {
   const homeId = match.homeTeam?.id;
   const awayId = match.awayTeam?.id;
-  const history = useApiQuery(signal => homeId ? endpoints.matches({ team: homeId, page: 1, pageSize: 100 }, signal) : Promise.resolve({ data: [] }), [homeId]);
+  const history = useApiQuery(signal => homeId ? endpoints.matches({ team: homeId, opponent: awayId, status: 'finished', order: 'recent', page: 1, pageSize: 100 }, signal) : Promise.resolve({ data: [] }), [homeId, awayId]);
   const meetings = (Array.isArray(history.data) ? history.data : [])
     .filter(item => item.id !== match.id && item.status === 'finished' && [item.homeTeam?.id, item.awayTeam?.id].includes(awayId))
     .sort((left, right) => String(right.finishedAt ?? '').localeCompare(String(left.finishedAt ?? '')));
