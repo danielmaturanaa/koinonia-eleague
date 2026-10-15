@@ -3105,12 +3105,6 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 
 /* Subastas: tarjeta a todo el ancho; con espacio, datos y oferta a la izquierda y el chat a la derecha */
 .poll-list.sealed-list { grid-template-columns: 1fr; }
-@media (min-width: 960px) {
-  .sealed-card.status-open { grid-template-columns: minmax(300px, 400px) minmax(0, 1fr); column-gap: 16px; align-items: start; }
-  .sealed-card.status-open > * { grid-column: 1; }
-  .sealed-card.status-open > header { grid-column: 1 / -1; }
-  .sealed-card.status-open > .pc, .sealed-card.status-open > .pc-closed { grid-column: 2; grid-row: 2 / span 30; }
-}
 
 /* "Listo": confirmación explícita de que ya ofertaste */
 .sealed-done { display: grid; gap: 8px; padding: 12px; border: 2px solid #167a45; background: #e4f4ea; }
@@ -3160,3 +3154,50 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .pc-chip.negativa { border-color: #d1d7db; }
 .pc-chip.on { border-color: #25a244; background: #f1fbe9; box-shadow: inset 0 0 0 1px #25a244; }
 .pc-send { background: #25a244; }
+
+/* Pulido de la subasta: una sola lectura, sin repeticiones */
+.sealed-list { grid-template-columns: 1fr; }
+.market-sealed.is-empty > header p { margin: 0; color: #625d4e; }
+.sealed-head { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; gap: 10px; align-items: center; }
+.sealed-title { display: grid; gap: 2px; min-width: 0; }
+.sealed-title b { font: 600 20px/1.1 'Oswald', sans-serif; color: #062764; }
+.sealed-title small { color: #625d4e; font: 500 13px/1.2 'Roboto Condensed', sans-serif; }
+.sealed-clock { padding: 4px 10px; text-align: right; }
+.sealed-clock b { font-size: 24px; }
+.sealed-body { display: grid; gap: 12px; align-items: start; }
+.sealed-body.with-chat { grid-template-columns: minmax(280px, 380px) minmax(0, 1fr); }
+.sealed-side, .sealed-chat { display: grid; gap: 10px; min-width: 0; }
+.sealed-yours { display: grid; gap: 4px; padding: 6px 10px; border: 1px solid #d0c4a8; background: #fffdf4; }
+.sealed-yours-row { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; font: 600 13px/1.2 'Oswald', sans-serif; }
+.sealed-yours-row .ok { color: #0d4a2a; } .sealed-yours-row .wait { color: #625d4e; } .sealed-yours-row .heat { color: #a90020; }
+.sealed-dot { display: inline-block; width: 9px; height: 9px; margin-right: 6px; border-radius: 50%; background: #aa9e86; }
+.sealed-participation li { display: flex; align-items: center; gap: 0; border-left-width: 1px; padding: 4px 8px; }
+.sealed-participation li small { margin-left: 8px; }
+.sealed-participation li.state-oferto .sealed-dot { background: #092e77; }
+.sealed-participation li.state-listo .sealed-dot { background: #1c7a3e; }
+.sealed-participation li.state-no_participa { opacity: .65; }
+.sealed-participation li.state-no_participa .sealed-dot { background: #a90020; }
+.sealed-participation li.state-pendiente { background: transparent; }
+.sealed-all-ready { margin: 0; }
+.sealed-bid-help b { font-weight: 600; }
+.link-button { padding: 2px 4px; border: 0; background: none; color: #092e77; font: 600 13px/1.2 'Oswald', sans-serif; text-decoration: underline; cursor: pointer; }
+.link-button.muted { color: #625d4e; font-weight: 500; }
+.sealed-confirm { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; font: 600 13px/1.2 'Oswald', sans-serif; color: #a90020; }
+.sealed-passed { display: flex; flex-wrap: wrap; gap: 6px 12px; align-items: center; padding: 8px 10px; border: 1px solid #d0c4a8; background: #f7f1df; font: 600 14px/1.2 'Oswald', sans-serif; }
+.sealed-skeleton { display: grid; gap: 8px; }
+.sealed-skeleton i { height: 72px; background: linear-gradient(90deg, #eee6d0, #f8f2e2, #eee6d0); background-size: 200% 100%; animation: sealed-shimmer 1.4s linear infinite; }
+@keyframes sealed-shimmer { to { background-position: -200% 0; } }
+.pc-finished { padding: 6px 10px; border: 1px solid #167a45; background: #e4f4ea; color: #0d4a2a; font: 600 13px/1.3 'Roboto Condensed', sans-serif; margin: 0; }
+.sealed-card button:focus-visible, .sealed-card input:focus-visible, .sealed-card select:focus-visible, .sealed-card summary:focus-visible { outline: 3px solid #1b5fa8; outline-offset: 2px; }
+@media (max-width: 760px) {
+  .sealed-body.with-chat { grid-template-columns: minmax(0, 1fr); }
+  .sealed-head { grid-template-columns: 40px minmax(0, 1fr); }
+  .sealed-clock { grid-column: 1 / -1; text-align: left; }
+}
+.sealed-card { display: grid; grid-template-columns: minmax(0, 1fr); }
+.sealed-card > * { min-width: 0; }
+.sealed-body { width: 100%; }
+.poll-card.sealed-card { grid-template-columns: minmax(0, 1fr); }
+.sealed-card > .sealed-body, .sealed-card > .sealed-head { grid-column: 1 / -1; }
+.sealed-title .sealed-moderator b { display: inline; font: 600 13px/1.2 'Oswald', sans-serif; }
+.sealed-title .sealed-moderator { display: block; }

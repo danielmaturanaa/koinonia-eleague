@@ -9,12 +9,11 @@ export function ReadyControl({ auction, teamId, onChanged }) {
   const ready = (auction.myReadyTeamIds ?? []).includes(teamId);
   const hasBid = (auction.myBids ?? []).some(bid => bid.teamId === teamId);
   const mutation = useApiMutation((body, signal) => endpoints.sealedAuctionAction(auction.id, 'ready', body, signal), { onSuccess: () => onChanged?.() });
-  if (!hasBid) return <p className="poll-hint sealed-ready-missing">FALTA TU OFERTA PARA ESTAR LISTO.</p>;
+  if (!hasBid) return null;
   if (ready) {
     return <div className="sealed-ready on" role="status">
-      <b>✅ ESTÁS LISTO</b>
-      <p>YA NO FALTA NADA DE TU PARTE. SI CAMBIAS ALGO, TIENES QUE VOLVER A MARCARLO.</p>
-      <div className="mini-actions"><button type="button" disabled={mutation.loading} onClick={() => mutation.execute({ teamId, ready: false })}>VOLVER A EDITAR</button></div>
+      <span><b>🏁 LISTO</b> · NO FALTA NADA DE TU PARTE</span>
+      <button type="button" className="link-button" disabled={mutation.loading} onClick={() => mutation.execute({ teamId, ready: false })}>VOLVER A EDITAR</button>
       {mutation.error && <p className="form-feedback error" role="alert">{mutation.error.message}</p>}
     </div>;
   }
@@ -22,7 +21,7 @@ export function ReadyControl({ auction, teamId, onChanged }) {
     <button type="button" className="action-button positive sealed-ready-btn" disabled={mutation.loading} onClick={() => mutation.execute({ teamId, ready: true })}>
       {mutation.loading ? 'MARCANDO…' : '🏁 ESTOY LISTO'}
     </button>
-    <small>AVISA A TODOS QUE YA TERMINASTE: OFERTA HECHA Y PREGUNTAS RESPONDIDAS.</small>
+    <small>CUANDO YA OFERTASTE Y RESPONDISTE TODO, AVÍSALES A LOS DEMÁS.</small>
     {mutation.error && <p className="form-feedback error" role="alert">{mutation.error.message}</p>}
   </div>;
 }

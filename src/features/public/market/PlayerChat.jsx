@@ -3,7 +3,6 @@ import { endpoints } from '../../../api/endpoints.js';
 import { useAuth } from '../../../app/AuthGate.jsx';
 import { PlayerFace } from '../../../components/PlayerFace.jsx';
 import { useApiMutation } from '../../admin/useApiMutation.js';
-import { ReadyControl } from './ReadyControl.jsx';
 
 const LEVEL = { frio: [1, '🧊 FRÍO'], tibio: [2, '🌤️ TIBIO'], caliente: [3, '🔥 CALIENTE'] };
 const KIND_TAG = { dato: 'DATO', promesa: 'PROMESA · QUEDA REGISTRADA', argumento: 'ARGUMENTO · NO OBLIGA', negativa: 'HONESTA' };
@@ -59,12 +58,21 @@ function Bubble({ message, player, children }) {
 }
 
 /** Chat privado entre un club y el jugador. Las respuestas son datos reales del club y no cambian el resultado por sí solas. */
-export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, onChanged = null }) {
+const openKey = auctionId => `chat-abierto-${auctionId}`;
+const readOpen = auctionId => {
+  try { return window.sessionStorage.getItem(openKey(auctionId)) !== '0'; } catch { return true; }
+};
+const writeOpen = (auctionId, value) => {
+  try { window.sessionStorage.setItem(openKey(auctionId), value ? '1' : '0'); } catch { /* sin almacenamiento: no pasa nada */ }
+};
+
+export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, onChanged = null, onHeat = null }) {
   const { isAdmin, user, teamId } = useAuth();
   // Los clubes que ya marcaron NO PARTICIPAR no hablan con el jugador.
   const clubs = allowedClubs ?? user?.teamIds ?? [];
   const [chosen, setChosen] = useState(clubs.includes(teamId) ? teamId : clubs[0] ?? '');
-  const [shown, setShown] = useState(false);
+  const [shown, setShownState] = useState(() => readOpen(auction.id));
+  const setShown = value => { setShownState(value); writeOpen(auction.id, value); };
   const [chat, setChat] = useState(null);
   const [loadError, setLoadError] = useState(null);
   const [unavailable, setUnavailable] = useState(false);
@@ -161,6 +169,28 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
     return () => { window.clearTimeout(timer); controller.abort(); };
   }, [shown, chosen, nextReveal, auction.id]);
 
+  useEffect(() => {
+    if (!onHeat) return;
+    onHeat(chat && typeof chat.temperature === 'number' ? { temperature: chat.temperature, label: (LEVEL[chat.interest] ?? [0, ''])[1].replace(/^\S+\s/, '') } : null);
+  }, [chat?.temperature, chat?.interest]);
+
+  // Con la pestaña oculta, un mensaje nuevo del jugador se anuncia en el título del documento.
+  const playerCount = (chat?.messages ?? []).filter(item => item.role !== 'club' && !item.pending).length;
+  const seenCount = useRef(null);
+  useEffect(() => {
+    if (seenCount.current !== null && playerCount > seenCount.current && document.hidden && !document.title.startsWith('(1) ')) {
+      const base = document.title;
+      document.title = `(1) ${base}`;
+      const restore = () => {
+        if (document.hidden) return;
+        document.title = base;
+        document.removeEventListener('visibilitychange', restore);
+      };
+      document.addEventListener('visibilitychange', restore);
+    }
+    seenCount.current = playerCount;
+  }, [playerCount]);
+
   const thinking = answer.loading || message.loading || rewind.loading;
   useEffect(() => {
     const node = scroller.current;
@@ -210,7 +240,6 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
 
     {chat && <>
       <div className="pc-log" ref={scroller} aria-live="polite">
-        <p className="pc-privacy">🔒 CHAT PRIVADO DE TU CLUB. LA DECISIÓN USA LOS DATOS DE TU CLUB Y TU OFERTA; ESTO SIRVE PARA SABER QUÉ LO CONVENCE.</p>
         {shownMessages.map(item => <Bubble key={item.id} message={item} player={player}>
           {item.role === 'club' && item.kind === 'answer' && rewindInfo.available && (confirmTopic === item.topic
             ? <span className="pc-confirm" role="group" aria-label="CONFIRMAR DESHACER">
@@ -249,11 +278,7 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
             <button type="button" className="action-button positive" disabled={thinking || !picked} onClick={() => send(picked)}>ENVIAR</button>
           </div>}
           {answer.error && <p className="form-feedback error" role="alert">{answer.error.message}</p>}
-        </div> : chat.finished && <div className="pc-finished" role="status">
-          <b>✅ RESPONDISTE TODAS LAS PREGUNTAS</b>
-          <p>PUEDES CAMBIAR CUALQUIER RESPUESTA ARRIBA, ESCRIBIRLE AL JUGADOR O MEJORAR TU OFERTA. CUANDO NO FALTE NADA, MARCA QUE ESTÁS LISTO.</p>
-          <ReadyControl auction={auction} teamId={chosen} onChanged={onChanged}/>
-        </div>}
+        </div> : chat.finished && <p className="pc-finished" role="status">✅ SIN PREGUNTAS PENDIENTES · PUEDES CAMBIAR RESPUESTAS, ESCRIBIRLE O MEJORAR TU OFERTA.</p>}
         {rewind.error && <p className="form-feedback error" role="alert">{rewind.error.message}</p>}
 
         <form className="pc-bar" onSubmit={event => {

@@ -35,6 +35,8 @@ function countdown(closesAt, now) {
   return days ? `${days} D ${clock}` : clock;
 }
 
+const clubLabel = (teams, id) => (teams.find(team => team.id === id)?.name ?? id).toUpperCase();
+
 function BidPanel({ auction, onChanged, teams = [], clubs: allowedClubs = null }) {
   const { isAdmin, user, teamId } = useAuth();
   const teamIds = user?.teamIds ?? [];
@@ -43,7 +45,7 @@ function BidPanel({ auction, onChanged, teams = [], clubs: allowedClubs = null }
   const mine = auction.myBids.find(bid => bid.teamId === chosen) ?? null;
   const minimum = Math.max(auction.minBid, mine ? mine.amount + 1 : 0);
   const [amount, setAmount] = useState(String(minimum));
-  // Con oferta registrada se muestra un "LISTO" explícito; el formulario vuelve solo si quiere subirla.
+  // Con oferta registrada el formulario se esconde; vuelve solo si quiere subirla.
   const [raising, setRaising] = useState(false);
   const bid = useApiMutation((body, signal) => endpoints.sealedAuctionAction(auction.id, 'bids', body, signal), { onSuccess: () => { setRaising(false); onChanged(); } });
   useEffect(() => { setAmount(String(minimum)); }, [minimum]);
@@ -53,32 +55,33 @@ function BidPanel({ auction, onChanged, teams = [], clubs: allowedClubs = null }
     event.preventDefault();
     bid.execute({ teamId: chosen, amount: Number(amount) });
   };
+  const selector = clubs.length > 1 && <label className="sealed-club">CLUB<select value={chosen} onChange={event => setChosen(event.target.value)}>
+    {clubs.map(id => <option key={id} value={id}>{clubLabel(teams, id)}</option>)}
+  </select></label>;
   if (mine && !raising) {
     return <div className="sealed-done" role="status">
-      {clubs.length > 1 && <label>CLUB<select value={chosen} onChange={event => setChosen(event.target.value)}>
-        {clubs.map(id => <option key={id} value={id}>{(teams.find(team => team.id === id)?.name ?? id).toUpperCase()}</option>)}
-      </select></label>}
+      {selector}
       <div className="sealed-done-main">
         <span className="sealed-done-check" aria-hidden="true">✓</span>
-        <div><b>¡LISTO! YA OFERTASTE</b><strong>{gp(mine.amount)}</strong></div>
+        <div><b>OFERTA REGISTRADA</b><strong>{gp(mine.amount)}</strong></div>
+        <button type="button" className="link-button" onClick={() => setRaising(true)}>SUBIR</button>
       </div>
-      <p className="poll-hint">TU OFERTA ESTÁ REGISTRADA Y LA PLATA QUEDÓ RETENIDA. NO HAY NADA MÁS QUE HACER: PUEDES CONVERSAR CON EL JUGADOR O SUBIRLA HASTA EL CIERRE.</p>
       {mine.outbid && <p className="poll-confirm warn">⚠️ HAY UNA OFERTA MÁS FUERTE QUE LA TUYA.</p>}
       <ReadyControl auction={auction} teamId={chosen} onChanged={onChanged}/>
-      <div className="mini-actions"><button type="button" onClick={() => setRaising(true)}>SUBIR MI OFERTA</button></div>
     </div>;
   }
+  const tooLow = Number(amount) < minimum;
+  const tooHigh = auction.maxBid != null && Number(amount) > auction.maxBid;
   return <form className="poll-auction-form sealed-bid" onSubmit={submit}>
-    {clubs.length > 1 && <label>CLUB<select value={chosen} onChange={event => setChosen(event.target.value)}>
-      {clubs.map(id => <option key={id} value={id}>{(teams.find(team => team.id === id)?.name ?? id).toUpperCase()}</option>)}
-    </select></label>}
+    {selector}
     <label>{mine ? 'SUBIR MI OFERTA (GP)' : 'MI OFERTA (GP)'}
       <input type="number" min={minimum} max={auction.maxBid ?? undefined} step="1" required value={amount} onChange={event => setAmount(event.target.value)}/>
     </label>
-    {auction.maxBid != null && <p className="poll-hint"><b>MÍNIMA {gp(minimum)} · MÁXIMA {gp(auction.maxBid)}</b> (1,5 VECES EL VALOR DEL JUGADOR).</p>}
-    <p className="poll-hint">LA OFERTA ES SECRETA. LA PLATA QUEDA RETENIDA EN TU SALDO HASTA EL CIERRE. SI GANAS, PAGAS TU OFERTA; SI NO, TE LA DEVUELVEN ENTERA. SI NO QUIERES SEGUIR, USA "NO PARTICIPAR".</p>
+    <p className="poll-hint sealed-bid-help">
+      ENTRE <b>{gp(minimum)}</b>{auction.maxBid != null ? <> Y <b>{gp(auction.maxBid)}</b></> : null} · 🔒 SECRETA: NADIE VE TU MONTO, SE RETIENE Y SE DEVUELVE SI NO GANAS.
+    </p>
     <div className="mini-actions">
-      <button type="submit" disabled={bid.loading || Number(amount) < minimum || (auction.maxBid != null && Number(amount) > auction.maxBid)}>{mine ? 'CONFIRMAR NUEVA OFERTA' : 'OFERTAR'}</button>
+      <button type="submit" disabled={bid.loading || tooLow || tooHigh}>{mine ? 'CONFIRMAR NUEVA OFERTA' : 'OFERTAR'}</button>
       {mine && <button type="button" className="danger" onClick={() => setRaising(false)}>CANCELAR</button>}
     </div>
     <FormFeedback mutation={bid}/>
@@ -86,55 +89,93 @@ function BidPanel({ auction, onChanged, teams = [], clubs: allowedClubs = null }
 }
 
 const STATE_LABEL = {
-  listo: ['🏁 LISTO', 'done'],
-  oferto: ['✅ OFERTÓ', 'ok'],
-  no_participa: ['🚫 NO PARTICIPA', 'out'],
-  pendiente: ['⏳ PENDIENTE', 'wait'],
+  listo: ['🏁 LISTO', 'listo'],
+  oferto: ['OFERTÓ', 'oferto'],
+  no_participa: ['NO PARTICIPA', 'no_participa'],
+  pendiente: [null, 'pendiente'],
 };
 
-/** Quién ofertó, quién está listo, quién no participa y quién falta. Es público; los montos siguen secretos. */
-function Participation({ rows, readiness, isModerator }) {
+/** Un solo resumen y fichas compactas: la etiqueta solo aparece cuando el club ya decidió algo. Es público; los montos no. */
+function Participation({ rows, isModerator }) {
   if (!rows?.length) return null;
-  const decided = rows.filter(row => row.state !== 'pendiente').length;
-  const ready = readiness?.ready ?? rows.filter(row => row.state === 'listo').length;
-  const total = readiness?.total ?? rows.filter(row => ['oferto', 'listo'].includes(row.state)).length;
-  const everyoneReady = total > 0 && ready >= total;
+  const count = state => rows.filter(row => row.state === state).length;
+  const bid = count('oferto') + count('listo');
+  const pieces = [
+    [bid, 'OFERTARON', 'OFERTÓ'],
+    [count('listo'), 'LISTOS', 'LISTO'],
+    [count('no_participa'), 'NO PARTICIPAN', 'NO PARTICIPA'],
+    [count('pendiente'), 'PENDIENTES', 'PENDIENTE'],
+  ].filter(([n]) => n > 0).map(([n, plural, singular]) => `${n} ${n === 1 ? singular : plural}`);
+  const everyoneReady = bid > 0 && count('listo') >= bid;
   return <div className="sealed-participation">
-    <p className="poll-meta"><b>{decided} DE {rows.length} YA DECIDIERON</b> · <b>{ready} DE {total} LISTOS</b> · LOS MONTOS SON SECRETOS</p>
+    <p className="poll-meta"><b>{pieces.join(' · ')}</b></p>
     {isModerator && everyoneReady && <p className="poll-confirm sealed-all-ready">🏁 TODOS ESTÁN LISTOS: PUEDES CERRAR.</p>}
-    <ul>
+    <ul aria-label="ESTADO DE CADA CLUB">
       {rows.map(row => {
-        const [label, tone] = STATE_LABEL[row.state] ?? [String(row.state).toUpperCase(), 'wait'];
-        return <li key={row.teamId} className={`state-${tone}`}><span>{row.emoji ? `${row.emoji} ` : ''}{String(row.name).toUpperCase()}</span><small>{label}</small></li>;
+        const [label, tone] = STATE_LABEL[row.state] ?? [String(row.state).toUpperCase(), 'pendiente'];
+        const name = String(row.name).toUpperCase();
+        return <li key={row.teamId} className={`state-${tone}`} aria-label={`${name}: ${label ?? 'PENDIENTE'}`}>
+          <i className="sealed-dot" aria-hidden="true"/><span>{name}</span>{label && <small>{label}</small>}
+        </li>;
       })}
     </ul>
   </div>;
 }
 
-/** NO PARTICIPAR por club: si tenía oferta el servidor la retira y devuelve el saldo. */
-function PassControl({ auction, clubId, name, passed, onChanged }) {
-  const pass = useApiMutation((body, signal) => endpoints.sealedAuctionAction(auction.id, 'pass', body, signal), { onSuccess: onChanged });
+/** Tu estado de un vistazo: oferta, listo y temperatura. */
+function YourState({ auction, clubs, teams, heat }) {
+  const ready = new Set(auction.myReadyTeamIds ?? []);
+  return <div className="sealed-yours" aria-label="TU ESTADO">
+    {clubs.map(id => {
+      const bid = auction.myBids.find(item => item.teamId === id);
+      return <div className="sealed-yours-row" key={id}>
+        {clubs.length > 1 && <b>{clubLabel(teams, id)}</b>}
+        <span className={bid ? 'ok' : 'wait'}>{bid ? `TU OFERTA ${gp(bid.amount)}` : 'SIN OFERTA TODAVÍA'}</span>
+        <span className={ready.has(id) ? 'ok' : 'wait'}>{ready.has(id) ? '🏁 LISTO' : 'NO LISTO'}</span>
+        {clubs.indexOf(id) === 0 && heat && <span className="heat">🌡 {heat.temperature}° {String(heat.label).toUpperCase()}</span>}
+      </div>;
+    })}
+  </div>;
+}
+
+/** "No participar": enlace discreto; si ya hay oferta, confirma en el mismo lugar (el servidor la retira y devuelve el saldo). */
+function PassControl({ auction, clubId, name, onChanged }) {
+  const [confirming, setConfirming] = useState(false);
+  const pass = useApiMutation((body, signal) => endpoints.sealedAuctionAction(auction.id, 'pass', body, signal), { onSuccess: () => { setConfirming(false); onChanged(); } });
   const hasBid = auction.myBids.some(bid => bid.teamId === clubId);
+  const label = `NO PARTICIPAR${name ? ` CON ${name}` : ''}`;
   return <div className="sealed-pass">
-    {passed && <p className="poll-hint">🚫 {name ? `${name} NO PARTICIPA` : 'NO PARTICIPAS'} EN ESTA SUBASTA.</p>}
-    <button type="button" className={`action-button ${passed ? '' : 'danger'}`} disabled={pass.loading} onClick={() => {
-      if (passed) { pass.execute({ teamId: clubId, pass: false }); return; }
-      const warn = hasBid ? '¿NO PARTICIPAR? SE RETIRA TU OFERTA Y RECUPERAS TU SALDO RETENIDO.' : '¿NO PARTICIPAR EN ESTA SUBASTA?';
-      if (window.confirm(warn)) pass.execute({ teamId: clubId, pass: true });
-    }}>{passed ? 'VOLVER A PARTICIPAR' : 'NO PARTICIPAR'}</button>
+    {confirming
+      ? <span className="sealed-confirm" role="group" aria-label="CONFIRMAR NO PARTICIPAR">
+        ¿RETIRAR TU OFERTA Y NO PARTICIPAR?
+        <button type="button" disabled={pass.loading} onClick={() => pass.execute({ teamId: clubId, pass: true })}>SÍ</button>
+        <button type="button" onClick={() => setConfirming(false)}>NO</button>
+      </span>
+      : <button type="button" className="link-button muted" disabled={pass.loading} onClick={() => (hasBid ? setConfirming(true) : pass.execute({ teamId: clubId, pass: true }))}>{label}</button>}
     <FormFeedback mutation={pass}/>
   </div>;
 }
 
-/** Solo el presi moderador ve este botón: el servidor también rechaza a cualquier otro. */
+function PassedNotice({ auction, clubId, name, onChanged }) {
+  const back = useApiMutation((body, signal) => endpoints.sealedAuctionAction(auction.id, 'pass', body, signal), { onSuccess: onChanged });
+  return <div className="sealed-passed" role="status">
+    <span>🚫 {name ? `${name} NO PARTICIPA` : 'NO PARTICIPAS'} EN ESTA SUBASTA.</span>
+    <button type="button" className="link-button" disabled={back.loading} onClick={() => back.execute({ teamId: clubId, pass: false })}>VOLVER A PARTICIPAR</button>
+    <FormFeedback mutation={back}/>
+  </div>;
+}
+
+/** Solo el presi moderador ve estos botones: el servidor también rechaza a cualquier otro. */
 function ModeratorActions({ auction, onChanged }) {
   const act = useApiMutation((action, signal) => endpoints.sealedAuctionAction(auction.id, action, {}, signal), { onSuccess: onChanged });
+  const blocked = auction.resolveBlockedReason;
   return <div className="sealed-moderator-actions">
-    <p className="poll-hint">ERES EL MODERADOR: SOLO TÚ PUEDES CERRAR O CANCELAR LA SUBASTA ANTES DE LA HORA. SI LA CIERRAS, EL JUGADOR ELEGIRÁ CON LAS OFERTAS ACTUALES.</p>
+    <p className="poll-hint"><b>ERES EL MODERADOR:</b> SOLO TÚ PUEDES CERRAR O CANCELAR ANTES DE LA HORA.</p>
     <div className="mini-actions">
-      {auction.canResolve && <button disabled={act.loading} onClick={() => { if (window.confirm(`¿RESOLVER AHORA LA SUBASTA DE ${auction.player.name}? EL JUGADOR FIRMARÁ CON EL CLUB QUE MEJOR LE CALCE.`)) act.execute('resolve'); }}>RESOLVER AHORA</button>}
+      {auction.canResolve && <button disabled={act.loading || Boolean(blocked)} onClick={() => { if (window.confirm(`¿RESOLVER AHORA LA SUBASTA DE ${auction.player.name}? EL JUGADOR FIRMARÁ CON EL CLUB QUE MEJOR LE CALCE.`)) act.execute('resolve'); }}>RESOLVER AHORA</button>}
       {auction.canCancel && <button className="danger" disabled={act.loading} onClick={() => { if (window.confirm(`¿CANCELAR LA SUBASTA DE ${auction.player.name}? SE DEVUELVE TODA LA PLATA RETENIDA Y EL JUGADOR SIGUE LIBRE.`)) act.execute('cancel'); }}>CANCELAR SUBASTA</button>}
     </div>
+    {blocked && <p className="poll-hint warn">{String(blocked).toUpperCase()}</p>}
     <FormFeedback mutation={act}/>
   </div>;
 }
@@ -144,42 +185,44 @@ function AuctionCard({ auction, now, onChanged, teams = [] }) {
   const myClubs = user?.teamIds ?? [];
   const passedIds = auction.myPassedTeamIds ?? [];
   const playingClubs = myClubs.filter(id => !passedIds.includes(id));
-  const clubName = id => teams.find(team => team.id === id)?.name?.toUpperCase() ?? null;
+  const passedClubs = myClubs.filter(id => passedIds.includes(id));
   const open = auction.status === 'open';
-  const outbid = auction.myBids.some(bid => bid.outbid);
-  const isPresident = Boolean(user?.teamIds?.length) || isAdmin;
   const isModerator = Boolean(auction.moderator?.isMe);
+  const canPlay = open && playingClubs.length > 0;
   const closing = open && Date.parse(auction.closesAt) - now < 5 * 60 * 1000;
+  const [heat, setHeat] = useState(null);
+  const moderator = auction.moderator;
   return <article className={`poll-card sealed-card status-${auction.status}`}>
-    <header>
+    <header className="sealed-head">
       <PlayerFace src={auction.player.faceUrl} name={auction.player.name}/>
-      <div>
+      <div className="sealed-title">
         <b>{auction.player.name}</b>
-        <small>{auction.player.position} · VALE {gp(auction.player.gpValue)} · OFERTA MÍNIMA {gp(auction.minBid)}{auction.maxBid != null ? ` · MÁXIMA ${gp(auction.maxBid)}` : ''}</small>
+        <small>{auction.player.position} · VALE {gp(auction.player.gpValue)}</small>
+        {moderator && <small className="sealed-moderator">⚖️ MODERA <b>{moderator.name.toUpperCase()}</b>{moderator.teamName ? ` (${moderator.teamName.toUpperCase()})` : ''}{isModerator ? ' · ERES TÚ' : ''}</small>}
       </div>
-      <span className="poll-status">{STATUS_LABEL[auction.status] ?? auction.status.toUpperCase()}</span>
+      {open
+        ? <div className={`sealed-clock ${closing ? 'closing' : ''}`}>
+          <b>{countdown(auction.closesAt, now)}</b>
+          <small>CIERRA {formatDate(auction.closesAt).toUpperCase()}{auction.extensions ? ` · EXTENDIDA ${auction.extensions}×` : ''}</small>
+        </div>
+        : <span className="poll-status">{STATUS_LABEL[auction.status] ?? auction.status.toUpperCase()}</span>}
     </header>
+    {open && closing && <p className="poll-hint warn">QUEDAN MENOS DE 5 MINUTOS: UNA OFERTA NUEVA EXTIENDE EL RELOJ.</p>}
+    {canPlay && <YourState auction={auction} clubs={playingClubs} teams={teams} heat={heat}/>}
 
-    {open && <div className={`sealed-clock ${closing ? 'closing' : ''}`}>
-      <b>{countdown(auction.closesAt, now)}</b>
-      <small>CIERRA {formatDate(auction.closesAt).toUpperCase()}{auction.extensions ? ` · EXTENDIDA ${auction.extensions} ${auction.extensions === 1 ? 'VEZ' : 'VECES'}` : ''}</small>
+    {open && <div className={`sealed-body ${canPlay ? 'with-chat' : ''}`}>
+      <div className="sealed-side">
+        <Participation rows={auction.participation} isModerator={isModerator}/>
+        {canPlay && <BidPanel auction={auction} onChanged={onChanged} teams={teams} clubs={playingClubs}/>}
+        {passedClubs.map(id => <PassedNotice key={id} auction={auction} clubId={id} name={myClubs.length > 1 ? clubLabel(teams, id) : null} onChanged={onChanged}/>)}
+        {canPlay && playingClubs.map(id => <PassControl key={id} auction={auction} clubId={id} name={myClubs.length > 1 ? clubLabel(teams, id) : null} onChanged={onChanged}/>)}
+        {myClubs.length === 0 && <p className="poll-hint">{isAdmin ? 'PARA OFERTAR NECESITAS UN CLUB VINCULADO.' : 'SOLO LOS PRESIDENTES CON CLUB PUEDEN OFERTAR.'}</p>}
+        {(auction.canResolve || auction.canCancel) && <ModeratorActions auction={auction} onChanged={onChanged}/>}
+      </div>
+      {canPlay && <div className="sealed-chat">
+        <PlayerChat auction={auction} teams={teams} clubs={playingClubs} onChanged={onChanged} onHeat={setHeat}/>
+      </div>}
     </div>}
-    {auction.moderator && <p className="poll-meta sealed-moderator">⚖️ MODERADOR: <b>{auction.moderator.name.toUpperCase()}</b>{auction.moderator.teamName ? ` (${auction.moderator.teamName.toUpperCase()})` : ''}</p>}
-    {open && closing && <p className="poll-hint">QUEDAN MENOS DE 5 MINUTOS: UNA OFERTA NUEVA EXTIENDE EL RELOJ.</p>}
-    {open && <p className="poll-meta">{auction.bidCount} {auction.bidCount === 1 ? 'OFERTA' : 'OFERTAS'} · NADIE VE CUÁNTO PUSO EL OTRO</p>}
-
-
-    {open && isModerator && <p className="poll-confirm">ERES EL MODERADOR DE ESTA SUBASTA: NO PUEDES OFERTAR, SOLO CERRARLA.</p>}
-    {open && <Participation rows={auction.participation} readiness={auction.readiness} isModerator={isModerator}/>}
-    {open && isPresident && !isModerator && playingClubs.length > 0 && <BidPanel auction={auction} onChanged={onChanged} teams={teams} clubs={playingClubs}/>}
-    {open && isPresident && !isModerator && playingClubs.length > 0 && <PlayerChat auction={auction} teams={teams} clubs={playingClubs} onChanged={onChanged}/>}
-    {open && isPresident && !isModerator && myClubs.length === 0 && isAdmin && <p className="poll-hint">PARA OFERTAR NECESITAS UN CLUB VINCULADO.</p>}
-    {open && !isModerator && myClubs.length > 0 && <div className="sealed-passes">
-      {playingClubs.length === 0 && <p className="poll-confirm">NO PARTICIPAS EN ESTA SUBASTA.</p>}
-      {myClubs.map(id => <PassControl key={id} auction={auction} clubId={id} name={myClubs.length > 1 ? clubName(id) : null} passed={passedIds.includes(id)} onChanged={onChanged}/>)}
-    </div>}
-    {open && !isPresident && <p className="poll-hint">SOLO LOS PRESIDENTES CON CLUB PUEDEN OFERTAR.</p>}
-    {open && (auction.canResolve || auction.canCancel) && <ModeratorActions auction={auction} onChanged={onChanged}/>}
 
     {!open && auction.winner && <p className="poll-confirm sealed-result"><b>🚨 {auction.player.name.toUpperCase()} FIRMA POR {auction.winner.name.toUpperCase()} · {gp(auction.winner.amount)}</b></p>}
     {!open && !auction.winner && auction.status === 'no_sale' && <p className="poll-hint">🤷 NADIE CONVENCIÓ AL JUGADOR: SIGUE LIBRE.</p>}
@@ -214,8 +257,7 @@ function OpenAuctionForm({ onChanged }) {
     </label>
     <p className="poll-hint sealed-bounds"><b>OFERTA MÍNIMA 0,5× Y MÁXIMA 1,5× EL VALOR DEL JUGADOR.</b></p>
     <label>CIERRE (OPCIONAL)<input type="datetime-local" value={closesAt} onChange={event => setClosesAt(event.target.value)}/></label>
-    <p className="poll-hint">EL MODERADOR ES EL ÚNICO QUE PUEDE CERRAR LA SUBASTA ANTES DE LA HORA, Y SU CLUB NO PUEDE OFERTAR. ELIGE A ALGUIEN QUE NO ESTÉ INTERESADO EN EL JUGADOR.</p>
-    <p className="poll-hint">SI NO PONES CIERRE, DURA 24 HORAS. NUNCA PASA DEL CIERRE DEL MERCADO. EL JUGADOR NO DEBE TENER UNA ENCUESTA ABIERTA.</p>
+    <p className="poll-hint">EL MODERADOR ES EL ÚNICO QUE PUEDE CERRAR LA SUBASTA ANTES DE LA HORA. TAMBIÉN PUEDE OFERTAR; SI LO HACE, SOLO CIERRA CUANDO TODOS ESTÉN LISTOS. SIN CIERRE, DURA 24 HORAS (NUNCA MÁS QUE EL MERCADO).</p>
     <button className="action-button positive" disabled={open.loading || !playerId || !moderatorId}>ABRIR SUBASTA</button>
     <FormFeedback mutation={open}/>
   </form>;
@@ -232,15 +274,18 @@ export function SealedAuctionsSection({ revision, onChanged, teams = [] }) {
   if (unavailable) {
     return <section className="market-section market-sealed"><header><h2>SUBASTAS</h2><p>SUBASTAS PRÓXIMAMENTE.</p></header></section>;
   }
-  return <section className="market-section market-sealed">
+  const openRows = rows.filter(row => row.status === 'open');
+  const emptyLine = !auctions.error && !auctions.loading && !rows.length;
+  return <section className={`market-section market-sealed ${emptyLine ? 'is-empty' : ''}`}>
     <header>
-      <h2>SUBASTAS <small>{rows.filter(row => row.status === 'open').length}</small></h2>
-      <p>SUBASTAS PÚBLICAS: TODOS VEN QUIÉN OFERTÓ Y QUIÉN NO PARTICIPA, PERO NADIE VE LOS MONTOS. LA PLATA QUEDA RETENIDA. AL CIERRE, EL JUGADOR ELIGE EL CLUB QUE MEJOR LE CALZA: NO SOLO GANA EL QUE MÁS PAGA.</p>
+      <h2>SUBASTAS <small>{openRows.length}</small></h2>
+      {emptyLine
+        ? <p>NO HAY SUBASTAS ABIERTAS. LAS TERMINADAS ESTÁN EN EL HISTORIAL.</p>
+        : <p>AL CIERRE EL JUGADOR ELIGE EL CLUB QUE MEJOR LE CALZA: NO SOLO GANA EL QUE MÁS PAGA.</p>}
     </header>
     {isAdmin && <details className="sealed-admin"><summary>ABRIR UNA SUBASTA</summary><OpenAuctionForm onChanged={refresh}/></details>}
-    {auctions.loading && auctions.data === null && <div className="arcade-state compact">CARGANDO SUBASTAS...</div>}
+    {auctions.loading && auctions.data === null && <div className="sealed-skeleton" aria-hidden="true"><i/><i/><i/></div>}
     {auctions.error && <DataState query={auctions}/>}
-    {!auctions.error && !auctions.loading && !rows.length && <p className="empty-copy">NO HAY SUBASTAS ABIERTAS POR AHORA. LAS TERMINADAS ESTÁN EN EL HISTORIAL DE SUBASTAS.</p>}
     <div className="poll-list sealed-list">{rows.map(auction => <AuctionCard key={auction.id} auction={auction} now={now} onChanged={refresh} teams={teams}/>)}</div>
   </section>;
 }
