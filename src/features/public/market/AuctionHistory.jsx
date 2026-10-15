@@ -26,26 +26,24 @@ const NO_SALE_LABEL = {
 /** Detalle técnico de cómo decidió el jugador: rasgos, pesos y la nota de cada club en cada tema. */
 function Breakdown({ result }) {
   if (!result?.ranking?.length) return null;
-  const weights = result.weights ?? {};
   const factors = Object.keys(FACTOR_LABEL);
   return <div className="sealed-breakdown">
-    <p className="poll-hint">DETALLE TÉCNICO. LA HISTORIA CORTA DE LA DECISIÓN ESTÁ EN LA NOTICIA DEL FICHAJE. AQUÍ SE VE CÓMO SE CALCULÓ: A CADA CLUB LE PUSO UNA NOTA DE 0 A 100 EN CADA TEMA; LAS NOTAS SE PESAN SEGÚN EL PERFIL DEL JUGADOR Y DAN UN ENCAJE QUE MULTIPLICA LA OFERTA. GANA EL VALOR FINAL MÁS ALTO.</p>
+    <p className="poll-hint">DETALLE TÉCNICO. LA HISTORIA CORTA DE LA DECISIÓN ESTÁ EN LA NOTICIA DEL FICHAJE. AQUÍ SE VE CÓMO SE CALCULÓ: A CADA CLUB LE PUSO UNA NOTA DE 0 A 100 EN CADA TEMA; LAS NOTAS DAN UN ENCAJE QUE MULTIPLICA LA OFERTA. GANA EL VALOR FINAL MÁS ALTO.</p>
     <div className="sealed-traits">
       {(result.traits ?? []).map(trait => <span key={trait}><b>{TRAIT_LABEL[trait]?.[0] ?? String(trait).toUpperCase()}</b> {TRAIT_LABEL[trait]?.[1]}</span>)}
     </div>
     <div className="table-wrap sealed-table">
       <table>
-        <thead><tr><th>TEMA</th><th>IMPORTA</th>{result.ranking.map(row => <th key={row.teamId}>{row.teamName?.toUpperCase()}</th>)}</tr></thead>
+        <thead><tr><th>TEMA</th>{result.ranking.map(row => <th key={row.teamId}>{row.teamName?.toUpperCase()}</th>)}</tr></thead>
         <tbody>
           {factors.map(factor => <tr key={factor}>
             <td>{FACTOR_LABEL[factor]}</td>
-            <td>{Math.round(weights[factor] ?? 0)}%</td>
             {result.ranking.map(row => <td key={row.teamId}>{row.notes?.[factor] ?? '—'}</td>)}
           </tr>)}
-          <tr className="sum"><td>OFERTA</td><td/>{result.ranking.map(row => <td key={row.teamId}>{gp(row.offer)}</td>)}</tr>
-          <tr><td>ENCAJE</td><td/>{result.ranking.map(row => <td key={row.teamId}>×{Number(row.fit).toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>)}</tr>
-          <tr className="sum"><td>VALOR FINAL</td><td/>{result.ranking.map(row => <td key={row.teamId}><b>{gp(row.value)}</b></td>)}</tr>
-          <tr><td>INTERÉS</td><td/>{result.ranking.map(row => {
+          <tr className="sum"><td>OFERTA</td>{result.ranking.map(row => <td key={row.teamId}>{gp(row.offer)}</td>)}</tr>
+          <tr><td>ENCAJE</td>{result.ranking.map(row => <td key={row.teamId}>×{Number(row.fit).toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>)}</tr>
+          <tr className="sum"><td>VALOR FINAL</td>{result.ranking.map(row => <td key={row.teamId}><b>{gp(row.value)}</b></td>)}</tr>
+          <tr><td>INTERÉS</td>{result.ranking.map(row => {
             const [label, tone] = INTEREST[row.interest] ?? [String(row.interest ?? '').toUpperCase(), 'warm'];
             return <td key={row.teamId}><span className={`interest ${tone}`}>{label}</span></td>;
           })}</tr>

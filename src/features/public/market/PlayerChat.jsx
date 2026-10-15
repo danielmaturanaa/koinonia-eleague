@@ -50,10 +50,13 @@ function Bubble({ message, player, children }) {
   return <div className={`pc-row ${mine ? 'mine' : 'theirs'}`}>
     {!mine && <PlayerFace src={player.faceUrl} name={player.name}/>}
     <div className="pc-stack">
-      <div className={`pc-bubble kind-${message.kind} ${message.pending ? 'is-pending' : ''}`}>
-        <p>{message.text}</p>
-        <small>{message.pending ? 'ESCRIBIENDO…' : clock(message.createdAt)}</small>
-      </div>
+      {message.pending && !message.text
+        // El jugador todavía "escribe": se ven los tres puntos; el texto llega después.
+        ? <div className="pc-bubble pc-typing" aria-label="EL JUGADOR ESTÁ ESCRIBIENDO"><i/><i/><i/></div>
+        : <div className={`pc-bubble kind-${message.kind} ${message.pending ? 'is-pending' : ''}`}>
+          <p>{message.text}</p>
+          <small>{message.pending ? 'ESCRIBIENDO…' : clock(message.createdAt)}</small>
+        </div>}
       {children}
     </div>
   </div>;
@@ -133,7 +136,7 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
     return () => controller.abort();
   }, [shown, chosen, load, bidSignature]);
 
-  // Mientras la IA escribe, se vuelve a pedir la conversación cada 3 s (hasta ~3 minutos) y se reemplazan los mensajes.
+  // Mientras el jugador "escribe", se vuelve a pedir la conversación cada segundo (hasta ~3 minutos) y se reemplazan los mensajes.
   const hasPending = Boolean(chat?.messages?.some(item => item.pending));
   useEffect(() => {
     if (!shown || !chosen || !hasPending) return undefined;
@@ -144,7 +147,7 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
       endpoints.sealedAuctionChat(auction.id, chosen, controller.signal)
         .then(response => { if (response?.data) setChat(response.data); })
         .catch(() => {});
-    }, 3000);
+    }, 1000);
     return () => { window.clearInterval(timer); controller.abort(); };
   }, [shown, chosen, hasPending, auction.id]);
 
