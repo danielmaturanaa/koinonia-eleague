@@ -3,6 +3,7 @@ import { endpoints } from '../../../api/endpoints.js';
 import { useAuth } from '../../../app/AuthGate.jsx';
 import { PlayerFace } from '../../../components/PlayerFace.jsx';
 import { useApiMutation } from '../../admin/useApiMutation.js';
+import { TraitsBadge } from './TraitsBadge.jsx';
 
 const LEVEL = { frio: [1, '🧊 FRÍO'], tibio: [2, '🌤️ TIBIO'], caliente: [3, '🔥 CALIENTE'] };
 
@@ -19,7 +20,10 @@ function Bubble({ message, player }) {
   const mine = message.role === 'club';
   return <div className={`chat-row ${mine ? 'mine' : 'theirs'}`}>
     {!mine && <PlayerFace src={player.faceUrl} name={player.name}/>}
-    <p className={`chat-bubble kind-${message.kind}`}>{message.text}</p>
+    <p className={`chat-bubble kind-${message.kind} ${message.pending ? 'is-pending' : ''}`}>
+      {message.text}
+      {message.pending && <small className="chat-typing"> …ESCRIBIENDO</small>}
+    </p>
   </div>;
 }
 
@@ -64,6 +68,21 @@ export function PlayerChat({ auction, teams = [] }) {
     return () => controller.abort();
   }, [shown, chosen, load]);
 
+  // Mientras la IA escribe, se vuelve a pedir la conversación cada 3 s (hasta ~3 minutos) y se reemplazan los mensajes.
+  const hasPending = Boolean(chat?.messages?.some(item => item.pending));
+  useEffect(() => {
+    if (!shown || !chosen || !hasPending) return undefined;
+    const controller = new AbortController();
+    const startedAt = Date.now();
+    const timer = window.setInterval(() => {
+      if (Date.now() - startedAt > 3 * 60 * 1000) { window.clearInterval(timer); return; }
+      endpoints.sealedAuctionChat(auction.id, chosen, controller.signal)
+        .then(response => { if (response?.data) setChat(response.data); })
+        .catch(() => {});
+    }, 3000);
+    return () => { window.clearInterval(timer); controller.abort(); };
+  }, [shown, chosen, hasPending, auction.id]);
+
   useEffect(() => {
     const node = scroller.current;
     if (node) node.scrollTop = node.scrollHeight;
@@ -103,6 +122,7 @@ export function PlayerChat({ auction, teams = [] }) {
     {loadError && <p className="form-feedback error" role="alert">{loadError.message}</p>}
 
     {chat && <>
+      <TraitsBadge negotiation={chat.negotiation ?? auction.negotiation}/>
       <InterestMeter interest={chat.interest}/>
       <div className="chat-log" ref={scroller} aria-live="polite">
         {chat.messages.map(item => <Bubble key={item.id} message={item} player={auction.player}/>)}

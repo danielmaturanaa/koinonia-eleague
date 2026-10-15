@@ -7,6 +7,7 @@ import { useApiMutation } from '../../admin/useApiMutation.js';
 import { DataState, formatDate, gp } from '../DataStates.jsx';
 import { useApiQuery } from '../useApiQuery.js';
 import { PlayerChat } from './PlayerChat.jsx';
+import { TraitsBadge } from './TraitsBadge.jsx';
 import { useAutoRefresh } from './PollsSection.jsx';
 
 const TRAIT_LABEL = {
@@ -159,6 +160,7 @@ function AuctionCard({ auction, now, onChanged, teams = [] }) {
       <b>{countdown(auction.closesAt, now)}</b>
       <small>CIERRA {formatDate(auction.closesAt).toUpperCase()}{auction.extensions ? ` · EXTENDIDA ${auction.extensions} ${auction.extensions === 1 ? 'VEZ' : 'VECES'}` : ''}</small>
     </div>}
+    <TraitsBadge negotiation={auction.negotiation}/>
     {auction.moderator && <p className="poll-meta sealed-moderator">⚖️ MODERADOR: <b>{auction.moderator.name.toUpperCase()}</b>{auction.moderator.teamName ? ` (${auction.moderator.teamName.toUpperCase()})` : ''}</p>}
     {open && closing && <p className="poll-hint">QUEDAN MENOS DE 5 MINUTOS: UNA OFERTA NUEVA EXTIENDE EL RELOJ.</p>}
     {open && <p className="poll-meta">{auction.bidCount} {auction.bidCount === 1 ? 'OFERTA' : 'OFERTAS'} · NADIE VE CUÁNTO PUSO EL OTRO</p>}
