@@ -42,7 +42,9 @@ function BidPanel({ auction, onChanged, teams = [], clubs: allowedClubs = null }
   const mine = auction.myBids.find(bid => bid.teamId === chosen) ?? null;
   const minimum = Math.max(auction.minBid, mine ? mine.amount + 1 : 0);
   const [amount, setAmount] = useState(String(minimum));
-  const bid = useApiMutation((body, signal) => endpoints.sealedAuctionAction(auction.id, 'bids', body, signal), { onSuccess: onChanged });
+  // Con oferta registrada se muestra un "LISTO" explícito; el formulario vuelve solo si quiere subirla.
+  const [raising, setRaising] = useState(false);
+  const bid = useApiMutation((body, signal) => endpoints.sealedAuctionAction(auction.id, 'bids', body, signal), { onSuccess: () => { setRaising(false); onChanged(); } });
   useEffect(() => { setAmount(String(minimum)); }, [minimum]);
   if (!chosen && !isAdmin) return null;
   if (!chosen) return <p className="poll-hint">PARA OFERTAR NECESITAS UN CLUB VINCULADO.</p>;
@@ -50,6 +52,20 @@ function BidPanel({ auction, onChanged, teams = [], clubs: allowedClubs = null }
     event.preventDefault();
     bid.execute({ teamId: chosen, amount: Number(amount) });
   };
+  if (mine && !raising) {
+    return <div className="sealed-done" role="status">
+      {clubs.length > 1 && <label>CLUB<select value={chosen} onChange={event => setChosen(event.target.value)}>
+        {clubs.map(id => <option key={id} value={id}>{(teams.find(team => team.id === id)?.name ?? id).toUpperCase()}</option>)}
+      </select></label>}
+      <div className="sealed-done-main">
+        <span className="sealed-done-check" aria-hidden="true">✓</span>
+        <div><b>¡LISTO! YA OFERTASTE</b><strong>{gp(mine.amount)}</strong></div>
+      </div>
+      <p className="poll-hint">TU OFERTA ESTÁ REGISTRADA Y LA PLATA QUEDÓ RETENIDA. NO HAY NADA MÁS QUE HACER: PUEDES CONVERSAR CON EL JUGADOR O SUBIRLA HASTA EL CIERRE.</p>
+      {mine.outbid && <p className="poll-confirm warn">⚠️ HAY UNA OFERTA MÁS FUERTE QUE LA TUYA.</p>}
+      <div className="mini-actions"><button type="button" onClick={() => setRaising(true)}>SUBIR MI OFERTA</button></div>
+    </div>;
+  }
   return <form className="poll-auction-form sealed-bid" onSubmit={submit}>
     {clubs.length > 1 && <label>CLUB<select value={chosen} onChange={event => setChosen(event.target.value)}>
       {clubs.map(id => <option key={id} value={id}>{(teams.find(team => team.id === id)?.name ?? id).toUpperCase()}</option>)}
@@ -60,7 +76,8 @@ function BidPanel({ auction, onChanged, teams = [], clubs: allowedClubs = null }
     {auction.maxBid != null && <p className="poll-hint"><b>MÍNIMA {gp(minimum)} · MÁXIMA {gp(auction.maxBid)}</b> (1,5 VECES EL VALOR DEL JUGADOR).</p>}
     <p className="poll-hint">LA OFERTA ES SECRETA. LA PLATA QUEDA RETENIDA EN TU SALDO HASTA EL CIERRE. SI GANAS, PAGAS TU OFERTA; SI NO, TE LA DEVUELVEN ENTERA. SI NO QUIERES SEGUIR, USA "NO PARTICIPAR".</p>
     <div className="mini-actions">
-      <button type="submit" disabled={bid.loading || Number(amount) < minimum || (auction.maxBid != null && Number(amount) > auction.maxBid)}>{mine ? 'SUBIR OFERTA' : 'OFERTAR'}</button>
+      <button type="submit" disabled={bid.loading || Number(amount) < minimum || (auction.maxBid != null && Number(amount) > auction.maxBid)}>{mine ? 'CONFIRMAR NUEVA OFERTA' : 'OFERTAR'}</button>
+      {mine && <button type="button" className="danger" onClick={() => setRaising(false)}>CANCELAR</button>}
     </div>
     <FormFeedback mutation={bid}/>
   </form>;
@@ -140,10 +157,6 @@ function AuctionCard({ auction, now, onChanged, teams = [] }) {
     {open && closing && <p className="poll-hint">QUEDAN MENOS DE 5 MINUTOS: UNA OFERTA NUEVA EXTIENDE EL RELOJ.</p>}
     {open && <p className="poll-meta">{auction.bidCount} {auction.bidCount === 1 ? 'OFERTA' : 'OFERTAS'} · NADIE VE CUÁNTO PUSO EL OTRO</p>}
 
-    {open && auction.myBids.map(bid => <div key={bid.teamId} className={`sealed-mine ${bid.outbid ? 'outbid' : ''}`}>
-      <b>TU OFERTA: {gp(bid.amount)}</b>
-      {bid.outbid && <span>⚠️ HAY UNA OFERTA MÁS FUERTE</span>}
-    </div>)}
 
     {open && isModerator && <p className="poll-confirm">ERES EL MODERADOR DE ESTA SUBASTA: NO PUEDES OFERTAR, SOLO CERRARLA.</p>}
     {open && <Participation rows={auction.participation}/>}

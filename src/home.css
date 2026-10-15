@@ -3102,3 +3102,20 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 @keyframes pc-dot { 0%, 80%, 100% { transform: scale(.6); opacity: .5; } 40% { transform: scale(1); opacity: 1; } }
 @media (max-width: 560px) { .pc-chips { grid-template-columns: 1fr; } .pc-stack { max-width: 90%; } }
 @media (prefers-reduced-motion: reduce) { .pc-row { animation: none; } .pc-typing i { animation: none; opacity: .7; } .pc-temp-bar i { transition: none; } .pc-log { scroll-behavior: auto; } }
+
+/* Subastas: tarjeta a todo el ancho; con espacio, datos y oferta a la izquierda y el chat a la derecha */
+.poll-list.sealed-list { grid-template-columns: 1fr; }
+@media (min-width: 960px) {
+  .sealed-card.status-open { grid-template-columns: minmax(300px, 400px) minmax(0, 1fr); column-gap: 16px; align-items: start; }
+  .sealed-card.status-open > * { grid-column: 1; }
+  .sealed-card.status-open > header { grid-column: 1 / -1; }
+  .sealed-card.status-open > .pc, .sealed-card.status-open > .pc-closed { grid-column: 2; grid-row: 2 / span 30; }
+}
+
+/* "Listo": confirmación explícita de que ya ofertaste */
+.sealed-done { display: grid; gap: 8px; padding: 12px; border: 2px solid #167a45; background: #e4f4ea; }
+.sealed-done-main { display: flex; align-items: center; gap: 12px; }
+.sealed-done-check { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: #167a45; color: #fff; font: 700 26px/1 'Oswald', sans-serif; }
+.sealed-done-main b { display: block; font: 600 14px/1.1 'Oswald', sans-serif; letter-spacing: .5px; color: #0d4a2a; }
+.sealed-done-main strong { display: block; font: 400 28px/1.1 'Anton', sans-serif; color: #0d4a2a; }
+.poll-confirm.warn { color: #a90020; }
