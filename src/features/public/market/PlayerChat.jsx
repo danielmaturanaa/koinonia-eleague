@@ -6,12 +6,22 @@ import { useApiMutation } from '../../admin/useApiMutation.js';
 
 const LEVEL = { frio: [1, '🧊 FRÍO'], tibio: [2, '🌤️ TIBIO'], caliente: [3, '🔥 CALIENTE'] };
 
-function InterestMeter({ interest }) {
+function InterestMeter({ interest, temperature }) {
   const [level, label] = LEVEL[interest] ?? [0, '—'];
-  return <div className="chat-meter" role="img" aria-label={`INTERÉS DEL JUGADOR: ${label}`}>
-    <div className="chat-meter-bar">{[1, 2, 3].map(step => <i key={step} className={step <= level ? `on level-${level}` : ''}/>)}</div>
-    <b>{label}</b>
-    <small>ASÍ VE EL JUGADOR A TU CLUB AHORA. MEJORA TU OFERTA PARA SUBIRLO.</small>
+  const previous = useRef(temperature);
+  const [change, setChange] = useState(0);
+  // Muestra cuánto se movió con tu última acción (▲ sube, ▼ baja) hasta que vuelva a cambiar.
+  useEffect(() => {
+    if (typeof temperature === 'number' && typeof previous.current === 'number' && temperature !== previous.current) {
+      setChange(temperature - previous.current);
+    }
+    previous.current = temperature;
+  }, [temperature]);
+  const hasValue = typeof temperature === 'number';
+  return <div className="chat-meter" role="img" aria-label={`TEMPERATURA DEL JUGADOR: ${label}${hasValue ? ` ${temperature} DE 100` : ''}`}>
+    <div className="chat-gauge" aria-hidden="true"><i className={`level-${level}`} style={{ width: `${hasValue ? temperature : level * 33}%` }}/></div>
+    <b>{label}{hasValue ? ` · ${temperature}°` : ''}{change !== 0 && <span className={`chat-delta ${change > 0 ? 'up' : 'down'}`}> {change > 0 ? '▲' : '▼'} {Math.abs(change)}</span>}</b>
+    <small>ASÍ VE EL JUGADOR A TU CLUB AHORA. SE MUEVE CON TUS RESPUESTAS Y TU OFERTA. LO QUE HAGAN LOS OTROS CLUBES NO LO AFECTA.</small>
   </div>;
 }
 
@@ -59,12 +69,14 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null }) 
     });
   }, [auction.id, chosen]);
 
+  // La temperatura incluye tu oferta: si la subes o la retiras, se vuelve a pedir.
+  const bidSignature = (auction.myBids ?? []).map(bid => `${bid.teamId}:${bid.amount}`).join(',');
   useEffect(() => {
     if (!shown || !chosen) return undefined;
     const controller = new AbortController();
     load(controller.signal);
     return () => controller.abort();
-  }, [shown, chosen, load]);
+  }, [shown, chosen, load, bidSignature]);
 
   // Mientras la IA escribe, se vuelve a pedir la conversación cada 3 s (hasta ~3 minutos) y se reemplazan los mensajes.
   const hasPending = Boolean(chat?.messages?.some(item => item.pending));
@@ -122,7 +134,7 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null }) 
     {loadError && <p className="form-feedback error" role="alert">{loadError.message}</p>}
 
     {chat && <>
-      <InterestMeter interest={chat.interest}/>
+      <InterestMeter interest={chat.interest} temperature={chat.temperature}/>
       <div className="chat-log" ref={scroller} aria-live="polite">
         {chat.messages.map(item => <Bubble key={item.id} message={item} player={auction.player}/>)}
         {thinking && <div className="chat-row theirs"><PlayerFace src={auction.player.faceUrl} name={auction.player.name}/><p className="chat-bubble thinking">EL JUGADOR ESTÁ PENSANDO…</p></div>}
