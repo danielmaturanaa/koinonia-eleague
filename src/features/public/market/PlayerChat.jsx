@@ -5,7 +5,7 @@ import { PlayerFace } from '../../../components/PlayerFace.jsx';
 import { useApiMutation } from '../../admin/useApiMutation.js';
 
 const LEVEL = { frio: [1, '🧊 FRÍO'], tibio: [2, '🌤️ TIBIO'], caliente: [3, '🔥 CALIENTE'] };
-const KIND_TAG = { dato: 'DATO', promesa: 'PROMESA', negativa: 'HONESTA' };
+const KIND_TAG = { dato: 'DATO', promesa: 'PROMESA · QUEDA REGISTRADA', argumento: 'ARGUMENTO · NO OBLIGA', negativa: 'HONESTA' };
 
 const clock = value => {
   const date = value ? new Date(value) : null;
@@ -225,7 +225,7 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null }) 
           </div>
           {options.length === 0 && <p className="pc-note">NO HAY RESPUESTAS PREPARADAS PARA ESTA PREGUNTA. ESCRÍBELE ABAJO.</p>}
           {options.length > 0 && <div className="pc-send-row">
-            <small>{picked ? 'TOCA DE NUEVO LA RESPUESTA O PULSA ENVIAR.' : 'ELIGE UNA RESPUESTA. LAS PROMESAS SE RECUERDAN POR DISCORD.'}</small>
+            <small>{picked ? 'TOCA DE NUEVO LA RESPUESTA O PULSA ENVIAR.' : 'ELIGE UNA RESPUESTA. SOLO LAS PROMESAS (ALINEACIÓN, FICHAJES, ROLES) QUEDAN REGISTRADAS Y SE RECUERDAN POR DISCORD.'}</small>
             <button type="button" className="action-button positive" disabled={thinking || !picked} onClick={() => send(picked)}>ENVIAR</button>
           </div>}
           {answer.error && <p className="form-feedback error" role="alert">{answer.error.message}</p>}

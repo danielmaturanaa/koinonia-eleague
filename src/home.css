@@ -3119,3 +3119,7 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .sealed-done-main b { display: block; font: 600 14px/1.1 'Oswald', sans-serif; letter-spacing: .5px; color: #0d4a2a; }
 .sealed-done-main strong { display: block; font: 400 28px/1.1 'Anton', sans-serif; color: #0d4a2a; }
 .poll-confirm.warn { color: #a90020; }
+
+/* Argumento: sirve para convencer pero no obliga ni se registra */
+.pc-chip.argumento em { background: #e3e8f5; color: #1c2f66; }
+.pc-chip.argumento { border-style: dotted; border-color: #7d8fc4; }
