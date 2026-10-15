@@ -3138,3 +3138,25 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .pc-finished { display: grid; gap: 6px; padding: 10px 12px; border: 2px solid #167a45; background: #e4f4ea; }
 .pc-finished b { font: 400 18px/1.1 'Anton', sans-serif; color: #0d4a2a; }
 .pc-finished p { margin: 0; color: #0d4a2a; font: 500 13px/1.3 'Roboto Condensed', sans-serif; }
+
+/* Chat tipo WhatsApp: burbujas del jugador blancas, las mías verdes; sin azules ni amarillos */
+.pc { background: #ece5dd; }
+.pc-log { background: #ece5dd; }
+.pc-bubble, .pc-bubble.kind-question, .pc-bubble.kind-greeting, .pc-bubble.kind-closing, .pc-bubble.kind-reaction, .pc-bubble.kind-reply { background: #fff; border-color: #e0dacf; }
+.pc-row.theirs .pc-bubble::after, .pc-row.theirs .pc-bubble.kind-question::after { border-right-color: #fff; border-bottom-color: #fff; }
+.pc-row.mine .pc-bubble { background: #d9fdd3; border-color: #b5e7ab; }
+.pc-row.mine .pc-bubble::after { border-left-color: #d9fdd3; border-bottom-color: #d9fdd3; }
+.pc-bubble.kind-note { font-style: normal; }
+.pc-privacy { background: #fff; border: 1px solid #e0dacf; color: #667781; }
+.pc-notice { background: #fff; border: 1px solid #e0dacf; color: #54656f; }
+.pc-undo { color: #54656f; }
+.pc-chip { border-color: #d1d7db; }
+.pc-chip.dato em { background: #e9edef; color: #3b4a54; }
+.pc-chip.promesa em { background: #d9fdd3; color: #1f5a2c; }
+.pc-chip.argumento em { background: #f0f2f5; color: #54656f; }
+.pc-chip.negativa em { background: #f0f2f5; color: #54656f; }
+.pc-chip.promesa { border-style: solid; border-color: #b5e7ab; }
+.pc-chip.argumento { border-style: dashed; border-color: #c0c7cc; }
+.pc-chip.negativa { border-color: #d1d7db; }
+.pc-chip.on { border-color: #25a244; background: #f1fbe9; box-shadow: inset 0 0 0 1px #25a244; }
+.pc-send { background: #25a244; }

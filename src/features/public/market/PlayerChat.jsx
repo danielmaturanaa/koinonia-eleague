@@ -43,10 +43,6 @@ function Typing({ player }) {
 
 function Bubble({ message, player, children }) {
   const mine = message.role === 'club';
-  // El saludo y el cierre se leen como avisos del chat, no como una burbuja más.
-  if (message.kind === 'greeting' || message.kind === 'closing') {
-    return <div className="pc-system"><span>{message.text}</span></div>;
-  }
   return <div className={`pc-row ${mine ? 'mine' : 'theirs'}`}>
     {!mine && <PlayerFace src={player.faceUrl} name={player.name}/>}
     <div className="pc-stack">
@@ -151,6 +147,20 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
     return () => { window.clearInterval(timer); controller.abort(); };
   }, [shown, chosen, hasPending, auction.id]);
 
+  // Se pide la conversación justo cuando toca revelar el siguiente mensaje (además del refresco de respaldo).
+  const nextReveal = (chat?.messages ?? []).filter(item => item.pending && item.revealAt)
+    .map(item => Date.parse(item.revealAt)).filter(Number.isFinite).sort((a, b) => a - b)[0] ?? null;
+  useEffect(() => {
+    if (!shown || !chosen || nextReveal == null) return undefined;
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => {
+      endpoints.sealedAuctionChat(auction.id, chosen, controller.signal)
+        .then(response => { if (response?.data) setChat(response.data); })
+        .catch(() => {});
+    }, Math.max(120, nextReveal - Date.now() + 150));
+    return () => { window.clearTimeout(timer); controller.abort(); };
+  }, [shown, chosen, nextReveal, auction.id]);
+
   const thinking = answer.loading || message.loading || rewind.loading;
   useEffect(() => {
     const node = scroller.current;
@@ -165,6 +175,9 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
   const pending = chat?.pending;
   const options = pending?.options ?? [];
   const freeText = chat?.freeText ?? { used: 0, limit: 0, maxLength: 280 };
+  // Los mensajes que el jugador todavía "escribe" no se dibujan: solo se ve un indicador por vez, en orden.
+  const firstHidden = (chat?.messages ?? []).findIndex(item => item.pending && !item.text);
+  const shownMessages = firstHidden === -1 ? (chat?.messages ?? []) : chat.messages.slice(0, firstHidden);
   const freeLeft = Math.max(0, freeText.limit - freeText.used);
   const rewindInfo = chat?.rewind ?? { available: false, used: 0, limit: 0 };
   const rewindsLeft = Math.max(0, (rewindInfo.limit ?? 0) - (rewindInfo.used ?? 0));
@@ -198,7 +211,7 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
     {chat && <>
       <div className="pc-log" ref={scroller} aria-live="polite">
         <p className="pc-privacy">🔒 CHAT PRIVADO DE TU CLUB. LA DECISIÓN USA LOS DATOS DE TU CLUB Y TU OFERTA; ESTO SIRVE PARA SABER QUÉ LO CONVENCE.</p>
-        {chat.messages.map(item => <Bubble key={item.id} message={item} player={player}>
+        {shownMessages.map(item => <Bubble key={item.id} message={item} player={player}>
           {item.role === 'club' && item.kind === 'answer' && rewindInfo.available && (confirmTopic === item.topic
             ? <span className="pc-confirm" role="group" aria-label="CONFIRMAR DESHACER">
               ¿DESHACER ESTA RESPUESTA?
@@ -212,7 +225,8 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
               ↩ CAMBIAR RESPUESTA ({rewindsLeft > 0 ? `QUEDAN ${rewindsLeft}` : 'ÚLTIMA'})
             </button>)}
         </Bubble>)}
-        {(thinking || hasPending) && <Typing player={player}/>}
+        {/* Un solo "escribiendo" a la vez: primero el feedback, después la siguiente pregunta. */}
+        {(thinking || firstHidden !== -1) && <Typing player={player}/>}
         {notice && <p className="pc-notice" role="status">{notice}</p>}
       </div>
 
