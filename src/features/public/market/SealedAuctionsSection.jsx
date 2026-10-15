@@ -7,6 +7,7 @@ import { useApiMutation } from '../../admin/useApiMutation.js';
 import { DataState, formatDate, gp } from '../DataStates.jsx';
 import { useApiQuery } from '../useApiQuery.js';
 import { PlayerChat } from './PlayerChat.jsx';
+import { PlayerPicker } from './PlayerPicker.jsx';
 import { useAutoRefresh } from './PollsSection.jsx';
 
 const STATUS_LABEL = { open: 'ABIERTA', resolved: 'FIRMADO', no_sale: 'SIN VENTA', cancelled: 'CANCELADA' };
@@ -126,17 +127,14 @@ function AuctionCard({ auction, now, onChanged, teams = [] }) {
 }
 
 function OpenAuctionForm({ onChanged }) {
-  const [query, setQuery] = useState('');
-  const [search, setSearch] = useState('');
-  const [playerId, setPlayerId] = useState('');
+  const [picked, setPicked] = useState(null);
   const [minBid, setMinBid] = useState('');
   const [closesAt, setClosesAt] = useState('');
   const [moderatorId, setModeratorId] = useState('');
   const presidents = useApiQuery(signal => endpoints.presidents({}, signal), []);
   const moderators = (Array.isArray(presidents.data) ? presidents.data : []).filter(item => item.discordUserId && item.teamId);
-  const players = useApiQuery(signal => endpoints.playerDirectory({ status: 'free', sort: 'price_desc', pageSize: 30, q: search }, signal), [search]);
-  const rows = (Array.isArray(players.data) ? players.data : []).filter(player => player.playerId);
-  const open = useApiMutation((body, signal) => endpoints.openSealedAuction(body, signal), { onSuccess: () => { setPlayerId(''); setMinBid(''); setClosesAt(''); setModeratorId(''); onChanged(); } });
+  const playerId = picked?.playerId ?? '';
+  const open = useApiMutation((body, signal) => endpoints.openSealedAuction(body, signal), { onSuccess: () => { setPicked(null); setMinBid(''); setClosesAt(''); setModeratorId(''); onChanged(); } });
   const submit = event => {
     event.preventDefault();
     open.execute({
@@ -147,14 +145,7 @@ function OpenAuctionForm({ onChanged }) {
     });
   };
   return <form className="admin-form market-form sealed-open" onSubmit={submit}>
-    <label>BUSCAR AGENTE LIBRE
-      <span className="sealed-search"><input value={query} onChange={event => setQuery(event.target.value)} placeholder="NOMBRE"/>
-        <button type="button" className="action-button" onClick={() => setSearch(query.trim())}>BUSCAR</button></span>
-    </label>
-    <label>JUGADOR<select required value={playerId} onChange={event => setPlayerId(event.target.value)}>
-      <option value="">SELECCIONAR</option>
-      {rows.map(player => <option key={player.playerId} value={player.playerId}>{player.name} · {player.position} · {gp(player.price)}</option>)}
-    </select></label>
+    <PlayerPicker value={picked} onChange={setPicked} label="AGENTE LIBRE"/>
     <label>PRESI MODERADOR
       <select required value={moderatorId} onChange={event => setModeratorId(event.target.value)}>
         <option value="">SELECCIONAR</option>
