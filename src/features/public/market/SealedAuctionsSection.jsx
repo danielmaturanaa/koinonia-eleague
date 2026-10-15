@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import { endpoints } from '../../../api/endpoints.js';
 import { useAuth } from '../../../app/AuthGate.jsx';
 import { PlayerFace } from '../../../components/PlayerFace.jsx';
@@ -6,12 +6,23 @@ import { FormFeedback } from '../../admin/FormFeedback.jsx';
 import { useApiMutation } from '../../admin/useApiMutation.js';
 import { DataState, formatDate, gp } from '../DataStates.jsx';
 import { useApiQuery } from '../useApiQuery.js';
+import { AuctionReveal } from './AuctionReveal.jsx';
 import { PlayerChat } from './PlayerChat.jsx';
 import { PlayerPicker } from './PlayerPicker.jsx';
 import { ReadyControl } from './ReadyControl.jsx';
 import { useAutoRefresh } from './PollsSection.jsx';
 
 const STATUS_LABEL = { open: 'ABIERTA', resolved: 'FIRMADO', no_sale: 'SIN VENTA', cancelled: 'CANCELADA' };
+
+// La revelación y las subastas que se vieron abiertas viven fuera del componente: si la página se vuelve a montar
+// (refrescos de datos), el show no se corta a la mitad ni se pierde el cierre que estabas mirando.
+const revealStore = { current: null, dismissed: new Set(), listeners: new Set() };
+const subscribeReveal = listener => { revealStore.listeners.add(listener); return () => revealStore.listeners.delete(listener); };
+const setReveal = value => { revealStore.current = value; revealStore.listeners.forEach(listener => listener()); };
+const useReveal = () => useSyncExternalStore(subscribeReveal, () => revealStore.current);
+// El show se abre solo 10 s antes de la hora (con cuenta regresiva adentro) para todos los que estén en la página.
+const AUTO_OPEN_BEFORE_MS = 10_000;
+const isRevealing = (auction, now) => auction.status !== 'open' && auction.revealAt && now < Date.parse(auction.revealEndsAt);
 
 function useNow(ms = 1000) {
   const [now, setNow] = useState(() => Date.now());
@@ -36,6 +47,13 @@ function countdown(closesAt, now) {
 }
 
 const clubLabel = (teams, id) => (teams.find(team => team.id === id)?.name ?? id).toUpperCase();
+// La API guarda created_at como "AAAA-MM-DD HH:MM:SS" en UTC (sin zona).
+const parseUtc = value => (value ? Date.parse(/[zZ]|[+-]\d\d:?\d\d$/.test(value) ? value : `${String(value).replace(' ', 'T')}Z`) : NaN);
+const crestOf = (teams, id) => {
+  const team = teams.find(item => item.id === id);
+  return team?.imageUrl ?? team?.image_url ?? team?.logoUrl ?? null;
+};
+const initials = name => String(name ?? '').split(/\s+/).filter(Boolean).slice(0, 2).map(word => word[0]).join('').toUpperCase();
 
 function BidPanel({ auction, onChanged, teams = [], clubs: allowedClubs = null }) {
   const { isAdmin, user, teamId } = useAuth();
@@ -96,7 +114,7 @@ const STATE_LABEL = {
 };
 
 /** Un solo resumen y fichas compactas: la etiqueta solo aparece cuando el club ya decidió algo. Es público; los montos no. */
-function Participation({ rows, isModerator }) {
+function Participation({ rows, isModerator, teams = [] }) {
   if (!rows?.length) return null;
   const count = state => rows.filter(row => row.state === state).length;
   const bid = count('oferto') + count('listo');
@@ -111,12 +129,15 @@ function Participation({ rows, isModerator }) {
   return <div className="sealed-participation">
     <p className="poll-meta"><b>{pieces.join(' · ')}</b></p>
     {isModerator && everyoneReady && <p className="poll-confirm sealed-all-ready">🏁 TODOS ESTÁN LISTOS: PUEDES CERRAR.</p>}
-    <ul aria-label="ESTADO DE CADA CLUB">
+    <ul className="stage-crests" aria-label="ESTADO DE CADA CLUB">
       {rows.map(row => {
         const [label, tone] = STATE_LABEL[row.state] ?? [String(row.state).toUpperCase(), 'pendiente'];
         const name = String(row.name).toUpperCase();
-        return <li key={row.teamId} className={`state-${tone}`} aria-label={`${name}: ${label ?? 'PENDIENTE'}`}>
-          <i className="sealed-dot" aria-hidden="true"/><span>{name}</span>{label && <small>{label}</small>}
+        const crest = crestOf(teams, row.teamId);
+        return <li key={`${row.teamId}-${row.state}`} className={`crest state-${tone}`} aria-label={`${name}: ${label ?? 'PENDIENTE'}`} title={`${name}${label ? ` · ${label}` : ''}`}>
+          <span className="crest-badge" aria-hidden="true">{crest ? <img src={crest} alt="" loading="lazy"/> : (row.emoji ?? initials(row.name))}{row.state === 'listo' && <i className="crest-check">✓</i>}</span>
+          <span className="crest-name">{name}</span>
+          {label && <small>{label}</small>}
         </li>;
       })}
     </ul>
@@ -188,32 +209,53 @@ function AuctionCard({ auction, now, onChanged, teams = [] }) {
   const playingClubs = myClubs.filter(id => !passedIds.includes(id));
   const passedClubs = myClubs.filter(id => passedIds.includes(id));
   const open = auction.status === 'open';
+  const revealing = isRevealing(auction, now);
   const isModerator = Boolean(auction.moderator?.isMe);
   const canPlay = open && playingClubs.length > 0;
   const closing = open && Date.parse(auction.closesAt) - now < 5 * 60 * 1000;
   const [heat, setHeat] = useState(null);
   const moderator = auction.moderator;
-  return <article className={`poll-card sealed-card status-${auction.status}`}>
-    <header className="sealed-head">
-      <PlayerFace src={auction.player.faceUrl} name={auction.player.name}/>
-      <div className="sealed-title">
-        <b>{auction.player.name}</b>
-        <small>{auction.player.position} · VALE {gp(auction.player.gpValue)}</small>
-        {moderator && <small className="sealed-moderator">⚖️ MODERA <b>{moderator.name.toUpperCase()}</b>{moderator.teamName ? ` (${moderator.teamName.toUpperCase()})` : ''}{isModerator ? ' · ERES TÚ' : ''}</small>}
-      </div>
-      {open
-        ? <div className={`sealed-clock ${closing ? 'closing' : ''}`}>
-          <b>{countdown(auction.closesAt, now)}</b>
-          <small>CIERRA {formatDate(auction.closesAt).toUpperCase()}{auction.extensions ? ` · EXTENDIDA ${auction.extensions}×` : ''}</small>
+  const startedAt = parseUtc(auction.openedAt);
+  const endsAt = Date.parse(auction.closesAt);
+  const elapsed = Number.isFinite(startedAt) && endsAt > startedAt ? Math.min(1, Math.max(0, (now - startedAt) / (endsAt - startedAt))) : null;
+  const heatLevel = heat ? (heat.temperature >= 60 ? 'hot' : heat.temperature >= 40 ? 'warm' : 'cold') : null;
+  return <article className={`poll-card sealed-card stage status-${auction.status} ${closing ? 'is-closing' : ''} ${heatLevel ? `heat-${heatLevel}` : ''}`}>
+    <header className="stage-hero">
+      <div className="stage-spot" aria-hidden="true"/>
+      <p className="stage-kicker">
+        <span className="stage-live">{open ? '● EN VIVO' : revealing ? '🔴 REVELACIÓN EN VIVO' : STATUS_LABEL[auction.status] ?? auction.status.toUpperCase()}</span>
+        <span>🔨 SUBASTA SELLADA</span>
+        {moderator && <span className="stage-moderator">⚖️ MODERA {moderator.name.toUpperCase()}{isModerator ? ' (TÚ)' : ''}</span>}
+      </p>
+      <div className="stage-player">
+        <div className="stage-ring"><PlayerFace src={auction.player.faceUrl} name={auction.player.name}/></div>
+        <div className="stage-name">
+          <h3>{auction.player.name}</h3>
+          <p className="stage-chips">
+            <span>{auction.player.position}</span>
+            <span>VALE {gp(auction.player.gpValue)}</span>
+            {open && <span>OFERTAS {gp(auction.minBid)} – {auction.maxBid != null ? gp(auction.maxBid) : '∞'}</span>}
+          </p>
         </div>
-        : <span className="poll-status">{STATUS_LABEL[auction.status] ?? auction.status.toUpperCase()}</span>}
+      </div>
+      {revealing && <div className="stage-clock closing" role="timer">
+        <small>{now < Date.parse(auction.revealAt) ? 'LA DECISIÓN EN VIVO EN' : 'DECIDIENDO AHORA'}</small>
+        <b>{now < Date.parse(auction.revealAt) ? countdown(auction.revealAt, now) : '🔴'}</b>
+        <button type="button" className="action-button positive" onClick={() => { revealStore.dismissed.delete(auction.id); setReveal({ auction, startAt: Date.parse(auction.revealAt) }); }}>VER EN VIVO</button>
+      </div>}
+      {open && <div className={`stage-clock ${closing ? 'closing' : ''}`} role="timer" aria-label={`CIERRA EN ${countdown(auction.closesAt, now)}`}>
+        <small>{closing ? '⏱ ÚLTIMOS MINUTOS' : 'CIERRA EN'}</small>
+        <b>{countdown(auction.closesAt, now)}</b>
+        {elapsed != null && <span className="stage-progress" aria-hidden="true"><i style={{ width: `${Math.round(elapsed * 100)}%` }}/></span>}
+        <small>{formatDate(auction.closesAt).toUpperCase()}{auction.extensions ? ` · EXTENDIDA ${auction.extensions}×` : ''}</small>
+      </div>}
     </header>
-    {open && closing && <p className="poll-hint warn">QUEDAN MENOS DE 5 MINUTOS: UNA OFERTA NUEVA EXTIENDE EL RELOJ.</p>}
+    {open && closing && <p className="stage-alert" role="status">⚡ QUEDAN MENOS DE 5 MINUTOS: UNA OFERTA NUEVA EXTIENDE EL RELOJ.</p>}
     {canPlay && <YourState auction={auction} clubs={playingClubs} teams={teams} heat={heat}/>}
 
     {open && <div className={`sealed-body ${canPlay ? 'with-chat' : ''}`}>
       <div className="sealed-side">
-        <Participation rows={auction.participation} isModerator={isModerator}/>
+        <Participation rows={auction.participation} isModerator={isModerator} teams={teams}/>
         {canPlay && <BidPanel auction={auction} onChanged={onChanged} teams={teams} clubs={playingClubs}/>}
         {passedClubs.map(id => <PassedNotice key={id} auction={auction} clubId={id} name={myClubs.length > 1 ? clubLabel(teams, id) : null} onChanged={onChanged}/>)}
         {canPlay && playingClubs.map(id => <PassControl key={id} auction={auction} clubId={id} name={myClubs.length > 1 ? clubLabel(teams, id) : null} onChanged={onChanged}/>)}
@@ -225,10 +267,11 @@ function AuctionCard({ auction, now, onChanged, teams = [] }) {
       </div>}
     </div>}
 
-    {!open && auction.winner && <p className="poll-confirm sealed-result"><b>🚨 {auction.player.name.toUpperCase()} FIRMA POR {auction.winner.name.toUpperCase()} · {gp(auction.winner.amount)}</b></p>}
-    {!open && !auction.winner && auction.status === 'no_sale' && <p className="poll-hint">🤷 NADIE CONVENCIÓ AL JUGADOR: SIGUE LIBRE.</p>}
+    {revealing && <p className="stage-alert" role="status">🔒 LA SUBASTA CERRÓ. EL JUGADOR REVELA SU DECISIÓN EN VIVO, A LA MISMA HORA PARA TODOS.</p>}
+    {!open && !revealing && auction.winner && <p className="poll-confirm sealed-result"><b>🚨 {auction.player.name.toUpperCase()} FIRMA POR {auction.winner.name.toUpperCase()} · {gp(auction.winner.amount)}</b></p>}
+    {!open && !revealing && !auction.winner && auction.status === 'no_sale' && <p className="poll-hint">🤷 NADIE CONVENCIÓ AL JUGADOR: SIGUE LIBRE.</p>}
     {auction.status === 'cancelled' && <p className="poll-hint">SUBASTA CANCELADA: SE DEVOLVIÓ TODA LA PLATA RETENIDA.</p>}
-    {!open && auction.status !== 'cancelled' && <p className="poll-hint">LAS RAZONES DE LA DECISIÓN SALEN EN LA NOTICIA DEL FICHAJE.</p>}
+    {!open && !revealing && auction.status !== 'cancelled' && <p className="poll-hint">LAS RAZONES DE LA DECISIÓN SALEN EN LA NOTICIA DEL FICHAJE.</p>}
   </article>;
 }
 
@@ -267,7 +310,6 @@ function OpenAuctionForm({ onChanged }) {
 export function SealedAuctionsSection({ revision, onChanged, teams = [] }) {
   const { isAdmin } = useAuth();
   const auctions = useApiQuery(signal => endpoints.sealedAuctions({ active: 1 }, signal), [revision]);
-  useAutoRefresh(auctions.retry, 15000);
   const now = useNow();
   const rows = Array.isArray(auctions.data) ? auctions.data : [];
   const refresh = () => { auctions.retry(); onChanged?.(); };
@@ -275,8 +317,18 @@ export function SealedAuctionsSection({ revision, onChanged, teams = [] }) {
   if (unavailable) {
     return <section className="market-section market-sealed"><header><h2>SUBASTAS</h2><p>SUBASTAS PRÓXIMAMENTE.</p></header></section>;
   }
-  const openRows = rows.filter(row => row.status === 'open');
+  const openRows = rows.filter(row => row.status === 'open' || isRevealing(row, now));
   const emptyLine = !auctions.error && !auctions.loading && !rows.length;
+  // Revelación en vivo: el servidor fija la hora; la página la abre sola poco antes para todos a la vez.
+  const reveal = useReveal();
+  useEffect(() => {
+    if (reveal) return;
+    const due = rows.find(row => isRevealing(row, now) && now >= Date.parse(row.revealAt) - AUTO_OPEN_BEFORE_MS && !revealStore.dismissed.has(row.id));
+    if (due) setReveal({ auction: due, startAt: Date.parse(due.revealAt) });
+  }, [rows, now, reveal]);
+  // Cerca de la hora se refresca seguido para no perderse el inicio.
+  const soon = rows.some(row => isRevealing(row, now));
+  useAutoRefresh(auctions.retry, soon ? 4000 : 15000);
   return <section className={`market-section market-sealed ${emptyLine ? 'is-empty' : ''}`}>
     <header>
       <h2>SUBASTAS <small>{openRows.length}</small></h2>
@@ -288,5 +340,7 @@ export function SealedAuctionsSection({ revision, onChanged, teams = [] }) {
     {auctions.loading && auctions.data === null && <div className="sealed-skeleton" aria-hidden="true"><i/><i/><i/></div>}
     {auctions.error && <DataState query={auctions}/>}
     <div className="poll-list sealed-list">{rows.map(auction => <AuctionCard key={auction.id} auction={auction} now={now} onChanged={refresh} teams={teams}/>)}</div>
+    {reveal && <AuctionReveal key={reveal.auction.id} auction={reveal.auction} startAt={reveal.startAt} teams={teams}
+      onClose={() => { revealStore.dismissed.add(reveal.auction.id); setReveal(null); onChanged?.(); }}/>}
   </section>;
 }

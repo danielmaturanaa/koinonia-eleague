@@ -6,7 +6,18 @@ import { PlayerFace } from '../../../components/PlayerFace.jsx';
 import { useApiMutation } from '../../admin/useApiMutation.js';
 
 const LEVEL = { frio: [1, '🧊 FRÍO'], tibio: [2, '🌤️ TIBIO'], caliente: [3, '🔥 CALIENTE'] };
-const KIND_TAG = { dato: 'DATO', promesa: 'PROMESA · QUEDA REGISTRADA', argumento: 'ARGUMENTO · NO OBLIGA', negativa: 'HONESTA' };
+const KIND_TAG = { dato: 'DATO', promesa: 'PROMESA · QUEDA REGISTRADA', argumento: 'ARGUMENTO · NO OBLIGA', negativa: 'HONESTA', pedido_si: 'ACEPTAR', pedido_no: 'RECHAZAR' };
+// Promesas con consecuencia automática: se dice claro qué te obliga.
+const PROMISE_TAG = {
+  keep: 'PROMESA · NO PODRÁS SOLTARLO HASTA EL PRÓXIMO MERCADO',
+  sell: 'PROMESA · DEBES VENDERLO ANTES DE QUE CIERRE EL PRÓXIMO MERCADO',
+};
+const tagOf = option => PROMISE_TAG[option.promiseKind] ?? KIND_TAG[option.kind ?? 'dato'] ?? 'DATO';
+const isRequest = topic => /^pedido:/.test(String(topic ?? ''));
+const REQUEST_TITLE = {
+  subir: '💰 QUIERE QUE SUBAS TU OFERTA', traer: '🤝 QUIERE QUE LE TRAIGAS A ALGUIEN', dorsal: '👕 PIDE UN DORSAL',
+  capitan: '©️ QUIERE LA CINTA DE CAPITÁN', penales: '🎯 QUIERE PATEAR LOS PENALES', tiros_libres: '🌀 QUIERE LOS TIROS LIBRES',
+};
 
 const clock = value => {
   const date = value ? new Date(value) : null;
@@ -49,7 +60,8 @@ function Bubble({ message, player, children }) {
       {message.pending && !message.text
         // El jugador todavía "escribe": se ven los tres puntos; el texto llega después.
         ? <div className="pc-bubble pc-typing" aria-label="EL JUGADOR ESTÁ ESCRIBIENDO"><i/><i/><i/></div>
-        : <div className={`pc-bubble kind-${message.kind} ${message.pending ? 'is-pending' : ''}`}>
+        : <div className={`pc-bubble kind-${message.kind} ${message.kind === 'question' && isRequest(message.topic) ? 'is-request' : ''} ${message.pending ? 'is-pending' : ''}`}>
+          {!mine && message.kind === 'question' && isRequest(message.topic) && <em className="pc-request-tag">📣 PEDIDO</em>}
           <p>{message.text}</p>
           <small>{message.pending ? 'ESCRIBIENDO…' : clock(message.createdAt)}</small>
         </div>}
@@ -278,21 +290,24 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
       </div>
 
       <div className="pc-composer">
-        {pending ? <div className="pc-quick">
-          <p className="pc-ask">❓ RESPONDE: <b>{(pending.label ?? pending.topic).toUpperCase()}</b></p>
-          <div className="pc-chips" role="radiogroup" aria-label="RESPUESTAS RÁPIDAS">
+        {pending ? <div className={`pc-quick ${pending.request ? 'is-request' : ''}`}>
+          {pending.request
+            ? <p className="pc-ask pc-ask-request">📣 <b>{REQUEST_TITLE[pending.request.type] ?? 'TE PIDE ALGO'}</b> · ACEPTAR SUMA, RECHAZAR RESTA</p>
+            : <p className="pc-ask">❓ RESPONDE: <b>{(pending.label ?? pending.topic).toUpperCase()}</b></p>}
+          <div className={`pc-chips ${pending.request ? 'pc-chips-request' : ''}`} role="radiogroup" aria-label="RESPUESTAS RÁPIDAS">
             {options.map(option => {
               const kind = option.kind ?? 'dato';
               return <button type="button" key={option.code} role="radio" aria-checked={picked === option.code}
-                disabled={thinking} className={`pc-chip ${kind} ${picked === option.code ? 'on' : ''}`} onClick={() => tapOption(option)}>
-                <em>{KIND_TAG[kind] ?? 'DATO'}</em>
+                disabled={thinking} className={`pc-chip ${kind} ${option.promiseKind ? `promise-${option.promiseKind}` : ''} ${picked === option.code ? 'on' : ''}`} onClick={() => tapOption(option)}>
+                <em>{tagOf(option)}</em>
                 <span>{option.text}</span>
+                {option.action?.type === 'raise' && <small className="pc-chip-action">SUBE TU OFERTA DE VERDAD A {Number(option.action.amount).toLocaleString('es-CL')} GP</small>}
               </button>;
             })}
           </div>
           {options.length === 0 && <p className="pc-note">NO HAY RESPUESTAS PREPARADAS PARA ESTA PREGUNTA. ESCRÍBELE ABAJO.</p>}
           {options.length > 0 && <div className="pc-send-row">
-            <small>{picked ? 'TOCA DE NUEVO LA RESPUESTA O PULSA ENVIAR.' : 'ELIGE UNA RESPUESTA. SOLO LAS PROMESAS (ALINEACIÓN, FICHAJES, ROLES) QUEDAN REGISTRADAS Y SE RECUERDAN POR DISCORD.'}</small>
+            <small>{picked ? 'TOCA DE NUEVO LA RESPUESTA O PULSA ENVIAR.' : pending.request ? 'SI ACEPTAS, QUEDA COMO PROMESA (Y SI LO ROMPES, BAJA TU REPUTACIÓN).' : 'ELIGE UNA RESPUESTA. LAS PROMESAS QUEDAN REGISTRADAS Y SE RECUERDAN POR DISCORD.'}</small>
             <button type="button" className="action-button positive" disabled={thinking || !picked} onClick={() => send(picked)}>ENVIAR</button>
           </div>}
           {answer.error && <p className="form-feedback error" role="alert">{answer.error.message}</p>}

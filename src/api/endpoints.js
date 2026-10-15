@@ -111,6 +111,12 @@ export const endpoints = {
   // action: bids | bids/withdraw | cancel | resolve
   sealedAuctionChat: (auctionId, teamId, signal) => get(`/market/sealed-auctions/${auctionId}/chat`, { teamId }, signal),
   sealedAuctionAction: (auctionId, action, body, signal) => apiClient.post(`/market/sealed-auctions/${auctionId}/${action}`, body ?? {}, { actor: 'web', signal }),
+  sealedAuction: (auctionId, signal) => get(`/market/sealed-auctions/${auctionId}`, null, signal),
+  marketInterest: signal => get('/market/interest', null, signal),
+  setMarketInterest: (body, signal) => apiClient.post('/market/interest', body, { actor: 'web', signal }),
+  teamPromises: (teamId, signal) => get(`/teams/${teamId}/promises`, null, signal),
+  auctionSimAccess: signal => get('/admin/auction-sim/access', null, signal),
+  auctionSim: (body, signal) => apiClient.post('/admin/auction-sim', body, { actor: 'web', signal }),
   createTournament: (body, signal) => apiClient.post('/tournaments', body, { actor: 'web', signal }),
   updateTournamentStatus: (tournamentId, status, signal) => apiClient.patch(`/tournaments/${tournamentId}/status`, { status }, { actor: 'web', signal }),
   updateTournamentChampionPolicy: (tournamentId, championPolicy, signal) => apiClient.patch(`/tournaments/${tournamentId}/champion-policy`, { championPolicy }, { actor: 'web', signal }),

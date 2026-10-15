@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { useAuth } from '../../app/AuthGate.jsx';
 import { EntityLink } from '../../components/EntityLink.jsx';
@@ -13,6 +13,7 @@ import { OffersInbox, ProposeOffers } from './market/OffersSection.jsx';
 import { PollsSection } from './market/PollsSection.jsx';
 import { AuctionHistory } from './market/AuctionHistory.jsx';
 import { SealedAuctionsSection } from './market/SealedAuctionsSection.jsx';
+import { AuctionSimulator } from './market/AuctionSimulator.jsx';
 
 const asList = value => Array.isArray(value) ? value : [];
 
@@ -127,7 +128,46 @@ function PollForm({ player, myTeamId, figures, marketOpen, onDone }) {
   </div>;
 }
 
-function MarketPlayer({ player, teams, onChanged, club }) {
+/** "Me interesa": el presi marca libres que quiere ver en subasta. El conteo de clubes es público. */
+function InterestButton({ player, interest }) {
+  const { teamId: myTeamId } = useAuth();
+  const count = interest.demand.find(row => row.playerId === player.playerId)?.count ?? 0;
+  const mine = interest.mine.includes(player.playerId);
+  if (!player.playerId) return null;
+  return <button type="button" className={`interest-toggle ${mine ? 'on' : ''}`} aria-pressed={mine} disabled={!myTeamId || interest.busy}
+    title={myTeamId ? (mine ? 'YA NO ME INTERESA' : 'ME INTERESA: QUIERO VERLO EN SUBASTA') : 'SOLO LOS PRESIS MARCAN INTERÉS'}
+    onClick={() => interest.toggle(player.playerId, !mine)}>
+    {mine ? '★' : '☆'}{count > 0 && <small>{count}</small>}
+  </button>;
+}
+
+function useInterest(revision) {
+  const query = useApiQuery(signal => endpoints.marketInterest(signal).catch(() => ({ data: { mine: [], demand: [] } })), [revision]);
+  const [state, setState] = useState(null);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => { if (query.data) setState(query.data); }, [query.data]);
+  const toggle = (playerId, interested) => {
+    setBusy(true);
+    endpoints.setMarketInterest({ playerId, interested }).then(response => setState(response.data)).catch(() => {}).finally(() => setBusy(false));
+  };
+  return { mine: state?.mine ?? [], demand: state?.demand ?? [], toggle, busy };
+}
+
+/** Los libres que más clubes quieren ver en subasta (el admin ve cuáles). */
+function DemandPanel({ interest }) {
+  const { isAdmin } = useAuth();
+  const top = interest.demand.slice(0, 6);
+  if (!top.length) return null;
+  return <section className="market-section market-demand"><header><h2>🔥 LOS MÁS PEDIDOS <small>{interest.demand.length}</small></h2><p>LIBRES QUE LOS CLUBES QUIEREN VER EN SUBASTA. MARCA ☆ EN LOS QUE TE INTERESAN.</p></header>
+    <ol className="demand-list">{top.map(row => <li key={row.playerId}>
+      <PlayerFace src={row.faceUrl} name={row.name}/>
+      <span><b>{row.name}</b><small>{row.position} · {gp(row.gpValue)}{isAdmin && row.teams ? ` · ${String(row.teams).toUpperCase()}` : ''}</small></span>
+      <strong>{row.count} {row.count === 1 ? 'CLUB' : 'CLUBES'}</strong>
+    </li>)}</ol>
+  </section>;
+}
+
+function MarketPlayer({ player, teams, onChanged, club, interest }) {
   const { isAdmin, teamId: myTeamId } = useAuth();
   const canAct = isAdmin || Boolean(myTeamId);
   const [open, setOpen] = useState(false);
@@ -136,18 +176,19 @@ function MarketPlayer({ player, teams, onChanged, club }) {
     : `#/efootball/${player.pesId}?${player.variation ? `v=${player.variation}&` : ''}from=mercado`;
   return <article className={`market-player ${open ? 'open' : ''}`}>
     <a href={href} className="market-player-link"><PlayerFace src={player.faceUrl} name={player.name}/><span><b>{player.name}</b><small>{[player.position, player.nationality, player.age ? `${player.age} AÑOS` : null].filter(Boolean).join(' · ')}</small><OverallBadge value={player.overall}/></span><strong>{gp(player.price)}</strong></a>
+    {interest && <InterestButton player={player} interest={interest}/>}
     {canAct && <button type="button" className="market-player-action" aria-expanded={open} onClick={() => setOpen(value => !value)}>{open ? 'CERRAR' : isAdmin ? 'FICHAR' : 'ABRIR ENCUESTA'}</button>}
     {open && isAdmin && <SigningForm player={player} teams={teams} onDone={() => { setOpen(false); onChanged(); }}/>}
     {open && !isAdmin && <PollForm player={player} myTeamId={myTeamId} figures={club?.figures} marketOpen={club?.marketOpen} onDone={() => { setOpen(false); onChanged(); }}/>}
   </article>;
 }
 
-function PlayerList({ title, hint, status, teams, allHref, club, onChanged }) {
+function PlayerList({ title, hint, status, teams, allHref, club, onChanged, interest }) {
   const players = useApiQuery(signal => endpoints.playerDirectory({ status, sort: 'price_desc', pageSize: PREVIEW }, signal), [status]);
   const rows = asList(players.data);
   return <section className="market-section"><header><h2>{title} {players.pagination?.total != null && <small>{players.pagination.total.toLocaleString('es-CL')}</small>}</h2><p>{hint}</p></header>
     <DataState query={players}/>
-    {!players.loading && !players.error && (rows.length ? <div className="market-player-list">{rows.map(player => <MarketPlayer key={player.playerId ?? `${player.pesId}-${player.variation}`} player={player} teams={teams} club={club} onChanged={() => { players.retry(); onChanged?.(); }}/>)}</div> : <p className="empty-copy">NO HAY JUGADORES EN ESTA LISTA.</p>)}
+    {!players.loading && !players.error && (rows.length ? <div className="market-player-list">{rows.map(player => <MarketPlayer key={player.playerId ?? `${player.pesId}-${player.variation}`} player={player} teams={teams} club={club} interest={interest} onChanged={() => { players.retry(); onChanged?.(); }}/>)}</div> : <p className="empty-copy">NO HAY JUGADORES EN ESTA LISTA.</p>)}
     <a className="market-see-all" href={allHref}>VER TODOS EN JUGADORES →</a>
   </section>;
 }
@@ -161,6 +202,24 @@ function PendingTrades({ trades, players, teams, onChanged }) {
   return <section className="market-section market-pending"><header><h2>PENDIENTES DE APROBACIÓN <small>{pending.length}</small></h2></header>
     {pending.map(item => <article className="market-item" key={item.id}><b>{relatedName(item, 'from', 'Player', playersById) ?? 'Jugador'} ⇄ {relatedName(item, 'to', 'Player', playersById) ?? 'Jugador'}</b><span>{relatedName(item, 'from', 'Team', teamsById) ?? 'Origen'} / {relatedName(item, 'to', 'Team', teamsById) ?? 'Destino'}</span>{isAdmin && <TradeActions item={item} onChanged={onChanged}/>}</article>)}
   </section>;
+}
+
+const TAB_KEY = 'mercado-pestana';
+const readTab = () => { try { return window.sessionStorage.getItem(TAB_KEY) ?? 'subastas'; } catch { return 'subastas'; } };
+
+/** Promesas de tu club: cuántas cumpliste y rompiste (pesa en tu reputación ante los jugadores libres). */
+function PromiseRecord({ teamId, revision }) {
+  const promises = useApiQuery(signal => teamId ? endpoints.teamPromises(teamId, signal).catch(() => ({ data: null })) : Promise.resolve({ data: null }), [teamId, revision]);
+  const data = promises.data;
+  if (!data) return null;
+  const { kept, broken } = data.record ?? { kept: 0, broken: 0 };
+  const active = data.active ?? [];
+  if (!kept && !broken && !active.length) return null;
+  return <details className="promise-record">
+    <summary>📜 PROMESAS · <b className="ok">✅ {kept} CUMPLIDAS</b> · <b className={broken ? 'bad' : ''}>💔 {broken} ROTAS</b>{active.length ? ` · ${active.length} PENDIENTES` : ''}</summary>
+    {active.length > 0 && <ul>{active.map((item, index) => <li key={index}><b>{item.playerName}:</b> {item.text}</li>)}</ul>}
+    <p className="poll-hint">ROMPER UNA PROMESA BAJA TU REPUTACIÓN: LOS JUGADORES LIBRES SE ACUERDAN.</p>
+  </details>;
 }
 
 export function MarketPage({ teams }) {
@@ -178,20 +237,44 @@ export function MarketPage({ teams }) {
   const marketOpen = status.data ? Boolean(status.data.open) : undefined;
   const club = { figures, marketOpen };
   const myTeam = teams.find(team => team.id === myTeamId);
+  const interest = useInterest(revision);
+  const [tab, setTabState] = useState(readTab);
+  const setTab = value => { setTabState(value); try { window.sessionStorage.setItem(TAB_KEY, value); } catch { /* sin almacenamiento */ } };
+  const live = useApiQuery(signal => endpoints.sealedAuctions({ active: 1 }, signal).catch(() => ({ data: [] })), [revision]);
+  const liveCount = (Array.isArray(live.data) ? live.data : []).filter(row => row.status === 'open').length;
+  const sim = useApiQuery(signal => isAdmin ? endpoints.auctionSimAccess(signal).catch(() => ({ data: { allowed: false } })) : Promise.resolve({ data: { allowed: false } }), [isAdmin]);
+  const tabs = [
+    ['subastas', '🔨 SUBASTAS', liveCount],
+    ['libres', '🧑‍🤝‍🧑 AGENTES LIBRES', null],
+    ...(operates ? [['ofertas', '🤝 OFERTAS Y ENCUESTAS', null]] : []),
+    ['historial', '📜 HISTORIAL', null],
+    ...(sim.data?.allowed ? [['simulador', '🧪 SIMULADOR', null]] : []),
+  ];
+  const current = tabs.some(([key]) => key === tab) ? tab : 'subastas';
   return <main className="newspaper data-page"><section className="data-paper">
     <PageHeader kicker="JUGADORES DISPONIBLES" title="MERCADO">{isAdmin && <button className="page-action" onClick={() => setManaging(value => !value)}>{managing ? 'CERRAR GESTIÓN' : '⚙ GESTIONAR'}</button>}</PageHeader>
     {managing && isAdmin && <section className="market-section market-manual"><header><h2>REGISTRAR OPERACIÓN MANUAL</h2><p>Los traspasos y trueques normalmente se hacen por Discord; usa esto solo para corregir o registrar algo a mano.</p></header><MarketAdmin teams={teams} players={asList(players.data)} onChanged={refresh}/></section>}
     {operates && <MyClubPanel team={myTeam} figures={figures} profileQuery={myTeamId ? profile : null} status={status.data} statusQuery={status}/>}
-    <SealedAuctionsSection revision={revision} onChanged={refresh} teams={teams}/>
-    <AuctionHistory revision={revision}/>
-    {operates && <PollsSection teams={teams} revision={revision} onChanged={refresh}/>}
-    {operates && myTeamId && <OffersInbox revision={revision} onChanged={refresh}/>}
-    {operates && myTeamId && <ProposeOffers teams={teams} onChanged={refresh}/>}
-    <PendingTrades trades={trades} players={players} teams={teams} onChanged={refresh}/>
-    <div className="market-layout">
-      <div className="market-main">
-        <PlayerList key={`free-${revision}`} title="AGENTES LIBRES" hint="Todos los jugadores de eFootballDB están inscritos y sin equipo: se pueden comprar o asignar." status="free" teams={teams} allHref="#/equipos/jugadores?status=free" club={club} onChanged={refresh}/>
-      </div>
+    {myTeamId && <PromiseRecord teamId={myTeamId} revision={revision}/>}
+    <nav className="market-tabs" role="tablist" aria-label="SECCIONES DEL MERCADO">
+      {tabs.map(([key, label, badge]) => <button key={key} type="button" role="tab" aria-selected={current === key} className={current === key ? 'active' : ''} onClick={() => setTab(key)}>
+        {label}{badge ? <span className="market-tab-badge">{badge}</span> : null}
+      </button>)}
+    </nav>
+    <div className="market-tab-panel" role="tabpanel">
+      {current === 'subastas' && <SealedAuctionsSection revision={revision} onChanged={refresh} teams={teams}/>}
+      {current === 'libres' && <>
+        <DemandPanel interest={interest}/>
+        <PlayerList key={`free-${revision}`} title="AGENTES LIBRES" hint="Todos los jugadores de eFootballDB están inscritos y sin equipo. Marca ☆ los que quieres ver en subasta." status="free" teams={teams} allHref="#/equipos/jugadores?status=free" club={club} interest={interest} onChanged={refresh}/>
+      </>}
+      {current === 'ofertas' && <>
+        {operates && <PollsSection teams={teams} revision={revision} onChanged={refresh}/>}
+        {operates && myTeamId && <OffersInbox revision={revision} onChanged={refresh}/>}
+        {operates && myTeamId && <ProposeOffers teams={teams} onChanged={refresh}/>}
+        <PendingTrades trades={trades} players={players} teams={teams} onChanged={refresh}/>
+      </>}
+      {current === 'historial' && <AuctionHistory revision={revision} teams={teams}/>}
+      {current === 'simulador' && <AuctionSimulator teams={teams}/>}
     </div>
   </section></main>;
 }

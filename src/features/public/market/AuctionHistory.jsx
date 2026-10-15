@@ -3,6 +3,8 @@ import { endpoints } from '../../../api/endpoints.js';
 import { DataState, formatDate, gp } from '../DataStates.jsx';
 import { useApiQuery } from '../useApiQuery.js';
 import { useAutoRefresh } from './PollsSection.jsx';
+import { AuctionReveal, revealLength } from './AuctionReveal.jsx';
+import { Stars } from './stars.jsx';
 
 const TRAIT_LABEL = {
   ganador: ['GANADOR', 'QUIERE TÍTULOS Y UN CLUB IMPORTANTE.'],
@@ -28,7 +30,7 @@ function Breakdown({ result }) {
   if (!result?.ranking?.length) return null;
   const factors = Object.keys(FACTOR_LABEL);
   return <div className="sealed-breakdown">
-    <p className="poll-hint">DETALLE TÉCNICO. LA HISTORIA CORTA DE LA DECISIÓN ESTÁ EN LA NOTICIA DEL FICHAJE. AQUÍ SE VE CÓMO SE CALCULÓ: A CADA CLUB LE PUSO UNA NOTA DE 0 A 100 EN CADA TEMA; LAS NOTAS DAN UN ENCAJE QUE MULTIPLICA LA OFERTA. GANA EL VALOR FINAL MÁS ALTO.</p>
+    <p className="poll-hint">CÓMO VIO EL JUGADOR A CADA CLUB, DE 0 A 5 ESTRELLAS POR TEMA. CON TODO ESO SALE EL ENCAJE, QUE MULTIPLICA LA OFERTA: GANA EL VALOR FINAL MÁS ALTO.</p>
     <div className="sealed-traits">
       {(result.traits ?? []).map(trait => <span key={trait}><b>{TRAIT_LABEL[trait]?.[0] ?? String(trait).toUpperCase()}</b> {TRAIT_LABEL[trait]?.[1]}</span>)}
     </div>
@@ -38,8 +40,9 @@ function Breakdown({ result }) {
         <tbody>
           {factors.map(factor => <tr key={factor}>
             <td>{FACTOR_LABEL[factor]}</td>
-            {result.ranking.map(row => <td key={row.teamId}>{row.notes?.[factor] ?? '—'}</td>)}
+            {result.ranking.map(row => <td key={row.teamId}>{row.notes?.[factor] == null ? '—' : <Stars note={row.notes[factor]} factor={factor}/>}</td>)}
           </tr>)}
+          <tr className="sum"><td>EN TOTAL</td>{result.ranking.map(row => <td key={row.teamId}><Stars note={row.total} factor="total"/></td>)}</tr>
           <tr className="sum"><td>OFERTA</td>{result.ranking.map(row => <td key={row.teamId}>{gp(row.offer)}</td>)}</tr>
           <tr><td>ENCAJE</td>{result.ranking.map(row => <td key={row.teamId}>×{Number(row.fit).toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>)}</tr>
           <tr className="sum"><td>VALOR FINAL</td>{result.ranking.map(row => <td key={row.teamId}><b>{gp(row.value)}</b></td>)}</tr>
@@ -54,8 +57,9 @@ function Breakdown({ result }) {
   </div>;
 }
 
-function HistoryRow({ auction }) {
+function HistoryRow({ auction, teams }) {
   const [open, setOpen] = useState(false);
+  const [replay, setReplay] = useState(null);
   const hasDetail = Boolean(auction.result?.ranking?.length);
   const reason = auction.result?.reason;
   return <article className={`sealed-history-item status-${auction.status}`}>
@@ -68,19 +72,24 @@ function HistoryRow({ auction }) {
         ? <p className="poll-confirm"><b>🚨 FIRMÓ POR {auction.winner.name.toUpperCase()} · {gp(auction.winner.amount)}</b></p>
         : <p className="poll-hint">🤷 {NO_SALE_LABEL[reason] ?? 'NADIE LO FICHÓ: SIGUE LIBRE.'}</p>}
     </header>
-    {hasDetail && <button type="button" className="action-button" aria-expanded={open} onClick={() => setOpen(value => !value)}>
-      {open ? 'OCULTAR EL DETALLE' : 'VER CÓMO SE DECIDIÓ'}
-    </button>}
+    {hasDetail && <div className="mini-actions">
+      <button type="button" aria-expanded={open} onClick={() => setOpen(value => !value)}>{open ? 'OCULTAR EL DETALLE' : 'VER CÓMO SE DECIDIÓ'}</button>
+      <button type="button" onClick={() => setReplay(Date.now())}>▶ VER LA REVELACIÓN</button>
+    </div>}
     {open && <Breakdown result={auction.result}/>}
+    {replay && <AuctionReveal auction={auction} startAt={replay} teams={teams} onClose={() => setReplay(null)}
+      onSkip={() => setReplay(Date.now() - revealLength(auction.result?.ranking?.length ?? 1))}/>}
   </article>;
 }
 
 /** Historial de subastas terminadas, con el detalle técnico de cómo decidió el jugador. */
-export function AuctionHistory({ revision }) {
+export function AuctionHistory({ revision, teams = [] }) {
   const auctions = useApiQuery(signal => endpoints.sealedAuctions({}, signal), [revision]);
   useAutoRefresh(auctions.retry, 60000);
   if (auctions.error?.status === 404) return null;
-  const rows = (Array.isArray(auctions.data) ? auctions.data : []).filter(item => item.status === 'resolved' || item.status === 'no_sale');
+  // Las que todavía se están revelando en vivo no aparecen aquí (sería un spoiler).
+  const rows = (Array.isArray(auctions.data) ? auctions.data : []).filter(item => (item.status === 'resolved' || item.status === 'no_sale')
+    && !(item.revealEndsAt && Date.parse(item.revealEndsAt) > Date.now()));
   return <section className="market-section market-sealed-history">
     <header>
       <h2>HISTORIAL DE SUBASTAS <small>{rows.length}</small></h2>
@@ -89,6 +98,6 @@ export function AuctionHistory({ revision }) {
     {auctions.loading && auctions.data === null && <div className="arcade-state compact">CARGANDO HISTORIAL...</div>}
     {auctions.error && <DataState query={auctions}/>}
     {!auctions.error && !auctions.loading && !rows.length && <p className="empty-copy">TODAVÍA NO HAY SUBASTAS TERMINADAS.</p>}
-    <div className="sealed-history-list">{rows.map(auction => <HistoryRow key={auction.id} auction={auction}/>)}</div>
+    <div className="sealed-history-list">{rows.map(auction => <HistoryRow key={auction.id} auction={auction} teams={teams}/>)}</div>
   </section>;
 }
