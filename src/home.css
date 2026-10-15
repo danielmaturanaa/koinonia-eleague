@@ -3006,3 +3006,25 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .chat-option { padding: 10px 12px; border: 2px solid #092e77; background: #fff; color: #062764; text-align: left; font: 600 15px/1.3 'Roboto Condensed', sans-serif; }
 .chat-option:disabled { opacity: .5; cursor: default; }
 @media (max-width: 560px) { .chat-bubble { max-width: 92%; } .chat-log { max-height: 300px; } }
+
+/* Chat flexible: temas, selección múltiple y texto libre */
+.chat-pending { margin: 0; padding: 6px 8px; border-left: 4px solid #c8102e; background: #fff0f0; color: #062764; font: 500 14px/1.3 'Roboto Condensed', sans-serif; }
+.chat-topics { display: grid; gap: 6px; }
+.chat-topic-list { display: flex; flex-wrap: wrap; gap: 6px; }
+.chat-topic { padding: 6px 10px; border: 2px solid #092e77; background: #fff; color: #062764; font: 600 13px/1.1 'Oswald', sans-serif; letter-spacing: .3px; }
+.chat-topic.answered { border-color: #1c7a3e; background: #e8f3df; color: #14572c; }
+.chat-topic.asked { border-color: #c8102e; box-shadow: 0 0 0 2px #c8102e55; }
+.chat-topic.active { background: #092e77; color: #fff; }
+.chat-topic:disabled { opacity: .5; cursor: default; }
+.chat-check { display: flex; gap: 8px; align-items: flex-start; padding: 9px 10px; border: 2px solid #092e77; background: #fff; color: #062764; font: 600 15px/1.3 'Roboto Condensed', sans-serif; cursor: pointer; }
+.chat-check.on { background: #eef3ff; border-color: #c8102e; }
+.chat-check input { margin-top: 3px; flex: 0 0 auto; }
+.chat-note, .chat-free label { display: grid; gap: 3px; color: #062764; font: 600 13px/1.2 'Oswald', sans-serif; }
+.chat-note small, .chat-free-bar small { color: #625d4e; font: 500 12px/1.2 'Roboto Condensed', sans-serif; }
+.chat-free { display: grid; gap: 6px; padding-top: 6px; border-top: 1px dashed #d0c4a8; }
+.chat-free textarea { width: 100%; resize: vertical; font: 500 15px/1.3 'Roboto Condensed', sans-serif; }
+.chat-free-bar { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.chat-bubble.kind-note { font-style: italic; }
+.chat-bubble.kind-reply { border-color: #092e77; }
+.sealed-moderator { color: #062764; }
+.sealed-moderator-actions { display: grid; gap: 6px; padding: 8px; border: 2px dashed #c8102e; background: #fff9e8; }

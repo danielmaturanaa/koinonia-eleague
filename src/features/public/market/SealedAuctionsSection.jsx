@@ -121,8 +121,19 @@ function Breakdown({ result }) {
 function AdminActions({ auction, onChanged }) {
   const act = useApiMutation((action, signal) => endpoints.sealedAuctionAction(auction.id, action, {}, signal), { onSuccess: onChanged });
   return <div className="mini-actions">
-    <button disabled={act.loading} onClick={() => { if (window.confirm(`¿RESOLVER AHORA LA SUBASTA DE ${auction.player.name}? EL JUGADOR ELEGIRÁ CON LAS OFERTAS ACTUALES.`)) act.execute('resolve'); }}>RESOLVER AHORA</button>
     <button className="danger" disabled={act.loading} onClick={() => { if (window.confirm(`¿CANCELAR LA SUBASTA DE ${auction.player.name}? SE DEVUELVE TODA LA PLATA RETENIDA.`)) act.execute('cancel'); }}>CANCELAR</button>
+    <FormFeedback mutation={act}/>
+  </div>;
+}
+
+/** Solo el presi moderador ve este botón: el servidor también rechaza a cualquier otro. */
+function ModeratorActions({ auction, onChanged }) {
+  const act = useApiMutation((action, signal) => endpoints.sealedAuctionAction(auction.id, action, {}, signal), { onSuccess: onChanged });
+  return <div className="sealed-moderator-actions">
+    <p className="poll-hint">ERES EL MODERADOR: SOLO TÚ PUEDES CERRAR LA SUBASTA ANTES DE LA HORA. EL JUGADOR ELEGIRÁ CON LAS OFERTAS ACTUALES.</p>
+    <div className="mini-actions">
+      <button disabled={act.loading} onClick={() => { if (window.confirm(`¿RESOLVER AHORA LA SUBASTA DE ${auction.player.name}? EL JUGADOR FIRMARÁ CON EL CLUB QUE MEJOR LE CALCE.`)) act.execute('resolve'); }}>RESOLVER AHORA</button>
+    </div>
     <FormFeedback mutation={act}/>
   </div>;
 }
@@ -132,6 +143,7 @@ function AuctionCard({ auction, now, onChanged, teams = [] }) {
   const open = auction.status === 'open';
   const outbid = auction.myBids.some(bid => bid.outbid);
   const isPresident = Boolean(user?.teamIds?.length) || isAdmin;
+  const isModerator = Boolean(auction.moderator?.isMe);
   const closing = open && Date.parse(auction.closesAt) - now < 5 * 60 * 1000;
   return <article className={`poll-card sealed-card status-${auction.status}`}>
     <header>
@@ -147,6 +159,7 @@ function AuctionCard({ auction, now, onChanged, teams = [] }) {
       <b>{countdown(auction.closesAt, now)}</b>
       <small>CIERRA {formatDate(auction.closesAt).toUpperCase()}{auction.extensions ? ` · EXTENDIDA ${auction.extensions} ${auction.extensions === 1 ? 'VEZ' : 'VECES'}` : ''}</small>
     </div>}
+    {auction.moderator && <p className="poll-meta sealed-moderator">⚖️ MODERADOR: <b>{auction.moderator.name.toUpperCase()}</b>{auction.moderator.teamName ? ` (${auction.moderator.teamName.toUpperCase()})` : ''}</p>}
     {open && closing && <p className="poll-hint">QUEDAN MENOS DE 5 MINUTOS: UNA OFERTA NUEVA EXTIENDE EL RELOJ.</p>}
     {open && <p className="poll-meta">{auction.bidCount} {auction.bidCount === 1 ? 'OFERTA' : 'OFERTAS'} · NADIE VE CUÁNTO PUSO EL OTRO</p>}
 
@@ -155,9 +168,11 @@ function AuctionCard({ auction, now, onChanged, teams = [] }) {
       {bid.outbid && <span>⚠️ HAY UNA OFERTA MÁS FUERTE</span>}
     </div>)}
 
-    {open && isPresident && <BidPanel auction={auction} onChanged={onChanged} teams={teams}/>}
-    {open && isPresident && <PlayerChat auction={auction} teams={teams}/>}
+    {open && isModerator && <p className="poll-confirm">ERES EL MODERADOR DE ESTA SUBASTA: NO PUEDES OFERTAR, SOLO CERRARLA.</p>}
+    {open && isPresident && !isModerator && <BidPanel auction={auction} onChanged={onChanged} teams={teams}/>}
+    {open && isPresident && !isModerator && <PlayerChat auction={auction} teams={teams}/>}
     {open && !isPresident && <p className="poll-hint">SOLO LOS PRESIDENTES CON CLUB PUEDEN OFERTAR.</p>}
+    {open && auction.canResolve && <ModeratorActions auction={auction} onChanged={onChanged}/>}
     {open && isAdmin && <AdminActions auction={auction} onChanged={onChanged}/>}
 
     {!open && auction.winner && <p className="poll-confirm sealed-result"><b>🚨 {auction.player.name.toUpperCase()} FIRMA POR {auction.winner.name.toUpperCase()} · {gp(auction.winner.amount)}</b></p>}
@@ -173,13 +188,17 @@ function OpenAuctionForm({ onChanged }) {
   const [playerId, setPlayerId] = useState('');
   const [minBid, setMinBid] = useState('');
   const [closesAt, setClosesAt] = useState('');
+  const [moderatorId, setModeratorId] = useState('');
+  const presidents = useApiQuery(signal => endpoints.presidents({}, signal), []);
+  const moderators = (Array.isArray(presidents.data) ? presidents.data : []).filter(item => item.discordUserId && item.teamId);
   const players = useApiQuery(signal => endpoints.playerDirectory({ status: 'free', sort: 'price_desc', pageSize: 30, q: search }, signal), [search]);
   const rows = (Array.isArray(players.data) ? players.data : []).filter(player => player.playerId);
-  const open = useApiMutation((body, signal) => endpoints.openSealedAuction(body, signal), { onSuccess: () => { setPlayerId(''); setMinBid(''); setClosesAt(''); onChanged(); } });
+  const open = useApiMutation((body, signal) => endpoints.openSealedAuction(body, signal), { onSuccess: () => { setPlayerId(''); setMinBid(''); setClosesAt(''); setModeratorId(''); onChanged(); } });
   const submit = event => {
     event.preventDefault();
     open.execute({
       playerId,
+      moderatorPresidentId: moderatorId,
       ...(minBid !== '' ? { minBid: Number(minBid) } : {}),
       ...(closesAt ? { closesAt: new Date(closesAt).toISOString() } : {}),
     });
@@ -193,10 +212,17 @@ function OpenAuctionForm({ onChanged }) {
       <option value="">SELECCIONAR</option>
       {rows.map(player => <option key={player.playerId} value={player.playerId}>{player.name} · {player.position} · {gp(player.price)}</option>)}
     </select></label>
+    <label>PRESI MODERADOR
+      <select required value={moderatorId} onChange={event => setModeratorId(event.target.value)}>
+        <option value="">SELECCIONAR</option>
+        {moderators.map(item => <option key={item.id} value={item.id}>{item.name.toUpperCase()} · {(item.teamName ?? '').toUpperCase()}</option>)}
+      </select>
+    </label>
     <label>OFERTA MÍNIMA (OPCIONAL)<input type="number" min="0" step="1" value={minBid} onChange={event => setMinBid(event.target.value)} placeholder="SU VALOR"/></label>
     <label>CIERRE (OPCIONAL)<input type="datetime-local" value={closesAt} onChange={event => setClosesAt(event.target.value)}/></label>
+    <p className="poll-hint">EL MODERADOR ES EL ÚNICO QUE PUEDE CERRAR LA SUBASTA ANTES DE LA HORA, Y SU CLUB NO PUEDE OFERTAR. ELIGE A ALGUIEN QUE NO ESTÉ INTERESADO EN EL JUGADOR.</p>
     <p className="poll-hint">SI NO PONES CIERRE, DURA 24 HORAS. NUNCA PASA DEL CIERRE DEL MERCADO. EL JUGADOR NO DEBE TENER UNA ENCUESTA ABIERTA.</p>
-    <button className="action-button positive" disabled={open.loading || !playerId}>ABRIR SUBASTA</button>
+    <button className="action-button positive" disabled={open.loading || !playerId || !moderatorId}>ABRIR SUBASTA</button>
     <FormFeedback mutation={open}/>
   </form>;
 }
