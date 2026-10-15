@@ -73,8 +73,9 @@ function thoughtsFor(row, seen) {
   const notes = Object.entries(row.notes ?? {}).filter(([factor]) => factor !== 'dinero');
   const best = [...notes].sort((a, b) => b[1] - a[1])[0];
   if (!goods.length && best) goods.push(`Me tinca: ${GOOD[best[0]]}.`);
-  // La duda: lo peor que le vio (sin títulos, se dice tal cual).
-  const worst = [...notes].sort((a, b) => a[1] - b[1])[0];
+  // La duda: lo peor que le vio (sin títulos, se dice tal cual). Con títulos, el prestigio no puede ser la duda:
+  // ya dijo que pesan, así que duda de lo siguiente más flojo.
+  const worst = [...notes].filter(([factor]) => !(d.titles > 0 && factor === 'prestigio')).sort((a, b) => a[1] - b[1])[0];
   const doubt = !d.titles && worst?.[0] === 'prestigio'
     ? pick(`${name}:p`, ['Pero… no han ganado nada todavía. 🤔', 'Aunque es un club chico, sin títulos…'])
     : worst && worst[1] < 45
