@@ -27,23 +27,23 @@ function Bubble({ message, player }) {
 }
 
 /** Chat privado entre un club y el jugador. Las respuestas son datos reales del club y no cambian el resultado por sí solas. */
-export function PlayerChat({ auction, teams = [] }) {
+export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null }) {
   const { isAdmin, user, teamId } = useAuth();
-  const clubs = user?.teamIds ?? [];
-  const [chosen, setChosen] = useState(teamId ?? clubs[0] ?? '');
+  // Los clubes que ya marcaron NO PARTICIPAR no hablan con el jugador.
+  const clubs = allowedClubs ?? user?.teamIds ?? [];
+  const [chosen, setChosen] = useState(clubs.includes(teamId) ? teamId : clubs[0] ?? '');
   const [shown, setShown] = useState(false);
   const [chat, setChat] = useState(null);
   const [loadError, setLoadError] = useState(null);
   const [unavailable, setUnavailable] = useState(false);
   const scroller = useRef(null);
 
-  const [picked, setPicked] = useState([]);
-  const [note, setNote] = useState('');
+  const [picked, setPicked] = useState('');
   const [text, setText] = useState('');
   const keep = result => { if (result?.data) setChat(result.data); };
   const answer = useApiMutation(
     (body, signal) => endpoints.sealedAuctionAction(auction.id, 'chat/answer', body, signal),
-    { onSuccess: result => { keep(result); setPicked([]); setNote(''); } },
+    { onSuccess: result => { keep(result); setPicked(''); } },
   );
   const message = useApiMutation(
     (body, signal) => endpoints.sealedAuctionAction(auction.id, 'chat/message', body, signal),
@@ -92,11 +92,13 @@ export function PlayerChat({ auction, teams = [] }) {
   const names = id => (teams.find(team => team.id === id)?.name ?? id).toUpperCase();
   const pending = chat?.pending;
   const options = pending?.options ?? [];
-  const facts = options.filter(option => option.kind !== 'promesa');
-  const promises = options.filter(option => option.kind === 'promesa');
+  const groups = [
+    ['dato', 'DATO DE TU CLUB'],
+    ['promesa', 'PROMESA'],
+    ['negativa', 'RESPUESTA HONESTA'],
+  ].map(([kind, label]) => ({ kind, label, items: options.filter(option => (option.kind ?? 'dato') === kind) })).filter(group => group.items.length);
   const thinking = answer.loading || message.loading;
   const freeText = chat?.freeText ?? { used: 0, limit: 0, maxLength: 280 };
-  const toggle = code => setPicked(list => (list.includes(code) ? list.filter(item => item !== code) : [...list, code]));
 
   if (!shown) {
     return <div className="chat-closed">
@@ -111,7 +113,7 @@ export function PlayerChat({ auction, teams = [] }) {
     </header>
     <p className="poll-hint">ESTE CHAT ES PRIVADO DE TU CLUB. EL JUGADOR TE VA PREGUNTANDO, EMPEZANDO POR LO QUE MÁS LE IMPORTA, Y TÚ RESPONDES EN ORDEN. SIRVE PARA SABER QUÉ LO CONVENCE Y MEJORAR TU OFERTA.</p>
     {clubs.length > 1 && <label className="chat-club">CLUB
-      <select value={chosen} onChange={event => { setChat(null); setPicked([]); setChosen(event.target.value); }}>
+      <select value={chosen} onChange={event => { setChat(null); setPicked(''); setChosen(event.target.value); }}>
         {clubs.map(id => <option key={id} value={id}>{names(id)}</option>)}
       </select>
     </label>}
@@ -128,32 +130,21 @@ export function PlayerChat({ auction, teams = [] }) {
 
       {pending ? <form className="chat-options" onSubmit={event => {
         event.preventDefault();
-        answer.execute({ teamId: chosen, topic: pending.topic, optionCodes: picked, ...(note.trim() ? { note: note.trim() } : {}) });
+        if (picked) answer.execute({ teamId: chosen, topic: pending.topic, optionCodes: [picked] });
       }}>
         <p className="chat-pending">❓ RESPONDE LA PREGUNTA SOBRE: <b>{(pending.label ?? pending.topic).toUpperCase()}</b></p>
-        <p className="poll-hint">PUEDES COMBINAR DATOS Y PROMESAS; EL JUGADOR REACCIONA SEGÚN LO QUE TU CLUB PUEDE RESPALDAR.</p>
-        {facts.length > 0 && <fieldset className="chat-group" disabled={thinking}>
-          <legend>DATOS DE TU CLUB</legend>
-          {facts.map(option => <label key={option.code} className={`chat-check ${picked.includes(option.code) ? 'on' : ''}`}>
-            <input type="checkbox" checked={picked.includes(option.code)} onChange={() => toggle(option.code)}/>
-            <span>{option.text}</span>
-          </label>)}
-        </fieldset>}
-        {promises.length > 0 && <fieldset className="chat-group" disabled={thinking}>
-          <legend>PROMESAS Y ARGUMENTOS</legend>
-          {promises.map(option => <label key={option.code} className={`chat-check promise ${picked.includes(option.code) ? 'on' : ''}`}>
-            <input type="checkbox" checked={picked.includes(option.code)} onChange={() => toggle(option.code)}/>
-            <span>{option.text}</span>
-          </label>)}
-        </fieldset>}
+        <p className="poll-hint">ELIGE UNA SOLA RESPUESTA. LAS PROMESAS QUEDAN REGISTRADAS Y TE LAS RECORDAMOS POR DISCORD PARA QUE LAS CUMPLAS.</p>
+        <div role="radiogroup" aria-label="RESPUESTAS POSIBLES" className="chat-radios">
+          {groups.map(group => <fieldset key={group.kind} className="chat-group" disabled={thinking}>
+            <legend>{group.label}</legend>
+            {group.items.map(option => <label key={option.code} className={`chat-check ${group.kind} ${picked === option.code ? 'on' : ''}`}>
+              <input type="radio" name={`respuesta-${auction.id}-${chosen}`} value={option.code} checked={picked === option.code} onChange={() => setPicked(option.code)}/>
+              <span>{option.text}</span>
+            </label>)}
+          </fieldset>)}
+        </div>
         {options.length === 0 && <p className="poll-hint">NO HAY RESPUESTAS PREPARADAS PARA ESTA PREGUNTA. PUEDES ESCRIBIRLE ABAJO.</p>}
-        {options.length > 0 && <>
-          <label className="chat-note">COMENTARIO (OPCIONAL)
-            <input type="text" maxLength={200} value={note} disabled={thinking} onChange={event => setNote(event.target.value)} placeholder="AGREGA ALGO CON TUS PALABRAS"/>
-            <small>{note.length}/200</small>
-          </label>
-          <button type="submit" className="action-button positive" disabled={thinking || picked.length === 0}>ENVIAR RESPUESTA{picked.length > 1 ? ` (${picked.length})` : ''}</button>
-        </>}
+        {options.length > 0 && <button type="submit" className="action-button positive" disabled={thinking || !picked}>ENVIAR RESPUESTA</button>}
         {answer.error && <p className="form-feedback error" role="alert">{answer.error.message}</p>}
       </form> : chat.finished && <p className="poll-hint">EL JUGADOR YA TE PREGUNTÓ TODO. SI QUIERES CONVENCERLO MÁS, MEJORA TU OFERTA O ESCRÍBELE ABAJO.</p>}
 

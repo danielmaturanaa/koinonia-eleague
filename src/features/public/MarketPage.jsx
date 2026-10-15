@@ -11,6 +11,7 @@ import { useApiQuery } from './useApiQuery.js';
 import { MyClubPanel, clubFigures, signingBlocker } from './market/MyClubPanel.jsx';
 import { OffersInbox, ProposeOffers } from './market/OffersSection.jsx';
 import { PollsSection } from './market/PollsSection.jsx';
+import { AuctionHistory } from './market/AuctionHistory.jsx';
 import { SealedAuctionsSection } from './market/SealedAuctionsSection.jsx';
 
 const asList = value => Array.isArray(value) ? value : [];
@@ -182,6 +183,7 @@ export function MarketPage({ teams }) {
     {managing && isAdmin && <section className="market-section market-manual"><header><h2>REGISTRAR OPERACIÓN MANUAL</h2><p>Los traspasos y trueques normalmente se hacen por Discord; usa esto solo para corregir o registrar algo a mano.</p></header><MarketAdmin teams={teams} players={asList(players.data)} onChanged={refresh}/></section>}
     {operates && <MyClubPanel team={myTeam} figures={figures} profileQuery={myTeamId ? profile : null} status={status.data} statusQuery={status}/>}
     <SealedAuctionsSection revision={revision} onChanged={refresh} teams={teams}/>
+    <AuctionHistory revision={revision}/>
     {operates && <PollsSection teams={teams} revision={revision} onChanged={refresh}/>}
     {operates && myTeamId && <OffersInbox revision={revision} onChanged={refresh}/>}
     {operates && myTeamId && <ProposeOffers teams={teams} onChanged={refresh}/>}

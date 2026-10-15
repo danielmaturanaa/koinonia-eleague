@@ -3034,3 +3034,33 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .picker-chosen b { font: 600 16px/1.1 'Oswald', sans-serif; }
 .picker-chosen small { grid-column: 1; color: #55607a; font: 500 12px/1.2 'Roboto Condensed', sans-serif; }
 .picker-chosen button { grid-column: 2; grid-row: 1 / span 2; }
+
+/* Subasta pública: quién ofertó, quién no participa y quién falta */
+.sealed-participation { display: grid; gap: 6px; padding: 8px 10px; border: 1px solid #d0c4a8; background: #fffdf4; }
+.sealed-participation ul { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.sealed-participation li { display: grid; gap: 1px; padding: 5px 8px; border-left: 4px solid #aa9e86; background: #f7f1df; font: 600 13px/1.2 'Oswald', sans-serif; color: #062764; }
+.sealed-participation li small { font: 600 11px/1.2 'Roboto Condensed', sans-serif; color: #625d4e; }
+.sealed-participation li.state-ok { border-left-color: #1c7a3e; background: #e8f3df; }
+.sealed-participation li.state-out { border-left-color: #a90020; background: #fbe7ea; }
+.sealed-passes { display: grid; gap: 6px; }
+.sealed-pass { display: grid; gap: 4px; }
+.chat-radios { display: grid; gap: 6px; }
+.chat-check.negativa { border-color: #a90020; }
+.chat-check.negativa.on { background: #fbe7ea; }
+
+/* Historial de subastas con el detalle técnico */
+.sealed-history-list { display: grid; gap: 10px; }
+.sealed-history-item { display: grid; gap: 8px; padding: 10px 12px; border: 2px solid #aa9e86; background: #fff; min-width: 0; }
+.sealed-history-item.status-resolved { border-color: #1c7a3e; }
+.sealed-history-item > header { display: grid; gap: 4px; }
+.sealed-history-item > header b { font: 600 17px/1.1 'Oswald', sans-serif; color: #062764; }
+.sealed-history-item > header small { display: block; color: #625d4e; font: 500 12px/1.2 'Roboto Condensed', sans-serif; }
+.sealed-breakdown { display: grid; gap: 8px; min-width: 0; }
+.sealed-traits { display: grid; gap: 4px; }
+.sealed-traits span { padding: 5px 8px; border-left: 4px solid #092e77; background: #eef3ff; font: 500 13px/1.25 'Roboto Condensed', sans-serif; }
+.sealed-traits b { color: #062764; font: 600 13px/1.2 'Oswald', sans-serif; }
+.sealed-table { overflow-x: auto; border: 1px solid #d0c4a8; }
+.sealed-table table { width: 100%; min-width: 360px; border-collapse: collapse; font: 500 13px/1.2 'Roboto Condensed', sans-serif; font-variant-numeric: tabular-nums; }
+.sealed-table th, .sealed-table td { padding: 5px 7px; border-bottom: 1px solid #e0d6bf; text-align: left; }
+.sealed-table th { color: #062764; font: 600 12px/1.1 'Oswald', sans-serif; letter-spacing: .4px; }
+.sealed-table tr.sum td { background: #f7f1df; }
