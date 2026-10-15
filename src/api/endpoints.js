@@ -109,6 +109,7 @@ export const endpoints = {
   sealedAuctions: (query, signal) => get('/market/sealed-auctions', query, signal),
   openSealedAuction: (body, signal) => apiClient.post('/market/sealed-auctions', body, { actor: 'web', signal }),
   // action: bids | bids/withdraw | cancel | resolve
+  sealedAuctionChat: (auctionId, teamId, signal) => get(`/market/sealed-auctions/${auctionId}/chat`, { teamId }, signal),
   sealedAuctionAction: (auctionId, action, body, signal) => apiClient.post(`/market/sealed-auctions/${auctionId}/${action}`, body ?? {}, { actor: 'web', signal }),
   createTournament: (body, signal) => apiClient.post('/tournaments', body, { actor: 'web', signal }),
   updateTournamentStatus: (tournamentId, status, signal) => apiClient.patch(`/tournaments/${tournamentId}/status`, { status }, { actor: 'web', signal }),

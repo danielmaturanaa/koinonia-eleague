@@ -6,6 +6,7 @@ import { FormFeedback } from '../../admin/FormFeedback.jsx';
 import { useApiMutation } from '../../admin/useApiMutation.js';
 import { DataState, formatDate, gp } from '../DataStates.jsx';
 import { useApiQuery } from '../useApiQuery.js';
+import { PlayerChat } from './PlayerChat.jsx';
 import { useAutoRefresh } from './PollsSection.jsx';
 
 const TRAIT_LABEL = {
@@ -154,6 +155,7 @@ function AuctionCard({ auction, now, onChanged, teams = [] }) {
     </div>)}
 
     {open && isPresident && <BidPanel auction={auction} onChanged={onChanged} teams={teams}/>}
+    {open && isPresident && <PlayerChat auction={auction} teams={teams}/>}
     {open && !isPresident && <p className="poll-hint">SOLO LOS PRESIDENTES CON CLUB PUEDEN OFERTAR.</p>}
     {open && isAdmin && <AdminActions auction={auction} onChanged={onChanged}/>}
 
