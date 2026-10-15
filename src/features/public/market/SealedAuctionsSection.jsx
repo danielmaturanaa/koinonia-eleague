@@ -73,11 +73,12 @@ function BidPanel({ auction, onChanged, teams = [] }) {
       {clubs.map(id => <option key={id} value={id}>{(teams.find(team => team.id === id)?.name ?? id).toUpperCase()}</option>)}
     </select></label>}
     <label>{mine ? 'SUBIR MI OFERTA (GP)' : 'MI OFERTA (GP)'}
-      <input type="number" min={minimum} step="1" required value={amount} onChange={event => setAmount(event.target.value)}/>
+      <input type="number" min={minimum} max={auction.maxBid ?? undefined} step="1" required value={amount} onChange={event => setAmount(event.target.value)}/>
     </label>
+    {auction.maxBid != null && <p className="poll-hint"><b>MÍNIMA {gp(minimum)} · MÁXIMA {gp(auction.maxBid)}</b> (1,5 VECES EL VALOR DEL JUGADOR).</p>}
     <p className="poll-hint">LA OFERTA ES SECRETA. LA PLATA QUEDA RETENIDA EN TU SALDO HASTA EL CIERRE Y LA PUEDES RETIRAR ANTES. SI GANAS, PAGAS TU OFERTA; SI NO, TE LA DEVUELVEN ENTERA.</p>
     <div className="mini-actions">
-      <button type="submit" disabled={bid.loading || Number(amount) < minimum}>{mine ? 'SUBIR OFERTA' : 'OFERTAR'}</button>
+      <button type="submit" disabled={bid.loading || Number(amount) < minimum || (auction.maxBid != null && Number(amount) > auction.maxBid)}>{mine ? 'SUBIR OFERTA' : 'OFERTAR'}</button>
       {mine && <button type="button" className="danger" disabled={withdraw.loading} onClick={() => withdraw.execute({ teamId: chosen })}>RETIRAR OFERTA</button>}
     </div>
     <FormFeedback mutation={bid}/>
@@ -137,7 +138,7 @@ function AuctionCard({ auction, now, onChanged, teams = [] }) {
       <PlayerFace src={auction.player.faceUrl} name={auction.player.name}/>
       <div>
         <b>{auction.player.name}</b>
-        <small>{auction.player.position} · VALE {gp(auction.player.gpValue)} · OFERTA MÍNIMA {gp(auction.minBid)}</small>
+        <small>{auction.player.position} · VALE {gp(auction.player.gpValue)} · OFERTA MÍNIMA {gp(auction.minBid)}{auction.maxBid != null ? ` · MÁXIMA ${gp(auction.maxBid)}` : ''}</small>
       </div>
       <span className="poll-status">{STATUS_LABEL[auction.status] ?? auction.status.toUpperCase()}</span>
     </header>
