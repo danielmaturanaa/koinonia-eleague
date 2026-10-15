@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { PlayerFace } from '../../../components/PlayerFace.jsx';
 import { gp } from '../DataStates.jsx';
 import { isMuted } from './chatSound.js';
+import { serverNow } from './serverClock.js';
 
 // Mismas duraciones que el servidor (REVEAL en core/auctions.js): así todos ven el mismo momento a la misma hora.
 export const REVEAL = { introMs: 6000, perClubMs: 7500, fakeoutMs: 7000, finalMs: 8000 };
@@ -13,37 +14,71 @@ const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.
 const fitLabel = value => `×${Number(value).toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const ease = t => 1 - (1 - t) ** 3;
 
-// Lo que piensa el jugador de cada club, en voz alta. Sale de las notas reales que le puso.
+// Lo que piensa el jugador de cada club, en voz alta. Sale de datos reales: la plata, lo que le aceptaron, el DT que ya
+// lo dirigió, los compañeros que conoce y los títulos del club comparados con los de la liga.
 const GOOD = {
   minutos: 'ahí juego seguro', companeros: 'ahí tengo amigos', dt: 'su DT me hace mejor', prestigio: 'es un club grande',
   proyecto: 'vienen en racha', reputacion: 'ese presi cumple lo que promete',
 };
 const BAD = {
-  minutos: 'no sé si voy a jugar', companeros: 'no conozco a nadie', dt: 'el DT no me sirve', prestigio: 'ha ganado poco comparado con los grandes',
+  minutos: 'no sé si voy a jugar', companeros: 'no conozco a nadie', dt: 'el DT no me sirve', prestigio: 'no han ganado nada',
   proyecto: 'vienen mal', reputacion: 'ese presi no cumple sus promesas',
 };
 const hash = text => [...String(text)].reduce((acc, char) => (acc * 31 + char.charCodeAt(0)) >>> 0, 7);
 const pick = (seed, options) => options[hash(seed) % options.length];
+const ACCEPTED = {
+  dorsal: item => `me dan la ${item.number}`, traer: item => `me traen a ${item.subjectName}`, capitan: () => 'me dan la cinta de capitán',
+  penales: () => 'pateo los penales', tiros_libres: () => 'pateo los tiros libres', subir: () => 'subieron la oferta por mí',
+};
+
+/** Lo tentador de un club, en pocas palabras (para el "¿A o B?"), de lo más a lo menos concreto. */
+function hooks(row) {
+  const d = row.detail ?? {};
+  const list = (row.accepted ?? []).filter(item => ACCEPTED[item.type]).map(item => `donde ${ACCEPTED[item.type](item)}`);
+  for (const mate of d.knownMates ?? []) list.push(`con ${mate}`);
+  if (d.titles > 0 && d.titles >= (d.maxTitles ?? d.titles)) list.push('el más ganador de la liga');
+  else if (d.titles > 0) list.push(`con sus ${d.titles} título${d.titles > 1 ? 's' : ''}`);
+  if (d.matchingBoosters > 0 && d.managerName) list.push(`con ${d.managerName} en el banco`);
+  list.push('que me quiere tanto');
+  return list;
+}
+
+/** Ganchos de dos clubes que no se repitan (si los dos aceptaron traer al mismo, se busca otro). */
+function twoHooks(a, b) {
+  const first = hooks(a)[0];
+  const second = hooks(b).find(item => item !== first) ?? hooks(b)[0];
+  return [first, second];
+}
 
 function thoughtsFor(row, ranking) {
   const name = row.teamName ?? 'ese club';
+  const d = row.detail ?? {};
   const topOffer = Math.max(...ranking.map(item => item.offer ?? 0));
-  const notes = Object.entries(row.notes ?? {}).filter(([factor]) => factor !== 'dinero');
-  const best = [...notes].sort((a, b) => b[1] - a[1])[0];
-  const worst = [...notes].sort((a, b) => a[1] - b[1])[0];
   const tied = ranking.filter(item => item.offer === topOffer).length;
-  // Si varios pusieron lo mismo, la plata no desempata: no tiene sentido decir que uno "pone más".
   const money = row.offer >= topOffer && tied > 1
     ? pick(`${name}:t`, [`${name} también pone ${gp(row.offer)}. Igual que el resto…`, `${gp(row.offer)}, otra vez. La plata no desempata.`, `${name}: ${gp(row.offer)}, como todos. Entonces decide otra cosa…`])
     : row.offer >= topOffer
-    ? pick(`${name}:m`, [`${name} pone la mejor plata… ${gp(row.offer)}. Uf.`, `${gp(row.offer)}. ${name} va en serio…`, `Nadie pone más que ${name}: ${gp(row.offer)}.`])
-    : pick(`${name}:m`, [`${name} me ofrece ${gp(row.offer)}…`, `Mmm, ${name}. ${gp(row.offer)} sobre la mesa.`, `${name} pone ${gp(row.offer)}. A ver…`]);
-  const feel = best && best[1] >= 70 && (!worst || worst[1] >= 45)
-    ? pick(`${name}:g`, [`Y la verdad… ${GOOD[best[0]]}.`, `Me tinca: ${GOOD[best[0]]}.`, `Eso sí, ${GOOD[best[0]]}. 😏`])
+      ? pick(`${name}:m`, [`${name} pone la mejor plata… ${gp(row.offer)}. Uf.`, `${gp(row.offer)}. ${name} va en serio…`, `Nadie pone más que ${name}: ${gp(row.offer)}.`])
+      : pick(`${name}:m`, [`${name} me ofrece ${gp(row.offer)}…`, `Mmm, ${name}. ${gp(row.offer)} sobre la mesa.`, `${name} pone ${gp(row.offer)}. A ver…`]);
+  // Lo bueno, con nombre y apellido.
+  const accepted = (row.accepted ?? []).map(item => ACCEPTED[item.type]?.(item)).filter(Boolean);
+  const goods = [];
+  if (d.matchingBoosters > 0 && d.managerName) goods.push(`Y ${d.managerName} me haría mejor jugador…`);
+  if (accepted.length) goods.push(`Y ${accepted.join(' y ')}. Eso me gusta.`);
+  if (d.knownMates?.length) goods.push(`Ahí juego con ${d.knownMates.slice(0, 2).join(' y ')}…`);
+  if (d.titles > 0 && d.titles >= (d.maxTitles ?? d.titles)) goods.push(`Y es el club más ganador de la liga: ${d.titles} títulos. 🏆`);
+  else if (d.titles > 0) goods.push(`Y tienen ${d.titles} título${d.titles > 1 ? 's' : ''}. Eso pesa.`);
+  const notes = Object.entries(row.notes ?? {}).filter(([factor]) => factor !== 'dinero');
+  const best = [...notes].sort((a, b) => b[1] - a[1])[0];
+  if (!goods.length && best) goods.push(`Me tinca: ${GOOD[best[0]]}.`);
+  // La duda: lo peor que le vio (sin títulos, se dice tal cual).
+  const worst = [...notes].sort((a, b) => a[1] - b[1])[0];
+  const doubt = !d.titles && worst?.[0] === 'prestigio'
+    ? pick(`${name}:p`, ['Pero… no han ganado nada todavía. 🤔', 'Aunque es un club chico, sin títulos…'])
     : worst && worst[1] < 45
-      ? pick(`${name}:b`, [`Pero… ${BAD[worst[0]]}. 🤔`, `Aunque ${BAD[worst[0]]}…`, `Lo malo: ${BAD[worst[0]]}.`])
-      : pick(`${name}:n`, ['No está mal… no está mal.', 'Mmm. Correcto.', 'Ni frío ni caliente.']);
-  return [money, feel];
+      ? pick(`${name}:b`, [`Pero… ${BAD[worst[0]]}. 🤔`, `Aunque ${BAD[worst[0]]}…`])
+      : !d.titles ? 'Lo malo: todavía no ganan nada.' : 'No le veo nada malo… mmm.';
+  return [money, pick(`${name}:g`, goods), doubt];
 }
 
 /** Lluvia de papel picado en un canvas (sin librerías). Dura ~3,5 s. */
@@ -135,10 +170,10 @@ export function AuctionReveal({ auction, startAt, onClose, onSkip = null, teams 
   const n = Math.max(1, order.length);
   const winnerId = auction.winner?.teamId ?? null;
   const runnerUp = ranking.find(row => row.teamId !== winnerId) ?? null;
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState(() => serverNow());
   useEffect(() => {
     let frame = 0;
-    const loop = () => { setNow(Date.now()); frame = requestAnimationFrame(loop); };
+    const loop = () => { setNow(serverNow()); frame = requestAnimationFrame(loop); };
     frame = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(frame);
   }, []);
@@ -172,12 +207,15 @@ export function AuctionReveal({ auction, startAt, onClose, onSkip = null, teams 
   const bubble = (() => {
     if (phase === 'countdown') return `LA DECISIÓN EN VIVO EN ${Math.ceil(-elapsed / 1000)}…`;
     if (phase === 'intro') return elapsed < clubsStart / 2 ? 'Bueno, bueno…' : `Tengo ${order.length} ${order.length === 1 ? 'oferta' : 'ofertas'} sobre la mesa. Déjenme pensar.`;
-    if (phase === 'clubs') { const [money, feel] = thoughtsFor(order[current], ranking); return within < 0.5 ? money : feel; }
+    if (phase === 'clubs') { const lines = thoughtsFor(order[current], ranking); return lines[Math.min(2, Math.floor(within * 3))]; }
     if (phase === 'fakeout') {
       if (!winnerId) return fakeHalf ? 'Mmm… ninguno me termina de convencer…' : '…';
       if (!runnerUp) return fakeHalf ? `¿Me convence ${auction.winner.name}… o sigo libre?` : 'Ya. Lo tengo decidido.';
-      // Coqueteo, no una decisión falsa: se nota que está jugando.
-      return fakeHalf ? `${runnerUp.teamName} me hace ojitos… 😏 ¿o no?` : 'Ya. Lo tengo decidido… 🥁';
+      // Duda entre los dos mejores con cosas concretas, en un orden que no delata al ganador.
+      const pair = [ranking.find(row => row.teamId === winnerId), runnerUp];
+      const [a, b] = hash(auction.id ?? player.name) % 2 ? pair : [pair[1], pair[0]];
+      const [hookA, hookB] = twoHooks(a, b);
+      return fakeHalf ? `¿${a.teamName}, ${hookA}? ¿O ${b.teamName}, ${hookB}?` : 'Ya. Lo tengo decidido… 🥁';
     }
     return null;
   })();
@@ -194,7 +232,7 @@ export function AuctionReveal({ auction, startAt, onClose, onSkip = null, teams 
         <b>{player.name}</b>
         {bubble && <p className="reveal-bubble" key={bubble} aria-live="polite">{bubble}</p>}
       </div>
-      <ol className="reveal-envelopes">
+      <ol className="reveal-envelopes" style={{ '--n': order.length }}>
         {order.map((row, index) => {
           const shown = index < current || (index === current && phase === 'clubs') || phase === 'fakeout' || done;
           const active = index === current && phase === 'clubs';

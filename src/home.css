@@ -3491,3 +3491,46 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .stage-steps li.current i { color: #062764; background: #ffd42a; }
 .stage-heat { margin-left: auto; color: #a90020; font: 600 13px/1 'Oswald', sans-serif; }
 @media (max-width: 560px) { .stage-heat { margin-left: 0; } }
+
+/* ===== Sin scroll: la revelación cabe en la pantalla y los sobres van en una sola fila ===== */
+.reveal { padding: 12px 16px; overflow: hidden; }
+.reveal-inner { gap: clamp(8px, 1.6vh, 16px); max-height: 100vh; }
+.reveal-ring { width: clamp(80px, 13vh, 120px); height: clamp(80px, 13vh, 120px); }
+.reveal-player { gap: 4px; }
+.reveal-player b { font-size: clamp(28px, 5.5vh, 52px); }
+.reveal-bubble { margin-top: 4px; padding: 10px 16px; font-size: clamp(16px, 2.4vh, 22px); }
+.phase-done .reveal-ring { width: clamp(64px, 9vh, 90px); height: clamp(64px, 9vh, 90px); }
+.phase-done .reveal-player b { font-size: clamp(24px, 4vh, 40px); }
+.reveal-final { gap: 4px; }
+.reveal-final-crest { width: clamp(64px, 11vh, 110px); height: clamp(64px, 11vh, 110px); }
+.reveal-stamp { font-size: clamp(22px, 4.5vh, 40px); }
+.reveal-envelopes { flex-wrap: nowrap; justify-content: center; gap: 10px; width: 100%; }
+.reveal-envelopes .reveal-envelope { flex: 0 1 170px; width: auto; min-width: 0; height: clamp(130px, 19vh, 160px); }
+.reveal-back b { font-size: clamp(12px, 1.9vh, 16px); overflow-wrap: anywhere; }
+.reveal-back span { font-size: clamp(10px, 1.5vh, 12px); }
+@media (max-width: 700px) {
+  .reveal { overflow-y: auto; }
+  .reveal-envelopes { flex-wrap: wrap; }
+  .reveal-envelopes .reveal-envelope { flex: 0 0 132px; }
+}
+
+/* ===== Sin scroll en la sala: cabecera compacta y el chat ocupa el alto que queda ===== */
+.poll-card.sealed-card.stage > header.stage-hero { padding: 10px 14px 12px; gap: 8px 16px; }
+.stage-ring { width: 72px; height: 72px; padding: 3px; }
+.poll-card.sealed-card.stage > header.stage-hero .stage-name h3 { font-size: clamp(26px, 3vw, 36px); }
+.stage-clock { padding: 6px 12px; min-width: 170px; }
+.stage-clock b, .poll-card.sealed-card.stage > header.stage-hero .stage-clock b { font-size: 32px; }
+.stage-steps { margin: 8px 12px 0; }
+.stage-steps-row { padding: 6px 8px; }
+.sealed-card.stage > .sealed-body { padding: 8px 12px 12px; gap: 10px; }
+.sealed-card.stage .pc-log { min-height: 140px; max-height: max(180px, calc(100vh - 560px)); }
+.sealed-card.stage .sealed-participation { padding: 8px 10px; }
+.sealed-card.stage .crest-badge { width: 40px; height: 40px; }
+.sealed-card.stage .crest-badge img { width: 30px; height: 30px; }
+.sealed-card.stage .stage-crests li.crest { width: 66px; }
+.sealed-card.stage .sealed-moderator-actions { grid-template-columns: auto 1fr; align-items: center; gap: 6px 10px; padding: 6px 8px; }
+.sealed-card.stage .sealed-moderator-actions .mini-actions { display: flex; gap: 6px; }
+.sealed-card.stage .sealed-moderator-actions .mini-actions button { min-height: 34px; padding: 0 10px; font-size: 13px; }
+.sealed-card.stage .sealed-moderator-actions > .poll-hint.warn, .sealed-card.stage .sealed-moderator-actions > .form-feedback { grid-column: 1 / -1; }
+.sealed-card.stage .sealed-bid input { height: 34px; }
+.sealed-card.stage .sealed-bid-help { font-size: 12px; }

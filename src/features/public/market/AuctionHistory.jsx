@@ -5,6 +5,7 @@ import { useApiQuery } from '../useApiQuery.js';
 import { useAutoRefresh } from './PollsSection.jsx';
 import { AuctionReveal, revealLength } from './AuctionReveal.jsx';
 import { Stars } from './stars.jsx';
+import { serverNow } from './serverClock.js';
 
 const TRAIT_LABEL = {
   ganador: ['GANADOR', 'QUIERE TÍTULOS Y UN CLUB IMPORTANTE.'],
@@ -74,11 +75,11 @@ function HistoryRow({ auction, teams }) {
     </header>
     {hasDetail && <div className="mini-actions">
       <button type="button" aria-expanded={open} onClick={() => setOpen(value => !value)}>{open ? 'OCULTAR EL DETALLE' : 'VER CÓMO SE DECIDIÓ'}</button>
-      <button type="button" onClick={() => setReplay(Date.now())}>▶ VER LA REVELACIÓN</button>
+      <button type="button" onClick={() => setReplay(serverNow())}>▶ VER LA REVELACIÓN</button>
     </div>}
     {open && <Breakdown result={auction.result}/>}
     {replay && <AuctionReveal auction={auction} startAt={replay} teams={teams} onClose={() => setReplay(null)}
-      onSkip={() => setReplay(Date.now() - revealLength(auction.result?.ranking?.length ?? 1))}/>}
+      onSkip={() => setReplay(serverNow() - revealLength(auction.result?.ranking?.length ?? 1))}/>}
   </article>;
 }
 

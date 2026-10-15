@@ -7,6 +7,7 @@ import { useApiMutation } from '../../admin/useApiMutation.js';
 import { DataState, formatDate, gp } from '../DataStates.jsx';
 import { useApiQuery } from '../useApiQuery.js';
 import { AuctionReveal } from './AuctionReveal.jsx';
+import { serverNow, syncServerTime } from './serverClock.js';
 import { PlayerChat } from './PlayerChat.jsx';
 import { PlayerPicker } from './PlayerPicker.jsx';
 import { ReadyControl } from './ReadyControl.jsx';
@@ -25,9 +26,9 @@ const AUTO_OPEN_BEFORE_MS = 10_000;
 const isRevealing = (auction, now) => auction.status !== 'open' && auction.revealAt && now < Date.parse(auction.revealEndsAt);
 
 function useNow(ms = 1000) {
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState(() => serverNow());
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), ms);
+    const timer = window.setInterval(() => setNow(serverNow()), ms);
     return () => window.clearInterval(timer);
   }, [ms]);
   return now;
@@ -202,7 +203,7 @@ function ModeratorActions({ auction, onChanged }) {
   const act = useApiMutation((action, signal) => endpoints.sealedAuctionAction(auction.id, action, {}, signal), { onSuccess: onChanged });
   const blocked = auction.resolveBlockedReason;
   return <div className="sealed-moderator-actions">
-    <p className="poll-hint"><b>ERES EL MODERADOR:</b> SOLO TÚ PUEDES CERRAR O CANCELAR ANTES DE LA HORA.</p>
+    <p className="poll-hint"><b>⚖️ ERES EL MODERADOR</b></p>
     <div className="mini-actions">
       {auction.canResolve && <button disabled={act.loading || Boolean(blocked)} onClick={() => { if (window.confirm(`¿RESOLVER AHORA LA SUBASTA DE ${auction.player.name}? EL JUGADOR FIRMARÁ CON EL CLUB QUE MEJOR LE CALCE.`)) act.execute('resolve'); }}>RESOLVER AHORA</button>}
       {auction.canCancel && <button className="danger" disabled={act.loading} onClick={() => { if (window.confirm(`¿CANCELAR LA SUBASTA DE ${auction.player.name}? SE DEVUELVE TODA LA PLATA RETENIDA Y EL JUGADOR SIGUE LIBRE.`)) act.execute('cancel'); }}>CANCELAR SUBASTA</button>}
@@ -322,6 +323,18 @@ export function SealedAuctionsSection({ revision, onChanged, teams = [] }) {
   const auctions = useApiQuery(signal => endpoints.sealedAuctions({ active: 1 }, signal), [revision]);
   const now = useNow();
   const rows = Array.isArray(auctions.data) ? auctions.data : [];
+  useEffect(() => { if (rows[0]?.serverNow) syncServerTime(rows[0].serverNow); }, [auctions.data]);
+  // Al entrar a una subasta abierta, la sala queda encuadrada en la pantalla (sin tener que bajar).
+  const firstOpenId = rows.find(row => row.status === 'open')?.id ?? null;
+  useEffect(() => {
+    if (!firstOpenId) return;
+    const node = document.querySelector('.sealed-card.stage');
+    // Debajo del encabezado del sitio y de las pestañas (las dos quedan fijas arriba).
+    const tabs = document.querySelector('.market-tabs');
+    const offset = (tabs ? tabs.getBoundingClientRect().height : 60) + 71 + 10;
+    const top = node ? node.getBoundingClientRect().top + window.scrollY - offset : null;
+    if (top != null && window.scrollY < top - 40) window.scrollTo({ top, behavior: 'smooth' });
+  }, [firstOpenId]);
   const refresh = () => { auctions.retry(); onChanged?.(); };
   const unavailable = auctions.error?.status === 404;
   if (unavailable) {
