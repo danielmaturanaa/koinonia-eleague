@@ -3450,6 +3450,8 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .reveal-meter { display: block; width: 100%; height: 8px; border-radius: 4px; background: #d6ccb2; overflow: hidden; }
 .reveal-meter i { display: block; height: 100%; background: linear-gradient(90deg, #a90020, #ffd42a 55%, #1c7a3e); }
 .reveal-fit strong { font-variant-numeric: tabular-nums; }
+.reveal-back .stars, .reveal-back .stars span { justify-self: center; color: #d49b00; font: 600 15px/1 'Oswald', sans-serif; letter-spacing: 1px; }
+.reveal-back .stars i { color: #c9c2ad; font-style: normal; }
 .reveal-skip { justify-self: center; }
 @media (prefers-reduced-motion: reduce) { .reveal-envelope.shake, .reveal-live, .reveal-bubble { animation: none; } }
 .reveal-envelopes .reveal-envelope { flex: 0 0 170px; width: 170px; }

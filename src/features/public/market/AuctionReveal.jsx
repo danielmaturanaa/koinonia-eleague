@@ -4,6 +4,7 @@ import { PlayerFace } from '../../../components/PlayerFace.jsx';
 import { gp } from '../DataStates.jsx';
 import { isMuted } from './chatSound.js';
 import { serverNow } from './serverClock.js';
+import { Stars } from './stars.jsx';
 
 // Mismas duraciones que el servidor (REVEAL en core/auctions.js): así todos ven el mismo momento a la misma hora.
 export const REVEAL = { introMs: 6000, perClubMs: 7500, fakeoutMs: 7000, finalMs: 8000 };
@@ -11,7 +12,6 @@ const FIT_MIN = 0.7;
 const FIT_MAX = 1.3;
 
 const reducedMotion = () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-const fitLabel = value => `×${Number(value).toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const ease = t => 1 - (1 - t) ** 3;
 
 // Lo que piensa el jugador de cada club, en voz alta. Sale de datos reales: la plata, lo que le aceptaron, el DT que ya
@@ -152,14 +152,27 @@ const fanfare = () => tone([523.25, 659.25, 783.99, 1046.5]);
 const tick = () => tone([880], { type: 'sine', last: 0.08, volume: 0.05 });
 const drum = () => tone(Array.from({ length: 14 }, (_, index) => 110 + index * 4), { type: 'square', gap: 0.06, last: 0.12, volume: 0.04 });
 
+/** Copia del ranking en un orden pseudoaleatorio fijo por `seed` (Fisher-Yates con el hash como semilla). */
+function shuffled(items, seed) {
+  const list = [...items];
+  let state = hash(`${seed}:orden`) || 1;
+  for (let index = list.length - 1; index > 0; index -= 1) {
+    state = (state * 1103515245 + 12345) >>> 0;
+    const other = state % (index + 1);
+    [list[index], list[other]] = [list[other], list[index]];
+  }
+  return list;
+}
+
 /** Línea de tiempo de la revelación: todo sale de cuánto pasó desde `startAt` (igual para todos). */
 export function revealLength(clubs) {
   return REVEAL.introMs + Math.max(1, clubs) * REVEAL.perClubMs + REVEAL.fakeoutMs + REVEAL.finalMs;
 }
 
 /**
- * La revelación: el jugador piensa en voz alta club por club (del peor al mejor), el encaje de cada uno se llena de
- * a poco, amaga con elegir a otro, redoble… y recién ahí el "HERE WE GO". `startAt` (ms) la sincroniza para todos.
+ * La revelación: el jugador piensa en voz alta club por club (en un orden sorteado: el ganador puede salir en
+ * cualquier momento), el encaje de cada uno se llena de a poco (sin el número final, para que no se pueda sacar la
+ * cuenta), amaga con elegir a otro, redoble… y recién ahí el "HERE WE GO". `startAt` (ms) la sincroniza para todos.
  */
 const initials = name => String(name ?? '').split(/\s+/).filter(Boolean).slice(0, 2).map(word => word[0]).join('').toUpperCase();
 function Crest({ teams, teamId, name, className = 'reveal-crest' }) {
@@ -169,11 +182,16 @@ function Crest({ teams, teamId, name, className = 'reveal-crest' }) {
 }
 
 export function AuctionReveal({ auction, startAt, onClose, onSkip = null, teams = [] }) {
+  const player = auction.player;
   const ranking = auction.result?.ranking ?? [];
-  const order = [...ranking].reverse();
+  // Orden de los sobres sorteado con el id de la subasta: igual para todos, pero no delata al ganador.
+  const order = shuffled(ranking, auction.id ?? player?.name);
   const n = Math.max(1, order.length);
   const winnerId = auction.winner?.teamId ?? null;
   const runnerUp = ranking.find(row => row.teamId !== winnerId) ?? null;
+  const winnerRow = ranking.find(row => row.teamId === winnerId) ?? null;
+  // La corazonada dio vuelta un resultado parejo: en el papel ganaba el segundo.
+  const flipped = Boolean(winnerRow && runnerUp && winnerRow.baseValue != null && runnerUp.baseValue != null && runnerUp.baseValue > winnerRow.baseValue);
   const [now, setNow] = useState(() => serverNow());
   useEffect(() => {
     let frame = 0;
@@ -207,7 +225,6 @@ export function AuctionReveal({ auction, startAt, onClose, onSkip = null, teams 
     if (phase === 'done' && winnerId && elapsed < finalStart + 1500) once('fanfare', fanfare);
   });
 
-  const player = auction.player;
   const bubble = (() => {
     if (phase === 'countdown') return `LA DECISIÓN EN VIVO EN ${Math.ceil(-elapsed / 1000)}…`;
     if (phase === 'intro') return elapsed < clubsStart / 2 ? 'Bueno, bueno…' : `Tengo ${order.length} ${order.length === 1 ? 'oferta' : 'ofertas'} sobre la mesa. Déjenme pensar.`;
@@ -219,7 +236,10 @@ export function AuctionReveal({ auction, startAt, onClose, onSkip = null, teams 
       const pair = [ranking.find(row => row.teamId === winnerId), runnerUp];
       const [a, b] = hash(auction.id ?? player.name) % 2 ? pair : [pair[1], pair[0]];
       const [hookA, hookB] = twoHooks(a, b);
-      return fakeHalf ? `¿${a.teamName}, ${hookA}? ¿O ${b.teamName}, ${hookB}?` : 'Ya. Lo tengo decidido… 🥁';
+      if (fakeHalf) return `¿${a.teamName}, ${hookA}? ¿O ${b.teamName}, ${hookB}?`;
+      return flipped
+        ? pick(`${auction.id}:c`, [`Lo tenía claro… pero hay algo de ${winnerRow.teamName} que no me puedo sacar de la cabeza 💫`, `Los números dicen una cosa… pero el corazón me dice otra 💫`])
+        : 'Ya. Lo tengo decidido… 🥁';
     }
     return null;
   })();
@@ -252,9 +272,9 @@ export function AuctionReveal({ auction, startAt, onClose, onSkip = null, teams 
                 <Crest teams={teams} teamId={row.teamId} name={row.teamName}/>
                 <b>{String(row.teamName ?? '').toUpperCase()}</b>
                 <span>OFERTA <strong>{gp(row.offer)}</strong></span>
-                <span className="reveal-fit">ENCAJE <strong>{fitLabel(fit)}</strong></span>
+                <span className="reveal-fit">ENCAJE</span>
                 <span className="reveal-meter" aria-hidden="true"><i style={{ width: `${percent}%` }}/></span>
-                {(fill >= 1) && <span>VALOR <strong>{gp(Math.round(row.offer * fit))}</strong></span>}
+                {(fill >= 1) && <Stars note={row.total} compact/>}
                 {done && isWinner && <em>ELEGIDO</em>}
               </div>
             </div>
@@ -266,7 +286,7 @@ export function AuctionReveal({ auction, startAt, onClose, onSkip = null, teams 
           <Crest teams={teams} teamId={winnerId} name={auction.winner.name} className="reveal-final-crest"/>
           <p className="reveal-stamp">🚨 HERE WE GO! 🚨</p>
           <p className="reveal-headline"><b>{player.name.toUpperCase()}</b> FIRMA POR <b>{auction.winner.name.toUpperCase()}</b></p>
-          <p className="reveal-sub">POR {gp(auction.winner.amount)} · LAS RAZONES SALEN EN LA NOTICIA DEL FICHAJE</p>
+          <p className="reveal-sub">POR {gp(auction.winner.amount)}{flipped ? ' · 💫 LO DECIDIÓ UNA CORAZONADA' : ''} · LAS RAZONES SALEN EN LA NOTICIA DEL FICHAJE</p>
         </div>
         : <div className="reveal-final">
           <p className="reveal-stamp muted">🤷 SIGUE LIBRE</p>
