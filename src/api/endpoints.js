@@ -97,6 +97,15 @@ export const endpoints = {
   createTrade: (body, signal) => apiClient.post('/market/trades', body, { actor: 'web', signal }),
   approveTrade: (tradeId, signal) => apiClient.post(`/market/trades/${tradeId}/approve`, {}, { actor: 'web', signal }),
   rejectTrade: (tradeId, signal) => apiClient.post(`/market/trades/${tradeId}/reject`, {}, { actor: 'web', signal }),
+  marketStatus: signal => get('/market/status', null, signal),
+  marketPolls: (query, signal) => get('/market/polls', query, signal),
+  marketOffers: signal => get('/market/offers', null, signal),
+  openPoll: (body, signal) => apiClient.post('/market/polls', body, { actor: 'web', signal }),
+  // action: vote | confirm | decline | cancel
+  pollAction: (pollId, action, body, signal) => apiClient.post(`/market/polls/${pollId}/${action}`, body ?? {}, { actor: 'web', signal }),
+  claimAuction: (body, signal) => apiClient.post('/market/auctions', body, { actor: 'web', signal }),
+  // decision: accept | reject
+  resolveAuction: (pollId, decision, signal) => apiClient.post(`/market/polls/${pollId}/auction/${decision}`, {}, { actor: 'web', signal }),
   createTournament: (body, signal) => apiClient.post('/tournaments', body, { actor: 'web', signal }),
   updateTournamentStatus: (tournamentId, status, signal) => apiClient.patch(`/tournaments/${tournamentId}/status`, { status }, { actor: 'web', signal }),
   updateTournamentChampionPolicy: (tournamentId, championPolicy, signal) => apiClient.patch(`/tournaments/${tournamentId}/champion-policy`, { championPolicy }, { actor: 'web', signal }),

@@ -8,6 +8,9 @@ import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { DataState, OverallBadge, PageHeader, formatDate, gp } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
+import { MyClubPanel, clubFigures, signingBlocker } from './market/MyClubPanel.jsx';
+import { OffersInbox, ProposeOffers } from './market/OffersSection.jsx';
+import { PollsSection } from './market/PollsSection.jsx';
 
 const asList = value => Array.isArray(value) ? value : [];
 
@@ -108,24 +111,41 @@ function SigningForm({ player, teams, onDone }) {
   </div>;
 }
 
-function MarketPlayer({ player, teams, onChanged }) {
+/* Presidentes: no compran directo; abren una encuesta que votan los demás clubes. */
+function PollForm({ player, myTeamId, figures, marketOpen, onDone }) {
+  const open = useApiMutation((body, signal) => endpoints.openPoll(body, signal), { onSuccess: onDone });
+  const blocker = signingBlocker(figures, player.price, marketOpen);
+  return <div className="signing-form">
+    <p className="poll-hint">SE ABRE UNA ENCUESTA POR {gp(player.price)}. SI NADIE PIDE SUBASTA Y LLEGA AL MÍNIMO DE VOTOS, CONFIRMAS LA COMPRA.</p>
+    <div className="button-row">
+      <button type="button" className="action-button positive" disabled={Boolean(blocker) || open.loading} onClick={() => open.execute({ playerId: player.playerId, teamId: myTeamId })}>ABRIR ENCUESTA · {gp(player.price)}</button>
+    </div>
+    {blocker && <small className="signing-warning">{blocker}</small>}
+    <FormFeedback mutation={open}/>
+  </div>;
+}
+
+function MarketPlayer({ player, teams, onChanged, club }) {
+  const { isAdmin, teamId: myTeamId } = useAuth();
+  const canAct = isAdmin || Boolean(myTeamId);
   const [open, setOpen] = useState(false);
   const href = player.playerId
     ? `#/jugadores/${encodeURIComponent(player.playerId)}?from=mercado`
     : `#/efootball/${player.pesId}?${player.variation ? `v=${player.variation}&` : ''}from=mercado`;
   return <article className={`market-player ${open ? 'open' : ''}`}>
     <a href={href} className="market-player-link"><PlayerFace src={player.faceUrl} name={player.name}/><span><b>{player.name}</b><small>{[player.position, player.nationality, player.age ? `${player.age} AÑOS` : null].filter(Boolean).join(' · ')}</small><OverallBadge value={player.overall}/></span><strong>{gp(player.price)}</strong></a>
-    <button type="button" className="market-player-action" aria-expanded={open} onClick={() => setOpen(value => !value)}>{open ? 'CERRAR' : 'FICHAR'}</button>
-    {open && <SigningForm player={player} teams={teams} onDone={() => { setOpen(false); onChanged(); }}/>}
+    {canAct && <button type="button" className="market-player-action" aria-expanded={open} onClick={() => setOpen(value => !value)}>{open ? 'CERRAR' : isAdmin ? 'FICHAR' : 'ABRIR ENCUESTA'}</button>}
+    {open && isAdmin && <SigningForm player={player} teams={teams} onDone={() => { setOpen(false); onChanged(); }}/>}
+    {open && !isAdmin && <PollForm player={player} myTeamId={myTeamId} figures={club?.figures} marketOpen={club?.marketOpen} onDone={() => { setOpen(false); onChanged(); }}/>}
   </article>;
 }
 
-function PlayerList({ title, hint, status, teams, allHref }) {
+function PlayerList({ title, hint, status, teams, allHref, club, onChanged }) {
   const players = useApiQuery(signal => endpoints.playerDirectory({ status, sort: 'price_desc', pageSize: PREVIEW }, signal), [status]);
   const rows = asList(players.data);
   return <section className="market-section"><header><h2>{title} {players.pagination?.total != null && <small>{players.pagination.total.toLocaleString('es-CL')}</small>}</h2><p>{hint}</p></header>
     <DataState query={players}/>
-    {!players.loading && !players.error && (rows.length ? <div className="market-player-list">{rows.map(player => <MarketPlayer key={player.playerId ?? `${player.pesId}-${player.variation}`} player={player} teams={teams} onChanged={players.retry}/>)}</div> : <p className="empty-copy">NO HAY JUGADORES EN ESTA LISTA.</p>)}
+    {!players.loading && !players.error && (rows.length ? <div className="market-player-list">{rows.map(player => <MarketPlayer key={player.playerId ?? `${player.pesId}-${player.variation}`} player={player} teams={teams} club={club} onChanged={() => { players.retry(); onChanged?.(); }}/>)}</div> : <p className="empty-copy">NO HAY JUGADORES EN ESTA LISTA.</p>)}
     <a className="market-see-all" href={allHref}>VER TODOS EN JUGADORES →</a>
   </section>;
 }
@@ -142,20 +162,31 @@ function PendingTrades({ trades, players, teams, onChanged }) {
 }
 
 export function MarketPage({ teams }) {
-  const { isAdmin } = useAuth();
+  const { isAdmin, teamId: myTeamId } = useAuth();
   const [managing, setManaging] = useState(false);
   const [revision, setRevision] = useState(0);
   const trades = useApiQuery(signal => endpoints.trades({ page: 1, pageSize: 100 }, signal), [revision]);
   const hasPending = asList(trades.data).some(item => String(item.status ?? '').toLowerCase() === 'pending');
   const players = useApiQuery(signal => managing || hasPending ? loadAllPlayers(signal) : Promise.resolve({ data: [] }), [managing, hasPending, revision]);
+  const status = useApiQuery(signal => endpoints.marketStatus(signal), [revision]);
+  const profile = useApiQuery(signal => myTeamId ? endpoints.team(myTeamId, signal) : Promise.resolve({ data: null }), [myTeamId, revision]);
   const refresh = () => setRevision(value => value + 1);
+  const operates = isAdmin || Boolean(myTeamId);
+  const figures = clubFigures(profile.data);
+  const marketOpen = status.data ? Boolean(status.data.open) : undefined;
+  const club = { figures, marketOpen };
+  const myTeam = teams.find(team => team.id === myTeamId);
   return <main className="newspaper data-page"><section className="data-paper">
     <PageHeader kicker="JUGADORES DISPONIBLES" title="MERCADO">{isAdmin && <button className="page-action" onClick={() => setManaging(value => !value)}>{managing ? 'CERRAR GESTIÓN' : '⚙ GESTIONAR'}</button>}</PageHeader>
     {managing && isAdmin && <section className="market-section market-manual"><header><h2>REGISTRAR OPERACIÓN MANUAL</h2><p>Los traspasos y trueques normalmente se hacen por Discord; usa esto solo para corregir o registrar algo a mano.</p></header><MarketAdmin teams={teams} players={asList(players.data)} onChanged={refresh}/></section>}
+    {operates && <MyClubPanel team={myTeam} figures={figures} profileQuery={myTeamId ? profile : null} status={status.data} statusQuery={status}/>}
+    {operates && <PollsSection teams={teams} revision={revision} onChanged={refresh}/>}
+    {operates && myTeamId && <OffersInbox revision={revision} onChanged={refresh}/>}
+    {operates && myTeamId && <ProposeOffers teams={teams} onChanged={refresh}/>}
     <PendingTrades trades={trades} players={players} teams={teams} onChanged={refresh}/>
     <div className="market-layout">
       <div className="market-main">
-        <PlayerList key={`free-${revision}`} title="AGENTES LIBRES" hint="Todos los jugadores de eFootballDB están inscritos y sin equipo: se pueden comprar o asignar." status="free" teams={teams} allHref="#/equipos/jugadores?status=free"/>
+        <PlayerList key={`free-${revision}`} title="AGENTES LIBRES" hint="Todos los jugadores de eFootballDB están inscritos y sin equipo: se pueden comprar o asignar." status="free" teams={teams} allHref="#/equipos/jugadores?status=free" club={club} onChanged={refresh}/>
       </div>
     </div>
   </section></main>;
