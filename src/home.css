@@ -3201,3 +3201,9 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .sealed-card > .sealed-body, .sealed-card > .sealed-head { grid-column: 1 / -1; }
 .sealed-title .sealed-moderator b { display: inline; font: 600 13px/1.2 'Oswald', sans-serif; }
 .sealed-title .sealed-moderator { display: block; }
+
+/* Cabecera del chat sin foto: el nombre ya está en la tarjeta; botón de sonido */
+.pc-head { grid-template-columns: minmax(0, 1fr) auto auto; }
+.pc-sound { min-width: 40px; min-height: 36px; border: 2px solid #b9c9ec; background: transparent; color: #fff9e8; font-size: 16px; cursor: pointer; border-radius: 8px; }
+.pc-sound[aria-pressed="true"] { opacity: .7; }
+.pc-sound:focus-visible, .pc-close:focus-visible { outline: 3px solid #ffd42a; outline-offset: 2px; }

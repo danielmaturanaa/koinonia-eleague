@@ -100,12 +100,13 @@ function Participation({ rows, isModerator }) {
   if (!rows?.length) return null;
   const count = state => rows.filter(row => row.state === state).length;
   const bid = count('oferto') + count('listo');
+  const ready = count('listo');
   const pieces = [
-    [bid, 'OFERTARON', 'OFERTÓ'],
-    [count('listo'), 'LISTOS', 'LISTO'],
-    [count('no_participa'), 'NO PARTICIPAN', 'NO PARTICIPA'],
-    [count('pendiente'), 'PENDIENTES', 'PENDIENTE'],
-  ].filter(([n]) => n > 0).map(([n, plural, singular]) => `${n} ${n === 1 ? singular : plural}`);
+    // Los listos ya cuentan entre los que ofertaron: se muestran entre paréntesis, no como otro grupo.
+    [bid, 'OFERTARON', 'OFERTÓ', ready > 0 ? ` (${ready} ${ready === 1 ? 'LISTO' : 'LISTOS'})` : ''],
+    [count('no_participa'), 'NO PARTICIPAN', 'NO PARTICIPA', ''],
+    [count('pendiente'), 'PENDIENTES', 'PENDIENTE', ''],
+  ].filter(([n]) => n > 0).map(([n, plural, singular, extra]) => `${n} ${n === 1 ? singular : plural}${extra}`);
   const everyoneReady = bid > 0 && count('listo') >= bid;
   return <div className="sealed-participation">
     <p className="poll-meta"><b>{pieces.join(' · ')}</b></p>

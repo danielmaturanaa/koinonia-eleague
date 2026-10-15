@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { isMuted, playIncoming, setMuted } from './chatSound.js';
 import { endpoints } from '../../../api/endpoints.js';
 import { useAuth } from '../../../app/AuthGate.jsx';
 import { PlayerFace } from '../../../components/PlayerFace.jsx';
@@ -188,8 +189,25 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
       };
       document.addEventListener('visibilitychange', restore);
     }
+    // Mensaje nuevo del jugador (no el primero al abrir): suena si el chat está a la vista, salvo que lo silencies.
+    if (seenCount.current !== null && playerCount > seenCount.current) playIncoming();
     seenCount.current = playerCount;
   }, [playerCount]);
+
+  const [muted, setMutedState] = useState(isMuted);
+  const toggleMuted = () => { const next = !muted; setMuted(next); setMutedState(next); };
+
+  // En escritorio, al abrir el chat el cursor queda listo en el cuadro de texto (no en móvil: abriría el teclado).
+  const textInput = useRef(null);
+  const focusedOnce = useRef(false);
+  useEffect(() => {
+    if (!chat || focusedOnce.current || typeof window === 'undefined') return;
+    const desktop = window.matchMedia?.('(min-width: 960px) and (hover: hover)').matches;
+    if (desktop && textInput.current && !textInput.current.disabled) {
+      focusedOnce.current = true;
+      textInput.current.focus({ preventScroll: true });
+    }
+  }, [chat]);
 
   const thinking = answer.loading || message.loading || rewind.loading;
   useEffect(() => {
@@ -224,8 +242,8 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
 
   return <section className="pc" aria-label={`CHAT CON ${player.name}`}>
     <header className="pc-head">
-      <PlayerFace src={player.faceUrl} name={player.name}/>
-      <div className="pc-who"><b>{player.name.toUpperCase()}</b><small>{(player.position ?? 'JUGADOR').toUpperCase()} · AGENTE LIBRE</small></div>
+      <div className="pc-who"><b>💬 CHAT PRIVADO CON {player.name.toUpperCase()}</b><small>SOLO TU CLUB LO VE</small></div>
+      <button type="button" className="pc-sound" aria-pressed={muted} aria-label={muted ? 'ACTIVAR SONIDO' : 'SILENCIAR SONIDO'} title={muted ? 'ACTIVAR SONIDO' : 'SILENCIAR SONIDO'} onClick={toggleMuted}>{muted ? '🔕' : '🔔'}</button>
       <button type="button" className="pc-close" onClick={() => setShown(false)}>CERRAR</button>
     </header>
     {chat && <Temperature interest={chat.interest} temperature={chat.temperature}/>}
@@ -285,7 +303,7 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
           event.preventDefault();
           if (text.trim()) message.execute({ teamId: chosen, text: text.trim() });
         }}>
-          <input value={text} maxLength={freeText.maxLength} disabled={thinking || freeLeft === 0}
+          <input ref={textInput} value={text} maxLength={freeText.maxLength} disabled={thinking || freeLeft === 0}
             onChange={event => setText(event.target.value)} placeholder={freeLeft === 0 ? 'SIN MENSAJES LIBRES' : 'ESCRÍBELE AL JUGADOR…'}
             aria-label="ESCRÍBELE AL JUGADOR"/>
           <button type="submit" className="pc-send" aria-label="ENVIAR MENSAJE" disabled={thinking || !text.trim() || freeLeft === 0}>➤</button>
