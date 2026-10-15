@@ -3472,3 +3472,8 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .reveal-envelope.winner .reveal-crest { width: 44px; height: 44px; }
 .reveal-final-crest { justify-self: center; width: 110px; height: 110px; object-fit: contain; filter: drop-shadow(0 0 22px rgba(255, 212, 42, .6)); animation: reveal-final .7s cubic-bezier(.2, 1.5, .4, 1) both; }
 @media (max-width: 560px) { .reveal-final-crest { width: 80px; height: 80px; } .reveal-crest { width: 28px; height: 28px; } }
+/* El club que coquetea en la revelación apenas se mueve: el brillo dorado es solo del elegido */
+.reveal-envelope.teased { transform: translateY(-4px) rotate(-1.5deg); }
+.reveal-envelope.teased .reveal-back { box-shadow: 0 0 0 2px #b9c9ec; }
+/* Respuestas que no calzan con lo elegido */
+.pc-chip.blocked { opacity: .38; text-decoration: line-through; text-decoration-color: rgba(169, 0, 32, .5); }

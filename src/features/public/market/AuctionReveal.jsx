@@ -172,7 +172,8 @@ export function AuctionReveal({ auction, startAt, onClose, onSkip = null, teams 
     if (phase === 'fakeout') {
       if (!winnerId) return fakeHalf ? 'Mmm… ninguno me termina de convencer…' : '…';
       if (!runnerUp) return fakeHalf ? `¿Me convence ${auction.winner.name}… o sigo libre?` : 'Ya. Lo tengo decidido.';
-      return fakeHalf ? `Creo que me voy a… ${runnerUp.teamName}…` : '…no. Espera. 🥁';
+      // Coqueteo, no una decisión falsa: se nota que está jugando.
+      return fakeHalf ? `${runnerUp.teamName} me hace ojitos… 😏 ¿o no?` : 'Ya. Lo tengo decidido… 🥁';
     }
     return null;
   })();
