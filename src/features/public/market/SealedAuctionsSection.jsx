@@ -144,17 +144,27 @@ function Participation({ rows, isModerator, teams = [] }) {
   </div>;
 }
 
-/** Tu estado de un vistazo: oferta, listo y temperatura. */
-function YourState({ auction, clubs, teams, heat }) {
+/** Guía de 3 pasos: qué hiciste y qué te falta (ofertar → conversar → estoy listo), con la temperatura del jugador. */
+function Steps({ auction, clubs, teams, heat }) {
   const ready = new Set(auction.myReadyTeamIds ?? []);
-  return <div className="sealed-yours" aria-label="TU ESTADO">
+  return <div className="stage-steps" aria-label="TUS PASOS">
     {clubs.map(id => {
       const bid = auction.myBids.find(item => item.teamId === id);
-      return <div className="sealed-yours-row" key={id}>
-        {clubs.length > 1 && <b>{clubLabel(teams, id)}</b>}
-        <span className={bid ? 'ok' : 'wait'}>{bid ? `TU OFERTA ${gp(bid.amount)}` : 'SIN OFERTA TODAVÍA'}</span>
-        <span className={ready.has(id) ? 'ok' : 'wait'}>{ready.has(id) ? '🏁 LISTO' : 'NO LISTO'}</span>
-        {clubs.indexOf(id) === 0 && heat && <span className="heat">🌡 {heat.temperature}° {String(heat.label).toUpperCase()}</span>}
+      const talked = clubs.indexOf(id) === 0 && heat ? heat : null;
+      const steps = [
+        { key: 'oferta', label: bid ? `OFERTASTE ${gp(bid.amount)}` : 'HAZ TU OFERTA', done: Boolean(bid) },
+        { key: 'chat', label: talked?.finished ? 'LE RESPONDISTE TODO' : talked ? `CONVERSA CON ÉL${talked.answered ? ` · ${talked.answered} RESPONDIDA${talked.answered > 1 ? 'S' : ''}` : ''}` : 'CONVERSA CON ÉL', done: Boolean(talked?.finished) },
+        { key: 'listo', label: ready.has(id) ? 'ESTÁS LISTO' : 'MARCA «ESTOY LISTO»', done: ready.has(id) },
+      ];
+      const current = steps.findIndex(step => !step.done);
+      return <div className="stage-steps-row" key={id}>
+        {clubs.length > 1 && <b className="stage-steps-club">{clubLabel(teams, id)}</b>}
+        <ol>
+          {steps.map((step, index) => <li key={step.key} className={step.done ? 'done' : index === current ? 'current' : ''}>
+            <i aria-hidden="true">{step.done ? '✓' : index + 1}</i><span>{step.label}</span>
+          </li>)}
+        </ol>
+        {talked && <span className="stage-heat">🌡 {talked.temperature}° {String(talked.label).toUpperCase()}</span>}
       </div>;
     })}
   </div>;
@@ -251,7 +261,7 @@ function AuctionCard({ auction, now, onChanged, teams = [] }) {
       </div>}
     </header>
     {open && closing && <p className="stage-alert" role="status">⚡ QUEDAN MENOS DE 5 MINUTOS: UNA OFERTA NUEVA EXTIENDE EL RELOJ.</p>}
-    {canPlay && <YourState auction={auction} clubs={playingClubs} teams={teams} heat={heat}/>}
+    {canPlay && <Steps auction={auction} clubs={playingClubs} teams={teams} heat={heat}/>}
 
     {open && <div className={`sealed-body ${canPlay ? 'with-chat' : ''}`}>
       <div className="sealed-side">

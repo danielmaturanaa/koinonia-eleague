@@ -96,7 +96,6 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
 
   // Respuestas elegidas (se pueden combinar hasta 3 si calzan entre sí).
   const [picks, setPicks] = useState([]);
-  const [text, setText] = useState('');
   // Tema cuya respuesta se está por deshacer (cualquiera de las respondidas, no solo la última).
   const [confirmTopic, setConfirmTopic] = useState('');
   const [notice, setNotice] = useState('');
@@ -119,10 +118,6 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
         onChanged?.();
       },
     },
-  );
-  const message = useApiMutation(
-    (body, signal) => endpoints.sealedAuctionAction(auction.id, 'chat/message', body, signal),
-    { onSuccess: result => { keep(result); setText(''); } },
   );
   const rewind = useApiMutation(
     (body, signal) => endpoints.sealedAuctionAction(auction.id, 'chat/rewind', body, signal),
@@ -186,8 +181,13 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
 
   useEffect(() => {
     if (!onHeat) return;
-    onHeat(chat && typeof chat.temperature === 'number' ? { temperature: chat.temperature, label: (LEVEL[chat.interest] ?? [0, ''])[1].replace(/^\S+\s/, '') } : null);
-  }, [chat?.temperature, chat?.interest]);
+    onHeat(chat && typeof chat.temperature === 'number' ? {
+      temperature: chat.temperature, label: (LEVEL[chat.interest] ?? [0, ''])[1].replace(/^\S+\s/, ''),
+      // Para la guía de pasos: cuántas preguntas respondiste y si ya no quedan.
+      answered: (chat.messages ?? []).filter(item => item.kind === 'answer' && !/^pedido:/.test(String(item.topic ?? ''))).length,
+      finished: Boolean(chat.finished),
+    } : null);
+  }, [chat?.temperature, chat?.interest, chat?.finished, chat?.messages?.length]);
 
   // Con la pestaña oculta, un mensaje nuevo del jugador se anuncia en el título del documento.
   const playerCount = (chat?.messages ?? []).filter(item => item.role !== 'club' && !item.pending).length;
@@ -211,19 +211,8 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
   const [muted, setMutedState] = useState(isMuted);
   const toggleMuted = () => { const next = !muted; setMuted(next); setMutedState(next); };
 
-  // En escritorio, al abrir el chat el cursor queda listo en el cuadro de texto (no en móvil: abriría el teclado).
-  const textInput = useRef(null);
-  const focusedOnce = useRef(false);
-  useEffect(() => {
-    if (!chat || focusedOnce.current || typeof window === 'undefined') return;
-    const desktop = window.matchMedia?.('(min-width: 960px) and (hover: hover)').matches;
-    if (desktop && textInput.current && !textInput.current.disabled) {
-      focusedOnce.current = true;
-      textInput.current.focus({ preventScroll: true });
-    }
-  }, [chat]);
 
-  const thinking = answer.loading || message.loading || rewind.loading;
+  const thinking = answer.loading || rewind.loading;
   useEffect(() => {
     const node = scroller.current;
     if (node) node.scrollTop = node.scrollHeight;
@@ -236,11 +225,9 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
   const player = auction.player;
   const pending = chat?.pending;
   const options = pending?.options ?? [];
-  const freeText = chat?.freeText ?? { used: 0, limit: 0, maxLength: 280 };
   // Los mensajes que el jugador todavía "escribe" no se dibujan: solo se ve un indicador por vez, en orden.
   const firstHidden = (chat?.messages ?? []).findIndex(item => item.pending && !item.text);
   const shownMessages = firstHidden === -1 ? (chat?.messages ?? []) : chat.messages.slice(0, firstHidden);
-  const freeLeft = Math.max(0, freeText.limit - freeText.used);
   const rewindInfo = chat?.rewind ?? { available: false, used: 0, limit: 0 };
   const rewindsLeft = Math.max(0, (rewindInfo.limit ?? 0) - (rewindInfo.used ?? 0));
 
@@ -323,20 +310,9 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
             <button type="button" className="action-button positive" disabled={thinking || !picks.length} onClick={() => send(picks)}>ENVIAR{picks.length > 1 ? ` (${picks.length})` : ''}</button>
           </div>}
           {answer.error && <p className="form-feedback error" role="alert">{answer.error.message}</p>}
-        </div> : chat.finished && <p className="pc-finished" role="status">✅ SIN PREGUNTAS PENDIENTES · PUEDES CAMBIAR RESPUESTAS, ESCRIBIRLE O MEJORAR TU OFERTA.</p>}
+        </div> : chat.finished && <p className="pc-finished" role="status">✅ LE RESPONDISTE TODO · PUEDES CAMBIAR UNA RESPUESTA O SUBIR TU OFERTA. SI YA ESTÁS, MARCA «ESTOY LISTO».</p>}
         {rewind.error && <p className="form-feedback error" role="alert">{rewind.error.message}</p>}
 
-        <form className="pc-bar" onSubmit={event => {
-          event.preventDefault();
-          if (text.trim()) message.execute({ teamId: chosen, text: text.trim() });
-        }}>
-          <input ref={textInput} value={text} maxLength={freeText.maxLength} disabled={thinking || freeLeft === 0}
-            onChange={event => setText(event.target.value)} placeholder={freeLeft === 0 ? 'SIN MENSAJES LIBRES' : 'ESCRÍBELE AL JUGADOR…'}
-            aria-label="ESCRÍBELE AL JUGADOR"/>
-          <button type="submit" className="pc-send" aria-label="ENVIAR MENSAJE" disabled={thinking || !text.trim() || freeLeft === 0}>➤</button>
-        </form>
-        <small className="pc-count">{text.length}/{freeText.maxLength} · MENSAJES LIBRES {freeText.used}/{freeText.limit}</small>
-        {message.error && <p className="form-feedback error" role="alert">{message.error.message}</p>}
       </div>
     </>}
   </section>;

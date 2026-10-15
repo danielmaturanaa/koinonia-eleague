@@ -3477,3 +3477,17 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .reveal-envelope.teased .reveal-back { box-shadow: 0 0 0 2px #b9c9ec; }
 /* Respuestas que no calzan con lo elegido */
 .pc-chip.blocked { opacity: .38; text-decoration: line-through; text-decoration-color: rgba(169, 0, 32, .5); }
+
+/* Guía de pasos de la subasta: oferta → conversa → listo */
+.stage-steps { display: grid; gap: 6px; margin: 12px 12px 0; }
+.stage-steps-row { display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: center; padding: 8px 10px; border: 2px solid #10285b; background: #fff; }
+.stage-steps-club { color: #062764; font: 600 14px/1 'Oswald', sans-serif; }
+.stage-steps ol { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.stage-steps li { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px 5px 5px; border-radius: 18px; color: #625d4e; background: #f1ead7; font: 600 13px/1.1 'Oswald', sans-serif; letter-spacing: .3px; }
+.stage-steps li i { display: grid; place-items: center; width: 22px; height: 22px; border-radius: 50%; color: #fff; background: #aa9e86; font-style: normal; font-size: 12px; }
+.stage-steps li.done { color: #0d4a2a; background: #e4f4ea; }
+.stage-steps li.done i { background: #1c7a3e; }
+.stage-steps li.current { color: #fff; background: #062764; box-shadow: 0 0 0 3px rgba(6, 39, 100, .2); }
+.stage-steps li.current i { color: #062764; background: #ffd42a; }
+.stage-heat { margin-left: auto; color: #a90020; font: 600 13px/1 'Oswald', sans-serif; }
+@media (max-width: 560px) { .stage-heat { margin-left: 0; } }

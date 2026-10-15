@@ -19,7 +19,7 @@ const GOOD = {
   proyecto: 'vienen en racha', reputacion: 'ese presi cumple lo que promete',
 };
 const BAD = {
-  minutos: 'no sé si voy a jugar', companeros: 'no conozco a nadie', dt: 'el DT no me sirve', prestigio: 'es un club chico',
+  minutos: 'no sé si voy a jugar', companeros: 'no conozco a nadie', dt: 'el DT no me sirve', prestigio: 'ha ganado poco comparado con los grandes',
   proyecto: 'vienen mal', reputacion: 'ese presi no cumple sus promesas',
 };
 const hash = text => [...String(text)].reduce((acc, char) => (acc * 31 + char.charCodeAt(0)) >>> 0, 7);
@@ -31,7 +31,11 @@ function thoughtsFor(row, ranking) {
   const notes = Object.entries(row.notes ?? {}).filter(([factor]) => factor !== 'dinero');
   const best = [...notes].sort((a, b) => b[1] - a[1])[0];
   const worst = [...notes].sort((a, b) => a[1] - b[1])[0];
-  const money = row.offer >= topOffer
+  const tied = ranking.filter(item => item.offer === topOffer).length;
+  // Si varios pusieron lo mismo, la plata no desempata: no tiene sentido decir que uno "pone más".
+  const money = row.offer >= topOffer && tied > 1
+    ? pick(`${name}:t`, [`${name} también pone ${gp(row.offer)}. Igual que el resto…`, `${gp(row.offer)}, otra vez. La plata no desempata.`, `${name}: ${gp(row.offer)}, como todos. Entonces decide otra cosa…`])
+    : row.offer >= topOffer
     ? pick(`${name}:m`, [`${name} pone la mejor plata… ${gp(row.offer)}. Uf.`, `${gp(row.offer)}. ${name} va en serio…`, `Nadie pone más que ${name}: ${gp(row.offer)}.`])
     : pick(`${name}:m`, [`${name} me ofrece ${gp(row.offer)}…`, `Mmm, ${name}. ${gp(row.offer)} sobre la mesa.`, `${name} pone ${gp(row.offer)}. A ver…`]);
   const feel = best && best[1] >= 70 && (!worst || worst[1] >= 45)
