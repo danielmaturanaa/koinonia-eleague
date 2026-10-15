@@ -50,7 +50,7 @@ function countdown(closesAt, now) {
   return days ? `${days} D ${clock}` : clock;
 }
 
-function BidPanel({ auction, onChanged }) {
+function BidPanel({ auction, onChanged, teams = [] }) {
   const { isAdmin, user, teamId } = useAuth();
   const teamIds = user?.teamIds ?? [];
   const clubs = isAdmin && !teamIds.length ? [] : teamIds;
@@ -69,7 +69,7 @@ function BidPanel({ auction, onChanged }) {
   };
   return <form className="poll-auction-form sealed-bid" onSubmit={submit}>
     {clubs.length > 1 && <label>CLUB<select value={chosen} onChange={event => setChosen(event.target.value)}>
-      {clubs.map(id => <option key={id} value={id}>{id === teamId ? 'MI CLUB PRINCIPAL' : id}</option>)}
+      {clubs.map(id => <option key={id} value={id}>{(teams.find(team => team.id === id)?.name ?? id).toUpperCase()}</option>)}
     </select></label>}
     <label>{mine ? 'SUBIR MI OFERTA (GP)' : 'MI OFERTA (GP)'}
       <input type="number" min={minimum} step="1" required value={amount} onChange={event => setAmount(event.target.value)}/>
@@ -125,7 +125,7 @@ function AdminActions({ auction, onChanged }) {
   </div>;
 }
 
-function AuctionCard({ auction, now, onChanged }) {
+function AuctionCard({ auction, now, onChanged, teams = [] }) {
   const { isAdmin, user } = useAuth();
   const open = auction.status === 'open';
   const outbid = auction.myBids.some(bid => bid.outbid);
@@ -153,7 +153,7 @@ function AuctionCard({ auction, now, onChanged }) {
       {bid.outbid && <span>⚠️ HAY UNA OFERTA MÁS FUERTE</span>}
     </div>)}
 
-    {open && isPresident && <BidPanel auction={auction} onChanged={onChanged}/>}
+    {open && isPresident && <BidPanel auction={auction} onChanged={onChanged} teams={teams}/>}
     {open && !isPresident && <p className="poll-hint">SOLO LOS PRESIDENTES CON CLUB PUEDEN OFERTAR.</p>}
     {open && isAdmin && <AdminActions auction={auction} onChanged={onChanged}/>}
 
@@ -198,7 +198,7 @@ function OpenAuctionForm({ onChanged }) {
   </form>;
 }
 
-export function SealedAuctionsSection({ revision, onChanged }) {
+export function SealedAuctionsSection({ revision, onChanged, teams = [] }) {
   const { isAdmin } = useAuth();
   const [showAll, setShowAll] = useState(false);
   const auctions = useApiQuery(signal => endpoints.sealedAuctions(showAll ? {} : { active: 1 }, signal), [revision, showAll]);
@@ -220,6 +220,6 @@ export function SealedAuctionsSection({ revision, onChanged }) {
     {auctions.loading && auctions.data === null && <div className="arcade-state compact">CARGANDO SUBASTAS...</div>}
     {auctions.error && <DataState query={auctions}/>}
     {!auctions.error && !auctions.loading && !rows.length && <p className="empty-copy">NO HAY SUBASTAS {showAll ? 'REGISTRADAS' : 'ABIERTAS'} POR AHORA.</p>}
-    <div className="poll-list sealed-list">{rows.map(auction => <AuctionCard key={auction.id} auction={auction} now={now} onChanged={refresh}/>)}</div>
+    <div className="poll-list sealed-list">{rows.map(auction => <AuctionCard key={auction.id} auction={auction} now={now} onChanged={refresh} teams={teams}/>)}</div>
   </section>;
 }
