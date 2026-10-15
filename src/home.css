@@ -2942,3 +2942,39 @@ a.news-read-more { display: inline-block; text-decoration: none; }
   .poll-card > header { grid-template-columns: 44px minmax(0, 1fr); }
   .poll-status { grid-column: 1 / -1; justify-self: start; }
 }
+
+/* Subastas selladas */
+.sealed-list { grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); }
+.sealed-card.status-resolved { border-color: #1c7a3e; }
+.sealed-card.status-cancelled, .sealed-card.status-no_sale { border-color: #aa9e86; }
+.sealed-clock { display: grid; gap: 2px; padding: 8px 10px; border: 2px solid #092e77; background: #eef3ff; }
+.sealed-clock b { color: #062764; font: 400 30px/1 'Anton', sans-serif; letter-spacing: 1px; font-variant-numeric: tabular-nums; }
+.sealed-clock small { color: #625d4e; font: 500 13px/1.2 'Roboto Condensed', sans-serif; }
+.sealed-clock.closing { border-color: #a90020; background: #ffe9ec; }
+.sealed-clock.closing b { color: #a90020; }
+.sealed-mine { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; padding: 6px 8px; border: 2px solid #1c7a3e; background: #e8f3df; font: 600 14px/1.2 'Oswald', sans-serif; }
+.sealed-mine.outbid { border-color: #a90020; background: #fff3c4; }
+.sealed-mine.outbid span { color: #a90020; }
+.sealed-bid { border-style: solid; border-color: #092e77; background: #fff9e8; }
+.sealed-bid label { color: #062764; }
+.sealed-result { margin: 0; }
+.sealed-breakdown { display: grid; gap: 8px; min-width: 0; }
+.sealed-traits { display: grid; gap: 4px; }
+.sealed-traits span { padding: 5px 8px; border-left: 4px solid #092e77; background: #eef3ff; font: 500 13px/1.25 'Roboto Condensed', sans-serif; }
+.sealed-traits b { color: #062764; font: 600 13px/1.2 'Oswald', sans-serif; }
+.sealed-table { overflow-x: auto; border: 1px solid #d0c4a8; }
+.sealed-table table { width: 100%; min-width: 360px; border-collapse: collapse; font: 500 13px/1.2 'Roboto Condensed', sans-serif; font-variant-numeric: tabular-nums; }
+.sealed-table th, .sealed-table td { padding: 5px 7px; border-bottom: 1px solid #e0d6bf; text-align: left; }
+.sealed-table th { color: #062764; font: 600 12px/1.1 'Oswald', sans-serif; letter-spacing: .4px; }
+.sealed-table tr.sum td { background: #f7f1df; }
+.interest { display: inline-block; padding: 2px 6px; border: 1px solid currentColor; font: 600 11px/1.2 'Oswald', sans-serif; white-space: nowrap; }
+.interest.hot { color: #a90020; } .interest.warm { color: #8a6500; } .interest.cold { color: #1b5fa8; }
+.sealed-admin { padding: 8px 10px; border: 2px dashed #092e77; }
+.sealed-admin summary { cursor: pointer; color: #062764; font: 600 14px/1.2 'Oswald', sans-serif; }
+.sealed-search { display: flex; gap: 6px; }
+.sealed-search input { flex: 1; min-width: 0; }
+.sealed-toggle { display: flex; gap: 6px; align-items: center; color: #625d4e; font: 500 13px/1.2 'Roboto Condensed', sans-serif; }
+@media (max-width: 560px) {
+  .sealed-list { grid-template-columns: 1fr; }
+  .sealed-clock b { font-size: 26px; }
+}

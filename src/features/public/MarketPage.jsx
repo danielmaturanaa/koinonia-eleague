@@ -11,6 +11,7 @@ import { useApiQuery } from './useApiQuery.js';
 import { MyClubPanel, clubFigures, signingBlocker } from './market/MyClubPanel.jsx';
 import { OffersInbox, ProposeOffers } from './market/OffersSection.jsx';
 import { PollsSection } from './market/PollsSection.jsx';
+import { SealedAuctionsSection } from './market/SealedAuctionsSection.jsx';
 
 const asList = value => Array.isArray(value) ? value : [];
 
@@ -180,6 +181,7 @@ export function MarketPage({ teams }) {
     <PageHeader kicker="JUGADORES DISPONIBLES" title="MERCADO">{isAdmin && <button className="page-action" onClick={() => setManaging(value => !value)}>{managing ? 'CERRAR GESTIÓN' : '⚙ GESTIONAR'}</button>}</PageHeader>
     {managing && isAdmin && <section className="market-section market-manual"><header><h2>REGISTRAR OPERACIÓN MANUAL</h2><p>Los traspasos y trueques normalmente se hacen por Discord; usa esto solo para corregir o registrar algo a mano.</p></header><MarketAdmin teams={teams} players={asList(players.data)} onChanged={refresh}/></section>}
     {operates && <MyClubPanel team={myTeam} figures={figures} profileQuery={myTeamId ? profile : null} status={status.data} statusQuery={status}/>}
+    <SealedAuctionsSection revision={revision} onChanged={refresh}/>
     {operates && <PollsSection teams={teams} revision={revision} onChanged={refresh}/>}
     {operates && myTeamId && <OffersInbox revision={revision} onChanged={refresh}/>}
     {operates && myTeamId && <ProposeOffers teams={teams} onChanged={refresh}/>}

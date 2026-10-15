@@ -106,6 +106,10 @@ export const endpoints = {
   claimAuction: (body, signal) => apiClient.post('/market/auctions', body, { actor: 'web', signal }),
   // decision: accept | reject
   resolveAuction: (pollId, decision, signal) => apiClient.post(`/market/polls/${pollId}/auction/${decision}`, {}, { actor: 'web', signal }),
+  sealedAuctions: (query, signal) => get('/market/sealed-auctions', query, signal),
+  openSealedAuction: (body, signal) => apiClient.post('/market/sealed-auctions', body, { actor: 'web', signal }),
+  // action: bids | bids/withdraw | cancel | resolve
+  sealedAuctionAction: (auctionId, action, body, signal) => apiClient.post(`/market/sealed-auctions/${auctionId}/${action}`, body ?? {}, { actor: 'web', signal }),
   createTournament: (body, signal) => apiClient.post('/tournaments', body, { actor: 'web', signal }),
   updateTournamentStatus: (tournamentId, status, signal) => apiClient.patch(`/tournaments/${tournamentId}/status`, { status }, { actor: 'web', signal }),
   updateTournamentChampionPolicy: (tournamentId, championPolicy, signal) => apiClient.patch(`/tournaments/${tournamentId}/champion-policy`, { championPolicy }, { actor: 'web', signal }),
