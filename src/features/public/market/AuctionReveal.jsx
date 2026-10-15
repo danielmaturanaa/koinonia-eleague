@@ -38,7 +38,7 @@ function hooks(row) {
   for (const mate of d.knownMates ?? []) list.push(`con ${mate}`);
   if (d.titles > 0 && d.titles >= (d.maxTitles ?? d.titles)) list.push('el más ganador de la liga');
   else if (d.titles > 0) list.push(`con sus ${d.titles} título${d.titles > 1 ? 's' : ''}`);
-  if (d.matchingBoosters > 0 && d.managerName) list.push(`con ${d.managerName} en el banco`);
+  if ((d.coachGain ?? d.matchingBoosters) > 0 && d.managerName) list.push(`con ${d.managerName} en el banco`);
   list.push('que me quiere tanto');
   return list;
 }
@@ -65,7 +65,8 @@ function thoughtsFor(row, seen) {
   // Lo bueno, con nombre y apellido.
   const accepted = (row.accepted ?? []).map(item => ACCEPTED[item.type]?.(item)).filter(Boolean);
   const goods = [];
-  if (d.matchingBoosters > 0 && d.managerName) goods.push(`Y ${d.managerName} me haría mejor jugador…`);
+  if (d.coachGain > 0 && d.managerName && d.overallBefore != null) goods.push(`Y con ${d.managerName} paso de ${d.overallBefore} a ${d.overallWithCoach} de media…`);
+  else if (d.coachGain == null && d.matchingBoosters > 0 && d.managerName) goods.push(`Y ${d.managerName} me haría mejor jugador…`);
   if (accepted.length) goods.push(`Y ${accepted.join(' y ')}. Eso me gusta.`);
   if (d.knownMates?.length) goods.push(`Ahí juego con ${d.knownMates.slice(0, 2).join(' y ')}…`);
   if (d.titles > 0 && d.titles >= (d.maxTitles ?? d.titles)) goods.push(`Y es el club más ganador de la liga: ${d.titles} títulos. 🏆`);
