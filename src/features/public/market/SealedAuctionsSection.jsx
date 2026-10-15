@@ -8,6 +8,7 @@ import { DataState, formatDate, gp } from '../DataStates.jsx';
 import { useApiQuery } from '../useApiQuery.js';
 import { PlayerChat } from './PlayerChat.jsx';
 import { PlayerPicker } from './PlayerPicker.jsx';
+import { ReadyControl } from './ReadyControl.jsx';
 import { useAutoRefresh } from './PollsSection.jsx';
 
 const STATUS_LABEL = { open: 'ABIERTA', resolved: 'FIRMADO', no_sale: 'SIN VENTA', cancelled: 'CANCELADA' };
@@ -63,6 +64,7 @@ function BidPanel({ auction, onChanged, teams = [], clubs: allowedClubs = null }
       </div>
       <p className="poll-hint">TU OFERTA ESTÁ REGISTRADA Y LA PLATA QUEDÓ RETENIDA. NO HAY NADA MÁS QUE HACER: PUEDES CONVERSAR CON EL JUGADOR O SUBIRLA HASTA EL CIERRE.</p>
       {mine.outbid && <p className="poll-confirm warn">⚠️ HAY UNA OFERTA MÁS FUERTE QUE LA TUYA.</p>}
+      <ReadyControl auction={auction} teamId={chosen} onChanged={onChanged}/>
       <div className="mini-actions"><button type="button" onClick={() => setRaising(true)}>SUBIR MI OFERTA</button></div>
     </div>;
   }
@@ -83,14 +85,23 @@ function BidPanel({ auction, onChanged, teams = [], clubs: allowedClubs = null }
   </form>;
 }
 
-const STATE_LABEL = { oferto: ['✅ OFERTÓ', 'ok'], no_participa: ['🚫 NO PARTICIPA', 'out'], pendiente: ['⏳ PENDIENTE', 'wait'] };
+const STATE_LABEL = {
+  listo: ['🏁 LISTO', 'done'],
+  oferto: ['✅ OFERTÓ', 'ok'],
+  no_participa: ['🚫 NO PARTICIPA', 'out'],
+  pendiente: ['⏳ PENDIENTE', 'wait'],
+};
 
-/** Quién ofertó, quién no participa y quién falta. Es público; los montos siguen secretos. */
-function Participation({ rows }) {
+/** Quién ofertó, quién está listo, quién no participa y quién falta. Es público; los montos siguen secretos. */
+function Participation({ rows, readiness, isModerator }) {
   if (!rows?.length) return null;
   const decided = rows.filter(row => row.state !== 'pendiente').length;
+  const ready = readiness?.ready ?? rows.filter(row => row.state === 'listo').length;
+  const total = readiness?.total ?? rows.filter(row => ['oferto', 'listo'].includes(row.state)).length;
+  const everyoneReady = total > 0 && ready >= total;
   return <div className="sealed-participation">
-    <p className="poll-meta"><b>{decided} DE {rows.length} YA DECIDIERON</b> · LOS MONTOS SON SECRETOS</p>
+    <p className="poll-meta"><b>{decided} DE {rows.length} YA DECIDIERON</b> · <b>{ready} DE {total} LISTOS</b> · LOS MONTOS SON SECRETOS</p>
+    {isModerator && everyoneReady && <p className="poll-confirm sealed-all-ready">🏁 TODOS ESTÁN LISTOS: PUEDES CERRAR.</p>}
     <ul>
       {rows.map(row => {
         const [label, tone] = STATE_LABEL[row.state] ?? [String(row.state).toUpperCase(), 'wait'];
@@ -159,9 +170,9 @@ function AuctionCard({ auction, now, onChanged, teams = [] }) {
 
 
     {open && isModerator && <p className="poll-confirm">ERES EL MODERADOR DE ESTA SUBASTA: NO PUEDES OFERTAR, SOLO CERRARLA.</p>}
-    {open && <Participation rows={auction.participation}/>}
+    {open && <Participation rows={auction.participation} readiness={auction.readiness} isModerator={isModerator}/>}
     {open && isPresident && !isModerator && playingClubs.length > 0 && <BidPanel auction={auction} onChanged={onChanged} teams={teams} clubs={playingClubs}/>}
-    {open && isPresident && !isModerator && playingClubs.length > 0 && <PlayerChat auction={auction} teams={teams} clubs={playingClubs}/>}
+    {open && isPresident && !isModerator && playingClubs.length > 0 && <PlayerChat auction={auction} teams={teams} clubs={playingClubs} onChanged={onChanged}/>}
     {open && isPresident && !isModerator && myClubs.length === 0 && isAdmin && <p className="poll-hint">PARA OFERTAR NECESITAS UN CLUB VINCULADO.</p>}
     {open && !isModerator && myClubs.length > 0 && <div className="sealed-passes">
       {playingClubs.length === 0 && <p className="poll-confirm">NO PARTICIPAS EN ESTA SUBASTA.</p>}
@@ -179,19 +190,17 @@ function AuctionCard({ auction, now, onChanged, teams = [] }) {
 
 function OpenAuctionForm({ onChanged }) {
   const [picked, setPicked] = useState(null);
-  const [minBid, setMinBid] = useState('');
   const [closesAt, setClosesAt] = useState('');
   const [moderatorId, setModeratorId] = useState('');
   const presidents = useApiQuery(signal => endpoints.presidents({}, signal), []);
   const moderators = (Array.isArray(presidents.data) ? presidents.data : []).filter(item => item.discordUserId && item.teamId);
   const playerId = picked?.playerId ?? '';
-  const open = useApiMutation((body, signal) => endpoints.openSealedAuction(body, signal), { onSuccess: () => { setPicked(null); setMinBid(''); setClosesAt(''); setModeratorId(''); onChanged(); } });
+  const open = useApiMutation((body, signal) => endpoints.openSealedAuction(body, signal), { onSuccess: () => { setPicked(null); setClosesAt(''); setModeratorId(''); onChanged(); } });
   const submit = event => {
     event.preventDefault();
     open.execute({
       playerId,
       moderatorPresidentId: moderatorId,
-      ...(minBid !== '' ? { minBid: Number(minBid) } : {}),
       ...(closesAt ? { closesAt: new Date(closesAt).toISOString() } : {}),
     });
   };
@@ -203,7 +212,7 @@ function OpenAuctionForm({ onChanged }) {
         {moderators.map(item => <option key={item.id} value={item.id}>{item.name.toUpperCase()} · {(item.teamName ?? '').toUpperCase()}</option>)}
       </select>
     </label>
-    <label>OFERTA MÍNIMA (OPCIONAL)<input type="number" min="0" step="1" value={minBid} onChange={event => setMinBid(event.target.value)} placeholder="SU VALOR"/></label>
+    <p className="poll-hint sealed-bounds"><b>OFERTA MÍNIMA 0,5× Y MÁXIMA 1,5× EL VALOR DEL JUGADOR.</b></p>
     <label>CIERRE (OPCIONAL)<input type="datetime-local" value={closesAt} onChange={event => setClosesAt(event.target.value)}/></label>
     <p className="poll-hint">EL MODERADOR ES EL ÚNICO QUE PUEDE CERRAR LA SUBASTA ANTES DE LA HORA, Y SU CLUB NO PUEDE OFERTAR. ELIGE A ALGUIEN QUE NO ESTÉ INTERESADO EN EL JUGADOR.</p>
     <p className="poll-hint">SI NO PONES CIERRE, DURA 24 HORAS. NUNCA PASA DEL CIERRE DEL MERCADO. EL JUGADOR NO DEBE TENER UNA ENCUESTA ABIERTA.</p>

@@ -3,6 +3,7 @@ import { endpoints } from '../../../api/endpoints.js';
 import { useAuth } from '../../../app/AuthGate.jsx';
 import { PlayerFace } from '../../../components/PlayerFace.jsx';
 import { useApiMutation } from '../../admin/useApiMutation.js';
+import { ReadyControl } from './ReadyControl.jsx';
 
 const LEVEL = { frio: [1, '🧊 FRÍO'], tibio: [2, '🌤️ TIBIO'], caliente: [3, '🔥 CALIENTE'] };
 const KIND_TAG = { dato: 'DATO', promesa: 'PROMESA · QUEDA REGISTRADA', argumento: 'ARGUMENTO · NO OBLIGA', negativa: 'HONESTA' };
@@ -59,7 +60,7 @@ function Bubble({ message, player, children }) {
 }
 
 /** Chat privado entre un club y el jugador. Las respuestas son datos reales del club y no cambian el resultado por sí solas. */
-export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null }) {
+export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, onChanged = null }) {
   const { isAdmin, user, teamId } = useAuth();
   // Los clubes que ya marcaron NO PARTICIPAR no hablan con el jugador.
   const clubs = allowedClubs ?? user?.teamIds ?? [];
@@ -75,7 +76,8 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null }) 
 
   const [picked, setPicked] = useState('');
   const [text, setText] = useState('');
-  const [confirmRewind, setConfirmRewind] = useState(false);
+  // Tema cuya respuesta se está por deshacer (cualquiera de las respondidas, no solo la última).
+  const [confirmTopic, setConfirmTopic] = useState('');
   const [notice, setNotice] = useState('');
 
   const keep = result => { if (result?.data) setChat(result.data); };
@@ -90,8 +92,9 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null }) 
         if (id) answerKinds.current[id] = sentKind;
         keep(result);
         setPicked('');
-        setConfirmRewind(false);
+        setConfirmTopic('');
         setNotice('');
+        onChanged?.();
       },
     },
   );
@@ -105,8 +108,9 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null }) 
       onSuccess: result => {
         keep(result);
         setPicked('');
-        setConfirmRewind(false);
-        setNotice(undoneKind.current === 'promesa' ? 'LA PROMESA QUEDÓ RETIRADA.' : 'RESPUESTA DESHECHA: VUELVE A RESPONDER.');
+        setConfirmTopic('');
+        setNotice(undoneKind.current === 'promesa' ? 'LA PROMESA QUEDÓ RETIRADA.' : 'RESPUESTA DESHECHA: VUELVE A RESPONDERLA CUANDO QUIERAS.');
+        onChanged?.();
       },
     },
   );
@@ -161,7 +165,6 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null }) 
   const freeLeft = Math.max(0, freeText.limit - freeText.used);
   const rewindInfo = chat?.rewind ?? { available: false, used: 0, limit: 0 };
   const rewindsLeft = Math.max(0, (rewindInfo.limit ?? 0) - (rewindInfo.used ?? 0));
-  const myLastAnswer = lastAnswerId(chat);
 
   const send = code => answer.execute({ teamId: chosen, topic: pending.topic, optionCodes: [code] });
   // Un toque selecciona; tocar otra vez la misma (o ENVIAR) la manda. Evita envíos accidentales.
@@ -193,16 +196,16 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null }) 
       <div className="pc-log" ref={scroller} aria-live="polite">
         <p className="pc-privacy">🔒 CHAT PRIVADO DE TU CLUB. LA DECISIÓN USA LOS DATOS DE TU CLUB Y TU OFERTA; ESTO SIRVE PARA SABER QUÉ LO CONVENCE.</p>
         {chat.messages.map(item => <Bubble key={item.id} message={item} player={player}>
-          {item.id === myLastAnswer && rewindInfo.available && (confirmRewind
+          {item.role === 'club' && item.kind === 'answer' && rewindInfo.available && (confirmTopic === item.topic
             ? <span className="pc-confirm" role="group" aria-label="CONFIRMAR DESHACER">
               ¿DESHACER ESTA RESPUESTA?
               <button type="button" disabled={rewind.loading} onClick={() => {
                 undoneKind.current = item.optionKind ?? answerKinds.current[item.id] ?? 'dato';
-                rewind.execute({ teamId: chosen });
+                rewind.execute({ teamId: chosen, topic: item.topic });
               }}>SÍ</button>
-              <button type="button" onClick={() => setConfirmRewind(false)}>NO</button>
+              <button type="button" onClick={() => setConfirmTopic('')}>NO</button>
             </span>
-            : <button type="button" className="pc-undo" disabled={thinking} onClick={() => setConfirmRewind(true)}>
+            : <button type="button" className="pc-undo" disabled={thinking} onClick={() => setConfirmTopic(item.topic)}>
               ↩ CAMBIAR RESPUESTA ({rewindsLeft > 0 ? `QUEDAN ${rewindsLeft}` : 'ÚLTIMA'})
             </button>)}
         </Bubble>)}
@@ -229,7 +232,11 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null }) 
             <button type="button" className="action-button positive" disabled={thinking || !picked} onClick={() => send(picked)}>ENVIAR</button>
           </div>}
           {answer.error && <p className="form-feedback error" role="alert">{answer.error.message}</p>}
-        </div> : chat.finished && <p className="pc-note">EL JUGADOR YA TE PREGUNTÓ TODO. SI QUIERES CONVENCERLO MÁS, MEJORA TU OFERTA O ESCRÍBELE.</p>}
+        </div> : chat.finished && <div className="pc-finished" role="status">
+          <b>✅ RESPONDISTE TODAS LAS PREGUNTAS</b>
+          <p>PUEDES CAMBIAR CUALQUIER RESPUESTA ARRIBA, ESCRIBIRLE AL JUGADOR O MEJORAR TU OFERTA. CUANDO NO FALTE NADA, MARCA QUE ESTÁS LISTO.</p>
+          <ReadyControl auction={auction} teamId={chosen} onChanged={onChanged}/>
+        </div>}
         {rewind.error && <p className="form-feedback error" role="alert">{rewind.error.message}</p>}
 
         <form className="pc-bar" onSubmit={event => {
