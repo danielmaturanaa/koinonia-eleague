@@ -50,16 +50,18 @@ function twoHooks(a, b) {
   return [first, second];
 }
 
-function thoughtsFor(row, ranking) {
+// `seen`: los sobres que ya abrió antes de este (no sabe lo que hay en los que siguen cerrados).
+function thoughtsFor(row, seen) {
   const name = row.teamName ?? 'ese club';
   const d = row.detail ?? {};
-  const topOffer = Math.max(...ranking.map(item => item.offer ?? 0));
-  const tied = ranking.filter(item => item.offer === topOffer).length;
-  const money = row.offer >= topOffer && tied > 1
-    ? pick(`${name}:t`, [`${name} también pone ${gp(row.offer)}. Igual que el resto…`, `${gp(row.offer)}, otra vez. La plata no desempata.`, `${name}: ${gp(row.offer)}, como todos. Entonces decide otra cosa…`])
-    : row.offer >= topOffer
-      ? pick(`${name}:m`, [`${name} pone la mejor plata… ${gp(row.offer)}. Uf.`, `${gp(row.offer)}. ${name} va en serio…`, `Nadie pone más que ${name}: ${gp(row.offer)}.`])
-      : pick(`${name}:m`, [`${name} me ofrece ${gp(row.offer)}…`, `Mmm, ${name}. ${gp(row.offer)} sobre la mesa.`, `${name} pone ${gp(row.offer)}. A ver…`]);
+  const bestSoFar = seen.length ? Math.max(...seen.map(item => item.offer ?? 0)) : null;
+  const money = bestSoFar == null
+    ? pick(`${name}:o`, [`Empecemos. ${name} abre con ${gp(row.offer)}…`, `Primer sobre: ${name}, ${gp(row.offer)}.`, `${name} pone ${gp(row.offer)}. A ver qué más hay…`])
+    : row.offer > bestSoFar
+      ? pick(`${name}:u`, [`${name} sube la apuesta: ${gp(row.offer)}. Uf.`, `${gp(row.offer)}. ${name} va en serio…`, `Ojo: ${name} pone más que todos hasta ahora.`])
+      : row.offer === bestSoFar
+        ? pick(`${name}:e`, [`${name} iguala lo mejor que he visto: ${gp(row.offer)}.`, `${gp(row.offer)} otra vez… la plata sola no va a decidir.`, `${name} también llega a ${gp(row.offer)}. Mmm.`])
+        : pick(`${name}:l`, [`${name} ofrece menos: ${gp(row.offer)}.`, `${gp(row.offer)}… se quedó un poco atrás.`, `${name} pone ${gp(row.offer)}. No es lo más alto.`]);
   // Lo bueno, con nombre y apellido.
   const accepted = (row.accepted ?? []).map(item => ACCEPTED[item.type]?.(item)).filter(Boolean);
   const goods = [];
@@ -207,7 +209,7 @@ export function AuctionReveal({ auction, startAt, onClose, onSkip = null, teams 
   const bubble = (() => {
     if (phase === 'countdown') return `LA DECISIÓN EN VIVO EN ${Math.ceil(-elapsed / 1000)}…`;
     if (phase === 'intro') return elapsed < clubsStart / 2 ? 'Bueno, bueno…' : `Tengo ${order.length} ${order.length === 1 ? 'oferta' : 'ofertas'} sobre la mesa. Déjenme pensar.`;
-    if (phase === 'clubs') { const lines = thoughtsFor(order[current], ranking); return lines[Math.min(2, Math.floor(within * 3))]; }
+    if (phase === 'clubs') { const lines = thoughtsFor(order[current], order.slice(0, current)); return lines[Math.min(2, Math.floor(within * 3))]; }
     if (phase === 'fakeout') {
       if (!winnerId) return fakeHalf ? 'Mmm… ninguno me termina de convencer…' : '…';
       if (!runnerUp) return fakeHalf ? `¿Me convence ${auction.winner.name}… o sigo libre?` : 'Ya. Lo tengo decidido.';
