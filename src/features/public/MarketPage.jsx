@@ -217,8 +217,8 @@ function PromiseRecord({ teamId, revision }) {
   if (!kept && !broken && !active.length) return null;
   return <details className="promise-record">
     <summary>📜 PROMESAS · <b className="ok">✅ {kept} CUMPLIDAS</b> · <b className={broken ? 'bad' : ''}>💔 {broken} ROTAS</b>{active.length ? ` · ${active.length} PENDIENTES` : ''}</summary>
-    {active.length > 0 && <ul>{active.map((item, index) => <li key={index}><b>{item.playerName}:</b> {item.text}</li>)}</ul>}
-    <p className="poll-hint">ROMPER UNA PROMESA BAJA TU REPUTACIÓN: LOS JUGADORES LIBRES SE ACUERDAN.</p>
+    {active.length > 0 && <ul>{active.map((item, index) => <li key={index}><b>{item.playerName}:</b> {item.text}{item.status === 'voting' ? ' · 🗳️ EN VOTACIÓN EN DISCORD' : ''}</li>)}</ul>}
+    <p className="poll-hint">ROMPER UNA PROMESA BAJA TU REPUTACIÓN: LOS JUGADORES LIBRES SE ACUERDAN. LAS DE PALABRA (CAPITANÍA, PENALES, TIROS LIBRES…) LAS JUZGAN LOS PRESIS VOTANDO EN DISCORD.</p>
   </details>;
 }
 
