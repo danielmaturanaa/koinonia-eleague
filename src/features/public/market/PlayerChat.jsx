@@ -310,7 +310,7 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
             <button type="button" className="action-button positive" disabled={thinking || !picks.length} onClick={() => send(picks)}>ENVIAR{picks.length > 1 ? ` (${picks.length})` : ''}</button>
           </div>}
           {answer.error && <p className="form-feedback error" role="alert">{answer.error.message}</p>}
-        </div> : chat.finished && <p className="pc-finished" role="status">✅ LE RESPONDISTE TODO · PUEDES CAMBIAR UNA RESPUESTA O SUBIR TU OFERTA. SI YA ESTÁS, MARCA «ESTOY LISTO».</p>}
+        </div> : chat.finished && <p className="pc-finished" role="status">✅ LE RESPONDISTE TODO · PUEDES CAMBIAR UNA RESPUESTA O TU OFERTA. SI YA ESTÁS, MARCA «ESTOY LISTO».</p>}
         {rewind.error && <p className="form-feedback error" role="alert">{rewind.error.message}</p>}
 
       </div>

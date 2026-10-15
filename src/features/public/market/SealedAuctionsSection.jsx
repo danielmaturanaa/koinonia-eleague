@@ -62,12 +62,13 @@ function BidPanel({ auction, onChanged, teams = [], clubs: allowedClubs = null }
   const clubs = allowedClubs ?? (isAdmin && !teamIds.length ? [] : teamIds);
   const [chosen, setChosen] = useState(clubs.includes(teamId) ? teamId : clubs[0] ?? '');
   const mine = auction.myBids.find(bid => bid.teamId === chosen) ?? null;
-  const minimum = Math.max(auction.minBid, mine ? mine.amount + 1 : 0);
-  const [amount, setAmount] = useState(String(minimum));
-  // Con oferta registrada el formulario se esconde; vuelve solo si quiere subirla.
+  // Se puede subir o bajar (al bajar se devuelve la diferencia), siempre entre el mínimo y el máximo.
+  const minimum = auction.minBid;
+  const [amount, setAmount] = useState(String(mine?.amount ?? minimum));
+  // Con oferta registrada el formulario se esconde; vuelve solo si quiere cambiarla.
   const [raising, setRaising] = useState(false);
   const bid = useApiMutation((body, signal) => endpoints.sealedAuctionAction(auction.id, 'bids', body, signal), { onSuccess: () => { setRaising(false); onChanged(); } });
-  useEffect(() => { setAmount(String(minimum)); }, [minimum]);
+  useEffect(() => { setAmount(String(mine?.amount ?? minimum)); }, [minimum, mine?.amount, raising]);
   if (!chosen && !isAdmin) return null;
   if (!chosen) return <p className="poll-hint">PARA OFERTAR NECESITAS UN CLUB VINCULADO.</p>;
   const submit = event => {
@@ -83,24 +84,25 @@ function BidPanel({ auction, onChanged, teams = [], clubs: allowedClubs = null }
       <div className="sealed-done-main">
         <span className="sealed-done-check" aria-hidden="true">✓</span>
         <div><b>OFERTA REGISTRADA</b><strong>{gp(mine.amount)}</strong></div>
-        <button type="button" className="link-button" onClick={() => setRaising(true)}>SUBIR</button>
+        <button type="button" className="link-button" onClick={() => setRaising(true)}>CAMBIAR</button>
       </div>
       {mine.outbid && <p className="poll-confirm warn">⚠️ HAY UNA OFERTA MÁS FUERTE QUE LA TUYA.</p>}
       <ReadyControl auction={auction} teamId={chosen} onChanged={onChanged}/>
     </div>;
   }
   const tooLow = Number(amount) < minimum;
+  const same = Boolean(mine) && Number(amount) === mine.amount;
   const tooHigh = auction.maxBid != null && Number(amount) > auction.maxBid;
   return <form className="poll-auction-form sealed-bid" onSubmit={submit}>
     {selector}
-    <label>{mine ? 'SUBIR MI OFERTA (GP)' : 'MI OFERTA (GP)'}
+    <label>{mine ? `CAMBIAR MI OFERTA (HOY ${gp(mine.amount)})` : 'MI OFERTA (GP)'}
       <input type="number" min={minimum} max={auction.maxBid ?? undefined} step="1" required value={amount} onChange={event => setAmount(event.target.value)}/>
     </label>
     <p className="poll-hint sealed-bid-help">
       ENTRE <b>{gp(minimum)}</b>{auction.maxBid != null ? <> Y <b>{gp(auction.maxBid)}</b></> : null} · 🔒 SECRETA: NADIE VE TU MONTO, SE RETIENE Y SE DEVUELVE SI NO GANAS.
     </p>
     <div className="mini-actions">
-      <button type="submit" disabled={bid.loading || tooLow || tooHigh}>{mine ? 'CONFIRMAR NUEVA OFERTA' : 'OFERTAR'}</button>
+      <button type="submit" disabled={bid.loading || tooLow || tooHigh || same}>{mine ? (Number(amount) < mine.amount ? 'BAJAR MI OFERTA' : 'SUBIR MI OFERTA') : 'OFERTAR'}</button>
       {mine && <button type="button" className="danger" onClick={() => setRaising(false)}>CANCELAR</button>}
     </div>
     <FormFeedback mutation={bid}/>
