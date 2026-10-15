@@ -3,7 +3,6 @@ import { endpoints } from '../../../api/endpoints.js';
 import { useAuth } from '../../../app/AuthGate.jsx';
 import { PlayerFace } from '../../../components/PlayerFace.jsx';
 import { useApiMutation } from '../../admin/useApiMutation.js';
-import { TraitsBadge } from './TraitsBadge.jsx';
 
 const LEVEL = { frio: [1, '🧊 FRÍO'], tibio: [2, '🌤️ TIBIO'], caliente: [3, '🔥 CALIENTE'] };
 
@@ -38,7 +37,6 @@ export function PlayerChat({ auction, teams = [] }) {
   const [unavailable, setUnavailable] = useState(false);
   const scroller = useRef(null);
 
-  const [topic, setTopic] = useState(null);
   const [picked, setPicked] = useState([]);
   const [note, setNote] = useState('');
   const [text, setText] = useState('');
@@ -93,12 +91,12 @@ export function PlayerChat({ auction, teams = [] }) {
 
   const names = id => (teams.find(team => team.id === id)?.name ?? id).toUpperCase();
   const pending = chat?.pending;
-  const topics = chat?.topics ?? [];
-  const current = topics.find(item => item.topic === topic) ?? null;
+  const options = pending?.options ?? [];
+  const facts = options.filter(option => option.kind !== 'promesa');
+  const promises = options.filter(option => option.kind === 'promesa');
   const thinking = answer.loading || message.loading;
   const freeText = chat?.freeText ?? { used: 0, limit: 0, maxLength: 280 };
   const toggle = code => setPicked(list => (list.includes(code) ? list.filter(item => item !== code) : [...list, code]));
-  const chooseTopic = value => { setTopic(value === topic ? null : value); setPicked([]); setNote(''); answer.clear?.(); };
 
   if (!shown) {
     return <div className="chat-closed">
@@ -111,9 +109,9 @@ export function PlayerChat({ auction, teams = [] }) {
       <b>💬 CHAT CON {auction.player.name.toUpperCase()}</b>
       <button type="button" className="chat-hide" onClick={() => setShown(false)}>CERRAR</button>
     </header>
-    <p className="poll-hint">ESTE CHAT ES PRIVADO DE TU CLUB. PUEDES CONTESTARLE LO QUE TE PREGUNTE Y TAMBIÉN HABLAR DE CUALQUIER TEMA. NO CAMBIA EL RESULTADO POR SÍ SOLO: LA DECISIÓN USA LOS DATOS DE TU CLUB Y TU OFERTA. SIRVE PARA SABER QUÉ LO CONVENCE Y MEJORAR TU OFERTA.</p>
+    <p className="poll-hint">ESTE CHAT ES PRIVADO DE TU CLUB. EL JUGADOR TE VA PREGUNTANDO, EMPEZANDO POR LO QUE MÁS LE IMPORTA, Y TÚ RESPONDES EN ORDEN. SIRVE PARA SABER QUÉ LO CONVENCE Y MEJORAR TU OFERTA.</p>
     {clubs.length > 1 && <label className="chat-club">CLUB
-      <select value={chosen} onChange={event => { setChat(null); setTopic(null); setChosen(event.target.value); }}>
+      <select value={chosen} onChange={event => { setChat(null); setPicked([]); setChosen(event.target.value); }}>
         {clubs.map(id => <option key={id} value={id}>{names(id)}</option>)}
       </select>
     </label>}
@@ -122,38 +120,34 @@ export function PlayerChat({ auction, teams = [] }) {
     {loadError && <p className="form-feedback error" role="alert">{loadError.message}</p>}
 
     {chat && <>
-      <TraitsBadge negotiation={chat.negotiation ?? auction.negotiation}/>
       <InterestMeter interest={chat.interest}/>
       <div className="chat-log" ref={scroller} aria-live="polite">
         {chat.messages.map(item => <Bubble key={item.id} message={item} player={auction.player}/>)}
         {thinking && <div className="chat-row theirs"><PlayerFace src={auction.player.faceUrl} name={auction.player.name}/><p className="chat-bubble thinking">EL JUGADOR ESTÁ PENSANDO…</p></div>}
       </div>
 
-      {pending && <p className="chat-pending">❓ EL JUGADOR ESPERA TU RESPUESTA SOBRE: <b>{(pending.label ?? pending.topic).toUpperCase()}</b></p>}
-
-      <div className="chat-topics" role="group" aria-label="TEMAS DE CONVERSACIÓN">
-        <p className="poll-hint">ELIGE UN TEMA PARA RESPONDER O PARA CONTARLE ALGO. PUEDES MARCAR VARIAS RESPUESTAS A LA VEZ.</p>
-        <div className="chat-topic-list">
-          {topics.map(item => <button
-            key={item.topic} type="button" disabled={thinking}
-            className={`chat-topic ${item.answered ? 'answered' : ''} ${pending?.topic === item.topic ? 'asked' : ''} ${topic === item.topic ? 'active' : ''}`}
-            aria-pressed={topic === item.topic}
-            onClick={() => chooseTopic(item.topic)}
-          >{item.answered ? '✓ ' : ''}{(item.label ?? item.topic).toUpperCase()}</button>)}
-        </div>
-      </div>
-
-      {current && <form className="chat-options" onSubmit={event => {
+      {pending ? <form className="chat-options" onSubmit={event => {
         event.preventDefault();
-        answer.execute({ teamId: chosen, topic: current.topic, optionCodes: picked, ...(note.trim() ? { note: note.trim() } : {}) });
+        answer.execute({ teamId: chosen, topic: pending.topic, optionCodes: picked, ...(note.trim() ? { note: note.trim() } : {}) });
       }}>
-        <p className="poll-hint">SOLO PUEDES RESPONDER CON DATOS REALES DE TU CLUB.{current.answered ? ' ESTE TEMA YA LO RESPONDISTE: PUEDES AGREGAR MÁS.' : ''}</p>
-        {current.options.length === 0 && <p className="poll-hint">NO HAY DATOS DE TU CLUB PARA ESTE TEMA. PUEDES ESCRIBIRLE ABAJO.</p>}
-        {current.options.map(option => <label key={option.code} className={`chat-check ${picked.includes(option.code) ? 'on' : ''}`}>
-          <input type="checkbox" checked={picked.includes(option.code)} disabled={thinking} onChange={() => toggle(option.code)}/>
-          <span>{option.text}</span>
-        </label>)}
-        {current.options.length > 0 && <>
+        <p className="chat-pending">❓ RESPONDE LA PREGUNTA SOBRE: <b>{(pending.label ?? pending.topic).toUpperCase()}</b></p>
+        <p className="poll-hint">PUEDES COMBINAR DATOS Y PROMESAS; EL JUGADOR REACCIONA SEGÚN LO QUE TU CLUB PUEDE RESPALDAR.</p>
+        {facts.length > 0 && <fieldset className="chat-group" disabled={thinking}>
+          <legend>DATOS DE TU CLUB</legend>
+          {facts.map(option => <label key={option.code} className={`chat-check ${picked.includes(option.code) ? 'on' : ''}`}>
+            <input type="checkbox" checked={picked.includes(option.code)} onChange={() => toggle(option.code)}/>
+            <span>{option.text}</span>
+          </label>)}
+        </fieldset>}
+        {promises.length > 0 && <fieldset className="chat-group" disabled={thinking}>
+          <legend>PROMESAS Y ARGUMENTOS</legend>
+          {promises.map(option => <label key={option.code} className={`chat-check promise ${picked.includes(option.code) ? 'on' : ''}`}>
+            <input type="checkbox" checked={picked.includes(option.code)} onChange={() => toggle(option.code)}/>
+            <span>{option.text}</span>
+          </label>)}
+        </fieldset>}
+        {options.length === 0 && <p className="poll-hint">NO HAY RESPUESTAS PREPARADAS PARA ESTA PREGUNTA. PUEDES ESCRIBIRLE ABAJO.</p>}
+        {options.length > 0 && <>
           <label className="chat-note">COMENTARIO (OPCIONAL)
             <input type="text" maxLength={200} value={note} disabled={thinking} onChange={event => setNote(event.target.value)} placeholder="AGREGA ALGO CON TUS PALABRAS"/>
             <small>{note.length}/200</small>
@@ -161,7 +155,7 @@ export function PlayerChat({ auction, teams = [] }) {
           <button type="submit" className="action-button positive" disabled={thinking || picked.length === 0}>ENVIAR RESPUESTA{picked.length > 1 ? ` (${picked.length})` : ''}</button>
         </>}
         {answer.error && <p className="form-feedback error" role="alert">{answer.error.message}</p>}
-      </form>}
+      </form> : chat.finished && <p className="poll-hint">EL JUGADOR YA TE PREGUNTÓ TODO. SI QUIERES CONVENCERLO MÁS, MEJORA TU OFERTA O ESCRÍBELE ABAJO.</p>}
 
       <form className="chat-free" onSubmit={event => {
         event.preventDefault();

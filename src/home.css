@@ -2958,15 +2958,6 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .sealed-bid { border-style: solid; border-color: #092e77; background: #fff9e8; }
 .sealed-bid label { color: #062764; }
 .sealed-result { margin: 0; }
-.sealed-breakdown { display: grid; gap: 8px; min-width: 0; }
-.sealed-traits { display: grid; gap: 4px; }
-.sealed-traits span { padding: 5px 8px; border-left: 4px solid #092e77; background: #eef3ff; font: 500 13px/1.25 'Roboto Condensed', sans-serif; }
-.sealed-traits b { color: #062764; font: 600 13px/1.2 'Oswald', sans-serif; }
-.sealed-table { overflow-x: auto; border: 1px solid #d0c4a8; }
-.sealed-table table { width: 100%; min-width: 360px; border-collapse: collapse; font: 500 13px/1.2 'Roboto Condensed', sans-serif; font-variant-numeric: tabular-nums; }
-.sealed-table th, .sealed-table td { padding: 5px 7px; border-bottom: 1px solid #e0d6bf; text-align: left; }
-.sealed-table th { color: #062764; font: 600 12px/1.1 'Oswald', sans-serif; letter-spacing: .4px; }
-.sealed-table tr.sum td { background: #f7f1df; }
 .interest { display: inline-block; padding: 2px 6px; border: 1px solid currentColor; font: 600 11px/1.2 'Oswald', sans-serif; white-space: nowrap; }
 .interest.hot { color: #a90020; } .interest.warm { color: #8a6500; } .interest.cold { color: #1b5fa8; }
 .sealed-admin { padding: 8px 10px; border: 2px dashed #092e77; }
@@ -3009,13 +3000,6 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 
 /* Chat flexible: temas, selección múltiple y texto libre */
 .chat-pending { margin: 0; padding: 6px 8px; border-left: 4px solid #c8102e; background: #fff0f0; color: #062764; font: 500 14px/1.3 'Roboto Condensed', sans-serif; }
-.chat-topics { display: grid; gap: 6px; }
-.chat-topic-list { display: flex; flex-wrap: wrap; gap: 6px; }
-.chat-topic { padding: 6px 10px; border: 2px solid #092e77; background: #fff; color: #062764; font: 600 13px/1.1 'Oswald', sans-serif; letter-spacing: .3px; }
-.chat-topic.answered { border-color: #1c7a3e; background: #e8f3df; color: #14572c; }
-.chat-topic.asked { border-color: #c8102e; box-shadow: 0 0 0 2px #c8102e55; }
-.chat-topic.active { background: #092e77; color: #fff; }
-.chat-topic:disabled { opacity: .5; cursor: default; }
 .chat-check { display: flex; gap: 8px; align-items: flex-start; padding: 9px 10px; border: 2px solid #092e77; background: #fff; color: #062764; font: 600 15px/1.3 'Roboto Condensed', sans-serif; cursor: pointer; }
 .chat-check.on { background: #eef3ff; border-color: #c8102e; }
 .chat-check input { margin-top: 3px; flex: 0 0 auto; }
@@ -3030,17 +3014,7 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .sealed-moderator-actions { display: grid; gap: 6px; padding: 8px; border: 2px dashed #c8102e; background: #fff9e8; }
 
 /* Perfil de negociación del jugador (ficha, tarjeta de subasta y chat) */
-.traits-badge { display: grid; gap: 6px; padding: 8px 10px; border: 2px solid #092e77; background: #eef3ff; min-width: 0; }
-.traits-badge.full { margin: 10px 0; padding: 12px 14px; }
-.traits-title { color: #062764; font: 600 14px/1.1 'Oswald', sans-serif; letter-spacing: .4px; }
-.traits-list { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
-.traits-list li { display: grid; gap: 1px; padding: 5px 9px; border: 2px solid #092e77; background: #fff; }
-.traits-list em { color: #062764; font: 600 13px/1.1 'Oswald', sans-serif; font-style: normal; letter-spacing: .3px; }
-.traits-list small { color: #3d3a30; font: 500 12px/1.2 'Roboto Condensed', sans-serif; }
-.traits-priorities { margin: 0; color: #3d3a30; font: 500 13px/1.5 'Roboto Condensed', sans-serif; }
-.traits-priorities span { display: inline-block; margin-right: 8px; white-space: nowrap; }
-.traits-priorities b { color: #c8102e; font-family: 'Oswald', sans-serif; }
-.traits-hint, .traits-note { margin: 0; color: #625d4e; font: 500 12px/1.3 'Roboto Condensed', sans-serif; }
-.chat-bubble.is-pending { opacity: .7; font-style: italic; }
-.chat-typing { color: #625d4e; font: 600 11px/1 'Oswald', sans-serif; letter-spacing: .4px; font-style: normal; }
-@media (max-width: 560px) { .traits-list li { flex: 1 1 100%; } .traits-priorities span { display: block; } }
+
+.chat-group { margin: 8px 0 0; padding: 8px 10px 10px; border: 2px solid #092e77; background: #fff; display: grid; gap: 6px; min-width: 0; }
+.chat-group legend { padding: 0 6px; color: #062764; font: 600 13px/1 'Oswald', sans-serif; letter-spacing: .5px; }
+.chat-check.promise { border-style: dashed; }
