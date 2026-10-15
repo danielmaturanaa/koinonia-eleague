@@ -312,7 +312,7 @@ function OpenAuctionForm({ onChanged }) {
         {moderators.map(item => <option key={item.id} value={item.id}>{item.name.toUpperCase()} · {(item.teamName ?? '').toUpperCase()}</option>)}
       </select>
     </label>
-    <p className="poll-hint sealed-bounds"><b>OFERTA MÍNIMA 0,5× Y MÁXIMA 1,5× EL VALOR DEL JUGADOR.</b></p>
+    <p className="poll-hint sealed-bounds"><b>OFERTA MÍNIMA 0,7× Y MÁXIMA 1,25× EL VALOR DEL JUGADOR.</b></p>
     <label>CIERRE (OPCIONAL)<input type="datetime-local" value={closesAt} onChange={event => setClosesAt(event.target.value)}/></label>
     <p className="poll-hint">EL MODERADOR ES EL ÚNICO QUE PUEDE CERRAR LA SUBASTA ANTES DE LA HORA. TAMBIÉN PUEDE OFERTAR; SI LO HACE, SOLO CIERRA CUANDO TODOS ESTÉN LISTOS. SIN CIERRE, DURA 24 HORAS (NUNCA MÁS QUE EL MERCADO).</p>
     <button className="action-button positive" disabled={open.loading || !playerId || !moderatorId}>ABRIR SUBASTA</button>

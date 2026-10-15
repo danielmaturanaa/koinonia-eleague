@@ -38,6 +38,7 @@ function hooks(row) {
   for (const mate of d.knownMates ?? []) list.push(`con ${mate}`);
   if (d.titles > 0 && d.titles >= (d.maxTitles ?? d.titles)) list.push('el más ganador de la liga');
   else if (d.titles > 0) list.push(`con sus ${d.titles} título${d.titles > 1 ? 's' : ''}`);
+  else if (d.runnerUps > 0) list.push(`que ya jugó ${d.runnerUps === 1 ? 'una final' : `${d.runnerUps} finales`}`);
   if ((d.coachGain ?? d.matchingBoosters) > 0 && d.managerName) list.push(`con ${d.managerName} en el banco`);
   list.push('que me quiere tanto');
   return list;
@@ -71,17 +72,22 @@ function thoughtsFor(row, seen) {
   if (d.knownMates?.length) goods.push(`Ahí juego con ${d.knownMates.slice(0, 2).join(' y ')}…`);
   if (d.titles > 0 && d.titles >= (d.maxTitles ?? d.titles)) goods.push(`Y es el club más ganador de la liga: ${d.titles} títulos. 🏆`);
   else if (d.titles > 0) goods.push(`Y tienen ${d.titles} título${d.titles > 1 ? 's' : ''}. Eso pesa.`);
+  else if (d.runnerUps > 0) goods.push(`Y ya ${d.runnerUps === 1 ? 'jugaron una final' : `jugaron ${d.runnerUps} finales`}. Algo es algo.`);
   const notes = Object.entries(row.notes ?? {}).filter(([factor]) => factor !== 'dinero');
   const best = [...notes].sort((a, b) => b[1] - a[1])[0];
   if (!goods.length && best) goods.push(`Me tinca: ${GOOD[best[0]]}.`);
   // La duda: lo peor que le vio (sin títulos, se dice tal cual). Con títulos, el prestigio no puede ser la duda:
   // ya dijo que pesan, así que duda de lo siguiente más flojo.
   const worst = [...notes].filter(([factor]) => !(d.titles > 0 && factor === 'prestigio')).sort((a, b) => a[1] - b[1])[0];
+  // Sin títulos pero con finales o playoffs, no se dice "no han ganado nada" a secas.
+  const close = d.runnerUps > 0 || d.playoffs > 0;
   const doubt = !d.titles && worst?.[0] === 'prestigio'
-    ? pick(`${name}:p`, ['Pero… no han ganado nada todavía. 🤔', 'Aunque es un club chico, sin títulos…'])
+    ? close
+      ? pick(`${name}:p`, ['Pero… han estado cerca y nunca la levantaron. 🤔', 'Aunque les falta ganar algo de verdad…'])
+      : pick(`${name}:p`, ['Pero… no han ganado nada todavía. 🤔', 'Aunque es un club chico, sin títulos…'])
     : worst && worst[1] < 45
       ? pick(`${name}:b`, [`Pero… ${BAD[worst[0]]}. 🤔`, `Aunque ${BAD[worst[0]]}…`])
-      : !d.titles ? 'Lo malo: todavía no ganan nada.' : 'No le veo nada malo… mmm.';
+      : !d.titles ? (close ? 'Lo malo: todavía no levantan una copa.' : 'Lo malo: todavía no ganan nada.') : 'No le veo nada malo… mmm.';
   return [money, pick(`${name}:g`, goods), doubt];
 }
 

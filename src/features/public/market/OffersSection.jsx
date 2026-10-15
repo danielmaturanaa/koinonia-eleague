@@ -110,11 +110,11 @@ function ReleaseForm({ myTeamId, onDone }) {
   const refund = player ? Math.round((player.gpValue ?? 0) * RELEASE_SHARE) : null;
   const submit = event => {
     event.preventDefault();
-    if (window.confirm(`¿LIBERAR A ${player.name}? TU CLUB RECIBE ${gp(refund)} Y EL JUGADOR QUEDA LIBRE.`)) mutation.execute({ teamId: myTeamId });
+    if (window.confirm(`¿LIBERAR A ${player.name}? TU CLUB RECIBE ${gp(refund)}, EL JUGADOR QUEDA LIBRE VALIENDO EL 80% Y BAJA TU REPUTACIÓN EN LAS SUBASTAS.`)) mutation.execute({ teamId: myTeamId });
   };
   return <form className="admin-form market-form" onSubmit={submit}>
     <label>JUGADOR A LIBERAR<select value={playerId} required onChange={event => setPlayerId(event.target.value)}>{playerOptions(mySquad.squad)}</select></label>
-    <p className="poll-hint">AL LIBERAR RECIBES SOLO EL 20% DEL VALOR DEL JUGADOR{refund !== null ? `: ${gp(refund)}` : ''}. EL JUGADOR QUEDA COMO AGENTE LIBRE PARA TODA LA LIGA.</p>
+    <p className="poll-hint">AL LIBERAR RECIBES SOLO EL 20% DEL VALOR DEL JUGADOR{refund !== null ? `: ${gp(refund)}` : ''}. EL JUGADOR QUEDA COMO AGENTE LIBRE PARA TODA LA LIGA, VALIENDO EL 80%. LOS AGENTES LIBRES SE ACUERDAN: CADA LIBERACIÓN BAJA TU REPUTACIÓN EN LAS SUBASTAS.</p>
     <button className="action-button danger" disabled={mutation.loading || !playerId}>LIBERAR JUGADOR</button>
     <FormFeedback mutation={mutation}/>
   </form>;
@@ -126,7 +126,7 @@ export function ProposeOffers({ teams, onChanged }) {
   if (!myTeamId) return null;
   const rivals = teams.filter(team => team.id !== myTeamId && (team.kind ?? 'club') === 'club');
   return <section className="market-section market-propose">
-    <header><h2>PROPONER UNA OPERACIÓN</h2><p>LA OTRA PARTE LA VE EN SU BANDEJA Y DEBE ACEPTARLA. LOS TRASPASOS Y TRUEQUES SOLO SE PUEDEN PROPONER CON EL MERCADO ABIERTO.</p></header>
+    <header><h2>PROPONER UNA OPERACIÓN</h2><p>LA OTRA PARTE LA VE EN SU BANDEJA Y DEBE ACEPTARLA. LOS TRASPASOS Y TRUEQUES SOLO SE PUEDEN PROPONER CON EL MERCADO ABIERTO, Y EL PRECIO DE CADA JUGADOR TIENE QUE QUEDAR ENTRE 0,7× Y 1,25× SU VALOR.</p></header>
     <nav className="market-tabs" aria-label="Tipo de operación">
       <button className={tab === 'transfer' ? 'active' : ''} onClick={() => setTab('transfer')}>TRASPASO</button>
       <button className={tab === 'trade' ? 'active' : ''} onClick={() => setTab('trade')}>TRUEQUE</button>

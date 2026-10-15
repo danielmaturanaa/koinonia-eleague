@@ -24,7 +24,7 @@ export function PlayerActions({ player, teams, onChanged }) {
   };
   const releasePlayer = () => {
     const amount = Math.round(Number(player.gpValue ?? 0) * 0.2);
-    if (window.confirm(`¿LIBERAR A ${player.name}? EL CLUB RECIBE EL 20% DE SU VALOR (${amount.toLocaleString('es-CL')} GP).`)) release.execute({ teamId: currentTeamId });
+    if (window.confirm(`¿LIBERAR A ${player.name}? EL CLUB RECIBE EL 20% DE SU VALOR (${amount.toLocaleString('es-CL')} GP), EL JUGADOR QUEDA VALIENDO EL 80% Y BAJA LA REPUTACIÓN DEL CLUB ANTE LOS AGENTES LIBRES.`)) release.execute({ teamId: currentTeamId });
   };
 
   return <section className="player-actions">
