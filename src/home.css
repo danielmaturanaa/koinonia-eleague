@@ -3676,10 +3676,12 @@ html.pc-locked, html.pc-locked body { overflow: hidden; }
 }
 
 /* Reputación del presi: chip junto al cargo (abre el ranking) y resumen al pasar el mouse por la foto. */
-.reputation-chip { display: inline-flex; align-items: baseline; gap: 4px; margin-left: auto; padding: 2px 7px; border: 2px solid #10285b; color: #062764; background: #fff9e8; font: 600 11px/1.2 'Oswald', sans-serif; letter-spacing: .4px; cursor: pointer; }
+/* El chip va sobre la esquina de la foto (misma celda de la grilla) para no descuadrar las dos tarjetas en el teléfono. */
+.club-person-entry > .club-person-role { grid-row: 1; grid-column: 1; }
+.club-person-entry > .club-person-card { grid-row: 2; grid-column: 1; }
+.reputation-chip { grid-row: 2; grid-column: 1; align-self: start; justify-self: end; z-index: 2; display: inline-flex; align-items: baseline; gap: 4px; margin: 6px; padding: 2px 7px; box-shadow: 2px 2px 0 #0006; border: 2px solid #10285b; color: #062764; background: #fff9e8; font: 600 11px/1.2 'Oswald', sans-serif; letter-spacing: .4px; cursor: pointer; }
 .reputation-chip b { font: 400 14px/1 'Anton', sans-serif; }
 .reputation-chip:hover, .reputation-chip:focus-visible { background: #fff3c4; }
-.club-person-role .reputation-chip + .club-leader-edit { margin-left: 6px; }
 .reputation-summary { display: grid; gap: 6px; padding: 8px 9px; border: 2px solid #10285b; background: #fff9e8; color: #062764; }
 .reputation-summary-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; }
 .reputation-summary-title span { display: grid; gap: 2px; }
@@ -3713,7 +3715,7 @@ html.pc-locked, html.pc-locked body { overflow: hidden; }
 .reputation-table .table-team-link span { display: grid; }
 .reputation-table .table-team-link small { color: #4d4839; font-size: 11px; }
 .reputation-table .team-mark { width: 22px; height: 22px; flex: 0 0 22px; }
-@media (max-width: 560px) { .reputation-table th:nth-child(n+3):nth-child(-n+7), .reputation-table td:nth-child(n+3):nth-child(-n+7) { display: none; } }
+/* En el teléfono quedan club, liberaciones y total. */
+@media (max-width: 560px) { .reputation-table :is(th, td):is(:nth-child(3), :nth-child(4), :nth-child(5), :nth-child(7)) { display: none; } .reputation-table td { white-space: normal; } .reputation-table th, .reputation-table td { padding: 5px 4px; } }
 
 .reputation-table small.reputation-count { display: block; color: #4d4839; font-size: 10.5px; font-weight: 500; }
-@media (max-width: 560px) { .reputation-table th:nth-child(6), .reputation-table td:nth-child(6) { display: table-cell; } }
