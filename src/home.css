@@ -3621,3 +3621,16 @@ html.pc-locked, html.pc-locked body { overflow: hidden; }
   .offer-sides { grid-template-columns: 1fr; }
   .offer-swap { justify-self: center; transform: rotate(90deg); }
 }
+
+/* ===== Pestaña de encuestas: buscador de agentes libres y filtros ===== */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.poll-search-box { display: block; margin: 4px 0 10px; }
+.poll-search-box input { width: 100%; min-height: 48px; padding: 0 14px; border: 2px solid #062764; background: #fff; color: #1a1f33; font: 500 16px/1.2 'Roboto Condensed', sans-serif; }
+.poll-search-box input:focus { outline: 3px solid #ffd42a; outline-offset: 1px; }
+.poll-filters { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; align-items: end; margin: 4px 0 12px; }
+.poll-filters label { display: grid; gap: 3px; color: #062764; font: 600 12px/1.2 'Oswald', sans-serif; }
+.poll-filters select { min-height: 42px; }
+.profile-poll { display: inline-grid; gap: 6px; }
+.profile-poll.done { margin: 0; padding: 8px 12px; border: 2px solid #167a45; background: #e4f4ea; color: #0d4a2a; font: 600 13px/1.35 'Roboto Condensed', sans-serif; }
+.profile-poll.done a { color: #062764; }
+@media (max-width: 560px) { .poll-filters { grid-template-columns: 1fr; } }

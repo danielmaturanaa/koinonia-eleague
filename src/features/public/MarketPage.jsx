@@ -159,19 +159,32 @@ function MarketPlayer({ player, teams, onChanged, club, interest }) {
   return <article className={`market-player ${open ? 'open' : ''}`}>
     <a href={href} className="market-player-link"><PlayerFace src={player.faceUrl} name={player.name}/><span><b>{player.name}</b><small>{[player.position, player.nationality, player.age ? `${player.age} AÑOS` : null].filter(Boolean).join(' · ')}</small><OverallBadge value={player.overall}/></span><strong>{gp(player.price)}</strong></a>
     {interest && <InterestButton player={player} interest={interest}/>}
-    {canAct && <button type="button" className="market-player-action" aria-expanded={open} onClick={() => setOpen(value => !value)}>{open ? 'CERRAR' : isAdmin ? 'FICHAR' : 'ABRIR ENCUESTA'}</button>}
-    {open && isAdmin && <SigningForm player={player} teams={teams} onDone={() => { setOpen(false); onChanged(); }}/>}
-    {open && !isAdmin && <PollForm player={player} myTeamId={myTeamId} figures={club?.figures} marketOpen={club?.marketOpen} onDone={() => { setOpen(false); onChanged(); }}/>}
+    {canAct && <button type="button" className="market-player-action" aria-expanded={open} onClick={() => setOpen(value => !value)}>{open ? 'CERRAR' : myTeamId ? '🗳️ ABRIR ENCUESTA' : 'FICHAR'}</button>}
+    {open && !myTeamId && isAdmin && <SigningForm player={player} teams={teams} onDone={() => { setOpen(false); onChanged(); }}/>}
+    {open && myTeamId && <PollForm player={player} myTeamId={myTeamId} figures={club?.figures} marketOpen={club?.marketOpen} onDone={() => { setOpen(false); onChanged(); }}/>}
   </article>;
 }
 
-function PlayerList({ title, hint, status, teams, allHref, club, onChanged, interest }) {
-  const players = useApiQuery(signal => endpoints.playerDirectory({ status, sort: 'price_desc', pageSize: PREVIEW }, signal), [status]);
+/** Buscar un agente libre por nombre y abrirle una encuesta ahí mismo. Sin texto, muestra los más caros. */
+function PollSearch({ teams, club, interest, onChanged }) {
+  const [text, setText] = useState('');
+  const [query, setQuery] = useState('');
+  useEffect(() => {
+    const timer = window.setTimeout(() => setQuery(text.trim()), 300);
+    return () => window.clearTimeout(timer);
+  }, [text]);
+  const players = useApiQuery(signal => endpoints.playerDirectory({ status: 'free', sort: 'price_desc', pageSize: PREVIEW, ...(query ? { q: query } : {}) }, signal), [query]);
   const rows = asList(players.data);
-  return <section className="market-section"><header><h2>{title} {players.pagination?.total != null && <small>{players.pagination.total.toLocaleString('es-CL')}</small>}</h2><p>{hint}</p></header>
+  return <section className="market-section poll-search">
+    <header><h2>ABRIR UNA ENCUESTA</h2><p>BUSCA AL AGENTE LIBRE POR NOMBRE. TAMBIÉN PUEDES ABRIRLA DESDE SU FICHA. MARCA ☆ LOS QUE QUIERES VER EN SUBASTA.</p></header>
+    <label className="poll-search-box"><span className="sr-only">BUSCAR AGENTE LIBRE</span>
+      <input type="search" value={text} placeholder="🔎 BUSCAR AGENTE LIBRE (EJ.: MBAPPÉ)" autoComplete="off" onChange={event => setText(event.target.value)}/>
+    </label>
     <DataState query={players}/>
-    {!players.loading && !players.error && (rows.length ? <div className="market-player-list">{rows.map(player => <MarketPlayer key={player.playerId ?? `${player.pesId}-${player.variation}`} player={player} teams={teams} club={club} interest={interest} onChanged={() => { players.retry(); onChanged?.(); }}/>)}</div> : <p className="empty-copy">NO HAY JUGADORES EN ESTA LISTA.</p>)}
-    <a className="market-see-all" href={allHref}>VER TODOS EN JUGADORES →</a>
+    {!players.loading && !players.error && (rows.length
+      ? <div className="market-player-list">{rows.map(player => <MarketPlayer key={player.playerId ?? `${player.pesId}-${player.variation}`} player={player} teams={teams} club={club} interest={interest} onChanged={() => { players.retry(); onChanged?.(); }}/>)}</div>
+      : <p className="empty-copy">{query ? `NO HAY AGENTES LIBRES QUE COINCIDAN CON «${query.toUpperCase()}».` : 'NO HAY AGENTES LIBRES.'}</p>)}
+    {!query && players.pagination?.total > rows.length && <p className="poll-hint">MOSTRANDO LOS {rows.length} MÁS CAROS DE {players.pagination.total.toLocaleString('es-CL')}. ESCRIBE UN NOMBRE PARA BUSCAR EL RESTO.</p>}
   </section>;
 }
 
@@ -214,8 +227,7 @@ export function MarketPage({ teams }) {
   const sim = useApiQuery(signal => isAdmin ? endpoints.auctionSimAccess(signal).catch(() => ({ data: { allowed: false } })) : Promise.resolve({ data: { allowed: false } }), [isAdmin]);
   const tabs = [
     ['subastas', '🔨 SUBASTAS', liveCount],
-    ['libres', '🧑‍🤝‍🧑 AGENTES LIBRES', null],
-    ...(operates ? [['ofertas', '🤝 OFERTAS Y ENCUESTAS', null]] : []),
+    ...(operates ? [['encuestas', '🗳️ ENCUESTAS', null], ['ofertas', '🤝 OFERTAS', null]] : []),
     ['historial', '📜 HISTORIAL', null],
     ...(sim.data?.allowed ? [['simulador', '🧪 SIMULADOR', null]] : []),
   ];
@@ -232,12 +244,11 @@ export function MarketPage({ teams }) {
     </nav>
     <div className="market-tab-panel" role="tabpanel">
       {current === 'subastas' && <SealedAuctionsSection revision={revision} onChanged={refresh} teams={teams}/>}
-      {current === 'libres' && <>
+      {current === 'encuestas' && <PollsSection teams={teams} revision={revision} onChanged={refresh}>
+        <PollSearch teams={teams} club={club} interest={interest} onChanged={refresh}/>
         <DemandPanel interest={interest}/>
-        <PlayerList key={`free-${revision}`} title="AGENTES LIBRES" hint="Todos los jugadores de eFootballDB están inscritos y sin equipo. Marca ☆ los que quieres ver en subasta." status="free" teams={teams} allHref="#/equipos/jugadores?status=free" club={club} interest={interest} onChanged={refresh}/>
-      </>}
+      </PollsSection>}
       {current === 'ofertas' && <>
-        {operates && <PollsSection teams={teams} revision={revision} onChanged={refresh} onOpenPoll={() => setTab('libres')}/>}
         {operates && <OffersInbox revision={revision} onChanged={refresh}/>}
         {operates && myTeamId && <ProposeOffers teams={teams} marketOpen={marketOpen} onChanged={refresh}/>}
       </>}

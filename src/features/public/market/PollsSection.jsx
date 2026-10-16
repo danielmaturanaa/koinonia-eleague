@@ -114,21 +114,40 @@ function PollCard({ poll, teams, onChanged }) {
   </article>;
 }
 
-export function PollsSection({ teams, revision, onChanged, onOpenPoll = null }) {
-  const polls = useApiQuery(signal => endpoints.marketPolls({ active: 1 }, signal), [revision]);
+export function PollsSection({ teams, revision, onChanged, children = null }) {
+  const [scope, setScope] = useState('market');
+  const [teamFilter, setTeamFilter] = useState('');
+  const polls = useApiQuery(signal => endpoints.marketPolls(scope === 'all' ? { scope: 'all' } : {}, signal), [revision, scope]);
   useAutoRefresh(polls.retry);
-  const rows = Array.isArray(polls.data) ? polls.data : [];
+  const all = Array.isArray(polls.data) ? polls.data : [];
+  const rows = teamFilter ? all.filter(poll => poll.team?.id === teamFilter) : all;
+  const open = rows.filter(poll => ACTIVE.includes(poll.status));
+  const closed = rows.filter(poll => !ACTIVE.includes(poll.status));
   const refresh = () => { polls.retry(); onChanged?.(); };
   const unavailable = polls.error?.status === 404;
-  return <section className="market-section market-polls">
-    <header><h2>ENCUESTAS DE COMPRA <small>{rows.length}</small></h2><p>VOTA SI ESTÁS DE ACUERDO O PIDE SUBASTA. ES LA MISMA ENCUESTA QUE EN DISCORD: VOTA DONDE QUIERAS. PARA ABRIR UNA, ELIGE AL JUGADOR EN AGENTES LIBRES.</p></header>
-    {polls.loading && polls.data === null && <div className="arcade-state compact">CARGANDO ENCUESTAS...</div>}
-    {polls.error && !unavailable && <DataState query={polls}/>}
-    {unavailable && <p className="empty-copy">LAS ENCUESTAS TODAVÍA NO ESTÁN DISPONIBLES EN LA API.</p>}
-    {!polls.error && !polls.loading && !rows.length && <div className="empty-copy poll-empty">
-      <span>NO HAY ENCUESTAS ABIERTAS.</span>
-      {onOpenPoll && <button type="button" className="action-button" onClick={onOpenPoll}>🗳️ ABRIR UNA ENCUESTA</button>}
-    </div>}
-    <div className="poll-list">{rows.map(poll => <PollCard key={poll.id} poll={poll} teams={teams} onChanged={refresh}/>)}</div>
-  </section>;
+  // En el filtro solo aparecen los clubes que tienen encuestas (con cuántas).
+  const counts = all.reduce((map, poll) => map.set(poll.team?.id, (map.get(poll.team?.id) ?? 0) + 1), new Map());
+  const filterTeams = teams.filter(team => counts.has(team.id));
+  return <>
+    {children}
+    <section className="market-section market-polls">
+      <header><h2>ENCUESTAS DE COMPRA <small>{rows.length}</small></h2><p>VOTA SI ESTÁS DE ACUERDO O PIDE SUBASTA. SON LAS MISMAS QUE EN DISCORD: VOTA DONDE QUIERAS.</p></header>
+      <div className="poll-filters">
+        <div className="offer-toggle" role="radiogroup" aria-label="QUÉ ENCUESTAS VER">
+          <button type="button" role="radio" aria-checked={scope === 'market'} className={scope === 'market' ? 'on' : ''} onClick={() => setScope('market')}>ESTE MERCADO</button>
+          <button type="button" role="radio" aria-checked={scope === 'all'} className={scope === 'all' ? 'on' : ''} onClick={() => setScope('all')}>TODOS LOS MERCADOS</button>
+        </div>
+        <label>EQUIPO<select value={teamFilter} onChange={event => setTeamFilter(event.target.value)}>
+          <option value="">TODOS LOS EQUIPOS ({all.length})</option>
+          {filterTeams.map(team => <option key={team.id} value={team.id}>{team.name} ({counts.get(team.id)})</option>)}
+        </select></label>
+      </div>
+      {polls.loading && polls.data === null && <div className="arcade-state compact">CARGANDO ENCUESTAS...</div>}
+      {polls.error && !unavailable && <DataState query={polls}/>}
+      {unavailable && <p className="empty-copy">LAS ENCUESTAS TODAVÍA NO ESTÁN DISPONIBLES EN LA API.</p>}
+      {!polls.error && !polls.loading && !rows.length && <p className="empty-copy">{teamFilter ? 'ESE EQUIPO NO TIENE ENCUESTAS AQUÍ.' : 'NO HAY ENCUESTAS. ABRE UNA BUSCANDO AL JUGADOR ARRIBA.'}</p>}
+      {open.length > 0 && <><h3 className="market-subtitle">🗳️ ABIERTAS · {open.length}</h3><div className="poll-list">{open.map(poll => <PollCard key={poll.id} poll={poll} teams={teams} onChanged={refresh}/>)}</div></>}
+      {closed.length > 0 && <><h3 className="market-subtitle">📁 CERRADAS · {closed.length}</h3><div className="poll-list">{closed.map(poll => <PollCard key={poll.id} poll={poll} teams={teams} onChanged={refresh}/>)}</div></>}
+    </section>
+  </>;
 }
