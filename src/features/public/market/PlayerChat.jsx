@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { isMuted, playIncoming, setMuted } from './chatSound.js';
 import { endpoints } from '../../../api/endpoints.js';
 import { useAuth } from '../../../app/AuthGate.jsx';
@@ -71,9 +72,27 @@ function Bubble({ message, player, children }) {
 }
 
 /** Chat privado entre un club y el jugador. Las respuestas son datos reales del club y no cambian el resultado por sí solas. */
+const PHONE_QUERY = '(max-width: 900px)';
+const isPhoneNow = () => typeof window !== 'undefined' && Boolean(window.matchMedia?.(PHONE_QUERY).matches);
+function useIsPhone() {
+  const [phone, setPhone] = useState(isPhoneNow);
+  useEffect(() => {
+    const query = window.matchMedia?.(PHONE_QUERY);
+    if (!query) return undefined;
+    const update = () => setPhone(query.matches);
+    query.addEventListener('change', update);
+    return () => query.removeEventListener('change', update);
+  }, []);
+  return phone;
+}
+
 const openKey = auctionId => `chat-abierto-${auctionId}`;
+// En el teléfono el chat se abre a pantalla completa, así que parte cerrado; en el computador, abierto.
 const readOpen = auctionId => {
-  try { return window.sessionStorage.getItem(openKey(auctionId)) !== '0'; } catch { return true; }
+  try {
+    const stored = window.sessionStorage.getItem(openKey(auctionId));
+    return stored === null ? !isPhoneNow() : stored === '1';
+  } catch { return !isPhoneNow(); }
 };
 const writeOpen = (auctionId, value) => {
   try { window.sessionStorage.setItem(openKey(auctionId), value ? '1' : '0'); } catch { /* sin almacenamiento: no pasa nada */ }
@@ -86,6 +105,8 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
   const [chosen, setChosen] = useState(clubs.includes(teamId) ? teamId : clubs[0] ?? '');
   const [shown, setShownState] = useState(() => readOpen(auction.id));
   const setShown = value => { setShownState(value); writeOpen(auction.id, value); };
+  const phone = useIsPhone();
+  const sheet = phone && shown;
   const [chat, setChat] = useState(null);
   const [loadError, setLoadError] = useState(null);
   const [unavailable, setUnavailable] = useState(false);
@@ -213,10 +234,33 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
 
 
   const thinking = answer.loading || rewind.loading;
+  // Como en cualquier chat: lo nuevo aparece abajo y lo viejo se va hacia arriba dentro de la conversación.
+  // Si subiste a releer, no te tira para abajo hasta que vuelvas al final (o respondas).
+  const stuck = useRef(true);
+  const lastTop = useRef(0);
+  const onLogScroll = () => {
+    const node = scroller.current;
+    if (!node) return;
+    // Solo se suelta si subes a mano (el scroll suave hacia abajo pasa por posiciones intermedias que no cuentan).
+    if (node.scrollHeight - node.scrollTop - node.clientHeight < 80) stuck.current = true;
+    else if (node.scrollTop < lastTop.current - 4) stuck.current = false;
+    lastTop.current = node.scrollTop;
+  };
+  useEffect(() => { if (thinking) stuck.current = true; }, [thinking]);
   useEffect(() => {
     const node = scroller.current;
-    if (node) node.scrollTop = node.scrollHeight;
-  }, [chat?.messages?.length, hasPending, thinking, chat?.pending?.topic]);
+    if (node && stuck.current) node.scrollTop = node.scrollHeight;
+  }, [chat?.messages?.length, hasPending, thinking, chat?.pending?.topic, notice, shown, sheet]);
+
+  // En el teléfono el chat tapa la pantalla: la página de atrás no se mueve y ATRÁS / Esc lo cierran.
+  useEffect(() => {
+    if (!sheet) return undefined;
+    const root = document.documentElement;
+    root.classList.add('pc-locked');
+    const onKey = event => { if (event.key === 'Escape') setShown(false); };
+    window.addEventListener('keydown', onKey);
+    return () => { root.classList.remove('pc-locked'); window.removeEventListener('keydown', onKey); };
+  }, [sheet]);
 
   if (unavailable || auction.status !== 'open' || (!chosen && !isAdmin)) return null;
   if (!chosen) return null;
@@ -241,15 +285,20 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
 
   if (!shown) {
     return <div className="pc-closed">
-      <button type="button" className="action-button" onClick={() => setShown(true)}>💬 HABLAR CON EL JUGADOR</button>
+      <button type="button" className="action-button pc-open" onClick={() => setShown(true)}>
+        <PlayerFace src={player.faceUrl} name={player.name}/>
+        <span>💬 HABLAR CON {player.name.toUpperCase()}</span>
+      </button>
     </div>;
   }
 
-  return <section className="pc" aria-label={`CHAT CON ${player.name}`}>
+  const panel = <section className={`pc ${sheet ? 'pc-sheet' : ''}`} aria-label={`CHAT CON ${player.name}`} role={sheet ? 'dialog' : undefined} aria-modal={sheet ? 'true' : undefined}>
     <header className="pc-head">
-      <div className="pc-who"><b>💬 CHAT PRIVADO CON {player.name.toUpperCase()}</b><small>SOLO TU CLUB LO VE</small></div>
+      {sheet && <button type="button" className="pc-back" aria-label="VOLVER A LA SUBASTA" onClick={() => setShown(false)}>←</button>}
+      <PlayerFace src={player.faceUrl} name={player.name}/>
+      <div className="pc-who"><b>{player.name.toUpperCase()}</b><small>{thinking || firstHidden !== -1 ? 'ESCRIBIENDO…' : 'CHAT PRIVADO · SOLO TU CLUB LO VE'}</small></div>
       <button type="button" className="pc-sound" aria-pressed={muted} aria-label={muted ? 'ACTIVAR SONIDO' : 'SILENCIAR SONIDO'} title={muted ? 'ACTIVAR SONIDO' : 'SILENCIAR SONIDO'} onClick={toggleMuted}>{muted ? '🔕' : '🔔'}</button>
-      <button type="button" className="pc-close" onClick={() => setShown(false)}>CERRAR</button>
+      {!sheet && <button type="button" className="pc-close" onClick={() => setShown(false)}>CERRAR</button>}
     </header>
     {chat && <Temperature interest={chat.interest} temperature={chat.temperature}/>}
     {clubs.length > 1 && <label className="pc-club">CLUB
@@ -262,7 +311,7 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
     {loadError && <p className="form-feedback error" role="alert">{loadError.message}</p>}
 
     {chat && <>
-      <div className="pc-log" ref={scroller} aria-live="polite">
+      <div className="pc-log" ref={scroller} onScroll={onLogScroll} aria-live="polite">
         {shownMessages.map(item => <Bubble key={item.id} message={item} player={player}>
           {item.role === 'club' && item.kind === 'answer' && rewindInfo.available && (confirmTopic === item.topic
             ? <span className="pc-confirm" role="group" aria-label="CONFIRMAR DESHACER">
@@ -316,4 +365,6 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
       </div>
     </>}
   </section>;
+  // A pantalla completa va directo al body, para que nada de la sala lo recorte.
+  return sheet ? createPortal(panel, document.body) : panel;
 }

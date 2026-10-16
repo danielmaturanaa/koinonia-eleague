@@ -3540,3 +3540,39 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 /* Foto del jugador en el chat: el PNG va dentro de un círculo con fondo, como avatar */
 .pc-row.theirs .player-photo { width: 34px; height: 34px; flex: 0 0 auto; border-radius: 50%; border: 2px solid #fff; background: radial-gradient(circle at 50% 35%, #2a5bb8, #062764); object-fit: cover; object-position: center top; box-shadow: 0 1px 3px rgba(0, 0, 0, .25); }
 .pc-row.theirs .player-photo-fallback { display: grid; place-items: center; color: #fff; font: 600 12px/1 'Oswald', sans-serif; }
+
+/* ===== Chat estilo WhatsApp: alto fijo, scroll solo dentro de la conversación =====
+   Arriba la cabecera, al medio los mensajes (lo viejo se va escondiendo hacia arriba) y abajo las respuestas,
+   como un teclado. En el computador ocupa el alto de la pantalla; en el teléfono se abre a pantalla completa. */
+.pc { display: flex; flex-direction: column; height: clamp(440px, calc(100dvh - 300px), 760px); }
+.pc > * { flex: 0 0 auto; }
+.pc-head { grid-template-columns: auto minmax(0, 1fr) auto auto; padding: 6px 10px; }
+.pc-head .player-photo { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #fff; background: radial-gradient(circle at 50% 35%, #2a5bb8, #062764); object-fit: cover; object-position: center top; }
+.pc-head .player-photo-fallback { display: grid; place-items: center; color: #fff; font: 600 13px/1 'Oswald', sans-serif; }
+.pc-who b { font-size: 17px; }
+.pc-who small { font-size: 11px; letter-spacing: .2px; }
+.pc .pc-log, .sealed-card.stage .pc .pc-log { flex: 1 1 auto; display: flex; flex-direction: column; gap: 8px; min-height: 0; max-height: none; overflow-y: auto; overscroll-behavior: contain; }
+/* Con pocos mensajes, quedan pegados abajo (junto a las respuestas), como en WhatsApp. */
+.pc .pc-log > :first-child { margin-top: auto; }
+.pc-composer { display: flex; flex-direction: column; gap: 6px; max-height: 50%; min-height: 0; padding: 8px 10px; box-shadow: 0 -2px 8px rgba(0, 0, 0, .06); }
+.pc-quick { display: flex; flex-direction: column; gap: 6px; min-height: 0; flex: 1 1 auto; }
+.pc-quick > * { flex: 0 0 auto; }
+.pc-quick .pc-chips { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 2px; }
+.pc-chip { min-height: 0; padding: 7px 10px; }
+.pc-send-row { padding-top: 4px; border-top: 1px solid #e0dacf; }
+.pc-closed .pc-open { display: inline-flex; align-items: center; gap: 10px; min-height: 52px; padding: 6px 16px 6px 6px; }
+.pc-closed .pc-open .player-photo { width: 40px; height: 40px; border-radius: 50%; border: 2px solid #fff; background: radial-gradient(circle at 50% 35%, #2a5bb8, #062764); object-fit: cover; object-position: center top; }
+.pc-closed .pc-open .player-photo-fallback { display: grid; place-items: center; color: #fff; font: 600 13px/1 'Oswald', sans-serif; }
+.pc-back { width: 40px; height: 40px; border: 0; border-radius: 50%; background: transparent; color: #fff9e8; font: 600 24px/1 'Roboto Condensed', sans-serif; cursor: pointer; }
+.pc-back:focus-visible { outline: 3px solid #ffd42a; outline-offset: 1px; }
+.pc-head:has(.pc-back) { grid-template-columns: auto auto minmax(0, 1fr) auto; padding-left: 4px; }
+
+/* Teléfono: pantalla completa, sin que se mueva la página de atrás. */
+html.pc-locked, html.pc-locked body { overflow: hidden; }
+.pc.pc-sheet { position: fixed; inset: 0; z-index: 1000; height: 100dvh; border: 0; padding-bottom: env(safe-area-inset-bottom); }
+.pc.pc-sheet .pc-head { padding-top: calc(6px + env(safe-area-inset-top)); }
+.pc.pc-sheet .pc-composer { max-height: 55%; }
+@media (max-width: 900px) {
+  .sealed-chat .pc-closed { position: sticky; bottom: 10px; z-index: 5; }
+  .sealed-chat .pc-closed .pc-open { width: 100%; justify-content: flex-start; box-shadow: 0 4px 14px rgba(0, 0, 0, .25); }
+}
