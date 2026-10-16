@@ -21,12 +21,19 @@ export function clubFigures(profile) {
 }
 
 /* Por qué un club no puede pagar un fichaje (texto en mayúsculas), o null si puede. */
+// Abrir una encuesta es una propuesta: solo la frena el mercado cerrado. El saldo se exige al confirmar la
+// compra, y el tope de plantilla se revisa al cierre del mercado (hasta entonces el presi puede ordenarse).
 export function signingBlocker(figures, price, marketOpen) {
-  if (marketOpen === false) return 'EL MERCADO ESTÁ CERRADO.';
-  if (!figures || price == null) return null;
-  if (figures.balance !== null && figures.balance < price) return `SALDO INSUFICIENTE: TIENES ${gp(figures.balance)}.`;
-  if (figures.room !== null && price > figures.room) return `NO CABE EN EL TOPE DE PLANTILLA: TE QUEDAN ${gp(figures.room)} DE MARGEN.`;
-  return null;
+  return marketOpen === false ? 'EL MERCADO ESTÁ CERRADO.' : null;
+}
+
+/** Avisos que no frenan: qué pasaría con el saldo y el tope si la compra se concreta. */
+export function signingNotes(figures, price) {
+  if (!figures || price == null) return [];
+  const notes = [];
+  if (figures.balance !== null && figures.balance < price) notes.push(`OJO: PARA CONFIRMAR LA COMPRA NECESITAS ${gp(price)} DE SALDO (HOY TIENES ${gp(figures.balance)}).`);
+  if (figures.room !== null && price > figures.room) notes.push(`OJO: CON ÉL QUEDARÍAS ${gp(price - figures.room)} SOBRE EL TOPE. TIENES HASTA EL CIERRE DEL MERCADO PARA ORDENARTE.`);
+  return notes;
 }
 
 export function MyClubPanel({ team, figures, profileQuery, status, statusQuery }) {

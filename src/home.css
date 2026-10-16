@@ -3655,3 +3655,5 @@ html.pc-locked, html.pc-locked body { overflow: hidden; }
 .tournament-awards-table select { min-width: 118px; }
 .tournament-awards-table table { table-layout: auto; }
 .tournament-awards-table th:first-child, .tournament-awards-table td:first-child { width: 32px; text-align: center; }
+.signing-note { display: block; color: #6b4e00; font: 600 12px/1.35 'Roboto Condensed', sans-serif; }
+.club-page .market-coupons { margin-bottom: 12px; }

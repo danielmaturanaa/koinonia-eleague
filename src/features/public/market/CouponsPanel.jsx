@@ -34,7 +34,7 @@ function CouponUse({ coupon, players, onUsed }) {
 }
 
 /** Cupones de Rebaja Salarial del club (premios de torneo). Si no tiene ninguno, no se muestra. */
-export function CouponsPanel({ teamId, revision, onChanged }) {
+export function CouponsPanel({ teamId, revision = 0, onChanged }) {
   const query = useApiQuery(signal => teamId ? endpoints.teamCoupons(teamId, signal).catch(() => ({ data: null })) : Promise.resolve({ data: null }), [teamId, revision]);
   const coupons = query.data?.coupons ?? [];
   if (!coupons.length) return null;

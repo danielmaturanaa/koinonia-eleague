@@ -48,22 +48,32 @@ const Transfers = ({ squadValueLimit }) => <section className="rules-section">
   <p>Si dos o más presidentes desean adquirir al mismo jugador libre al final de la temporada, la operación se resolverá mediante una <strong>subasta</strong> entre los clubes interesados.</p>
   <h3>4.4 Fair Play Financiero</h3>
   <ul>
-    <li>El valor total de una plantilla no podrá superar <strong>{squadValueLimit === null ? 'el tope definido por la liga' : `${squadValueLimit.toLocaleString('es-CL')} GP`}</strong> (valor a definir por la liga).</li>
+    <li>El valor total de una plantilla no podrá superar <strong>{squadValueLimit === null ? 'el tope definido por la liga' : `${squadValueLimit.toLocaleString('es-CL')} GP`}</strong> (valor a definir por la liga). Durante el mercado puedes pasarte mientras ordenas tu plantel: el tope se revisa al <strong>cierre del mercado</strong>. Lo que sí frena una compra es el saldo: no puedes pagar más de lo que tienes.</li>
     <li>Para este cálculo siempre se utilizará el valor de mercado base del jugador, independientemente del precio pagado en una negociación.</li>
   </ul>
 </section>;
 
 const Prizes = () => <>
   <section className="rules-section">
-    <h2>5. Sistema de Premios: Ligas Regulares</h2>
-    <h3>Liga Schwencke (Primera División)</h3>
-    <ul><li><strong>1.º:</strong> 500K</li><li><strong>2.º:</strong> 450K</li><li><strong>3.º:</strong> 400K</li><li><strong>4.º:</strong> 300K</li><li><strong>5.º:</strong> 250K; si desciende, 200K</li><li><strong>6.º:</strong> 150K</li></ul>
-    <h3>Liga San Jorge (Segunda División)</h3>
-    <ul><li><strong>1.º:</strong> 300K</li><li><strong>2.º:</strong> 200K; si logra el ascenso, 250K</li><li><strong>3.º:</strong> 150K</li><li><strong>4.º:</strong> 125K</li><li><strong>5.º:</strong> 100K</li></ul>
+    <h2>5. Sistema de Premios</h2>
+    <h3>Tabla de la liga</h3>
+    <ul><li><strong>1.º:</strong> 200.000 GP</li><li><strong>Desde el 2.º:</strong> 20.000 GP menos por cada puesto (2.º 180.000, 3.º 160.000, 4.º 140.000, y así).</li></ul>
+    <h3>Playoffs</h3>
+    <ul>
+      <li><strong>Campeón:</strong> Cupón de Rebaja Salarial del 20% + 40.000 GP.</li>
+      <li><strong>Subcampeón:</strong> Cupón de Rebaja Salarial del 15% + 20.000 GP.</li>
+      <li><strong>Semifinalistas:</strong> Cupón de Rebaja Salarial del 10%.</li>
+    </ul>
+    <p>Los premios de los playoffs se suman a los de la tabla.</p>
   </section>
   <section className="rules-section">
-    <h2>6. Sistema de Premios: Torneo de Transición</h2>
-    <ul><li><strong>1.º:</strong> 500K</li><li><strong>2.º:</strong> 450K</li><li><strong>3.º:</strong> 400K</li><li><strong>4.º:</strong> 350K</li><li><strong>5.º:</strong> 275K</li><li><strong>6.º:</strong> 250K</li><li><strong>7.º:</strong> 225K</li><li><strong>8.º:</strong> 200K</li><li><strong>9.º:</strong> 150K</li><li><strong>10.º:</strong> 100K</li><li><strong>11.º:</strong> 50K</li></ul>
+    <h2>6. Cupones de Rebaja Salarial</h2>
+    <ul>
+      <li>Le bajan el valor a un jugador de tu plantel en el porcentaje del cupón (por ejemplo, uno de 100.000 GP con un cupón del 20% queda en 80.000 GP), lo que te deja más margen bajo el tope de plantilla.</li>
+      <li>Cada jugador puede recibir <strong>una sola rebaja</strong> mientras esté en un mismo club.</li>
+      <li>El cupón es del club que lo ganó y lo usa su Presidente desde la ficha del club en la web, cuando quiera. No vence. Cada uso se anuncia en Discord.</li>
+      <li>No se puede usar en un jugador que esté amarrado por una promesa.</li>
+    </ul>
   </section>
 </>;
 

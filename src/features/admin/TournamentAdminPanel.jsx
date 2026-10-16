@@ -76,7 +76,7 @@ export function TournamentAwardsPanel({ tournament, onChanged }) {
     return { data: { teams: grants.length, totalGp, totalCoupons } };
   }, { onSuccess: () => { setDone({ teams: grants.length, totalGp, totalCoupons }); setConfirming(false); onChanged?.(); } });
 
-  if (done) return <section className="tournament-awards"><p className="form-feedback success">✅ PREMIOS OTORGADOS: {gpText(done.totalGp)} Y {done.totalCoupons} CUPÓN(ES) A {done.teams} CLUBES. LOS CUPONES LOS USA CADA PRESI DESDE MERCADO.</p></section>;
+  if (done) return <section className="tournament-awards"><p className="form-feedback success">✅ PREMIOS OTORGADOS: {gpText(done.totalGp)} Y {done.totalCoupons} CUPÓN(ES) A {done.teams} CLUBES. CADA PRESI USA SUS CUPONES DESDE LA FICHA DE SU CLUB, Y SE AVISA EN DISCORD.</p></section>;
   return <section className="tournament-awards">
     <header><div><h3>CLASIFICACIÓN FINAL Y PREMIOS</h3><p>VIENEN PRE-LLENADOS (1.º DE LA LIGA 200.000 Y BAJANDO DE A 20.000; SEMIFINALISTAS CUPÓN 10%; SUBCAMPEÓN CUPÓN 15% + 20.000; CAMPEÓN CUPÓN 20% + 40.000). REVISA, AJUSTA Y OTORGA TODO CON UN SOLO GUARDADO.</p></div><b>{gpText(totalGp)}{totalCoupons ? ` · ${totalCoupons} 🎟️` : ''}</b></header>
     <DataState query={standings}/>
