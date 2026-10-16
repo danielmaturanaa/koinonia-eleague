@@ -9,7 +9,7 @@ import { useApiQuery } from '../useApiQuery.js';
 
 const ACTIVE = ['open', 'awaiting', 'disputed'];
 const STATUS_LABEL = {
-  open: 'ABIERTA', awaiting: 'ESPERA CONFIRMACIÓN', disputed: 'EN SUBASTA',
+  open: 'ABIERTA', awaiting: 'ESPERA CONFIRMACIÓN', disputed: 'VA A SUBASTA',
   bought: 'COMPRADO', auctioned: 'SUBASTADO', declined: 'DESCARTADA', cancelled: 'CANCELADA',
 };
 
@@ -27,43 +27,26 @@ function Voters({ title, votes, tone }) {
     : <span>NADIE TODAVÍA</span>}</div>;
 }
 
-function AuctionPanel({ poll, teams, onChanged }) {
-  const { isAdmin, user } = useAuth();
-  const owns = teamId => Boolean(user?.teamIds?.includes(teamId));
-  const mine = poll.involvedTeamIds.filter(owns);
-  const [teamId, setTeamId] = useState(mine[0] ?? poll.involvedTeamIds[0] ?? '');
-  const [price, setPrice] = useState(String(poll.price));
-  const claim = useApiMutation((body, signal) => endpoints.claimAuction(body, signal), { onSuccess: onChanged });
-  const resolve = useApiMutation((decision, signal) => endpoints.resolveAuction(poll.id, decision, signal), { onSuccess: onChanged });
-  const nameOf = id => teams.find(team => team.id === id)?.name ?? 'CLUB';
-  const canClaim = isAdmin || mine.length > 0;
-  // Valida otro club de la subasta (no el que anotó) o un admin.
-  const canValidate = poll.auction && (isAdmin || poll.involvedTeamIds.some(id => id !== poll.auction.team.id && owns(id)));
-
-  if (poll.auction) {
-    return <div className="poll-auction">
-      <p><b>RESULTADO ANOTADO:</b> {poll.auction.team.emoji ?? '⚽'} {poll.auction.team.name} POR {gp(poll.auction.price)}. FALTA QUE OTRO CLUB DE LA SUBASTA LO VALIDE.</p>
-      {canValidate && <div className="mini-actions">
-        <button disabled={resolve.loading} onClick={() => resolve.execute('accept')}>SÍ, ASÍ QUEDÓ</button>
-        <button className="danger" disabled={resolve.loading} onClick={() => resolve.execute('reject')}>NO FUE ASÍ</button>
-      </div>}
-      <FormFeedback mutation={resolve}/>
-    </div>;
-  }
-  if (!canClaim) return <p className="poll-hint">HAY INTERESADOS: LA COMPRA ESTÁ BLOQUEADA HASTA QUE SE RESUELVA LA SUBASTA.</p>;
-  const submit = event => {
-    event.preventDefault();
-    claim.execute({ playerId: poll.player.id, teamId, price: Number(price) });
-  };
-  return <form className="poll-auction-form" onSubmit={submit}>
-    <p className="poll-hint">LA SUBASTA SE HACE ENTRE USTEDES. QUIEN GANÓ ANOTA AQUÍ EL RESULTADO Y OTRO CLUB LO VALIDA. EL PRECIO SOLO PUEDE SUBIR.</p>
-    <label>CLUB GANADOR<select value={teamId} onChange={event => setTeamId(event.target.value)}>
-      {poll.involvedTeamIds.map(id => <option key={id} value={id}>{nameOf(id)}</option>)}
-    </select></label>
-    <label>MONTO GP<input type="number" min={poll.price} step="1" required value={price} onChange={event => setPrice(event.target.value)}/></label>
-    <button className="action-button" disabled={claim.loading || !teamId || Number(price) < poll.price}>ANOTAR RESULTADO</button>
-    <FormFeedback mutation={claim}/>
-  </form>;
+/** Alguien pidió subasta: la encuesta queda bloqueada y un admin abre la subasta sellada eligiendo al moderador. */
+function SendToAuction({ poll, onChanged }) {
+  const { isAdmin } = useAuth();
+  const [moderatorId, setModeratorId] = useState('');
+  const presidents = useApiQuery(signal => isAdmin ? endpoints.presidents({}, signal) : Promise.resolve({ data: [] }), [isAdmin]);
+  // El moderador no puede ofertar: se ofrecen solo presis de clubes que no están en la encuesta.
+  const moderators = (Array.isArray(presidents.data) ? presidents.data : [])
+    .filter(item => item.discordUserId && item.teamId && !poll.involvedTeamIds.includes(item.teamId));
+  const open = useApiMutation((body, signal) => endpoints.openSealedAuction(body, signal), { onSuccess: onChanged });
+  return <div className="poll-auction">
+    <p><b>⚖️ VA A SUBASTA SELLADA.</b> OTRO CLUB TAMBIÉN LO QUIERE: LA COMPRA QUEDA BLOQUEADA HASTA QUE UN ADMIN ABRA LA SUBASTA. AHÍ TODOS OFERTAN EN SECRETO Y EL JUGADOR ELIGE.</p>
+    {isAdmin && <form className="poll-auction-form" onSubmit={event => { event.preventDefault(); if (moderatorId) open.execute({ playerId: poll.player.id, moderatorPresidentId: moderatorId }); }}>
+      <label>PRESI MODERADOR (NO OFERTA)<select required value={moderatorId} onChange={event => setModeratorId(event.target.value)}>
+        <option value="">ELEGIR MODERADOR</option>
+        {moderators.map(item => <option key={item.id} value={item.id}>{String(item.name).toUpperCase()} · {String(item.teamName ?? '').toUpperCase()}</option>)}
+      </select></label>
+      <button className="action-button" disabled={!moderatorId || open.loading}>{open.loading ? 'ABRIENDO…' : '🔨 ABRIR SUBASTA SELLADA'}</button>
+      {open.error && <p className="form-feedback error" role="alert">{open.error.message}</p>}
+    </form>}
+  </div>;
 }
 
 function PollCard({ poll, teams, onChanged }) {
@@ -85,7 +68,7 @@ function PollCard({ poll, teams, onChanged }) {
         <b>{poll.player.name}</b>
         <small>{poll.player.position} · {poll.team.emoji ?? '⚽'} {poll.team.name} LO QUIERE POR {gp(buyerPaid)}</small>
       </div>
-      <span className="poll-status">{STATUS_LABEL[poll.status] ?? poll.status.toUpperCase()}</span>
+      <span className="poll-status">{poll.status === 'cancelled' && poll.decisionText === 'Pasó a subasta sellada' ? 'PASÓ A SUBASTA' : STATUS_LABEL[poll.status] ?? poll.status.toUpperCase()}</span>
     </header>
     <div className="poll-votes">
       <Voters title={`DELE NOMÁS (${confirms.length}/${poll.window?.minConfirmations ?? '?'})`} votes={confirms} tone="yes"/>
@@ -107,7 +90,7 @@ function PollCard({ poll, teams, onChanged }) {
     </div>}
     {poll.status === 'awaiting' && !canDecide && <p className="poll-hint">LUZ VERDE: FALTA QUE EL PRESI DE {poll.team.name.toUpperCase()} CONFIRME LA COMPRA.</p>}
 
-    {poll.status === 'disputed' && <AuctionPanel poll={poll} teams={teams} onChanged={onChanged}/>}
+    {poll.status === 'disputed' && <SendToAuction poll={poll} onChanged={onChanged}/>}
 
     {active && ownsBuyer && <button type="button" className="poll-cancel" disabled={act.loading} onClick={() => act.execute('cancel')}>CANCELAR ENCUESTA</button>}
     <FormFeedback mutation={act}/>

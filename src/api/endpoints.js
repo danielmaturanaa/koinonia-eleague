@@ -109,9 +109,7 @@ export const endpoints = {
   openPoll: (body, signal) => apiClient.post('/market/polls', body, { actor: 'web', signal }),
   // action: vote | confirm | decline | cancel
   pollAction: (pollId, action, body, signal) => apiClient.post(`/market/polls/${pollId}/${action}`, body ?? {}, { actor: 'web', signal }),
-  claimAuction: (body, signal) => apiClient.post('/market/auctions', body, { actor: 'web', signal }),
   // decision: accept | reject
-  resolveAuction: (pollId, decision, signal) => apiClient.post(`/market/polls/${pollId}/auction/${decision}`, {}, { actor: 'web', signal }),
   sealedAuctions: (query, signal) => get('/market/sealed-auctions', query, signal),
   openSealedAuction: (body, signal) => apiClient.post('/market/sealed-auctions', body, { actor: 'web', signal }),
   // action: bids | bids/withdraw | cancel | resolve
