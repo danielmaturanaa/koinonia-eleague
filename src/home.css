@@ -3634,3 +3634,24 @@ html.pc-locked, html.pc-locked body { overflow: hidden; }
 .profile-poll.done { margin: 0; padding: 8px 12px; border: 2px solid #167a45; background: #e4f4ea; color: #0d4a2a; font: 600 13px/1.35 'Roboto Condensed', sans-serif; }
 .profile-poll.done a { color: #062764; }
 @media (max-width: 560px) { .poll-filters { grid-template-columns: 1fr; } }
+
+/* ===== Cupones de Rebaja Salarial ===== */
+.coupon-list { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 320px), 1fr)); }
+.coupon-card { display: grid; gap: 8px; padding: 12px; border: 2px dashed #b8860b; background: #fffaf0; }
+.coupon-card header { display: grid; gap: 2px; }
+.coupon-card header b { color: #6b4e00; font: 600 17px/1.1 'Oswald', sans-serif; }
+.coupon-card header small { color: #55607a; font: 500 12px/1.2 'Roboto Condensed', sans-serif; }
+.coupon-card label { display: grid; gap: 3px; color: #062764; font: 600 12px/1.2 'Oswald', sans-serif; }
+.coupon-card select { min-height: 42px; }
+.coupon-preview { margin: 0; color: #0d4a2a; font: 600 13px/1.35 'Roboto Condensed', sans-serif; }
+.coupon-used { margin: 10px 0 0; padding-left: 18px; color: #3b4a54; font: 500 13px/1.6 'Roboto Condensed', sans-serif; }
+.tournament-awards select { min-height: 34px; }
+.tournament-awards .button-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.tournament-awards-table { overflow-x: auto; }
+.tournament-awards-table table { width: 100%; min-width: 640px; }
+.tournament-awards-table td:nth-child(2), .tournament-awards-table th:nth-child(2) { text-align: left; }
+.tournament-awards-table td:nth-child(5) { white-space: nowrap; font: 600 12px/1.2 'Oswald', sans-serif; }
+.tournament-awards-table input { width: 100%; min-width: 96px; }
+.tournament-awards-table select { min-width: 118px; }
+.tournament-awards-table table { table-layout: auto; }
+.tournament-awards-table th:first-child, .tournament-awards-table td:first-child { width: 32px; text-align: center; }

@@ -12,27 +12,105 @@ function MutationAction({ action, label, confirmText, onChanged, danger = false 
   return <div className="mutation-action"><button className={`action-button ${danger ? 'danger' : ''}`} disabled={mutation.loading} onClick={run}>{label}</button><FormFeedback mutation={mutation}/></div>;
 }
 
+// Premios sugeridos (se pre-llenan y el admin los puede cambiar antes de otorgar):
+// liga: 1.º 200.000 y bajando de a 20.000; playoffs: semifinalistas cupón 10%,
+// subcampeón cupón 15% + 20.000 y campeón cupón 20% + 40.000.
+const LEAGUE_FIRST = 200000;
+const LEAGUE_STEP = 20000;
+const PLAYOFF_PRIZES = {
+  champion: { label: 'CAMPEÓN', gp: 40000, coupon: 20 },
+  runnerUp: { label: 'SUBCAMPEÓN', gp: 20000, coupon: 15 },
+  semifinal: { label: 'SEMIFINALISTA', gp: 0, coupon: 10 },
+};
+const COUPON_OPTIONS = [0, 10, 15, 20];
+const gpText = value => `${Number(value || 0).toLocaleString('es-CL')} GP`;
+
+/** Cómo terminó cada club en los playoffs del torneo (si los hubo y ya se jugaron). */
+function playoffPlaces(playoffs) {
+  const places = {};
+  for (const series of playoffs?.series ?? []) {
+    if (!series.winnerTeamId) continue;
+    const loser = series.homeTeam.id === series.winnerTeamId ? series.awayTeam.id : series.homeTeam.id;
+    if (series.round === 'final') { places[series.winnerTeamId] = 'champion'; places[loser] = 'runnerUp'; }
+    else if (!places[loser]) places[loser] = 'semifinal';
+  }
+  return places;
+}
+
+function suggested(rows, places) {
+  return Object.fromEntries(rows.map((row, index) => {
+    const prize = PLAYOFF_PRIZES[places[row.team_id]];
+    return [row.team_id, { league: String(Math.max(0, LEAGUE_FIRST - LEAGUE_STEP * index)), playoff: String(prize?.gp ?? 0), coupon: String(prize?.coupon ?? 0) }];
+  }));
+}
+
 export function TournamentAwardsPanel({ tournament, onChanged }) {
   const standings = useApiQuery(signal => endpoints.standings(tournament.id, {}, signal), [tournament.id]);
+  const playoffs = useApiQuery(signal => endpoints.playoffs(tournament.id, signal).catch(() => ({ data: null })), [tournament.id]);
   const rows = Array.isArray(standings.data) ? standings.data : [];
-  const [amounts, setAmounts] = useState({});
-  useEffect(() => setAmounts({}), [tournament.id]);
-  const grants = rows.map((row, index) => ({ row, position: index + 1, amount: Number(amounts[row.team_id] ?? 0) })).filter(item => item.amount > 0);
-  const total = grants.reduce((sum, item) => sum + item.amount, 0);
+  const places = playoffPlaces(playoffs.data);
+  const [values, setValues] = useState(null);
+  const [confirming, setConfirming] = useState(false);
+  const [done, setDone] = useState(null);
+  // Se pre-llena apenas llegan la tabla y los playoffs; después manda lo que edite el admin.
+  const ready = !standings.loading && !playoffs.loading && rows.length > 0;
+  useEffect(() => { setValues(null); setDone(null); setConfirming(false); }, [tournament.id]);
+  useEffect(() => { if (ready && values === null) setValues(suggested(rows, places)); }, [ready, values]);
+  const form = values ?? {};
+  const set = (teamId, field, value) => setValues(current => ({ ...current, [teamId]: { ...current[teamId], [field]: value } }));
+  const grants = rows.map((row, index) => {
+    const entry = form[row.team_id] ?? {};
+    return { row, position: index + 1, place: places[row.team_id] ?? null,
+      league: Number(entry.league || 0), playoff: Number(entry.playoff || 0), coupon: Number(entry.coupon || 0) };
+  }).filter(item => item.league > 0 || item.playoff > 0 || item.coupon > 0);
+  const totalGp = grants.reduce((sum, item) => sum + item.league + item.playoff, 0);
+  const totalCoupons = grants.filter(item => item.coupon > 0).length;
   const mutation = useApiMutation(async signal => {
     for (const grant of grants) {
-      await endpoints.creditTeam(grant.row.team_id, {
-        amount: grant.amount,
-        reason: `Premio ${tournament.name} · Puesto ${grant.position}`,
-      }, signal);
+      const teamId = grant.row.team_id;
+      const placeLabel = grant.place ? PLAYOFF_PRIZES[grant.place].label.toLowerCase() : null;
+      if (grant.league > 0) await endpoints.creditTeam(teamId, { amount: grant.league, reason: `Premio ${tournament.name} · ${grant.position}.º de la liga` }, signal);
+      if (grant.playoff > 0) await endpoints.creditTeam(teamId, { amount: grant.playoff, reason: `Premio ${tournament.name} · ${placeLabel ?? 'playoffs'}` }, signal);
+      if (grant.coupon > 0) await endpoints.grantCoupon(teamId, { percent: grant.coupon, tournamentId: tournament.id, reason: `${tournament.name}${placeLabel ? ` · ${placeLabel}` : ''}` }, signal);
     }
-    return { data: { awardedTeams: grants.length, total } };
-  }, { onSuccess: () => { setAmounts({}); onChanged?.(); } });
-  const save = () => {
-    if (!grants.length) return;
-    if (window.confirm(`¿OTORGAR ${total.toLocaleString('es-CL')} GP EN PREMIOS A ${grants.length} CLUBES? ESTA OPERACIÓN MODIFICARÁ SUS PRESUPUESTOS.`)) mutation.execute();
-  };
-  return <section className="tournament-awards"><header><div><h3>CLASIFICACIÓN FINAL Y PREMIOS</h3><p>INGRESA EL PREMIO DE CADA CLUB. LOS MONTOS SE ACREDITARÁN CON UN ÚNICO GUARDADO.</p></div><b>{total.toLocaleString('es-CL')} GP</b></header><DataState query={standings}/>{rows.length > 0 && <div className="tournament-awards-table"><table><thead><tr><th>CLUB</th><th>PTS</th><th>PREMIO GP</th></tr></thead><tbody>{rows.map(row => <tr key={row.team_id}><td>{row.name}</td><td><b>{row.points}</b></td><td><input aria-label={`Premio para ${row.name}`} type="number" min="0" step="1" value={amounts[row.team_id] ?? ''} onChange={event => setAmounts(current => ({ ...current, [row.team_id]: event.target.value }))} placeholder="0"/></td></tr>)}</tbody></table></div>}<button className="action-button tournament-awards-save" disabled={!grants.length || mutation.loading} onClick={save}>GUARDAR Y OTORGAR PREMIOS</button><FormFeedback mutation={mutation}/></section>;
+    return { data: { teams: grants.length, totalGp, totalCoupons } };
+  }, { onSuccess: () => { setDone({ teams: grants.length, totalGp, totalCoupons }); setConfirming(false); onChanged?.(); } });
+
+  if (done) return <section className="tournament-awards"><p className="form-feedback success">✅ PREMIOS OTORGADOS: {gpText(done.totalGp)} Y {done.totalCoupons} CUPÓN(ES) A {done.teams} CLUBES. LOS CUPONES LOS USA CADA PRESI DESDE MERCADO.</p></section>;
+  return <section className="tournament-awards">
+    <header><div><h3>CLASIFICACIÓN FINAL Y PREMIOS</h3><p>VIENEN PRE-LLENADOS (1.º DE LA LIGA 200.000 Y BAJANDO DE A 20.000; SEMIFINALISTAS CUPÓN 10%; SUBCAMPEÓN CUPÓN 15% + 20.000; CAMPEÓN CUPÓN 20% + 40.000). REVISA, AJUSTA Y OTORGA TODO CON UN SOLO GUARDADO.</p></div><b>{gpText(totalGp)}{totalCoupons ? ` · ${totalCoupons} 🎟️` : ''}</b></header>
+    <DataState query={standings}/>
+    {rows.length > 0 && <div className="tournament-awards-table"><table>
+      <thead><tr><th>#</th><th>CLUB</th><th>PTS</th><th>GP LIGA</th><th>PLAYOFFS</th><th>GP PLAYOFFS</th><th>CUPÓN REBAJA SALARIAL</th></tr></thead>
+      <tbody>{rows.map((row, index) => {
+        const entry = form[row.team_id] ?? {};
+        const place = places[row.team_id];
+        return <tr key={row.team_id}>
+          <td>{index + 1}</td><td>{row.name}</td><td><b>{row.points}</b></td>
+          <td><input aria-label={`GP de liga para ${row.name}`} type="number" min="0" step="1000" value={entry.league ?? ''} onChange={event => set(row.team_id, 'league', event.target.value)} placeholder="0"/></td>
+          <td>{place ? PLAYOFF_PRIZES[place].label : '—'}</td>
+          <td><input aria-label={`GP de playoffs para ${row.name}`} type="number" min="0" step="1000" value={entry.playoff ?? ''} onChange={event => set(row.team_id, 'playoff', event.target.value)} placeholder="0"/></td>
+          <td><select aria-label={`Cupón para ${row.name}`} value={entry.coupon ?? '0'} onChange={event => set(row.team_id, 'coupon', event.target.value)}>
+            {COUPON_OPTIONS.map(percent => <option key={percent} value={percent}>{percent ? `🎟️ ${percent}%` : 'SIN CUPÓN'}</option>)}
+          </select></td>
+        </tr>;
+      })}</tbody>
+    </table></div>}
+    {rows.length > 0 && !playoffs.data && <p className="poll-hint">ESTE TORNEO NO TIENE PLAYOFFS: SOLO SE PRE-LLENAN LOS PREMIOS DE LA LIGA.</p>}
+    {confirming
+      ? <div className="offer-confirm" role="group" aria-label="CONFIRMAR PREMIOS">
+        <span>¿OTORGAR {gpText(totalGp)}{totalCoupons ? ` Y ${totalCoupons} CUPÓN(ES)` : ''} A {grants.length} CLUBES? SE ACREDITA AL TIRO Y NO SE DESHACE SOLO.</span>
+        <div className="mini-actions">
+          <button type="button" disabled={mutation.loading} onClick={() => mutation.execute()}>{mutation.loading ? 'OTORGANDO…' : 'SÍ, OTORGAR'}</button>
+          <button type="button" className="ghost" disabled={mutation.loading} onClick={() => setConfirming(false)}>VOLVER</button>
+        </div>
+      </div>
+      : <div className="button-row">
+        <button className="action-button tournament-awards-save" disabled={!grants.length} onClick={() => setConfirming(true)}>GUARDAR Y OTORGAR PREMIOS</button>
+        <button type="button" className="action-button ghost-button" disabled={!ready} onClick={() => setValues(suggested(rows, places))}>VOLVER A LOS SUGERIDOS</button>
+      </div>}
+    {mutation.error && <p className="form-feedback error" role="alert">{mutation.error.message}</p>}
+  </section>;
 }
 
 function StatusPanel({ tournament, onChanged, onDeleted }) {

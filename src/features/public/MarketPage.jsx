@@ -11,6 +11,7 @@ import { useApiQuery } from './useApiQuery.js';
 import { MyClubPanel, clubFigures, signingBlocker } from './market/MyClubPanel.jsx';
 import { OffersInbox, ProposeOffers } from './market/OffersSection.jsx';
 import { PollsSection } from './market/PollsSection.jsx';
+import { CouponsPanel } from './market/CouponsPanel.jsx';
 import { AuctionHistory } from './market/AuctionHistory.jsx';
 import { SealedAuctionsSection } from './market/SealedAuctionsSection.jsx';
 import { AuctionSimulator } from './market/AuctionSimulator.jsx';
@@ -237,6 +238,7 @@ export function MarketPage({ teams }) {
     {managing && isAdmin && <section className="market-section market-manual"><header><h2>REGISTRAR OPERACIÓN MANUAL</h2><p>Los traspasos y trueques normalmente se hacen por Discord; usa esto solo para corregir o registrar algo a mano.</p></header><MarketAdmin teams={teams} players={asList(players.data)} onChanged={refresh}/></section>}
     {operates && <MyClubPanel team={myTeam} figures={figures} profileQuery={myTeamId ? profile : null} status={status.data} statusQuery={status}/>}
     {myTeamId && <PromiseRecord teamId={myTeamId} revision={revision}/>}
+    {myTeamId && <CouponsPanel teamId={myTeamId} revision={revision} onChanged={refresh}/>}
     <nav className="market-tabs" role="tablist" aria-label="SECCIONES DEL MERCADO">
       {tabs.map(([key, label, badge]) => <button key={key} type="button" role="tab" aria-selected={current === key} className={current === key ? 'active' : ''} onClick={() => setTab(key)}>
         {label}{badge ? <span className="market-tab-badge">{badge}</span> : null}
