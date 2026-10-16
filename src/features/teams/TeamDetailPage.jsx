@@ -11,6 +11,7 @@ import { readPersonProfile } from '../../utils/personProfile.js';
 import { matchRoundLabel } from '../../utils/matchPresentation.js';
 import { CoachForm, PresidentForm, ProfileForm, SquadEditor } from '../admin/TeamAdminPanel.jsx';
 import { ManagerSummary } from './ManagerCard.jsx';
+import { ReputationModal, ReputationSummary } from './Reputation.jsx';
 import { hasCoachBoost, overallText } from '../../utils/managerBoosters.js';
 import { useAuth } from '../../app/AuthGate.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
@@ -105,9 +106,10 @@ function PersonPhoto({ photo, name }) {
 }
 
 // Foto a sangre con nombre, edad y país sobre un degradado inferior; la edición queda junto al cargo.
-function LeaderCard({ photo, name, age, country, customFields = [], role, onEdit, manager }) {
+function LeaderCard({ photo, name, age, country, customFields = [], role, onEdit, manager, reputation, onReputation }) {
   const details = [age ? `${age} AÑOS` : null, country, ...customFields.map(field => field.value ? `${field.label}: ${field.value}` : null)].filter(Boolean);
-  return <div className="club-person-entry"><h3 className="club-person-role">{role}{onEdit && <button type="button" className="club-inline-edit club-leader-edit" onClick={onEdit} aria-label={`Editar ${role.toLowerCase()}`} title={`Editar ${role.toLowerCase()}`}>✎</button>}</h3><article className="club-person-card" tabIndex={manager ? 0 : undefined} aria-label={manager ? `${name}: estilos y potenciadores de ${manager.name}` : undefined}><PersonPhoto photo={photo} name={name}/><div className="club-person-overlay"><h3>{name}</h3>{details.length > 0 && <p>{details.join(' · ')}</p>}</div></article>{manager && <div className="manager-popover" role="tooltip"><ManagerSummary manager={manager}/></div>}</div>;
+  const hover = manager ? `${name}: estilos y potenciadores de ${manager.name}` : reputation ? `${name}: reputación ${reputation.score}` : undefined;
+  return <div className="club-person-entry"><h3 className="club-person-role">{role}{reputation && <button type="button" className="reputation-chip" onClick={onReputation} title="Ver cómo se calcula y el ranking de presidentes">REP <b>{reputation.score}</b> <span aria-hidden="true">ⓘ</span></button>}{onEdit && <button type="button" className="club-inline-edit club-leader-edit" onClick={onEdit} aria-label={`Editar ${role.toLowerCase()}`} title={`Editar ${role.toLowerCase()}`}>✎</button>}</h3><article className="club-person-card" tabIndex={hover ? 0 : undefined} aria-label={hover}><PersonPhoto photo={photo} name={name}/><div className="club-person-overlay"><h3>{name}</h3>{details.length > 0 && <p>{details.join(' · ')}</p>}</div></article>{manager && <div className="manager-popover" role="tooltip"><ManagerSummary manager={manager}/></div>}{!manager && reputation && <div className="manager-popover" role="tooltip"><ReputationSummary reputation={reputation} clubCount={reputation.clubCount}/></div>}</div>;
 }
 
 function ClubPeople({ president: { key: presidentKey, ...president }, coach: { key: coachKey, ...coach }, onEditPresident, onEditCoach }) {
@@ -710,7 +712,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
           <div className="club-overview-secondary">
             <div className="club-overview-left-column">
               <ClubPeople
-                president={{ key: `president-${personRevision}`, photo, name: presidentName, age: presidentProfile.age, country: presidentProfile.country, customFields: team.president?.customFields, role: 'PRESIDENTE' }}
+                president={{ key: `president-${personRevision}`, photo, name: presidentName, age: presidentProfile.age, country: presidentProfile.country, customFields: team.president?.customFields, role: 'PRESIDENTE', reputation: team.president?.reputation ?? null, onReputation: () => setPersonEditor('reputation') }}
                 coach={{ key: `coach-${personRevision}`, photo: managerPhoto, name: coachName, age: coachProfile.age, country: coachProfile.country, customFields: team.coach?.customFields, role: 'DT', manager: team.coach?.manager }}
                 onEditPresident={canEdit ? () => setPersonEditor('president') : undefined}
                 onEditCoach={canEdit ? () => setPersonEditor('coach') : undefined}
@@ -735,6 +737,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
       </section>
 
       {personEditor === 'president' && <PersonEditorModal title="EDITAR PRESIDENTE" onClose={() => setPersonEditor('')}><PresidentForm team={team} onChanged={onChanged} onSaved={() => { setPersonRevision(value => value + 1); setPersonEditor(''); }}/></PersonEditorModal>}
+      {personEditor === 'reputation' && <ReputationModal teamId={team.id} onClose={() => setPersonEditor('')}/>}
       {personEditor === 'coach' && <PersonEditorModal title="EDITAR DIRECTOR TÉCNICO" onClose={() => setPersonEditor('')}><CoachForm team={team} onChanged={onChanged} onSaved={() => { setPersonRevision(value => value + 1); setPersonEditor(''); }}/></PersonEditorModal>}
       {crestEditorOpen && <PersonEditorModal title="EDITAR ESCUDO Y NOMBRE" onClose={() => setCrestEditorOpen(false)}><ProfileForm team={team} onChanged={onChanged} onSaved={() => setCrestEditorOpen(false)}/></PersonEditorModal>}
       {coversOpen && <TeamCoversModal team={team} onClose={() => setCoversOpen(false)} onChanged={onChanged}/>}

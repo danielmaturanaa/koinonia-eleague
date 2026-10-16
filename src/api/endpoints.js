@@ -12,6 +12,7 @@ export const endpoints = {
   updateNewsImage: (context, body, signal) => apiClient.put(`/news/images/${context}`, body, { actor: 'web', signal }),
   teams: (query, signal) => get('/teams', query, signal),
   team: (teamId, signal) => get(`/teams/${teamId}`, null, signal),
+  reputation: signal => get('/reputation', null, signal),
   teamSquad: (teamId, signal) => get(`/teams/${teamId}/squad`, null, signal),
   teamTitles: (teamId, signal) => get(`/teams/${teamId}/titles`, null, signal),
   // La API pagina de 20 en 20; la ficha del club necesita todo su historial (máximo permitido: 100).
