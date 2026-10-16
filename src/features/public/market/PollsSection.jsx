@@ -35,9 +35,11 @@ function SendToAuction({ poll, onChanged }) {
   // El moderador también puede ofertar (solo no puede cerrar antes de hora mientras falten clubes listos).
   const moderators = (Array.isArray(presidents.data) ? presidents.data : []).filter(item => item.discordUserId && item.teamId);
   const open = useApiMutation((body, signal) => endpoints.openSealedAuction(body, signal), { onSuccess: onChanged });
+  // Abrir la subasta es tarea del admin: a los demás no se les muestra este bloque.
+  if (!isAdmin) return null;
   return <div className="poll-auction">
     <p><b>⚖️ VA A SUBASTA SELLADA.</b> OTRO CLUB TAMBIÉN LO QUIERE: LA COMPRA QUEDA BLOQUEADA HASTA QUE UN ADMIN ABRA LA SUBASTA. AHÍ TODOS OFERTAN EN SECRETO Y EL JUGADOR ELIGE.</p>
-    {isAdmin && <form className="poll-auction-form" onSubmit={event => { event.preventDefault(); if (moderatorId) open.execute({ playerId: poll.player.id, moderatorPresidentId: moderatorId }); }}>
+    {<form className="poll-auction-form" onSubmit={event => { event.preventDefault(); if (moderatorId) open.execute({ playerId: poll.player.id, moderatorPresidentId: moderatorId }); }}>
       <label>PRESI MODERADOR<select required value={moderatorId} onChange={event => setModeratorId(event.target.value)}>
         <option value="">ELEGIR MODERADOR</option>
         {moderators.map(item => <option key={item.id} value={item.id}>{String(item.name).toUpperCase()} · {String(item.teamName ?? '').toUpperCase()}</option>)}
