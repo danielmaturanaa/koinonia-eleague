@@ -114,18 +114,21 @@ function PollCard({ poll, teams, onChanged }) {
   </article>;
 }
 
-export function PollsSection({ teams, revision, onChanged }) {
+export function PollsSection({ teams, revision, onChanged, onOpenPoll = null }) {
   const polls = useApiQuery(signal => endpoints.marketPolls({ active: 1 }, signal), [revision]);
   useAutoRefresh(polls.retry);
   const rows = Array.isArray(polls.data) ? polls.data : [];
   const refresh = () => { polls.retry(); onChanged?.(); };
   const unavailable = polls.error?.status === 404;
   return <section className="market-section market-polls">
-    <header><h2>ENCUESTAS DE COMPRA <small>{rows.length}</small></h2><p>VOTA SI ESTÁS DE ACUERDO O PIDE SUBASTA. SE ACTUALIZA SOLO Y ES LA MISMA ENCUESTA QUE VES EN DISCORD.</p></header>
+    <header><h2>ENCUESTAS DE COMPRA <small>{rows.length}</small></h2><p>VOTA SI ESTÁS DE ACUERDO O PIDE SUBASTA. ES LA MISMA ENCUESTA QUE EN DISCORD: VOTA DONDE QUIERAS. PARA ABRIR UNA, ELIGE AL JUGADOR EN AGENTES LIBRES.</p></header>
     {polls.loading && polls.data === null && <div className="arcade-state compact">CARGANDO ENCUESTAS...</div>}
     {polls.error && !unavailable && <DataState query={polls}/>}
     {unavailable && <p className="empty-copy">LAS ENCUESTAS TODAVÍA NO ESTÁN DISPONIBLES EN LA API.</p>}
-    {!polls.error && !polls.loading && !rows.length && <p className="empty-copy">NO HAY ENCUESTAS ABIERTAS. ABRE UNA DESDE LOS AGENTES LIBRES.</p>}
+    {!polls.error && !polls.loading && !rows.length && <div className="empty-copy poll-empty">
+      <span>NO HAY ENCUESTAS ABIERTAS.</span>
+      {onOpenPoll && <button type="button" className="action-button" onClick={onOpenPoll}>🗳️ ABRIR UNA ENCUESTA</button>}
+    </div>}
     <div className="poll-list">{rows.map(poll => <PollCard key={poll.id} poll={poll} teams={teams} onChanged={refresh}/>)}</div>
   </section>;
 }

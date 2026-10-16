@@ -3578,3 +3578,46 @@ html.pc-locked, html.pc-locked body { overflow: hidden; }
   .sealed-chat .pc-closed { position: sticky; bottom: 10px; z-index: 5; }
   .sealed-chat .pc-closed .pc-open { width: 100%; justify-content: flex-start; box-shadow: 0 4px 14px rgba(0, 0, 0, .25); }
 }
+
+/* ===== Ofertas (traspasos y trueques): bandeja en tarjetas y formulario guiado ===== */
+.offer-group { display: grid; gap: 8px; margin-top: 6px; }
+.offer-list { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); }
+.offer-card { display: grid; gap: 10px; padding: 12px; border: 2px solid #b8c3dd; background: #fff; }
+.offer-card.is-incoming { border-color: #062764; box-shadow: 0 0 0 3px rgba(255, 212, 42, .45); }
+.offer-card > header { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; justify-content: space-between; }
+.offer-kind { color: #062764; font: 600 16px/1 'Oswald', sans-serif; letter-spacing: .3px; }
+.offer-card > header small { color: #55607a; font: 500 12px/1.2 'Roboto Condensed', sans-serif; }
+.offer-sides { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; align-items: center; }
+.offer-sides > div { display: grid; gap: 5px; align-content: start; min-width: 0; }
+.offer-sides > div > small { color: #55607a; font: 600 11px/1.2 'Oswald', sans-serif; letter-spacing: .3px; overflow-wrap: anywhere; }
+.offer-swap { color: #0b3a8c; font: 600 22px/1 'Oswald', sans-serif; }
+.offer-player { display: flex; gap: 8px; align-items: center; min-width: 0; }
+.offer-player .player-photo { width: 40px; height: 40px; flex: 0 0 auto; border-radius: 50%; background: radial-gradient(circle at 50% 35%, #2a5bb8, #062764); object-fit: cover; object-position: center top; }
+.offer-player .player-photo-fallback { display: grid; place-items: center; color: #fff; font: 600 13px/1 'Oswald', sans-serif; }
+.offer-player > span { display: grid; gap: 2px; min-width: 0; }
+.offer-player b { color: #1a1f33; font: 600 15px/1.1 'Oswald', sans-serif; overflow-wrap: anywhere; }
+.offer-player small { color: #55607a; font: 500 12px/1.2 'Roboto Condensed', sans-serif; }
+.offer-price, .offer-gp { color: #145c33; font: 600 20px/1.1 'Oswald', sans-serif; }
+.offer-gp { font-size: 15px; }
+.offer-status { margin: 0; color: #062764; font: 600 13px/1.3 'Roboto Condensed', sans-serif; }
+.offer-card .mini-actions button { min-height: 40px; font-size: 14px; }
+.offer-confirm { display: grid; gap: 8px; padding: 8px 10px; background: #fff3c4; border: 1px solid #e3c764; color: #5a4700; font: 600 13px/1.3 'Roboto Condensed', sans-serif; }
+.offer-confirm .mini-actions button { min-height: 40px; }
+.mini-actions button.ghost { background: #fff; color: #062764; border-color: #062764; }
+.offer-tabs { margin-bottom: 8px; }
+.offer-form { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); align-items: end; }
+.offer-form > .offer-toggle, .offer-form > .offer-summary, .offer-form > .offer-confirm, .offer-form > .poll-hint, .offer-form > .form-feedback, .offer-form > .action-button { grid-column: 1 / -1; }
+.offer-form > .action-button { min-height: 46px; }
+.offer-toggle { display: grid; grid-template-columns: 1fr 1fr; border: 2px solid #062764; }
+.offer-toggle button { min-height: 42px; border: 0; background: #fff; color: #062764; font: 600 15px/1 'Oswald', sans-serif; cursor: pointer; }
+.offer-toggle button.on { background: #062764; color: #fff9e8; }
+.offer-summary { padding: 8px 10px; border-left: 4px solid #25a244; background: #e4f4ea; color: #0d4a2a; }
+.offer-summary.has-problem { border-left-color: #a90020; background: #fdecef; color: #7a0017; }
+.offer-summary p { margin: 0; font: 600 13px/1.35 'Roboto Condensed', sans-serif; }
+.offer-sent { display: grid; gap: 10px; justify-items: start; padding: 12px; border: 2px solid #167a45; background: #e4f4ea; }
+.offer-sent p { margin: 0; color: #0d4a2a; font: 600 14px/1.35 'Roboto Condensed', sans-serif; }
+.poll-empty { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+@media (max-width: 560px) {
+  .offer-sides { grid-template-columns: 1fr; }
+  .offer-swap { justify-self: center; transform: rotate(90deg); }
+}

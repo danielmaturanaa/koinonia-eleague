@@ -17,14 +17,6 @@ import { AuctionSimulator } from './market/AuctionSimulator.jsx';
 
 const asList = value => Array.isArray(value) ? value : [];
 
-function relatedName(item, side, type, index) {
-  const camel = `${side}${type}`;
-  const snake = `${side}_${type.toLowerCase()}`;
-  const embedded = item[camel] ?? item[snake];
-  const id = embedded?.id ?? item[`${camel}Id`] ?? item[`${snake}_id`];
-  return embedded?.name ?? item[`${camel}Name`] ?? item[`${snake}_name`] ?? index.get(id)?.name;
-}
-
 export async function loadAllPlayers(signal) {
   const first = await endpoints.players({ page: 1, pageSize: 100 }, signal);
   const pages = first.pagination?.totalPages ?? 1;
@@ -85,16 +77,6 @@ function MarketAdmin({ teams, players, onChanged }) {
   return <section className="market-admin"><nav><button className={tab === 'transfer' ? 'active' : ''} onClick={() => setTab('transfer')}>NUEVA TRANSFERENCIA</button><button className={tab === 'trade' ? 'active' : ''} onClick={() => setTab('trade')}>NUEVO TRUEQUE</button></nav>{tab === 'transfer' ? <TransferForm teams={teams} players={players} onChanged={onChanged}/> : <TradeForm teams={teams} players={players} onChanged={onChanged}/>}</section>;
 }
 
-
-function TradeActions({ item, onChanged }) {
-  const mutation = useApiMutation((operation, signal) => endpoints[`${operation}Trade`](item.id, signal), { onSuccess: onChanged });
-  const status = String(item.status ?? 'pending').toLowerCase();
-  if (status !== 'pending') return null;
-  const act = operation => {
-    if (window.confirm(`¿${operation === 'approve' ? 'APROBAR' : 'RECHAZAR'} ESTE TRUEQUE?`)) mutation.execute(operation);
-  };
-  return <><div className="mini-actions"><button onClick={() => act('approve')}>APROBAR</button><button className="danger" onClick={() => act('reject')}>RECHAZAR</button></div><FormFeedback mutation={mutation}/></>;
-}
 
 const PREVIEW = 8;
 
@@ -193,17 +175,6 @@ function PlayerList({ title, hint, status, teams, allHref, club, onChanged, inte
   </section>;
 }
 
-function PendingTrades({ trades, players, teams, onChanged }) {
-  const { isAdmin } = useAuth();
-  const pending = asList(trades.data).filter(item => String(item.status ?? '').toLowerCase() === 'pending');
-  if (!pending.length) return null;
-  const playersById = new Map(asList(players.data).map(player => [player.id, player]));
-  const teamsById = new Map(teams.map(team => [team.id, team]));
-  return <section className="market-section market-pending"><header><h2>PENDIENTES DE APROBACIÓN <small>{pending.length}</small></h2></header>
-    {pending.map(item => <article className="market-item" key={item.id}><b>{relatedName(item, 'from', 'Player', playersById) ?? 'Jugador'} ⇄ {relatedName(item, 'to', 'Player', playersById) ?? 'Jugador'}</b><span>{relatedName(item, 'from', 'Team', teamsById) ?? 'Origen'} / {relatedName(item, 'to', 'Team', teamsById) ?? 'Destino'}</span>{isAdmin && <TradeActions item={item} onChanged={onChanged}/>}</article>)}
-  </section>;
-}
-
 const TAB_KEY = 'mercado-pestana';
 const readTab = () => { try { return window.sessionStorage.getItem(TAB_KEY) ?? 'subastas'; } catch { return 'subastas'; } };
 
@@ -226,9 +197,7 @@ export function MarketPage({ teams }) {
   const { isAdmin, teamId: myTeamId } = useAuth();
   const [managing, setManaging] = useState(false);
   const [revision, setRevision] = useState(0);
-  const trades = useApiQuery(signal => endpoints.trades({ page: 1, pageSize: 100 }, signal), [revision]);
-  const hasPending = asList(trades.data).some(item => String(item.status ?? '').toLowerCase() === 'pending');
-  const players = useApiQuery(signal => managing || hasPending ? loadAllPlayers(signal) : Promise.resolve({ data: [] }), [managing, hasPending, revision]);
+  const players = useApiQuery(signal => managing ? loadAllPlayers(signal) : Promise.resolve({ data: [] }), [managing, revision]);
   const status = useApiQuery(signal => endpoints.marketStatus(signal), [revision]);
   const profile = useApiQuery(signal => myTeamId ? endpoints.team(myTeamId, signal) : Promise.resolve({ data: null }), [myTeamId, revision]);
   const refresh = () => setRevision(value => value + 1);
@@ -268,10 +237,9 @@ export function MarketPage({ teams }) {
         <PlayerList key={`free-${revision}`} title="AGENTES LIBRES" hint="Todos los jugadores de eFootballDB están inscritos y sin equipo. Marca ☆ los que quieres ver en subasta." status="free" teams={teams} allHref="#/equipos/jugadores?status=free" club={club} interest={interest} onChanged={refresh}/>
       </>}
       {current === 'ofertas' && <>
-        {operates && <PollsSection teams={teams} revision={revision} onChanged={refresh}/>}
-        {operates && myTeamId && <OffersInbox revision={revision} onChanged={refresh}/>}
-        {operates && myTeamId && <ProposeOffers teams={teams} onChanged={refresh}/>}
-        <PendingTrades trades={trades} players={players} teams={teams} onChanged={refresh}/>
+        {operates && <PollsSection teams={teams} revision={revision} onChanged={refresh} onOpenPoll={() => setTab('libres')}/>}
+        {operates && <OffersInbox revision={revision} onChanged={refresh}/>}
+        {operates && myTeamId && <ProposeOffers teams={teams} marketOpen={marketOpen} onChanged={refresh}/>}
       </>}
       {current === 'historial' && <AuctionHistory revision={revision} teams={teams}/>}
       {current === 'simulador' && <AuctionSimulator teams={teams}/>}
