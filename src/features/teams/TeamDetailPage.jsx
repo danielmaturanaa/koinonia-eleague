@@ -176,15 +176,21 @@ function publishedHistoryFor(team) {
   };
 }
 
-function TeamCoversModal({ team, onClose, onChanged }) {
+function TeamCoversModal({ team, squad = [], teams = [], onClose, onChanged }) {
   const covers = useApiQuery(signal => endpoints.teamCovers(team.id, signal), [team.id]);
   const upload = useApiMutation(async (file, signal) => {
     const asset = await endpoints.uploadImage(file, { entityType: 'team', entityId: team.id }, signal);
     return endpoints.addTeamCover(team.id, { imageUrl: asset?.data?.secureUrl ?? asset?.secureUrl, assetId: asset?.data?.id ?? asset?.id }, signal);
   }, { onSuccess: () => { covers.retry(); onChanged?.(); } });
+  const tag = useApiMutation(({ coverId, ...body }, signal) => endpoints.updateTeamCover(team.id, coverId, body, signal), { onSuccess: () => covers.retry() });
   const remove = useApiMutation((coverId, signal) => endpoints.removeTeamCover(team.id, coverId, signal), { onSuccess: () => { covers.retry(); onChanged?.(); } });
   const rows = covers.data ?? [];
-  return <PersonEditorModal title={`PORTADAS · ${team.name}`} onClose={onClose}><div className="team-covers-manager"><label>SUBIR PORTADA<input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" disabled={upload.loading} onChange={event => { const file = event.target.files?.[0]; if (file) upload.execute(file); }}/></label><small>Quitarla evita que se elija en noticias futuras; las ya publicadas conservan su imagen.</small><FormFeedback mutation={upload}/>{covers.loading ? <p>CARGANDO PORTADAS…</p> : <div className="team-covers-grid">{rows.length ? rows.map(cover => <figure key={cover.id}><img src={cover.imageUrl} alt="Portada del equipo"/><button type="button" disabled={remove.loading} onClick={() => remove.execute(cover.id)}>QUITAR</button></figure>) : <p>SIN PORTADAS.</p>}</div>}<FormFeedback mutation={remove}/></div></PersonEditorModal>;
+  const players = [...squad].sort((a, b) => a.name.localeCompare(b.name));
+  const rivals = teams.filter(item => item.id !== team.id && !item.hidden).sort((a, b) => a.name.localeCompare(b.name));
+  // Una portada puede apuntar a alguien que ya dejó el club: se conserva como opción para no perderla.
+  const playerOptions = cover => cover.playerId && !players.some(player => player.id === cover.playerId) ? [{ id: cover.playerId, name: cover.playerName ?? 'Jugador anterior' }, ...players] : players;
+  const rivalOptions = cover => cover.rivalTeamId && !rivals.some(rival => rival.id === cover.rivalTeamId) ? [{ id: cover.rivalTeamId, name: cover.rivalName ?? 'Rival anterior' }, ...rivals] : rivals;
+  return <PersonEditorModal title={`PORTADAS · ${team.name}`} onClose={onClose}><div className="team-covers-manager"><label>SUBIR PORTADA<input type="file" accept="image/jpeg,image/png,image/webp,image/gif,image/avif" disabled={upload.loading} onChange={event => { const file = event.target.files?.[0]; if (file) upload.execute(file); }}/></label><small>Al ganar se usa primero la foto de la figura (quien más goles hizo), luego la de otro goleador y al final una genérica. Si eliges rival, la foto solo sale cuando le ganan a ese equipo y tiene prioridad. Quitarla evita que se elija en noticias futuras; las ya publicadas conservan su imagen.</small><FormFeedback mutation={upload}/>{covers.loading ? <p>CARGANDO PORTADAS…</p> : <div className="team-covers-grid">{rows.length ? rows.map(cover => <figure key={cover.id}><img src={cover.imageUrl} alt="Portada del equipo"/><select aria-label="Jugador de la portada" value={cover.playerId ?? ''} disabled={tag.loading} onChange={event => tag.execute({ coverId: cover.id, playerId: event.target.value || null })}><option value="">GENÉRICA</option>{playerOptions(cover).map(player => <option key={player.id} value={player.id}>SI MARCA {player.name}</option>)}</select><select aria-label="Rival de la portada" value={cover.rivalTeamId ?? ''} disabled={tag.loading} onChange={event => tag.execute({ coverId: cover.id, rivalTeamId: event.target.value || null })}><option value="">CUALQUIER RIVAL</option>{rivalOptions(cover).map(rival => <option key={rival.id} value={rival.id}>VS {rival.name}</option>)}</select><button type="button" disabled={remove.loading} onClick={() => remove.execute(cover.id)}>QUITAR</button></figure>) : <p>SIN PORTADAS.</p>}</div>}<FormFeedback mutation={tag}/><FormFeedback mutation={remove}/></div></PersonEditorModal>;
 }
 
 function ClubHistory({ team, onEdit }) {
@@ -740,7 +746,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
       {personEditor === 'reputation' && <ReputationModal teamId={team.id} onClose={() => setPersonEditor('')}/>}
       {personEditor === 'coach' && <PersonEditorModal title="EDITAR DIRECTOR TÉCNICO" onClose={() => setPersonEditor('')}><CoachForm team={team} onChanged={onChanged} onSaved={() => { setPersonRevision(value => value + 1); setPersonEditor(''); }}/></PersonEditorModal>}
       {crestEditorOpen && <PersonEditorModal title="EDITAR ESCUDO Y NOMBRE" onClose={() => setCrestEditorOpen(false)}><ProfileForm team={team} onChanged={onChanged} onSaved={() => setCrestEditorOpen(false)}/></PersonEditorModal>}
-      {coversOpen && <TeamCoversModal team={team} onClose={() => setCoversOpen(false)} onChanged={onChanged}/>}
+      {coversOpen && <TeamCoversModal team={team} squad={squad} teams={teams} onClose={() => setCoversOpen(false)} onChanged={onChanged}/>}
       {historyEditor === 'review' && <PersonEditorModal title="EDITAR RESEÑA HISTÓRICA" onClose={() => setHistoryEditor('')}><ReviewEditor team={team} onChanged={onChanged} onSaved={() => setHistoryEditor('')}/></PersonEditorModal>}
       {historyEditor === 'anthem' && <PersonEditorModal title="EDITAR HIMNO Y LETRA" onClose={() => setHistoryEditor('')}><AnthemEditor team={team} onChanged={onChanged} onSaved={() => setHistoryEditor('')}/></PersonEditorModal>}
     </>}

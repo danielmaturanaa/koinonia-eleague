@@ -721,6 +721,7 @@ body { min-width: 0; overflow-x: hidden; background: #001344; }
 .team-covers-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .team-covers-grid figure { display: grid; gap: 4px; margin: 0; }
 .team-covers-grid img { width: 100%; aspect-ratio: 1; object-fit: cover; border: 2px solid #10285b; }
+.team-covers-grid select { width: 100%; min-width: 0; padding: 3px; border: 1px solid #10285b; font: 500 12px/1.1 'Roboto Condensed', sans-serif; }
 .team-covers-grid button { padding: 4px; border: 1px solid #a90020; color: #fff; background: #a90020; font: 500 12px/1 'Oswald', sans-serif; }
 .club-actions { display: flex; justify-content: space-between; gap: 8px; }
 .club-covers-button { margin-left: auto; }

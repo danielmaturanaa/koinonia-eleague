@@ -53,6 +53,7 @@ export const endpoints = {
   updateTeamHistory: (teamId, body, signal) => apiClient.patch(`/teams/${teamId}/history`, body, { actor: 'web', signal }),
   teamCovers: (teamId, signal) => get(`/teams/${teamId}/covers`, null, signal),
   addTeamCover: (teamId, body, signal) => apiClient.post(`/teams/${teamId}/covers`, body, { actor: 'web', signal }),
+  updateTeamCover: (teamId, coverId, body, signal) => apiClient.patch(`/teams/${teamId}/covers/${coverId}`, body, { actor: 'web', signal }),
   removeTeamCover: (teamId, coverId, signal) => apiClient.delete(`/teams/${teamId}/covers/${coverId}`, {}, { actor: 'web', signal }),
   updatePresident: (presidentId, body, signal) => apiClient.patch(`/presidents/${presidentId}`, body, { actor: 'web', signal }),
   createCoach: (body, signal) => apiClient.post('/coaches', body, { actor: 'web', signal }),
