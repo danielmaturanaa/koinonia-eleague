@@ -32,14 +32,13 @@ function SendToAuction({ poll, onChanged }) {
   const { isAdmin } = useAuth();
   const [moderatorId, setModeratorId] = useState('');
   const presidents = useApiQuery(signal => isAdmin ? endpoints.presidents({}, signal) : Promise.resolve({ data: [] }), [isAdmin]);
-  // El moderador no puede ofertar: se ofrecen solo presis de clubes que no están en la encuesta.
-  const moderators = (Array.isArray(presidents.data) ? presidents.data : [])
-    .filter(item => item.discordUserId && item.teamId && !poll.involvedTeamIds.includes(item.teamId));
+  // El moderador también puede ofertar (solo no puede cerrar antes de hora mientras falten clubes listos).
+  const moderators = (Array.isArray(presidents.data) ? presidents.data : []).filter(item => item.discordUserId && item.teamId);
   const open = useApiMutation((body, signal) => endpoints.openSealedAuction(body, signal), { onSuccess: onChanged });
   return <div className="poll-auction">
     <p><b>⚖️ VA A SUBASTA SELLADA.</b> OTRO CLUB TAMBIÉN LO QUIERE: LA COMPRA QUEDA BLOQUEADA HASTA QUE UN ADMIN ABRA LA SUBASTA. AHÍ TODOS OFERTAN EN SECRETO Y EL JUGADOR ELIGE.</p>
     {isAdmin && <form className="poll-auction-form" onSubmit={event => { event.preventDefault(); if (moderatorId) open.execute({ playerId: poll.player.id, moderatorPresidentId: moderatorId }); }}>
-      <label>PRESI MODERADOR (NO OFERTA)<select required value={moderatorId} onChange={event => setModeratorId(event.target.value)}>
+      <label>PRESI MODERADOR<select required value={moderatorId} onChange={event => setModeratorId(event.target.value)}>
         <option value="">ELEGIR MODERADOR</option>
         {moderators.map(item => <option key={item.id} value={item.id}>{String(item.name).toUpperCase()} · {String(item.teamName ?? '').toUpperCase()}</option>)}
       </select></label>
