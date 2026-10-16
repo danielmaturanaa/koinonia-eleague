@@ -3657,3 +3657,20 @@ html.pc-locked, html.pc-locked body { overflow: hidden; }
 .tournament-awards-table th:first-child, .tournament-awards-table td:first-child { width: 32px; text-align: center; }
 .signing-note { display: block; color: #6b4e00; font: 600 12px/1.35 'Roboto Condensed', sans-serif; }
 .club-page .market-coupons { margin-bottom: 12px; }
+
+/* ===== Jugadores a la venta ===== */
+.for-sale-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; margin-bottom: 10px; }
+.for-sale-form label { display: grid; gap: 3px; color: #062764; font: 600 12px/1.2 'Oswald', sans-serif; }
+.for-sale-form select, .for-sale-form .action-button { min-height: 42px; }
+.for-sale-form .form-feedback { grid-column: 1 / -1; }
+.for-sale-list { display: grid; gap: 6px; }
+.for-sale-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 10px; align-items: center; padding: 8px 10px; border: 1px solid #c9bd9f; background: #fff; }
+.for-sale-row > a { color: inherit; text-decoration: none; }
+.for-sale-team { color: #062764; font: 600 13px/1.2 'Oswald', sans-serif; }
+.for-sale-row strong { color: #a0001d; font: 600 16px/1 'Oswald', sans-serif; }
+.for-sale-remove { min-height: 34px; padding: 0 10px; border: 2px solid #a90020; background: #fff; color: #a90020; font: 600 12px/1 'Oswald', sans-serif; cursor: pointer; }
+@media (max-width: 560px) {
+  .for-sale-form { grid-template-columns: 1fr; }
+  .for-sale-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .for-sale-team { grid-column: 1; }
+}

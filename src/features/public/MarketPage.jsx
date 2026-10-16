@@ -11,6 +11,7 @@ import { useApiQuery } from './useApiQuery.js';
 import { MyClubPanel, clubFigures, signingBlocker, signingNotes } from './market/MyClubPanel.jsx';
 import { OffersInbox, ProposeOffers } from './market/OffersSection.jsx';
 import { PollsSection } from './market/PollsSection.jsx';
+import { ForSaleSection } from './market/ForSaleSection.jsx';
 import { AuctionHistory } from './market/AuctionHistory.jsx';
 import { SealedAuctionsSection } from './market/SealedAuctionsSection.jsx';
 import { AuctionSimulator } from './market/AuctionSimulator.jsx';
@@ -136,20 +137,6 @@ function useInterest(revision) {
   return { mine: state?.mine ?? [], demand: state?.demand ?? [], toggle, busy };
 }
 
-/** Los libres que más clubes quieren ver en subasta (el admin ve cuáles). */
-function DemandPanel({ interest }) {
-  const { isAdmin } = useAuth();
-  const top = interest.demand.slice(0, 6);
-  if (!top.length) return null;
-  return <section className="market-section market-demand"><header><h2>🔥 LOS MÁS PEDIDOS <small>{interest.demand.length}</small></h2><p>LIBRES QUE LOS CLUBES QUIEREN VER EN SUBASTA. MARCA ☆ EN LOS QUE TE INTERESAN.</p></header>
-    <ol className="demand-list">{top.map(row => <li key={row.playerId}>
-      <PlayerFace src={row.faceUrl} name={row.name}/>
-      <span><b>{row.name}</b><small>{row.position} · {gp(row.gpValue)}{isAdmin && row.teams ? ` · ${String(row.teams).toUpperCase()}` : ''}</small></span>
-      <strong>{row.count} {row.count === 1 ? 'CLUB' : 'CLUBES'}</strong>
-    </li>)}</ol>
-  </section>;
-}
-
 function MarketPlayer({ player, teams, onChanged, club, interest }) {
   const { isAdmin, teamId: myTeamId } = useAuth();
   const canAct = isAdmin || Boolean(myTeamId);
@@ -174,18 +161,17 @@ function PollSearch({ teams, club, interest, onChanged }) {
     const timer = window.setTimeout(() => setQuery(text.trim()), 300);
     return () => window.clearTimeout(timer);
   }, [text]);
-  const players = useApiQuery(signal => endpoints.playerDirectory({ status: 'free', sort: 'price_desc', pageSize: PREVIEW, ...(query ? { q: query } : {}) }, signal), [query]);
+  const players = useApiQuery(signal => query ? endpoints.playerDirectory({ status: 'free', sort: 'price_desc', pageSize: PREVIEW, q: query }, signal) : Promise.resolve({ data: [] }), [query]);
   const rows = asList(players.data);
   return <section className="market-section poll-search">
-    <header><h2>ABRIR UNA ENCUESTA</h2><p>BUSCA AL AGENTE LIBRE POR NOMBRE. TAMBIÉN PUEDES ABRIRLA DESDE SU FICHA. MARCA ☆ LOS QUE QUIERES VER EN SUBASTA.</p></header>
+    <header><h2>ABRIR UNA ENCUESTA</h2><p>ESCRIBE EL NOMBRE DEL AGENTE LIBRE. TAMBIÉN PUEDES ABRIRLA DESDE SU FICHA.</p></header>
     <label className="poll-search-box"><span className="sr-only">BUSCAR AGENTE LIBRE</span>
       <input type="search" value={text} placeholder="🔎 BUSCAR AGENTE LIBRE (EJ.: MBAPPÉ)" autoComplete="off" onChange={event => setText(event.target.value)}/>
     </label>
-    <DataState query={players}/>
-    {!players.loading && !players.error && (rows.length
+    {query && <DataState query={players}/>}
+    {query && !players.loading && !players.error && (rows.length
       ? <div className="market-player-list">{rows.map(player => <MarketPlayer key={player.playerId ?? `${player.pesId}-${player.variation}`} player={player} teams={teams} club={club} interest={interest} onChanged={() => { players.retry(); onChanged?.(); }}/>)}</div>
-      : <p className="empty-copy">{query ? `NO HAY AGENTES LIBRES QUE COINCIDAN CON «${query.toUpperCase()}».` : 'NO HAY AGENTES LIBRES.'}</p>)}
-    {!query && players.pagination?.total > rows.length && <p className="poll-hint">MOSTRANDO LOS {rows.length} MÁS CAROS DE {players.pagination.total.toLocaleString('es-CL')}. ESCRIBE UN NOMBRE PARA BUSCAR EL RESTO.</p>}
+      : <p className="empty-copy">NO HAY AGENTES LIBRES QUE COINCIDAN CON «{query.toUpperCase()}».</p>)}
   </section>;
 }
 
@@ -228,7 +214,7 @@ export function MarketPage({ teams }) {
   const sim = useApiQuery(signal => isAdmin ? endpoints.auctionSimAccess(signal).catch(() => ({ data: { allowed: false } })) : Promise.resolve({ data: { allowed: false } }), [isAdmin]);
   const tabs = [
     ['subastas', '🔨 SUBASTAS', liveCount],
-    ...(operates ? [['encuestas', '🗳️ ENCUESTAS', null], ['ofertas', '🤝 OFERTAS', null]] : []),
+    ...(operates ? [['encuestas', '🗳️ ENCUESTAS', null], ['ofertas', '🤝 OFERTAS', null], ['venta', '🏷️ A LA VENTA', null]] : []),
     ['historial', '📜 HISTORIAL', null],
     ...(sim.data?.allowed ? [['simulador', '🧪 SIMULADOR', null]] : []),
   ];
@@ -247,12 +233,12 @@ export function MarketPage({ teams }) {
       {current === 'subastas' && <SealedAuctionsSection revision={revision} onChanged={refresh} teams={teams}/>}
       {current === 'encuestas' && <PollsSection teams={teams} revision={revision} onChanged={refresh}>
         <PollSearch teams={teams} club={club} interest={interest} onChanged={refresh}/>
-        <DemandPanel interest={interest}/>
       </PollsSection>}
       {current === 'ofertas' && <>
         {operates && <OffersInbox revision={revision} onChanged={refresh}/>}
         {operates && myTeamId && <ProposeOffers teams={teams} marketOpen={marketOpen} onChanged={refresh}/>}
       </>}
+      {current === 'venta' && <ForSaleSection teams={teams} revision={revision} onChanged={refresh}/>}
       {current === 'historial' && <AuctionHistory revision={revision} teams={teams}/>}
       {current === 'simulador' && <AuctionSimulator teams={teams}/>}
     </div>
