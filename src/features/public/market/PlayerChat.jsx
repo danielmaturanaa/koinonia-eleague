@@ -247,10 +247,20 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
     lastTop.current = node.scrollTop;
   };
   useEffect(() => { if (thinking) stuck.current = true; }, [thinking]);
+  const pinToBottom = () => {
+    const node = scroller.current;
+    if (node && stuck.current) { node.scrollTo({ top: node.scrollHeight, behavior: 'instant' }); lastTop.current = node.scrollTop; }
+  };
+  useEffect(pinToBottom, [chat?.messages?.length, hasPending, thinking, chat?.pending?.topic, notice, shown, sheet]);
+  // Si cambia el alto de la conversación (aparecen las respuestas, se gira el teléfono), sigue pegada al final.
+  const hasChat = Boolean(chat);
   useEffect(() => {
     const node = scroller.current;
-    if (node && stuck.current) node.scrollTop = node.scrollHeight;
-  }, [chat?.messages?.length, hasPending, thinking, chat?.pending?.topic, notice, shown, sheet]);
+    if (!node || typeof ResizeObserver === 'undefined') return undefined;
+    const observer = new ResizeObserver(pinToBottom);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [hasChat, shown, sheet]);
 
   // En el teléfono el chat tapa la pantalla: la página de atrás no se mueve y ATRÁS / Esc lo cierran.
   useEffect(() => {
