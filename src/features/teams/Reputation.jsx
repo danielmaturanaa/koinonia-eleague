@@ -20,7 +20,7 @@ function partNote(key, stats) {
   if (key === 'stay') return `${stats.averageStay.toLocaleString('es-CL')} torneos en promedio`;
   if (key === 'homegrown') return `${stats.homegrown} con 3+ torneos`;
   if (key === 'cleanStreak') return `${stats.cleanStreak} torneos`;
-  if (key === 'releases') return `${stats.releases} ${stats.releases === 1 ? 'liberado' : 'liberados'} · ${stats.recentReleases} recientes`;
+  if (key === 'releases') return `${stats.releases} ${stats.releases === 1 ? 'liberado' : 'liberados'} · ${stats.countedReleases ?? stats.releases} cuentan · ${stats.recentReleases} recientes`;
   return `${stats.promisesKept} cumplidas · ${stats.promisesBroken} rotas`;
 }
 
@@ -53,7 +53,7 @@ export function ReputationModal({ teamId, onClose }) {
         <li><b>Duración:</b> +{rules?.perStayTournament ?? 6} por cada torneo que duran en promedio sus jugadores en el club (contando también a los que ya se fueron), hasta {rules?.stayCap ?? 6} torneos.</li>
         <li><b>Formados en casa:</b> +{rules?.perHomegrown ?? 1} por cada jugador que llegó sin venir de otro club (agente libre, subasta o plantel inicial) y lleva {rules?.homegrownMinTournaments ?? 3} o más torneos, hasta +{rules?.homegrownCap ?? 10}.</li>
         <li><b>Racha sin liberar:</b> +{rules?.perCleanTournament ?? 2} por cada torneo desde su última liberación, hasta +{rules?.cleanCap ?? 10}.</li>
-        <li><b>Liberaciones:</b> −{rules?.perRelease ?? 4} cada una, pero pesan {Math.round((1 - (rules?.releaseDecay ?? 0.75)) * 100)}% menos por cada torneo que pasa: lo reciente pesa más y el presi se puede recuperar. Soltar a alguien que llevaba {rules?.quickReleaseMaxTournaments ?? 1} torneo o menos (fichar y botar) pesa ×{(rules?.quickReleaseFactor ?? 1.5).toLocaleString('es-CL')}. Tope −{rules?.releaseCap ?? 40}. En la tabla, «recientes» son las de este torneo y el anterior.</li>
+        <li><b>Liberaciones:</b> −{rules?.perRelease ?? 4} cada una, pero pesan {Math.round((1 - (rules?.releaseDecay ?? 0.75)) * 100)}% menos por cada torneo que pasa: lo reciente pesa más y el presi se puede recuperar. Pasados {rules?.releaseForgetAfter ?? 4} mercados (torneos) desde la liberación, ya no castiga. Soltar a alguien que llevaba {rules?.quickReleaseMaxTournaments ?? 1} torneo o menos (fichar y botar) pesa ×{(rules?.quickReleaseFactor ?? 1.5).toLocaleString('es-CL')}. Tope −{rules?.releaseCap ?? 40}. En la tabla, «recientes» son las de este torneo y el anterior.</li>
         <li><b>Promesas de subasta:</b> +{rules?.perPromiseKept ?? 3} por cada una cumplida (hasta {rules?.promisesKeptCap ?? 5}) y −{rules?.perPromiseBroken ?? 15} por cada una rota.</li>
       </ul>
       {ranking.loading ? <p className="reputation-intro">CARGANDO RANKING…</p> : ranking.error ? <p className="reputation-intro">NO SE PUDO CARGAR EL RANKING.</p> : <div className="reputation-table-wrap"><table className="reputation-table">
@@ -61,7 +61,7 @@ export function ReputationModal({ teamId, onClose }) {
         <tbody>{rows.map(row => <tr key={row.team.id} className={row.team.id === teamId ? 'current-team' : ''}>
           <td>{row.rank}</td>
           <td><EntityLink to="team" id={row.team.id} className="table-team-link" onClick={onClose}><TeamMark team={row.team}/><span>{row.team.name}<small>{row.president ?? 'SIN PRESI'}</small></span></EntityLink></td>
-          {PARTS.map(([key]) => <td key={key} className={row.parts[key] < 0 ? 'negative' : ''} title={partNote(key, row.stats)}>{signed(row.parts[key])}{key === 'releases' && <small className="reputation-count">{row.stats.releases} {row.stats.releases === 1 ? 'LIBERADO' : 'LIBERADOS'}{row.stats.recentReleases ? ` · ${row.stats.recentReleases} RECIENTES` : ''}</small>}</td>)}
+          {PARTS.map(([key]) => <td key={key} className={row.parts[key] < 0 ? 'negative' : ''} title={partNote(key, row.stats)}>{signed(row.parts[key])}{key === 'releases' && <small className="reputation-count">{row.stats.releases} {row.stats.releases === 1 ? 'LIBERADO' : 'LIBERADOS'}{row.stats.countedReleases != null ? ` · ${row.stats.countedReleases} CUENTAN` : ''}{row.stats.recentReleases ? ` · ${row.stats.recentReleases} RECIENTES` : ''}</small>}</td>)}
           <td><strong className={`reputation-score ${tone(row.score)}`}>{row.score}</strong></td>
         </tr>)}</tbody>
       </table></div>}
