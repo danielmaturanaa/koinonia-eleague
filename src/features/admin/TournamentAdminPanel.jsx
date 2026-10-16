@@ -22,8 +22,6 @@ const PLAYOFF_PRIZES = {
   runnerUp: { label: 'SUBCAMPEÓN', gp: 20000, coupon: 15 },
   semifinal: { label: 'SEMIFINALISTA', gp: 0, coupon: 10 },
 };
-// La tabla de premios parte por los playoffs (campeón, subcampeón, semifinalistas) y sigue con el resto según la liga.
-const PLACE_ORDER = { champion: 0, runnerUp: 1, semifinal: 2 };
 const COUPON_OPTIONS = [0, 10, 15, 20];
 const gpText = value => `${Number(value || 0).toLocaleString('es-CL')} GP`;
 
@@ -65,8 +63,6 @@ export function TournamentAwardsPanel({ tournament, onChanged }) {
     return { row, position: index + 1, place: places[row.team_id] ?? null,
       league: Number(entry.league || 0), playoff: Number(entry.playoff || 0), coupon: Number(entry.coupon || 0) };
   }).filter(item => item.league > 0 || item.playoff > 0 || item.coupon > 0);
-  const ordered = rows.map((row, index) => ({ row, position: index + 1 }))
-    .sort((a, b) => (PLACE_ORDER[places[a.row.team_id]] ?? 3) - (PLACE_ORDER[places[b.row.team_id]] ?? 3) || a.position - b.position);
   const totalGp = grants.reduce((sum, item) => sum + item.league + item.playoff, 0);
   const totalCoupons = grants.filter(item => item.coupon > 0).length;
   const mutation = useApiMutation(async signal => {
@@ -85,12 +81,12 @@ export function TournamentAwardsPanel({ tournament, onChanged }) {
     <header><div><h3>CLASIFICACIÓN FINAL Y PREMIOS</h3><p>VIENEN PRE-LLENADOS (1.º DE LA LIGA 200.000 Y BAJANDO DE A 20.000; SEMIFINALISTAS CUPÓN 10%; SUBCAMPEÓN CUPÓN 15% + 20.000; CAMPEÓN CUPÓN 20% + 40.000). REVISA, AJUSTA Y OTORGA TODO CON UN SOLO GUARDADO.</p></div><b>{gpText(totalGp)}{totalCoupons ? ` · ${totalCoupons} 🎟️` : ''}</b></header>
     <DataState query={standings}/>
     {rows.length > 0 && <div className="tournament-awards-table"><table>
-      <thead><tr><th title="Posición en la liga"># LIGA</th><th>CLUB</th><th>PTS</th><th>GP LIGA</th><th>PLAYOFFS</th><th>GP PLAYOFFS</th><th>CUPÓN REBAJA SALARIAL</th></tr></thead>
-      <tbody>{ordered.map(({ row, position }) => {
+      <thead><tr><th>#</th><th>CLUB</th><th>PTS</th><th>GP LIGA</th><th>PLAYOFFS</th><th>GP PLAYOFFS</th><th>CUPÓN REBAJA SALARIAL</th></tr></thead>
+      <tbody>{rows.map((row, index) => {
         const entry = form[row.team_id] ?? {};
         const place = places[row.team_id];
         return <tr key={row.team_id}>
-          <td>{position}</td><td>{row.name}</td><td><b>{row.points}</b></td>
+          <td>{index + 1}</td><td>{row.name}</td><td><b>{row.points}</b></td>
           <td><input aria-label={`GP de liga para ${row.name}`} type="number" min="0" step="1000" value={entry.league ?? ''} onChange={event => set(row.team_id, 'league', event.target.value)} placeholder="0"/></td>
           <td>{place ? PLAYOFF_PRIZES[place].label : '—'}</td>
           <td><input aria-label={`GP de playoffs para ${row.name}`} type="number" min="0" step="1000" value={entry.playoff ?? ''} onChange={event => set(row.team_id, 'playoff', event.target.value)} placeholder="0"/></td>
