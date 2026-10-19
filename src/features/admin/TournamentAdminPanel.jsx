@@ -156,12 +156,20 @@ function DrawPanel({ tournament, onChanged }) {
 function FixturesPanel({ tournament, onChanged }) {
   const [groupLabel, setGroupLabel] = useState('');
   const [legs, setLegs] = useState('1');
-  const roundRobin = useApiMutation((body, signal) => endpoints.generateRoundRobin(tournament.id, body, signal), { onSuccess: onChanged });
-  const groups = useApiMutation((body, signal) => endpoints.generateGroupFixtures(tournament.id, body, signal), { onSuccess: onChanged });
+  const [preview, setPreview] = useState(null);
   const payload = () => ({ ...(groupLabel.trim() ? { groupLabel: groupLabel.trim().toUpperCase() } : {}), ...(legs ? { legs: Number(legs) } : {}) });
-  const generate = (kind, mutation) => { if (window.confirm(`¿GENERAR EL FIXTURE ${kind} PARA ${tournament.name}?`)) mutation.execute(payload()); };
+  const previewMutation = useApiMutation(async (body, signal) => {
+    const response = await endpoints.previewRoundRobin(tournament.id, body, signal);
+    setPreview({ ...(response?.data ?? response), body });
+    return response;
+  });
+  const roundRobin = useApiMutation((body, signal) => endpoints.generateRoundRobin(tournament.id, body, signal), { onSuccess: () => { setPreview(null); onChanged?.(); } });
+  const groups = useApiMutation((body, signal) => endpoints.generateGroupFixtures(tournament.id, body, signal), { onSuccess: onChanged });
+  const confirmPreview = () => { if (window.confirm(`¿CREAR ESTE CALENDARIO PARA ${tournament.name}? DESPUÉS NO SE PODRÁ CAMBIAR.`)) roundRobin.execute({ ...preview.body, seed: preview.seed }); };
+  const generateGroups = () => { if (window.confirm(`¿GENERAR EL FIXTURE DE GRUPOS PARA ${tournament.name}?`)) groups.execute(payload()); };
   const teamCount = tournament.teams?.length ?? 0;
-  return <section className="tournament-admin-section"><p>{teamCount} PARTICIPANTES{teamCount % 2 ? ' · HABRÁ UN DESCANSO POR JORNADA.' : ''}</p><div className="admin-form compact-form"><label>GRUPO OPCIONAL<input maxLength="4" value={groupLabel} onChange={event => setGroupLabel(event.target.value)}/></label><label>VUELTAS<select value={legs} onChange={event => setLegs(event.target.value)}><option value="1">1</option><option value="2">2</option></select></label><button className="action-button" disabled={roundRobin.loading} onClick={() => generate('ROUND ROBIN', roundRobin)}>ROUND ROBIN</button><button className="action-button" disabled={groups.loading} onClick={() => generate('DE GRUPOS', groups)}>FIXTURE DE GRUPOS</button><FormFeedback mutation={roundRobin.error || roundRobin.success ? roundRobin : groups}/></div></section>;
+  const feedback = roundRobin.error || roundRobin.success ? roundRobin : previewMutation.error ? previewMutation : groups;
+  return <section className="tournament-admin-section"><p>{teamCount} PARTICIPANTES{teamCount % 2 ? ' · HABRÁ UN DESCANSO POR JORNADA.' : ''}</p><div className="admin-form compact-form"><label>GRUPO OPCIONAL<input maxLength="4" value={groupLabel} onChange={event => { setGroupLabel(event.target.value); setPreview(null); }}/></label><label>VUELTAS<select value={legs} onChange={event => { setLegs(event.target.value); setPreview(null); }}><option value="1">1</option><option value="2">2</option></select></label><button className="action-button" disabled={previewMutation.loading} onClick={() => previewMutation.execute(payload())}>{preview ? 'OTRA VISTA PREVIA' : 'VISTA PREVIA ROUND ROBIN'}</button>{preview && <button className="action-button" disabled={roundRobin.loading} onClick={confirmPreview}>CONFIRMAR ESTE CALENDARIO</button>}<button className="action-button" disabled={groups.loading} onClick={generateGroups}>FIXTURE DE GRUPOS</button><FormFeedback mutation={feedback}/></div>{preview && <div className="fixture-preview"><p>VISTA PREVIA · NO GUARDADA · RACHA MÁXIMA: <b>{preview.maxStreak}</b></p>{preview.rounds.map(round => <div className="fixture-preview-round" key={round.round}><b>JORNADA {round.round}</b>{round.matches.map(match => <span key={`${match.homeTeamId}-${match.awayTeamId}`}>{match.homeName} <i>VS</i> {match.awayName}</span>)}{round.resting.map(team => <span className="resting" key={team.teamId}>DESCANSA: {team.name}</span>)}</div>)}</div>}</section>;
 }
 
 function BracketPanel({ tournament, onChanged }) {

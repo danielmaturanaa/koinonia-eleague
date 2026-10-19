@@ -661,6 +661,11 @@ body { min-width: 0; overflow-x: hidden; background: #001344; }
 .tournament-admin-section { display: grid; gap: 8px; max-height: 355px; padding: 9px; overflow: auto; }
 .tournament-admin-section > p { font: 500 14px/1.15 'Oswald', sans-serif; }
 .tournament-admin-section > p b { color: #a0001d; }
+.fixture-preview { display: grid; gap: 6px; }
+.fixture-preview-round { display: grid; gap: 2px; padding: 5px 7px; border: 1px solid #8d816a; font: 600 13px/1.2 'Roboto Condensed', sans-serif; }
+.fixture-preview-round > b { font: 600 14px/1 'Oswald', sans-serif; color: #a0001d; }
+.fixture-preview-round i { color: #8d816a; font-style: normal; }
+.fixture-preview-round .resting { color: #8d816a; }
 .tournament-awards { display: grid; gap: 8px; margin-top: 4px; padding-top: 10px; border-top: 3px double #10285b; }
 .tournament-awards > header { display: flex; align-items: start; justify-content: space-between; gap: 10px; }
 .tournament-awards > header h3 { color: #a0001d; font: 500 17px/1 'Oswald', sans-serif; }

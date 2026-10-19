@@ -133,6 +133,7 @@ export const endpoints = {
   addTournamentParticipation: (tournamentId, body, signal) => apiClient.post(`/tournaments/${tournamentId}/participations`, body, { actor: 'web', signal }),
   replaceTournamentParticipations: (tournamentId, teamIds, signal) => apiClient.put(`/tournaments/${tournamentId}/participations`, { teamIds }, { actor: 'web', signal }),
   drawTournament: (tournamentId, groups, signal) => apiClient.post(`/tournaments/${tournamentId}/draw`, { groups }, { actor: 'web', signal }),
+  previewRoundRobin: (tournamentId, body, signal) => apiClient.post(`/tournaments/${tournamentId}/fixtures/round-robin/preview`, body, { actor: 'web', signal }),
   generateRoundRobin: (tournamentId, body, signal) => apiClient.post(`/tournaments/${tournamentId}/fixtures/round-robin`, body, { actor: 'web', signal }),
   generateGroupFixtures: (tournamentId, body, signal) => apiClient.post(`/tournaments/${tournamentId}/fixtures/groups`, body, { actor: 'web', signal }),
   generateBracket: (tournamentId, body, signal) => apiClient.post(`/tournaments/${tournamentId}/bracket`, body, { actor: 'web', signal }),
