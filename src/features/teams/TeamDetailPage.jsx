@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { TeamMark } from '../../components/TeamMark.jsx';
 import { SanctionBadge } from '../../components/SanctionBadge.jsx';
@@ -362,6 +362,11 @@ function saveSimulatorDraft(teamId, draft) {
   }
 }
 
+const SIMULATOR_SYNC_DELAY = 700;
+const SYNC_LABELS = { saving: 'GUARDANDO…', saved: 'GUARDADO EN TU CUENTA', error: 'SIN CONEXIÓN · SOLO EN ESTE DISPOSITIVO' };
+
+const validSimulatorDraft = (draft, signature) => draft?.signature === signature && Array.isArray(draft.roster) && Array.isArray(draft.removed) ? draft : null;
+
 function loadSimulatorView() {
   try {
     const stored = window.localStorage.getItem(SIMULATOR_VIEW_KEY);
@@ -437,14 +442,63 @@ function SquadValueSimulator({ team, squad, balance }) {
   const [view, setView] = useState(loadSimulatorView);
   const changeView = next => { setView(next); saveSimulatorView(next); };
 
+  // El borrador vive en la cuenta (se ve igual desde cualquier dispositivo); localStorage queda como copia
+  // inmediata y respaldo si no hay conexión. Gana el más reciente (savedAt).
+  const [syncState, setSyncState] = useState('idle');
+  const syncTimer = useRef(null);
+  const pendingSync = useRef(null);
+  const editedSinceLoad = useRef(false);
+  const flushSync = useCallback(async () => {
+    window.clearTimeout(syncTimer.current);
+    const job = pendingSync.current;
+    if (!job) return;
+    pendingSync.current = null;
+    try {
+      if (job.draft) await endpoints.saveSimulatorDraft(job.teamId, job.draft);
+      else await endpoints.clearSimulatorDraft(job.teamId);
+      setSyncState(pendingSync.current ? 'saving' : 'saved');
+    } catch {
+      setSyncState('error');
+    }
+  }, []);
+  useEffect(() => () => { flushSync(); }, [flushSync]);
+
   // Tras cargar otro equipo o plantel, el efecto de guardado del mismo render se salta para no pisar su borrador.
   const skipSave = useRef(true);
   useEffect(() => {
-    const draft = team?.id ? loadSimulatorDraft(team.id, baseSignature) : null;
+    flushSync();
+    const local = team?.id ? loadSimulatorDraft(team.id, baseSignature) : null;
     skipSave.current = true;
-    setSimulatedRoster(draft?.roster ?? baseRoster);
-    setRemovedPlayers(draft?.removed ?? []);
+    editedSinceLoad.current = false;
+    setSyncState('idle');
+    setSimulatedRoster(local?.roster ?? baseRoster);
+    setRemovedPlayers(local?.removed ?? []);
     setLastAdded(null);
+    if (!team?.id) return undefined;
+    const controller = new AbortController();
+    endpoints.simulatorDraft(team.id, controller.signal).then(response => {
+      // Si ya empezó a editar mientras cargaba, manda lo que está haciendo.
+      if (editedSinceLoad.current) return;
+      const stored = response?.data?.draft ?? null;
+      const remote = validSimulatorDraft(stored, baseSignature);
+      if (remote && (!local || (remote.savedAt ?? 0) > (local.savedAt ?? 0))) {
+        skipSave.current = true;
+        setSimulatedRoster(remote.roster);
+        setRemovedPlayers(remote.removed);
+        saveSimulatorDraft(team.id, remote);
+      } else if (local) {
+        // Solo vivía en este navegador (o es más nuevo): se sube a la cuenta.
+        if (!remote || (local.savedAt ?? 0) > (remote.savedAt ?? 0)) {
+          pendingSync.current = { teamId: team.id, draft: local.savedAt ? local : { ...local, savedAt: Date.now() } };
+          flushSync();
+        }
+      } else if (stored && !remote) {
+        // El plantel real cambió desde que se guardó: el borrador de la cuenta ya no sirve.
+        pendingSync.current = { teamId: team.id, draft: null };
+        flushSync();
+      }
+    }).catch(() => {});
+    return () => controller.abort();
   }, [team?.id, baseSignature]);
 
   useEffect(() => {
@@ -476,7 +530,13 @@ function SquadValueSimulator({ team, squad, balance }) {
   useEffect(() => {
     if (skipSave.current) { skipSave.current = false; return; }
     if (!team?.id) return;
-    saveSimulatorDraft(team.id, changed ? { signature: baseSignature, roster: simulatedRoster, removed: removedPlayers } : null);
+    const draft = changed ? { signature: baseSignature, roster: simulatedRoster, removed: removedPlayers, savedAt: Date.now() } : null;
+    editedSinceLoad.current = true;
+    saveSimulatorDraft(team.id, draft);
+    pendingSync.current = { teamId: team.id, draft };
+    setSyncState('saving');
+    window.clearTimeout(syncTimer.current);
+    syncTimer.current = window.setTimeout(flushSync, SIMULATOR_SYNC_DELAY);
   }, [simulatedRoster, removedPlayers]);
   const idOf = simulatorPlayerId;
 
@@ -567,7 +627,7 @@ function SquadValueSimulator({ team, squad, balance }) {
   };
 
   return <section className="club-card squad-value-simulator">
-    <header className="squad-simulator-header"><div><h3>SIMULADOR DE PLANTEL</h3><p>Prueba fichajes y salidas sobre la misma alineación del resumen. Es solo una simulación: no modifica el plantel real y se guarda en este navegador.</p></div><button type="button" className="club-link-button" onClick={reset} disabled={!changed}>↺ RESTABLECER</button></header>
+    <header className="squad-simulator-header"><div><h3>SIMULADOR DE PLANTEL</h3><p>Prueba fichajes y salidas sobre la misma alineación del resumen. Es solo una simulación: no modifica el plantel real y se guarda en tu cuenta, así la ves igual en cualquier dispositivo.</p>{syncState !== 'idle' && <small className={`squad-sim-sync ${syncState}`} role="status">{SYNC_LABELS[syncState]}</small>}</div><button type="button" className="club-link-button" onClick={reset} disabled={!changed}>↺ RESTABLECER</button></header>
     <div className="squad-sim-summary"><div className="squad-sim-meters" aria-label="Resumen del presupuesto simulado">
       <SimulatorMeter label="VALOR DEL PLANTEL" value={`${gp(simulatedValue)} GP`} ratio={budgetLimit === null ? undefined : simulatedValue / budgetLimit} over={exceedsLimit} detail={budgetLimit === null ? 'Tope no publicado' : exceedsLimit ? `Excede el tope de ${gp(budgetLimit)} GP en ${gp(-capRoom)} GP` : `Tope ${gp(budgetLimit)} GP · quedan ${gp(capRoom)} GP`}/>
       <SimulatorMeter label="SALDO TRAS LOS CAMBIOS" value={projectedBalance === null ? '—' : `${gp(projectedBalance)} GP`} over={exceedsBalance} detail={balance === null ? 'Saldo no publicado' : `Saldo actual ${gp(balance)} GP · movimiento ${signedGp(-movement)}`}/>
@@ -657,6 +717,29 @@ function HonoursList({ honours, historyError }) {
   return <section className="club-card"><h3>PALMARÉS <small>{honours.length} TÍTULO{honours.length === 1 ? '' : 'S'}</small></h3>{honours.length ? <div className="honours-list">{honours.map(item => <article key={item.id}><span aria-hidden="true">★</span><b>{item.name}</b>{item.season && <small>{item.season}</small>}</article>)}</div> : <p className="empty-copy">AÚN NO HAY TÍTULOS REGISTRADOS.</p>}{historyError && <p className="honours-api-note">NO FUE POSIBLE CONSULTAR EL HISTORIAL DEL CLUB.</p>}</section>;
 }
 
+const ovrAverage = value => value === null ? '—' : value.toLocaleString('es-CL', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+
+function averagesOf(players) {
+  const rated = players.filter(player => player.overall != null);
+  const mean = values => values.length ? values.reduce((total, value) => total + value, 0) / values.length : null;
+  return { count: rated.length, base: mean(rated.map(player => player.overall)), withCoach: mean(rated.map(player => player.overallWithCoach ?? player.overall)) };
+}
+
+// Media de la plantilla separando el 11 inicial: dos clubes con el mismo promedio total pueden tener titulares muy distintos.
+function SquadAverages({ starters, substitutes }) {
+  const groups = [['XI INICIAL', starters], ['BANCA', substitutes], ['PLANTILLA COMPLETA', [...starters, ...substitutes]]].map(([label, players]) => ({ label, ...averagesOf(players) }));
+  const coachHelps = [...starters, ...substitutes].some(hasCoachBoost);
+  return <section className="club-card squad-averages"><h3>MEDIA DE LA PLANTILLA <small>OVR</small></h3>
+    <div className="squad-averages-grid">{groups.map(group => <div className="squad-average" key={group.label}>
+      <small>{group.label}</small>
+      <b>{ovrAverage(group.base)}</b>
+      {coachHelps && <em title="Media contando los potenciadores del DT"><span>CON DT</span> {ovrAverage(group.withCoach)}</em>}
+      <i>{group.count} JUGADOR{group.count === 1 ? '' : 'ES'}</i>
+    </div>)}</div>
+    {!coachHelps && <p className="squad-averages-note">EL DT NO SUMA POTENCIADORES A ESTA PLANTILLA: LA MEDIA ES LA BASE.</p>}
+  </section>;
+}
+
 function SquadTab({ team, squad, starters, substitutes, onChanged }) {
   const { canEditTeam } = useAuth();
   const canEdit = canEditTeam(team.id);
@@ -728,6 +811,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
               <ClubScorers teamId={team.id} limit={3} tournaments={tournaments}/>
             </div>
             <div className="club-overview-right-column">
+              <SquadAverages starters={starters} substitutes={substitutes}/>
               <PitchBoard team={team} starters={starters} substitutes={substitutes} onChanged={onChanged} readOnly={!canEdit}/>
               <StadiumEditor team={team} onChanged={onChanged}/>
             </div>
