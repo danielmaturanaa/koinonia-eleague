@@ -106,6 +106,32 @@ function ContractYears({ team, contract, onDone }) {
   return <><YearsChips value={contract.seasons} disabled={change.loading} onChange={seasons => change.execute({ seasons })} label={`Torneos de ${contract.playerName}`}/><FormFeedback mutation={change}/></>;
 }
 
+/** Primas pactadas: por gol (chica, máx. 1% del valor) y por título (máx. 10%). Solo se cambian con el mercado abierto. */
+function BonusEditor({ team, contract, editable, onDone }) {
+  const [open, setOpen] = useState(false);
+  const [goal, setGoal] = useState(String(contract.goalBonus ?? 0));
+  const [title, setTitle] = useState(String(contract.titleBonus ?? 0));
+  const save = useApiMutation((body, signal) => endpoints.setContractBonuses(team.id, contract.playerId, body, signal), { onSuccess: () => { setOpen(false); onDone(); } });
+  const summary = contract.goalBonus || contract.titleBonus
+    ? [contract.goalBonus ? `${gp(contract.goalBonus)} POR GOL` : null, contract.titleBonus ? `${gp(contract.titleBonus)} POR TÍTULO` : null].filter(Boolean).join(' · ')
+    : 'SIN PRIMAS';
+  if (contract.status !== 'active') return null;
+  return <span className="bonus-editor">
+    <small className="bonus-summary">🎯 {summary}</small>
+    {editable && !open && <button type="button" className="ghost" onClick={() => setOpen(true)}>PRIMAS</button>}
+    {open && <span className="bonus-form" role="group" aria-label={`Primas de ${contract.playerName}`}>
+      <label>POR GOL (MÁX. {gp(contract.maxGoalBonus)})<GpInput value={goal} onChange={event => setGoal(event.target.value)} max={contract.maxGoalBonus} aria-label="Prima por gol"/></label>
+      <label>POR TÍTULO (MÁX. {gp(contract.maxTitleBonus)})<GpInput value={title} onChange={event => setTitle(event.target.value)} max={contract.maxTitleBonus} aria-label="Prima por título"/></label>
+      <small>LA PRIMA POR GOL CUENTA PARA EL TOPE DEL 20% CON LOS {contract.expectedGoals} GOLES QUE SE ESPERAN DE SU POSICIÓN. AL JUGADOR LE GUSTAN LOS INCENTIVOS: MEJORA SU ÁNIMO.</small>
+      <span className="mini-actions">
+        <button type="button" disabled={save.loading} onClick={() => save.execute({ goalBonus: Number(goal) || 0, titleBonus: Number(title) || 0 })}>{save.loading ? 'GUARDANDO…' : 'GUARDAR PRIMAS'}</button>
+        <button type="button" className="ghost" disabled={save.loading} onClick={() => setOpen(false)}>VOLVER</button>
+      </span>
+      <FormFeedback mutation={save}/>
+    </span>}
+  </span>;
+}
+
 const OUTCOME_LABEL = { accepted: ['✅', 'ACEPTÓ'], counter: ['🤝', 'CONTRAOFERTA'], refused: ['❌', 'SE NEGÓ'], error: ['⚠️', 'NO SE PUDO'] };
 
 /** Una misma propuesta para todos los jugadores con contrato vencido; cada uno responde por su cuenta. */
@@ -162,6 +188,7 @@ function RealView({ team, query, balance, marketOpen, canEdit, layout, refresh }
   const editable = contract => canEdit && marketOpen && contract.status === 'active' && contract.seasonsPaid === 0;
   const actions = contract => <>
     {editable(contract) && <ContractYears team={team} contract={contract} onDone={refresh}/>}
+    <BonusEditor team={team} contract={contract} editable={canEdit && marketOpen} onDone={refresh}/>
     {canEdit && contract.status === 'active' && <TerminateButton team={team} contract={contract} onDone={refresh}/>}
   </>;
 
