@@ -19,7 +19,6 @@ import { useApiMutation } from '../admin/useApiMutation.js';
 import { useApiQuery } from '../public/useApiQuery.js';
 import { useLiveStandings } from '../public/useLiveStandings.js';
 import { PitchBoard } from './PitchBoard.jsx';
-import { CouponsPanel } from '../public/market/CouponsPanel.jsx';
 import { SimulationTools } from './SimulationTools.jsx';
 import { bandFor, defaultFormationPositions, pitchPositionFor } from '../../utils/formationPositions.js';
 
@@ -796,7 +795,6 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
       <nav className="club-tabs" ref={tabsRef} role="tablist" aria-label="Secciones del club">{TABS.map(([id, label]) => <button type="button" role="tab" key={id} aria-selected={activeTab === id} className={activeTab === id ? 'active' : ''} onClick={() => onTab?.(id)}>{label}</button>)}</nav>
 
       <section className="club-tab-content" role="tabpanel">
-        {activeTab === 'resumen' && canEdit && team?.id && <CouponsPanel teamId={team.id} onChanged={onChanged}/>}
         {activeTab === 'resumen' && <div className="club-overview club-overview-reorganized">
           <div className="club-overview-secondary">
             <div className="club-overview-left-column">

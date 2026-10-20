@@ -13,16 +13,14 @@ function MutationAction({ action, label, confirmText, onChanged, danger = false 
 }
 
 // Premios sugeridos (se pre-llenan y el admin los puede cambiar antes de otorgar):
-// liga: 1.º 200.000 y bajando de a 20.000; playoffs: semifinalistas cupón 10%,
-// subcampeón cupón 15% + 20.000 y campeón cupón 20% + 40.000.
+// liga: 1.º 200.000 y bajando de a 20.000; playoffs: subcampeón 20.000 y campeón 40.000.
 const LEAGUE_FIRST = 200000;
 const LEAGUE_STEP = 20000;
 const PLAYOFF_PRIZES = {
-  champion: { label: 'CAMPEÓN', gp: 40000, coupon: 20 },
-  runnerUp: { label: 'SUBCAMPEÓN', gp: 20000, coupon: 15 },
-  semifinal: { label: 'SEMIFINALISTA', gp: 0, coupon: 10 },
+  champion: { label: 'CAMPEÓN', gp: 40000 },
+  runnerUp: { label: 'SUBCAMPEÓN', gp: 20000 },
+  semifinal: { label: 'SEMIFINALISTA', gp: 0 },
 };
-const COUPON_OPTIONS = [0, 10, 15, 20];
 const gpText = value => `${Number(value || 0).toLocaleString('es-CL')} GP`;
 
 /** Cómo terminó cada club en los playoffs del torneo (si los hubo y ya se jugaron). */
@@ -40,7 +38,7 @@ function playoffPlaces(playoffs) {
 function suggested(rows, places) {
   return Object.fromEntries(rows.map((row, index) => {
     const prize = PLAYOFF_PRIZES[places[row.team_id]];
-    return [row.team_id, { league: String(Math.max(0, LEAGUE_FIRST - LEAGUE_STEP * index)), playoff: String(prize?.gp ?? 0), coupon: String(prize?.coupon ?? 0) }];
+    return [row.team_id, { league: String(Math.max(0, LEAGUE_FIRST - LEAGUE_STEP * index)), playoff: String(prize?.gp ?? 0) }];
   }));
 }
 
@@ -61,27 +59,25 @@ export function TournamentAwardsPanel({ tournament, onChanged }) {
   const grants = rows.map((row, index) => {
     const entry = form[row.team_id] ?? {};
     return { row, position: index + 1, place: places[row.team_id] ?? null,
-      league: Number(entry.league || 0), playoff: Number(entry.playoff || 0), coupon: Number(entry.coupon || 0) };
-  }).filter(item => item.league > 0 || item.playoff > 0 || item.coupon > 0);
+      league: Number(entry.league || 0), playoff: Number(entry.playoff || 0) };
+  }).filter(item => item.league > 0 || item.playoff > 0);
   const totalGp = grants.reduce((sum, item) => sum + item.league + item.playoff, 0);
-  const totalCoupons = grants.filter(item => item.coupon > 0).length;
   const mutation = useApiMutation(async signal => {
     for (const grant of grants) {
       const teamId = grant.row.team_id;
       const placeLabel = grant.place ? PLAYOFF_PRIZES[grant.place].label.toLowerCase() : null;
       if (grant.league > 0) await endpoints.creditTeam(teamId, { amount: grant.league, reason: `Premio ${tournament.name} · ${grant.position}.º de la liga` }, signal);
       if (grant.playoff > 0) await endpoints.creditTeam(teamId, { amount: grant.playoff, reason: `Premio ${tournament.name} · ${placeLabel ?? 'playoffs'}` }, signal);
-      if (grant.coupon > 0) await endpoints.grantCoupon(teamId, { percent: grant.coupon, tournamentId: tournament.id, reason: `${tournament.name}${placeLabel ? ` · ${placeLabel}` : ''}` }, signal);
     }
-    return { data: { teams: grants.length, totalGp, totalCoupons } };
-  }, { onSuccess: () => { setDone({ teams: grants.length, totalGp, totalCoupons }); setConfirming(false); onChanged?.(); } });
+    return { data: { teams: grants.length, totalGp } };
+  }, { onSuccess: () => { setDone({ teams: grants.length, totalGp }); setConfirming(false); onChanged?.(); } });
 
-  if (done) return <section className="tournament-awards"><p className="form-feedback success">✅ PREMIOS OTORGADOS: {gpText(done.totalGp)} Y {done.totalCoupons} CUPÓN(ES) A {done.teams} CLUBES. CADA PRESI USA SUS CUPONES DESDE LA FICHA DE SU CLUB, Y SE AVISA EN DISCORD.</p></section>;
+  if (done) return <section className="tournament-awards"><p className="form-feedback success">✅ PREMIOS OTORGADOS: {gpText(done.totalGp)} A {done.teams} CLUBES.</p></section>;
   return <section className="tournament-awards">
-    <header><div><h3>CLASIFICACIÓN FINAL Y PREMIOS</h3><p>VIENEN PRE-LLENADOS (1.º DE LA LIGA 200.000 Y BAJANDO DE A 20.000; SEMIFINALISTAS CUPÓN 10%; SUBCAMPEÓN CUPÓN 15% + 20.000; CAMPEÓN CUPÓN 20% + 40.000). REVISA, AJUSTA Y OTORGA TODO CON UN SOLO GUARDADO.</p></div><b>{gpText(totalGp)}{totalCoupons ? ` · ${totalCoupons} 🎟️` : ''}</b></header>
+    <header><div><h3>CLASIFICACIÓN FINAL Y PREMIOS</h3><p>VIENEN PRE-LLENADOS (1.º DE LA LIGA 200.000 Y BAJANDO DE A 20.000; SUBCAMPEÓN 20.000; CAMPEÓN 40.000). REVISA, AJUSTA Y OTORGA TODO CON UN SOLO GUARDADO.</p></div><b>{gpText(totalGp)}</b></header>
     <DataState query={standings}/>
     {rows.length > 0 && <div className="tournament-awards-table"><table>
-      <thead><tr><th>#</th><th>CLUB</th><th>PTS</th><th>GP LIGA</th><th>PLAYOFFS</th><th>GP PLAYOFFS</th><th>CUPÓN REBAJA SALARIAL</th></tr></thead>
+      <thead><tr><th>#</th><th>CLUB</th><th>PTS</th><th>GP LIGA</th><th>PLAYOFFS</th><th>GP PLAYOFFS</th></tr></thead>
       <tbody>{rows.map((row, index) => {
         const entry = form[row.team_id] ?? {};
         const place = places[row.team_id];
@@ -90,16 +86,13 @@ export function TournamentAwardsPanel({ tournament, onChanged }) {
           <td><input aria-label={`GP de liga para ${row.name}`} type="number" min="0" step="1000" value={entry.league ?? ''} onChange={event => set(row.team_id, 'league', event.target.value)} placeholder="0"/></td>
           <td>{place ? PLAYOFF_PRIZES[place].label : '—'}</td>
           <td><input aria-label={`GP de playoffs para ${row.name}`} type="number" min="0" step="1000" value={entry.playoff ?? ''} onChange={event => set(row.team_id, 'playoff', event.target.value)} placeholder="0"/></td>
-          <td><select aria-label={`Cupón para ${row.name}`} value={entry.coupon ?? '0'} onChange={event => set(row.team_id, 'coupon', event.target.value)}>
-            {COUPON_OPTIONS.map(percent => <option key={percent} value={percent}>{percent ? `🎟️ ${percent}%` : 'SIN CUPÓN'}</option>)}
-          </select></td>
         </tr>;
       })}</tbody>
     </table></div>}
     {rows.length > 0 && !playoffs.data && <p className="poll-hint">ESTE TORNEO NO TIENE PLAYOFFS: SOLO SE PRE-LLENAN LOS PREMIOS DE LA LIGA.</p>}
     {confirming
       ? <div className="offer-confirm" role="group" aria-label="CONFIRMAR PREMIOS">
-        <span>¿OTORGAR {gpText(totalGp)}{totalCoupons ? ` Y ${totalCoupons} CUPÓN(ES)` : ''} A {grants.length} CLUBES? SE ACREDITA AL TIRO Y NO SE DESHACE SOLO.</span>
+        <span>¿OTORGAR {gpText(totalGp)}A {grants.length} CLUBES? SE ACREDITA AL TIRO Y NO SE DESHACE SOLO.</span>
         <div className="mini-actions">
           <button type="button" disabled={mutation.loading} onClick={() => mutation.execute()}>{mutation.loading ? 'OTORGANDO…' : 'SÍ, OTORGAR'}</button>
           <button type="button" className="ghost" disabled={mutation.loading} onClick={() => setConfirming(false)}>VOLVER</button>

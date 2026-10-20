@@ -60,20 +60,10 @@ const Prizes = () => <>
     <ul><li><strong>1.º:</strong> 200.000 GP</li><li><strong>Desde el 2.º:</strong> 20.000 GP menos por cada puesto (2.º 180.000, 3.º 160.000, 4.º 140.000, y así).</li></ul>
     <h3>Playoffs</h3>
     <ul>
-      <li><strong>Campeón:</strong> Cupón de Rebaja Salarial del 20% + 40.000 GP.</li>
-      <li><strong>Subcampeón:</strong> Cupón de Rebaja Salarial del 15% + 20.000 GP.</li>
-      <li><strong>Semifinalistas:</strong> Cupón de Rebaja Salarial del 10%.</li>
+      <li><strong>Campeón:</strong> 40.000 GP.</li>
+      <li><strong>Subcampeón:</strong> 20.000 GP.</li>
     </ul>
     <p>Los premios de los playoffs se suman a los de la tabla.</p>
-  </section>
-  <section className="rules-section">
-    <h2>6. Cupones de Rebaja Salarial</h2>
-    <ul>
-      <li>Le bajan el valor a un jugador de tu plantel en el porcentaje del cupón (por ejemplo, uno de 100.000 GP con un cupón del 20% queda en 80.000 GP), lo que te deja más margen bajo el tope de plantilla.</li>
-      <li>Cada jugador puede recibir <strong>una sola rebaja</strong> mientras esté en un mismo club.</li>
-      <li>El cupón es del club que lo ganó y lo usa su Presidente desde la ficha del club en la web, cuando quiera. No vence. Cada uso se anuncia en Discord.</li>
-      <li>No se puede usar en un jugador que esté amarrado por una promesa.</li>
-    </ul>
   </section>
 </>;
 
