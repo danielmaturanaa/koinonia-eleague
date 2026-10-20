@@ -3968,3 +3968,22 @@ html.pc-locked, html.pc-locked body { overflow: hidden; }
 
 .renew-result { color: #0d4a2a; font: 600 11px/1.2 'Roboto Condensed', sans-serif; }
 .ptable-sim .renew-result { white-space: nowrap; }
+
+/* ===== Medidor de interés y respuestas a peticiones ===== */
+.interest-meter { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; padding: 8px 10px; border: 2px solid #062764; background: #fff; }
+.interest-title { color: #062764; font: 600 12px/1 'Oswald', sans-serif; letter-spacing: .04em; }
+.interest-bars { display: inline-flex; gap: 3px; }
+.interest-bars i { width: 34px; height: 12px; border: 1px solid #062764; background: #eef1f8; }
+.interest-meter.level-0 b { color: #b3261e; }
+.interest-meter.level-1 .interest-bars i.on { background: #4c8dff; }
+.interest-meter.level-2 .interest-bars i.on { background: #d49b00; }
+.interest-meter.level-3 .interest-bars i.on { background: #e07b00; }
+.interest-meter.level-4 .interest-bars i.on { background: #167a45; }
+.interest-meter.level-4 b { color: #167a45; }
+.interest-meter b { font: 700 13px/1 'Oswald', sans-serif; color: #062764; }
+.interest-meter small { flex-basis: 100%; color: #b3261e; font: 600 12px/1.2 'Roboto Condensed', sans-serif; }
+.request-actions { display: grid; gap: 6px; padding: 8px 10px; border: 2px dashed #b8860b; background: #fffaf0; }
+.request-actions > span { color: #8a6d2f; font: 600 12px/1.2 'Oswald', sans-serif; }
+.request-actions small, .request-note { color: #55607a; font: 500 12px/1.3 'Roboto Condensed', sans-serif; }
+.request-note.leave { padding: 6px 10px; border: 2px solid #b3261e; background: #fbe9e7; color: #7a1a14; font-weight: 700; }
+.request-actions .chips button.danger { border-color: #b3261e; color: #b3261e; }
