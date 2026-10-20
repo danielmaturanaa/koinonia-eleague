@@ -9,9 +9,15 @@ import { MoodMeter, ROLES, roleLabel } from './SigningSheet.jsx';
 
 const TRAIT_LABEL = { ganador: 'GANADOR', titular: 'TITULAR', sociable: 'SOCIABLE', mercenario: 'MERCENARIO', ego: 'EGO', leal: 'LEAL' };
 
-function RoleSelect({ team, row, onDone }) {
+/** El mercado abierto bloquea los roles (para no manipular los fichajes): solo se cambian mientras se juega el torneo. */
+export function useMarketOpen() {
+  const status = useApiQuery(signal => endpoints.marketStatus(signal).catch(() => ({ data: { open: false } })), []);
+  return Boolean(status.data?.open);
+}
+
+export function RoleSelect({ team, row, onDone, locked = false }) {
   const change = useApiMutation((body, signal) => endpoints.setPlayerRole(team.id, row.playerId, body, signal), { onSuccess: onDone });
-  return <span><select aria-label={`Rol de ${row.name}`} value={row.role} disabled={change.loading} onChange={event => change.execute({ role: event.target.value })}>
+  return <span><select aria-label={`Rol de ${row.name}`} value={row.role} disabled={change.loading || locked} title={locked ? 'Con el mercado abierto los roles están bloqueados' : undefined} onChange={event => change.execute({ role: event.target.value })}>
     {ROLES.map(([key, label]) => <option key={key} value={key}>{label}{!row.assigned && key === row.suggestedRole ? ' (SUGERIDO)' : ''}</option>)}
   </select><FormFeedback mutation={change}/></span>;
 }
@@ -21,15 +27,17 @@ export function RolesPanel({ team }) {
   const { canEditTeam } = useAuth();
   const canEdit = canEditTeam(team.id);
   const query = useApiQuery(signal => endpoints.teamRoles(team.id, signal), [team.id]);
+  const marketOpen = useMarketOpen();
   const rows = Array.isArray(query.data) ? query.data : [];
   return <section className="roles-panel">
     <header><h3>ROLES Y ÁNIMO</h3><p>EL ROL LO ELIGES TÚ, QUE ERES QUIEN JUEGA. CADA JUGADOR CREE MERECER UN ROL SEGÚN LO QUE VALE EN LA LIGA; SU ÁNIMO SALE DE ESO, DEL RENDIMIENTO DEL EQUIPO, SU SUELDO Y SU PERSONALIDAD. SI LO TIENES POR DEBAJO DE LO QUE CREE MERECER, SE ENOJA Y PIDE MÁS (O SE NIEGA) AL RENOVAR. PASA EL MOUSE POR UNA FILA PARA VER POR QUÉ.</p></header>
+    {canEdit && marketOpen && <p className="payroll-empty">🔒 MERCADO ABIERTO: LOS ROLES ESTÁN BLOQUEADOS PARA NO MANIPULAR LOS FICHAJES. SE PUEDEN CAMBIAR MIENTRAS SE JUEGA EL TORNEO.</p>}
     <DataState query={query}/>
     {rows.length > 0 && <div className="payroll-table-wrap"><table className="payroll-table roles-table">
       <thead><tr><th>JUGADOR</th><th>ROL</th><th>CREE MERECER</th><th>ÁNIMO</th><th>PERSONALIDAD</th></tr></thead>
       <tbody>{rows.map(row => <tr key={row.playerId} title={row.reasons.map(reason => `${reason.delta > 0 ? '+' : '−'}${Math.abs(reason.delta)} ${reason.text}`).join('\n')}>
         <td><span className="roles-player"><PlayerFace src={row.faceUrl} name={row.name}/><span><b>{row.name}</b> <small>{row.position}</small></span></span></td>
-        <td>{canEdit ? <RoleSelect team={team} row={row} onDone={query.retry}/> : roleLabel(row.role)}</td>
+        <td>{canEdit ? <RoleSelect team={team} row={row} onDone={query.retry} locked={marketOpen}/> : roleLabel(row.role)}</td>
         <td className={ROLES.findIndex(([key]) => key === row.role) > ROLES.findIndex(([key]) => key === row.expectedRole) ? 'role-under' : ''}>{roleLabel(row.expectedRole)}</td>
         <td><MoodMeter mood={row.mood} label={row.moodLabel}/></td>
         <td><small>{row.traits.map(trait => TRAIT_LABEL[trait] ?? trait).join(' · ')}</small></td>

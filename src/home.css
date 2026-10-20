@@ -3958,3 +3958,7 @@ html.pc-locked, html.pc-locked body { overflow: hidden; }
 .ptable-sim td:not(:first-child) { white-space: nowrap; }
 .ptable-sim .years-chips { flex-wrap: nowrap; }
 .ptable-sim .sim-player-controls { flex-wrap: nowrap; }
+
+.inbox-role { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 6px 8px; border: 2px dashed #062764; background: #f4f7ff; color: #062764; font: 600 12px/1.2 'Oswald', sans-serif; }
+.inbox-role select { min-height: 34px; }
+.inbox-role small { color: #55607a; font: 500 12px/1.2 'Roboto Condensed', sans-serif; }

@@ -5,6 +5,7 @@ import { formatDate } from '../public/DataStates.jsx';
 import { DataState } from '../public/DataStates.jsx';
 import { useApiQuery } from '../public/useApiQuery.js';
 import { MoodMeter, roleLabel } from './SigningSheet.jsx';
+import { RoleSelect, useMarketOpen } from './RolesPanel.jsx';
 
 const KIND = { expiring: ['📄', 'CONTRATO POR VENCER'], expired: ['✍️', 'QUIERE RENOVAR'], unhappy: ['😠', 'DESCONTENTO'], renewal: ['💬', 'RENOVACIÓN'] };
 
@@ -12,6 +13,10 @@ const KIND = { expiring: ['📄', 'CONTRATO POR VENCER'], expired: ['✍️', 'Q
 export function InboxTab({ team, onTab, onRead }) {
   const query = useApiQuery(signal => endpoints.teamInbox(team.id, signal), [team.id]);
   const messages = query.data?.messages ?? [];
+  // Rol actual de cada jugador (el del mensaje puede estar desactualizado) para cambiarlo desde la propia bandeja.
+  const rolesQuery = useApiQuery(signal => endpoints.teamRoles(team.id, signal), [team.id]);
+  const roleOf = new Map((Array.isArray(rolesQuery.data) ? rolesQuery.data : []).map(row => [row.playerId, row]));
+  const marketOpen = useMarketOpen();
   useEffect(() => {
     if (query.data?.unread > 0) endpoints.markInboxRead(team.id).then(() => onRead?.()).catch(() => {});
   }, [query.data?.unread, team.id]);
@@ -29,7 +34,10 @@ export function InboxTab({ team, onTab, onRead }) {
           <p>{message.body}</p>
           {message.meta?.moodLabel && message.kind !== 'renewal' && <div className="inbox-mood"><MoodMeter mood={message.meta.mood} label={message.meta.moodLabel}/>{message.meta.role && <small>ROL: {roleLabel(message.meta.role)}</small>}</div>}
           {['expired', 'expiring'].includes(message.kind) && <button type="button" className="action-button" onClick={() => onTab?.('nomina')}>{message.kind === 'expired' ? 'IR A LA HOJA DE FIRMA' : 'VER CONTRATO'}</button>}
-          {message.kind === 'unhappy' && <button type="button" className="action-button" onClick={() => onTab?.('nomina')}>CAMBIAR SU ROL</button>}
+          {message.kind === 'unhappy' && roleOf.get(message.playerId) && <div className="inbox-role">
+            <span>ROL AHORA:</span><RoleSelect team={team} row={roleOf.get(message.playerId)} locked={marketOpen} onDone={() => { rolesQuery.retry(); }}/>
+            <small>{marketOpen ? '🔒 MERCADO ABIERTO: LOS ROLES ESTÁN BLOQUEADOS.' : `ÁNIMO HOY: ${String(roleOf.get(message.playerId).moodLabel).toUpperCase()} (${roleOf.get(message.playerId).mood}/100)`}</small>
+          </div>}
         </div>
       </li>;
     })}</ul>
