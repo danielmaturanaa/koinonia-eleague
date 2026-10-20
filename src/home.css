@@ -3609,6 +3609,11 @@ html.pc-locked, html.pc-locked body { overflow: hidden; }
 .offer-card .mini-actions button { min-height: 40px; font-size: 14px; }
 .offer-confirm { display: grid; gap: 8px; padding: 8px 10px; background: #fff3c4; border: 1px solid #e3c764; color: #5a4700; font: 600 13px/1.3 'Roboto Condensed', sans-serif; }
 .offer-confirm .mini-actions button { min-height: 40px; }
+.offer-counter { display: grid; gap: 8px; padding: 10px; background: #eef4ff; border: 1px solid #9db8e8; color: #1d3a6b; font: 600 13px/1.3 'Roboto Condensed', sans-serif; }
+.offer-counter label { display: grid; gap: 4px; }
+.offer-counter select { min-height: 40px; }
+.offer-counter-gp { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+.offer-counter .mini-actions button { min-height: 40px; }
 .mini-actions button.ghost { background: #fff; color: #062764; border-color: #062764; }
 .offer-tabs { margin-bottom: 8px; }
 .offer-form { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); align-items: end; }

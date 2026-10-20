@@ -42,11 +42,46 @@ function PlayerChip({ player, note }) {
   </span>;
 }
 
+/** Responder con otra oferta: otro precio, GP de más o pidiendo a un jugador del que ofreció. La original queda rechazada. */
+function CounterForm({ offer, me, other, onDone, onCancel }) {
+  const isTrade = offer.kind === 'trade';
+  const iAmSeller = !isTrade && me?.id === offer.fromTeam?.id;
+  const theirSquad = useSquad(other?.id);
+  const [price, setPrice] = useState(isTrade ? 0 : offer.gpAmount ?? 0);
+  const [ask, setAsk] = useState(isTrade ? offer.fromPlayer?.id ?? '' : '');
+  const [myGp, setMyGp] = useState(0);
+  const [theirGp, setTheirGp] = useState(0);
+  const asking = isTrade || (iAmSeller && ask);
+  const given = isTrade ? offer.toPlayer : offer.player;
+  const wanted = theirSquad.squad.find(player => player.id === ask);
+  const problem = asking ? tradeProblem(given, wanted, Number(myGp) || 0, Number(theirGp) || 0) : bandProblem(offer.player, Number(price));
+  const counter = useApiMutation((body, signal) => (isTrade ? endpoints.counterTrade(offer.id, body, signal) : endpoints.counterTransfer(offer.id, body, signal)), { onSuccess: onDone });
+  const send = () => counter.execute(asking ? { askPlayerId: ask, gpFrom: Number(myGp) || 0, gpTo: Number(theirGp) || 0 } : { gpAmount: Number(price) });
+  return <div className="offer-counter" role="group" aria-label="CONTRAOFERTA">
+    <b>🔁 CONTRAOFERTA</b>
+    {!asking && <label>PRECIO QUE PROPONES<GpInput value={price} onChange={event => setPrice(event.target.value)} aria-label="Precio de la contraoferta"/></label>}
+    {(isTrade || iAmSeller) && <label>{isTrade ? 'JUGADOR QUE PIDES' : 'PEDIR UN JUGADOR A CAMBIO (OPCIONAL)'}
+      <select value={ask} onChange={event => setAsk(event.target.value)}>{isTrade ? null : <option value="">NO, SOLO PLATA</option>}{asList(theirSquad.squad).map(player => <option key={player.id} value={player.id}>{player.name} · {player.position} · {gp(player.gpValue)}</option>)}</select>
+    </label>}
+    {asking && <div className="offer-counter-gp">
+      <label>GP QUE PONES TÚ<GpInput value={myGp} onChange={event => setMyGp(event.target.value)} aria-label="GP que pones"/></label>
+      <label>GP QUE PONE {upper(other?.name)}<GpInput value={theirGp} onChange={event => setTheirGp(event.target.value)} aria-label="GP que pone el otro club"/></label>
+    </div>}
+    {problem && <p className="form-feedback error" role="alert">{problem}</p>}
+    <div className="mini-actions">
+      <button type="button" disabled={counter.loading || Boolean(problem) || (isTrade && !ask)} onClick={send}>{counter.loading ? 'ENVIANDO…' : 'ENVIAR CONTRAOFERTA'}</button>
+      <button type="button" className="ghost" disabled={counter.loading} onClick={onCancel}>VOLVER</button>
+    </div>
+    {counter.error && <p className="form-feedback error" role="alert">{counter.error.message}</p>}
+  </div>;
+}
+
 function OfferCard({ offer, onChanged }) {
   const { isAdmin } = useAuth();
   const kind = offer.kind === 'trade' ? 'Trade' : 'Transfer';
   const mutation = useApiMutation((operation, signal) => endpoints[`${operation}${kind}`](offer.id, signal), { onSuccess: onChanged });
   const [confirming, setConfirming] = useState('');
+  const [countering, setCountering] = useState(false);
   const incoming = offer.direction === 'incoming';
   const outgoing = offer.direction === 'outgoing';
   const counterpart = offer.proposerTeamId === offer.fromTeam?.id ? offer.toTeam : offer.fromTeam;
@@ -87,8 +122,10 @@ function OfferCard({ offer, onChanged }) {
           <button type="button" className="ghost" disabled={mutation.loading} onClick={() => setConfirming('')}>VOLVER</button>
         </div>
       </div>
+      : countering ? <CounterForm offer={offer} me={counterpart} other={proposer} onDone={() => { setCountering(false); onChanged?.(); }} onCancel={() => setCountering(false)}/>
       : (canAccept || canReject) && <div className="mini-actions">
         {canAccept && <button type="button" onClick={() => setConfirming('approve')}>{acceptLabel}</button>}
+        {canAccept && incoming && <button type="button" className="ghost" onClick={() => setCountering(true)}>CONTRAOFERTAR</button>}
         {canReject && <button type="button" className="danger" onClick={() => setConfirming('reject')}>{rejectLabel}</button>}
       </div>}
     {mutation.error && <p className="form-feedback error" role="alert">{mutation.error.message}</p>}
