@@ -28,10 +28,12 @@ function SeasonDots({ paid, total }) {
 function TerminateButton({ team, contract, onDone }) {
   const [confirming, setConfirming] = useState(false);
   const release = useApiMutation(signal => endpoints.releasePlayer(contract.playerId, { teamId: team.id }, signal), { onSuccess: () => { setConfirming(false); onDone(); } });
-  if (!confirming) return <button type="button" className="ghost" onClick={() => setConfirming(true)}>RESCINDIR</button>;
+  if (!confirming) return <button type="button" className="ghost" onClick={() => setConfirming(true)}>{contract.endsWith ? 'SOLTAR' : 'RESCINDIR'}</button>;
   return <span className="offer-confirm" role="group" aria-label="CONFIRMAR RESCISIÓN">
-    <span>¿RESCINDIR A {upper(contract.playerName)}? PAGAS {gp(contract.terminationCost)} (50% DE {contract.seasonsLeft} TORNEO(S)), NO RECIBES NADA Y BAJA LA REPUTACIÓN. NO SE DESHACE.</span>
-    <button type="button" disabled={release.loading} onClick={() => release.execute()}>{release.loading ? 'RESCINDIENDO…' : 'SÍ, RESCINDIR'}</button>
+    <span>{contract.endsWith
+      ? `¿SOLTAR A ${upper(contract.playerName)}? SU CONTRATO TERMINA CON EL ${upper(contract.endsWith.name)}: NO PAGAS NADA, NO RECIBES NADA Y NO BAJA LA REPUTACIÓN. QUEDA AGENTE LIBRE.`
+      : `¿RESCINDIR A ${upper(contract.playerName)}? PAGAS ${gp(contract.terminationCost)} (50% DE ${contract.seasonsLeft} TORNEO(S)), NO RECIBES NADA Y BAJA LA REPUTACIÓN. NO SE DESHACE.`}</span>
+    <button type="button" disabled={release.loading} onClick={() => release.execute()}>{release.loading ? 'ESPERA…' : contract.endsWith ? 'SÍ, SOLTAR' : 'SÍ, RESCINDIR'}</button>
     <button type="button" className="ghost" disabled={release.loading} onClick={() => setConfirming(false)}>VOLVER</button>
     <FormFeedback mutation={release}/>
   </span>;
@@ -50,7 +52,7 @@ function StartContracts({ onDone }) {
   const [confirming, setConfirming] = useState(false);
   const start = useApiMutation(signal => endpoints.startContracts({ expireAll: true }, signal), { onSuccess: () => { setConfirming(false); onDone(); } });
   return <section className="payroll-admin">
-    <p>ADMIN: EL SISTEMA DE CONTRATOS TODAVÍA NO ESTÁ ACTIVO. AL ACTIVARLO, TODOS LOS CONTRATOS NACEN VENCIDOS (EL v10 ES EL ÚLTIMO TORNEO DE CADA JUGADOR) Y CADA PRESI TIENE QUE RENOVAR A LOS SUYOS; LOS QUE NO SE RENUEVEN SALEN A AGENCIA LIBRE AL CERRAR EL MERCADO QUE SIGUE AL v10. EL v10 NO SE COBRA Y LOS SUELDOS SE COBRAN AL FINAL DE CADA TORNEO DE LIGA CREADO DESDE AHORA (EL PRIMERO, EL v11).</p>
+    <p>ADMIN: EL SISTEMA DE CONTRATOS TODAVÍA NO ESTÁ ACTIVO. AL ACTIVARLO, TODOS LOS CONTRATOS QUEDAN VIGENTES HASTA QUE TERMINE EL TORNEO EN CURSO (ES EL ÚLTIMO DE CADA JUGADOR): SE PUEDEN TRASPASAR Y CANJEAR COMO SIEMPRE, SE PUEDEN RENOVAR DESDE YA Y AL TERMINAR EL TORNEO VENCEN. LOS QUE NO SE RENUEVEN SALEN A AGENCIA LIBRE CUANDO UN ADMIN TERMINE LA FASE DE RENOVACIONES DEL MERCADO. EL TORNEO EN CURSO NO SE COBRA Y LOS SUELDOS SE COBRAN AL FINAL DE CADA TORNEO DE LIGA CREADO DESDE AHORA (EL PRIMERO, EL v11).</p>
     {confirming
       ? <div className="offer-confirm" role="group" aria-label="CONFIRMAR ACTIVACIÓN">
         <span>¿ACTIVAR LOS CONTRATOS EN TODA LA LIGA? NO SE DESHACE SOLO.</span>
@@ -72,7 +74,7 @@ function RenewAll({ team, expiredCount, onDone }) {
   const send = useApiMutation((body, signal) => endpoints.negotiateAllContracts(team.id, body, signal), { onSuccess: response => { setResults(response?.data ?? []); onDone(); } });
   if (!expiredCount && !results) return null;
   return <section className="renew-all">
-    <header><h3>RENOVAR A TODOS</h3><p>{expiredCount} JUGADOR(ES) CON CONTRATO VENCIDO. LA MISMA PROPUESTA PARA TODOS: CADA UNO ACEPTA, CONTRAOFERTA O SE NIEGA SEGÚN SU ÁNIMO Y PERSONALIDAD. A LOS QUE NO ACEPTEN LOS NEGOCIAS UNO A UNO EN SU HOJA (HASTA 3 PROPUESTAS EN TOTAL).</p></header>
+    <header><h3>RENOVAR A TODOS</h3><p>{expiredCount} JUGADOR(ES) CON CONTRATO VENCIDO O QUE TERMINA CON EL TORNEO EN CURSO. LA MISMA PROPUESTA PARA TODOS: CADA UNO ACEPTA, CONTRAOFERTA O SE NIEGA SEGÚN SU ÁNIMO Y PERSONALIDAD. A LOS QUE NO ACEPTEN LOS NEGOCIAS UNO A UNO EN SU HOJA (HASTA 3 PROPUESTAS EN TOTAL).</p></header>
     {expiredCount > 0 && <div className="renew-all-form">
       <span className="chips">{SEASONS.map(n => <button type="button" key={n} className={seasons === n ? 'on' : ''} onClick={() => setSeasons(n)}>{n} TORNEOS</button>)}</span>
       <span className="sheet-slider"><input type="range" min="1" max="100" value={raise} onChange={event => setRaise(Number(event.target.value))} aria-label="Aumento de sueldo en porcentaje"/><b>+{raise}%</b></span>
@@ -104,7 +106,7 @@ export function PayrollTab({ team, balance, onChanged }) {
   const cap = projection?.cap ?? null;
 
   // Las hojas que ya se firmaron siguen a la vista (con su firma animada) aunque el contrato ya no esté vencido.
-  const expired = contracts.filter(contract => contract.status === 'expired');
+  const expired = contracts.filter(contract => contract.renewable);
   const sheets = [...expired, ...signedIds.filter(id => !expired.some(contract => contract.id === id)).map(id => signedSnapshots[id]).filter(Boolean)];
   const keepSigned = contract => { setSignedSnapshots(items => ({ ...items, [contract.id]: contract })); setSignedIds(ids => ids.includes(contract.id) ? ids : [...ids, contract.id]); };
 
@@ -113,7 +115,7 @@ export function PayrollTab({ team, balance, onChanged }) {
   const simulatedPayroll = simulated.reduce((sum, player) => sum + player.projectedSalary, 0);
   const simulatedTotal = simulated.reduce((sum, player) => sum + player.projectedSalary * player.years, 0);
   const livePayroll = projection?.payroll ?? 0;
-  const remainingCost = contracts.filter(contract => contract.status === 'active').reduce((sum, contract) => sum + contract.salary * contract.seasonsLeft, 0);
+  const remainingCost = contracts.filter(contract => contract.status === 'active' && !contract.endsWith).reduce((sum, contract) => sum + contract.salary * contract.seasonsLeft, 0);
   const covered = payroll => payroll > 0 && typeof balance === 'number' ? `${(Math.floor(balance / payroll * 10) / 10).toLocaleString('es-CL')} TORNEOS` : '—';
 
   return <section className="payroll-tab">
@@ -145,8 +147,8 @@ export function PayrollTab({ team, balance, onChanged }) {
           <header><PlayerFace src={contract.faceUrl} name={contract.playerName}/><div><b>{contract.playerName}</b><small>{contract.position} · VALE {gp(contract.marketValue)}</small></div></header>
           <div className="payroll-card-salary"><b>{gp(contract.salary)}</b><small>POR TORNEO</small></div>
           <div className="payroll-card-years">
-            <SeasonDots paid={contract.seasonsPaid} total={contract.seasons}/>
-            <span>{contract.status === 'expired' ? 'VENCIDO: RENOVAR' : `QUEDAN ${contract.seasonsLeft} DE ${contract.seasons} TORNEOS`}</span>
+            {!contract.endsWith && <SeasonDots paid={contract.seasonsPaid} total={contract.seasons}/>}
+            <span>{contract.status === 'expired' ? 'VENCIDO: RENOVAR' : contract.endsWith ? `VIGENTE: TERMINA CON EL ${upper(contract.endsWith.name)}` : `QUEDAN ${contract.seasonsLeft} DE ${contract.seasons} TORNEOS`}</span>
           </div>
           {canEdit && contract.status === 'active' && contract.seasonsPaid === 0 && <ContractYears team={team} contract={contract} onDone={refresh}/>}
           {canEdit && contract.status === 'active' && <TerminateButton team={team} contract={contract} onDone={refresh}/>}
