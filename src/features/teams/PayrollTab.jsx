@@ -51,7 +51,7 @@ function ContractYears({ team, contract, onDone }) {
 const OUTCOME_LABEL = { accepted: ['✅', 'ACEPTÓ'], counter: ['🤝', 'CONTRAOFERTA'], refused: ['❌', 'SE NEGÓ'], error: ['⚠️', 'NO SE PUDO'] };
 
 /** Una misma propuesta para todos los jugadores con contrato vencido; cada uno responde por su cuenta. */
-function RenewAll({ team, expiredCount, onDone }) {
+function RenewAll({ team, expiredCount, onDone, marketOpen }) {
   const [seasons, setSeasons] = useState(3);
   const [raise, setRaise] = useState(15);
   const [results, setResults] = useState(null);
@@ -59,7 +59,8 @@ function RenewAll({ team, expiredCount, onDone }) {
   if (!expiredCount && !results) return null;
   return <section className="renew-all">
     <header><h3>RENOVAR A TODOS</h3><p>{expiredCount} JUGADOR(ES) CON CONTRATO VENCIDO O QUE TERMINA CON EL TORNEO EN CURSO. LA MISMA PROPUESTA PARA TODOS: CADA UNO ACEPTA, CONTRAOFERTA O SE NIEGA SEGÚN SU ÁNIMO Y PERSONALIDAD. A LOS QUE NO ACEPTEN LOS NEGOCIAS UNO A UNO EN SU HOJA (HASTA 3 PROPUESTAS EN TOTAL).</p></header>
-    {expiredCount > 0 && <div className="renew-all-form">
+    {expiredCount > 0 && !marketOpen && <p className="payroll-empty">🔒 SIN MERCADO ABIERTO: LAS RENOVACIONES SOLO SE HACEN EN PERIODOS DE MERCADO.</p>}
+    {expiredCount > 0 && marketOpen && <div className="renew-all-form">
       <span className="chips">{SEASONS.map(n => <button type="button" key={n} className={seasons === n ? 'on' : ''} onClick={() => setSeasons(n)}>{n} TORNEOS</button>)}</span>
       <span className="sheet-slider"><input type="range" min="1" max="100" value={raise} onChange={event => setRaise(Number(event.target.value))} aria-label="Aumento de sueldo en porcentaje"/><b>+{raise}%</b></span>
       <button type="button" className="action-button positive" disabled={send.loading} onClick={() => send.execute({ seasons, raisePercent: raise })}>{send.loading ? 'ENVIANDO…' : 'ENVIAR A TODOS'}</button>
@@ -78,6 +79,9 @@ export function PayrollTab({ team, balance, onChanged }) {
   const { canEditTeam } = useAuth();
   const canEdit = canEditTeam(team.id);
   const query = useApiQuery(signal => endpoints.teamContracts(team.id, signal), [team.id]);
+  // Cambiar años, renovar y negociar contratos solo se puede con el mercado abierto.
+  const market = useApiQuery(signal => endpoints.marketStatus(signal).catch(() => ({ data: { open: false } })), []);
+  const marketOpen = Boolean(market.data?.open);
   const [draft, setDraft] = useState(() => loadDraft(team.id));
   const [view, setView] = useState(null);
   const [signedIds, setSignedIds] = useState([]);
@@ -117,6 +121,7 @@ export function PayrollTab({ team, balance, onChanged }) {
         <p className="payroll-empty">LOS CONTRATOS TODAVÍA NO ESTÁN ACTIVOS: ENTRAN CON EL TORNEO v11. MIENTRAS TANTO MIRA LA <button type="button" className="link-button" onClick={() => setView('proyeccion')}>PROYECCIÓN</button> PARA PLANIFICAR.</p>
       </>}
       {enabled && <>
+        {canEdit && !marketOpen && <p className="payroll-empty">🔒 SIN MERCADO ABIERTO: LOS AÑOS DE LOS CONTRATOS Y LAS RENOVACIONES SOLO SE CAMBIAN EN PERIODOS DE MERCADO. RESCINDIR SE PUEDE SIEMPRE, CON INDEMNIZACIÓN Y CASTIGO.</p>}
         <Tiles items={[
           ['NÓMINA ANUAL', gp(livePayroll)],
           ['TOPE DE NÓMINA', cap === null ? 'SIN DEFINIR' : gp(cap), cap !== null && livePayroll > cap ? `TE PASAS POR ${gp(livePayroll - cap)}` : null],
@@ -124,8 +129,8 @@ export function PayrollTab({ team, balance, onChanged }) {
           ['ALCANZA PARA', covered(livePayroll)],
           ['POR PAGAR EN CONTRATOS', gp(remainingCost)],
         ]}/>
-        {canEdit && <RenewAll team={team} expiredCount={expired.length} onDone={refresh}/>}
-        {canEdit && sheets.map(contract => <SigningSheet key={contract.id} team={team} contract={contract} args={query.data?.arguments ?? []} maxRounds={query.data?.maxRounds ?? 3} onDone={refresh} onAccepted={() => keepSigned(contract)}/>)}
+        {canEdit && <RenewAll team={team} expiredCount={expired.length} onDone={refresh} marketOpen={marketOpen}/>}
+        {canEdit && sheets.map(contract => <SigningSheet key={contract.id} team={team} contract={contract} args={query.data?.arguments ?? []} maxRounds={query.data?.maxRounds ?? 3} marketOpen={marketOpen} onDone={refresh} onAccepted={() => keepSigned(contract)}/>)}
         <div className="payroll-grid">{contracts.map(contract => <article key={contract.id} className={`payroll-card ${contract.status}`}>
           <header><PlayerFace src={contract.faceUrl} name={contract.playerName}/><div><b>{contract.playerName}</b><small>{contract.position} · VALE {gp(contract.marketValue)}</small></div></header>
           <div className="payroll-card-salary"><b>{gp(contract.salary)}</b><small>POR TORNEO</small></div>
@@ -133,7 +138,7 @@ export function PayrollTab({ team, balance, onChanged }) {
             {!contract.endsWith && <SeasonDots paid={contract.seasonsPaid} total={contract.seasons}/>}
             <span>{contract.status === 'expired' ? 'VENCIDO: RENOVAR' : contract.endsWith ? `VIGENTE: TERMINA CON EL ${upper(contract.endsWith.name)}` : `QUEDAN ${contract.seasonsLeft} DE ${contract.seasons} TORNEOS`}</span>
           </div>
-          {canEdit && contract.status === 'active' && contract.seasonsPaid === 0 && <ContractYears team={team} contract={contract} onDone={refresh}/>}
+          {canEdit && contract.status === 'active' && contract.seasonsPaid === 0 && marketOpen && <ContractYears team={team} contract={contract} onDone={refresh}/>}
           {canEdit && contract.status === 'active' && <TerminateButton team={team} contract={contract} onDone={refresh}/>}
         </article>)}</div>
       </>}

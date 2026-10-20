@@ -30,7 +30,7 @@ function Signatures({ playerName }) {
 }
 
 /** La hoja de firma de una renovación: se negocia hasta en 3 propuestas y, si hay acuerdo, se firma. */
-export function SigningSheet({ team, contract, args = [], maxRounds = 3, onDone, onAccepted }) {
+export function SigningSheet({ team, contract, args = [], maxRounds = 3, marketOpen = true, onDone, onAccepted }) {
   const info = contract.renewal;
   const talk = contract.talk;
   const [seasons, setSeasons] = useState(3);
@@ -50,6 +50,7 @@ export function SigningSheet({ team, contract, args = [], maxRounds = 3, onDone,
   const outcome = last?.outcome ?? (talk?.status === 'refused' ? 'refused' : null);
   const round = last?.round ?? talk?.rounds ?? 0;
   const closed = outcome === 'accepted' || outcome === 'refused' || info?.refuses;
+  const locked = !marketOpen && !closed;
   const offered = roundStep(contract.salary * (1 + Number(raise || 0) / 100));
   const send = (override = {}) => negotiate.execute({
     playerId: contract.playerId, seasons, raisePercent: Number(override.raisePercent ?? raise),
@@ -83,7 +84,8 @@ export function SigningSheet({ team, contract, args = [], maxRounds = 3, onDone,
     {outcome === 'refused' && <div className="sheet-stamp bad" role="status">NO RENUEVA ✖</div>}
     {info?.refuses && !last && <p className="poll-hint">ESTÁ DEMASIADO MOLESTO PARA SENTARSE A NEGOCIAR: ARREGLA LO QUE LO TIENE ASÍ (ROL, SUELDO, PROMESAS) Y VUELVE.</p>}
 
-    {!closed && <div className="sheet-form">
+    {locked && <p className="poll-hint">🔒 SIN MERCADO ABIERTO: LA RENOVACIÓN SE NEGOCIA EN EL PRÓXIMO PERIODO DE MERCADO.</p>}
+    {!closed && !locked && <div className="sheet-form">
       <div className="sheet-row"><span>TEMPORADAS</span><div className="chips">{SEASONS.map(n => <button type="button" key={n} className={seasons === n ? 'on' : ''} onClick={() => setSeasons(n)}>{n}</button>)}</div></div>
       <div className="sheet-row"><span>AUMENTO</span><div className="sheet-slider"><input type="range" min="1" max="100" value={raise} onChange={event => setRaise(Number(event.target.value))} aria-label="Aumento de sueldo en porcentaje"/><b>+{raise}%</b><em>{gpLabel(offered)} AL AÑO</em></div></div>
       {info?.roleWanted && <div className="sheet-row"><span>PROMETER ROL</span><div className="chips"><button type="button" className={!promisedRole ? 'on' : ''} onClick={() => setPromisedRole('')}>SIN PROMESA</button>{ROLES.map(([key, label]) => <button type="button" key={key} className={promisedRole === key ? 'on' : ''} onClick={() => setPromisedRole(key)}>{label}</button>)}</div></div>}
