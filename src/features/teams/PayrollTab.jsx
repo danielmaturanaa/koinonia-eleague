@@ -136,6 +136,7 @@ const covered = (payroll, balance) => (payroll > 0 && typeof balance === 'number
 
 // ---------- vista REAL ----------
 function RealView({ team, query, balance, marketOpen, canEdit, layout, refresh }) {
+  const upcoming = query.data?.upcoming ?? [];
   const projection = query.data?.projection;
   const contracts = query.data?.contracts ?? [];
   const enabled = Boolean(projection?.enabled);
@@ -148,7 +149,16 @@ function RealView({ team, query, balance, marketOpen, canEdit, layout, refresh }
   const sheets = [...renewables, ...signedIds.filter(id => !renewables.some(contract => contract.id === id)).map(id => signedSnapshots[id]).filter(Boolean)];
   const keepSigned = contract => { setSignedSnapshots(items => ({ ...items, [contract.id]: contract })); setSignedIds(ids => ids.includes(contract.id) ? ids : [...ids, contract.id]); };
   const remainingCost = contracts.filter(contract => contract.status === 'active' && !contract.endsWith).reduce((sum, contract) => sum + contract.salary * contract.seasonsLeft, 0);
-  const contractText = contract => (contract.status === 'expired' ? 'VENCIDO: RENOVAR' : contract.endsWith ? `VIGENTE: TERMINA CON EL ${upper(contract.endsWith.name)}` : `QUEDAN ${contract.seasonsLeft} DE ${contract.seasons} TORNEOS`);
+  // Qué torneos le quedan por cobrar a un contrato ("v11 y v12"), con los nombres reales cuando se pueden deducir.
+  const pending = contract => upcoming.slice(0, contract.seasonsLeft).map(upper);
+  const chargeText = names => (names.length <= 2 ? names.join(' Y ') : `${names[0]} A ${names[names.length - 1]}`);
+  const contractText = contract => {
+    if (contract.status === 'expired') return 'VENCIDO: RENOVAR';
+    if (contract.endsWith) return `VIGENTE: TERMINA CON EL ${upper(contract.endsWith.name)}`;
+    const names = pending(contract);
+    return names.length ? `VIGENTE HASTA EL ${names[names.length - 1]}` : `${contract.seasonsLeft} TORNEO(S) POR PAGAR`;
+  };
+  const chargeNote = contract => { const names = contract.status === 'active' && !contract.endsWith ? pending(contract) : []; return names.length ? `SE COBRA AL TERMINAR: ${chargeText(names)}` : null; };
   const editable = contract => canEdit && marketOpen && contract.status === 'active' && contract.seasonsPaid === 0;
   const actions = contract => <>
     {editable(contract) && <ContractYears team={team} contract={contract} onDone={refresh}/>}
@@ -157,7 +167,7 @@ function RealView({ team, query, balance, marketOpen, canEdit, layout, refresh }
 
   return <div className="payroll-real">
     <div className="view-badge is-real">📄 NÓMINA REAL · CONTRATOS FIRMADOS</div>
-    <p className="payroll-note">CADA JUGADOR TIENE UN CONTRATO DE 2 A 6 TORNEOS. SU SUELDO QUEDA CONGELADO Y SE COBRA AL TERMINAR CADA TORNEO DE LIGA MIENTRAS SIGA EN EL CLUB. NADIE PUEDE COBRAR MÁS DEL 20% DE SU VALOR DE MERCADO.</p>
+    <p className="payroll-note">CADA JUGADOR TIENE UN CONTRATO DE 2 A 6 TORNEOS. SU SUELDO QUEDA CONGELADO Y SE COBRA AL TERMINAR CADA TORNEO DE LIGA MIENTRAS SIGA EN EL CLUB. NADIE PUEDE COBRAR MÁS DEL 20% DE SU VALOR DE MERCADO.{upcoming[0] ? ` LOS SUELDOS SE COBRAN DESDE EL ${upper(upcoming[0])}; EL TORNEO EN CURSO NO SE COBRA.` : ''}</p>
     {!enabled && <p className="payroll-empty">LOS CONTRATOS TODAVÍA NO ESTÁN ACTIVOS. MIENTRAS TANTO USA LA SIMULACIÓN PARA PLANIFICAR.</p>}
     {enabled && <>
       {canEdit && !marketOpen && <p className="payroll-empty">🔒 SIN MERCADO ABIERTO: LOS AÑOS DE LOS CONTRATOS Y LAS RENOVACIONES SOLO SE CAMBIAN EN PERIODOS DE MERCADO. RESCINDIR SE PUEDE SIEMPRE, CON INDEMNIZACIÓN Y CASTIGO.</p>}
@@ -179,6 +189,7 @@ function RealView({ team, query, balance, marketOpen, canEdit, layout, refresh }
             {!contract.endsWith && <SeasonDots paid={contract.seasonsPaid} total={contract.seasons}/>}
             <span>{contractText(contract)}</span>
           </div>
+          {chargeNote(contract) && <small className="payroll-card-total">{chargeNote(contract)}</small>}
           {actions(contract)}
         </article>)}</div>
         : <div className="ptable-wrap"><table className="ptable">
@@ -188,7 +199,7 @@ function RealView({ team, query, balance, marketOpen, canEdit, layout, refresh }
             <td>{gp(contract.marketValue)}</td>
             <td><b>{gp(contract.salary)}</b></td>
             <td><ShareBar salary={contract.salary} value={contract.marketValue} compact/></td>
-            <td><span className="ptable-contract">{!contract.endsWith && <SeasonDots paid={contract.seasonsPaid} total={contract.seasons}/>}<small>{contractText(contract)}</small></span></td>
+            <td><span className="ptable-contract" title={chargeNote(contract) ?? undefined}>{!contract.endsWith && <SeasonDots paid={contract.seasonsPaid} total={contract.seasons}/>}<small>{contractText(contract)}{chargeNote(contract) ? ` · ${chargeNote(contract).replace('SE COBRA AL TERMINAR: ', 'PAGA ')}` : ''}</small></span></td>
             {canEdit && <td className="ptable-actions">{actions(contract)}</td>}
           </tr>)}</tbody>
         </table></div>}
@@ -197,7 +208,8 @@ function RealView({ team, query, balance, marketOpen, canEdit, layout, refresh }
 }
 
 // ---------- vista SIMULACIÓN ----------
-function SimView({ team, projection, balance, canEdit, layout, currentPosition }) {
+function SimView({ team, projection, balance, canEdit, layout, currentPosition, upcoming = [] }) {
+  const labelOf = index => (upcoming[index] ? upper(upcoming[index]) : `T${index + 1}`);
   const { sim, change, changePlayer, reset, applyToAll } = useSim(team.id);
   // Sin elegir, parte de tu puesto actual en la tabla (o 4.º si no hay torneo en curso).
   const defaultPosition = sim.position ?? currentPosition ?? 4;
@@ -239,7 +251,7 @@ function SimView({ team, projection, balance, canEdit, layout, currentPosition }
 
   return <div className="payroll-sim">
     <div className="view-badge is-sim">🧪 SIMULACIÓN · NADA DE ESTO ES REAL NI SE COBRA</div>
-    <p className="payroll-note">PRUEBA SUELDOS, AÑOS, UN AUMENTO AL RENOVAR (PARA TODOS O POR JUGADOR) Y VENTAS. EL AUMENTO SE APLICA CUANDO VENCE CADA CONTRATO (CON 2 TORNEOS, DESDE EL T3), ASÍ QUE SE VE EN "NÓMINA EN EL TORNEO 6", EN EL COSTO A 6 TORNEOS Y EN LOS GRÁFICOS. PARA VER CÓMO SE MUEVEN LA NÓMINA Y EL SALDO EN LOS PRÓXIMOS TORNEOS. USA LOS VALORES DE MERCADO DE HOY (CAMBIAN CON CADA REFRESCO DE TRANSFERMARKT) Y TODO QUEDA SOLO EN ESTE NAVEGADOR. SI UN JUGADOR PASA EL 20% DE SU VALOR, SALE EN ROJO: ESE SUELDO NO SE PODRÍA FIRMAR.</p>
+    <p className="payroll-note">PRUEBA SUELDOS, AÑOS, UN AUMENTO AL RENOVAR (PARA TODOS O POR JUGADOR) Y VENTAS PARA VER CÓMO SE MUEVEN LA NÓMINA Y EL SALDO EN LOS PRÓXIMOS TORNEOS. EL AUMENTO SE APLICA CUANDO VENCE CADA CONTRATO, ASÍ QUE SE NOTA EN LOS ÚLTIMOS TORNEOS, EN EL COSTO TOTAL Y EN LOS GRÁFICOS. USA LOS VALORES DE MERCADO DE HOY (CAMBIAN CON CADA REFRESCO DE TRANSFERMARKT) Y TODO QUEDA SOLO EN ESTE NAVEGADOR. SI UN JUGADOR PASA EL 20% DE SU VALOR, SALE EN ROJO: ESE SUELDO NO SE PODRÍA FIRMAR.</p>
     <section className="sim-controls">
       <label>AUMENTO AL RENOVAR (POR DEFECTO)<span className="sheet-slider"><input type="range" min="0" max="100" value={sim.raise} onChange={event => applyToAll({ raise: Number(event.target.value) })} aria-label="Aumento al renovar en porcentaje"/><b>+{sim.raise}%</b></span><small className="sim-hint">SE APLICA A TODOS LOS JUGADORES; DESPUÉS CAMBIAS A LOS QUE QUIERAS DISTINTOS.</small></label>
       <label className="sim-check"><input type="checkbox" checked={sim.renew} onChange={event => applyToAll({ renew: event.target.checked })}/> RENOVAR A QUIEN LE VENZA EL CONTRATO (POR DEFECTO)</label>
@@ -251,10 +263,10 @@ function SimView({ team, projection, balance, canEdit, layout, currentPosition }
       ['NÓMINA ANUAL SIMULADA', gp(payroll)],
       ['TOPE DE NÓMINA', cap === null ? 'SIN DEFINIR' : gp(cap), cap !== null && payroll > cap ? `TE PASAS POR ${gp(payroll - cap)}` : null],
       ['SALDO HOY', gp(balance)],
-      ['SALDO AL TORNEO 1', first ? gp(first.balance) : '—', first && first.net < 0 ? 'GASTAS MÁS DE LO QUE GANAS' : null],
+      [`SALDO AL ${upcoming[0] ? upper(upcoming[0]) : 'TORNEO 1'}`, first ? gp(first.balance) : '—', first && first.net < 0 ? 'GASTAS MÁS DE LO QUE GANAS' : null],
       ['CONTRATOS DE HOY (SUELDO × TORNEOS)', gp(total)],
-      [`NÓMINA EN EL TORNEO ${HORIZON}`, gp(last.payroll), `${last.payroll >= payroll ? '+' : '−'}${gp(Math.abs(last.payroll - payroll))} VS HOY, CON LAS RENOVACIONES`],
-      [`COSTO EN ${HORIZON} TORNEOS`, gp(timelineCost), 'INCLUYE RENOVACIONES CON EL AUMENTO ELEGIDO'],
+      [`NÓMINA EN EL ${labelOf(HORIZON - 1)}`, gp(last.payroll), `${last.payroll >= payroll ? '+' : '−'}${gp(Math.abs(last.payroll - payroll))} VS HOY, CON LAS RENOVACIONES`],
+      [`COSTO ${labelOf(0)} A ${labelOf(HORIZON - 1)}`, gp(timelineCost), 'INCLUYE RENOVACIONES CON EL AUMENTO ELEGIDO'],
     ]}/>
     {kept.filter(row => row.renew && row.renewalRisk === 'alto').length > 0 && <p className="payroll-empty sim-warn">🔴 {kept.filter(row => row.renew && row.renewalRisk === 'alto').map(row => row.playerName).join(', ')}: HOY SE NEGARÍA(N) A RENOVAR. LA SIMULACIÓN SUPONE QUE RENUEVAN; ARREGLA SU ROL O SU SUELDO ANTES.</p>}
     {overCount > 0 && <p className="payroll-empty sim-warn">⚠️ {overCount} JUGADOR(ES) SOBRE EL 20% DE SU VALOR: ESOS SUELDOS NO SE PODRÍAN FIRMAR.</p>}
@@ -283,13 +295,13 @@ function SimView({ team, projection, balance, canEdit, layout, currentPosition }
     <section className="sim-timeline">
       <h3>PRÓXIMOS TORNEOS</h3>
       <div className="sim-charts">
-        <figure><figcaption>NÓMINA POR TORNEO{cap !== null ? ' Y TOPE' : ''}</figcaption><PayrollBars rows={timeline} cap={cap}/></figure>
-        <figure><figcaption>SALDO PROYECTADO</figcaption><BalanceLine rows={timeline} start={typeof balance === 'number' ? balance : 0}/></figure>
+        <figure><figcaption>NÓMINA POR TORNEO{cap !== null ? ' Y TOPE' : ''}</figcaption><PayrollBars rows={timeline} cap={cap} labelOf={labelOf}/></figure>
+        <figure><figcaption>SALDO PROYECTADO</figcaption><BalanceLine rows={timeline} start={typeof balance === 'number' ? balance : 0} labelOf={labelOf}/></figure>
       </div>
       <div className="ptable-wrap"><table className="ptable sim-timeline-table">
         <thead><tr><th>TORNEO</th><th>PUESTO</th><th>PLAYOFFS</th><th>NÓMINA</th><th>PREMIOS</th><th>NETO</th><th>SALDO</th><th>CONTRATOS QUE VENCEN</th></tr></thead>
         <tbody>{timeline.map(row => <tr key={row.torneo} className={row.overCap || row.balance < 0 ? 'over' : ''}>
-          <td><b>T{row.torneo}</b></td>
+          <td><b>{labelOf(row.torneo - 1)}</b></td>
           <td><select aria-label={`Puesto en el torneo ${row.torneo}`} value={row.position} disabled={!canEdit} onChange={event => setTorneo('positions', row.torneo - 1, Number(event.target.value))}>{Array.from({ length: 8 }, (_, i) => i + 1).map(n => <option key={n} value={n}>{n}.º</option>)}</select></td>
           <td><select aria-label={`Playoffs del torneo ${row.torneo}`} value={row.playoff} disabled={!canEdit} onChange={event => setTorneo('playoffs', row.torneo - 1, event.target.value)}>{Object.keys(PLAYOFF_PRIZES).map(key => <option key={key} value={key}>{PLAYOFF_SHORT[key]}</option>)}</select></td>
           <td>{gp(row.payroll)}{row.overCap ? ' ⚠️' : ''}</td><td>{gp(row.prize)}</td>
@@ -297,7 +309,7 @@ function SimView({ team, projection, balance, canEdit, layout, currentPosition }
           <td>{row.expiring ? `${row.expiring} · ${row.renewed ? `${row.renewed} RENUEVA(N)` : ''}${row.renewed && row.leaving ? ' · ' : ''}${row.leaving ? `${row.leaving} SALE(N)` : ''}` : '—'}</td>
         </tr>)}</tbody>
       </table></div>
-      <p className="payroll-note">T1 ES EL PRIMER TORNEO CON CONTRATOS. LOS PREMIOS SON LOS DE LA TABLA DE LA LIGA SEGÚN EL PUESTO Y LOS PLAYOFFS QUE ELIJAS EN CADA FILA (PARTEN DE TU PUESTO DE HOY); NO INCLUYE FICHAJES NUEVOS.</p>
+      <p className="payroll-note">{upcoming[0] ? `EL PRIMER TORNEO QUE SE COBRA ES EL ${upper(upcoming[0])}.` : 'T1 ES EL PRIMER TORNEO CON CONTRATOS.'} LOS PREMIOS SON LOS DE LA TABLA DE LA LIGA SEGÚN EL PUESTO Y LOS PLAYOFFS QUE ELIJAS EN CADA FILA (PARTEN DE TU PUESTO DE HOY); NO INCLUYE FICHAJES NUEVOS.</p>
     </section>
   </div>;
 }
@@ -329,6 +341,6 @@ export function PayrollTab({ team, balance, onChanged, currentPosition = null })
     </header>
     <DataState query={query}/>
     {projection && current === 'actual' && <RealView team={team} query={query} balance={balance} marketOpen={marketOpen} canEdit={canEdit} layout={layout} refresh={refresh}/>}
-    {projection && current === 'proyeccion' && <SimView team={team} projection={projection} balance={balance} canEdit={canEdit} layout={layout} currentPosition={currentPosition}/>}
+    {projection && current === 'proyeccion' && <SimView team={team} projection={projection} balance={balance} canEdit={canEdit} layout={layout} currentPosition={currentPosition} upcoming={query.data?.upcoming ?? []}/>}
   </section>;
 }
