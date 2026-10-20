@@ -15,11 +15,13 @@ export function useMarketOpen() {
   return Boolean(status.data?.open);
 }
 
-export function RoleSelect({ team, row, onDone, locked = false }) {
+/** `showWanted`: agrega el botón "CAMBIAR A <el rol que el jugador cree merecer>" (en la bandeja). */
+export function RoleSelect({ team, row, onDone, locked = false, showWanted = false }) {
   const change = useApiMutation((body, signal) => endpoints.setPlayerRole(team.id, row.playerId, body, signal), { onSuccess: onDone });
-  return <span><select aria-label={`Rol de ${row.name}`} value={row.role} disabled={change.loading || locked} title={locked ? 'Con el mercado abierto los roles están bloqueados' : undefined} onChange={event => change.execute({ role: event.target.value })}>
-    {ROLES.map(([key, label]) => <option key={key} value={key}>{label}{!row.assigned && key === row.suggestedRole ? ' (SUGERIDO)' : ''}</option>)}
-  </select><FormFeedback mutation={change}/></span>;
+  const wanted = row.expectedRole && row.expectedRole !== row.role ? row.expectedRole : null;
+  return <span className="role-select"><select aria-label={`Rol de ${row.name}`} value={row.role} disabled={change.loading || locked} title={locked ? 'Con el mercado abierto los roles están bloqueados' : undefined} onChange={event => change.execute({ role: event.target.value })}>
+    {ROLES.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
+  </select>{showWanted && wanted && <button type="button" className="action-button positive" disabled={change.loading || locked} onClick={() => change.execute({ role: wanted })}>CAMBIAR A {roleLabel(wanted)}</button>}<FormFeedback mutation={change}/></span>;
 }
 
 /** El presi asigna el rol de cada jugador (él es quien juega); el ánimo de cada uno depende de eso y de lo que cree merecer. */
