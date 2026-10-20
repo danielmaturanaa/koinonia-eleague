@@ -50,9 +50,9 @@ function ContractYears({ team, contract, onDone }) {
 
 function StartContracts({ onDone }) {
   const [confirming, setConfirming] = useState(false);
-  const start = useApiMutation(signal => endpoints.startContracts({ expireAll: true }, signal), { onSuccess: () => { setConfirming(false); onDone(); } });
+  const start = useApiMutation(signal => endpoints.startContracts({}, signal), { onSuccess: () => { setConfirming(false); onDone(); } });
   return <section className="payroll-admin">
-    <p>ADMIN: EL SISTEMA DE CONTRATOS TODAVÍA NO ESTÁ ACTIVO. AL ACTIVARLO, TODOS LOS CONTRATOS QUEDAN VIGENTES HASTA QUE TERMINE EL TORNEO EN CURSO (ES EL ÚLTIMO DE CADA JUGADOR): SE PUEDEN TRASPASAR Y CANJEAR COMO SIEMPRE, SE PUEDEN RENOVAR DESDE YA Y AL TERMINAR EL TORNEO VENCEN. LOS QUE NO SE RENUEVEN SALEN A AGENCIA LIBRE CUANDO UN ADMIN TERMINE LA FASE DE RENOVACIONES DEL MERCADO. EL TORNEO EN CURSO NO SE COBRA Y LOS SUELDOS SE COBRAN AL FINAL DE CADA TORNEO DE LIGA CREADO DESDE AHORA (EL PRIMERO, EL v11).</p>
+    <p>ADMIN: EL SISTEMA DE CONTRATOS TODAVÍA NO ESTÁ ACTIVO. AL ACTIVARLO, TODOS LOS JUGADORES QUEDAN CON UN CONTRATO DE 2 TORNEOS: EL v11 Y EL v12 SON LOS ÚLTIMOS (EL TORNEO EN CURSO NO SE COBRA). LOS SUELDOS SE COBRAN AL FINAL DE CADA TORNEO DE LIGA CREADO DESDE AHORA, Y CADA PRESI PUEDE CAMBIAR LOS AÑOS DE SUS JUGADORES ANTES DEL PRIMER COBRO. LA REPUTACIÓN YA PARTIÓ DE CERO.</p>
     {confirming
       ? <div className="offer-confirm" role="group" aria-label="CONFIRMAR ACTIVACIÓN">
         <span>¿ACTIVAR LOS CONTRATOS EN TODA LA LIGA? NO SE DESHACE SOLO.</span>
