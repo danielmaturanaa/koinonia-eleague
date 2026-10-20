@@ -3868,3 +3868,12 @@ html.pc-locked, html.pc-locked body { overflow: hidden; }
 .renew-all-results li.accepted b { color: #167a45; }
 .renew-all-results li.refused b, .renew-all-results li.error b { color: #b3261e; }
 .renew-all-results small { color: #55607a; font: 600 11px/1 'Oswald', sans-serif; }
+
+.contract-terms { display: grid; gap: 8px; margin: 0; padding: 10px 12px; border: 2px dashed #b8860b; background: #fffaf0; }
+.contract-terms legend { padding: 0 6px; color: #8a6d2f; font: 600 12px/1.2 'Oswald', sans-serif; }
+.offer-terms { margin: 0; padding: 6px 10px; border: 2px dashed #b8860b; background: #fffaf0; color: #062764; font: 600 12px/1.4 'Roboto Condensed', sans-serif; }
+
+.market-phase { display: grid; gap: 6px; margin: 0 0 12px; padding: 10px 14px; border: 2px solid #062764; background: #e8eefc; }
+.market-phase.free { background: #e4f4ea; border-color: #167a45; }
+.market-phase b { color: #062764; font: 600 15px/1.2 'Oswald', sans-serif; }
+.market-phase p { margin: 0; color: #3b4a54; font: 500 13px/1.4 'Roboto Condensed', sans-serif; }

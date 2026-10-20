@@ -194,6 +194,26 @@ function PromiseRecord({ teamId, revision }) {
   </details>;
 }
 
+/** Con contratos activos el mercado tiene dos fases: renovaciones y traspasos, y después agencia libre. */
+function PhaseBanner({ status, isAdmin, onChanged }) {
+  const [confirming, setConfirming] = useState(false);
+  const end = useApiMutation(signal => endpoints.endRenewals({}, signal), { onSuccess: () => { setConfirming(false); onChanged(); } });
+  if (!status?.open || !status.contractsEnabled) return null;
+  const renewals = status.phase !== 'free_agency';
+  return <section className={`market-phase ${renewals ? 'renewals' : 'free'}`}>
+    <b>{renewals ? '📄 FASE 1: RENOVACIONES Y TRASPASOS' : '🔓 FASE 2: AGENCIA LIBRE'}</b>
+    <p>{renewals
+      ? 'RENUEVA A TUS JUGADORES CON CONTRATO VENCIDO (PESTAÑA NÓMINA DE TU CLUB) Y HAZ TRASPASOS Y TRUEQUES. LAS ENCUESTAS Y SUBASTAS POR AGENTES LIBRES ABREN CUANDO UN ADMIN TERMINE ESTA FASE: AHÍ SALEN LIBRES LOS QUE NO SE RENOVARON.'
+      : 'LOS CONTRATOS VENCIDOS SIN RENOVAR YA SALIERON LIBRES. SE PUEDEN ABRIR ENCUESTAS Y SUBASTAS.'}</p>
+    {renewals && isAdmin && (confirming
+      ? <div className="offer-confirm" role="group" aria-label="CONFIRMAR"><span>¿TERMINAR LAS RENOVACIONES? LOS CONTRATOS VENCIDOS SIN RENOVAR SALEN A AGENCIA LIBRE AL TIRO.</span>
+        <button type="button" disabled={end.loading} onClick={() => end.execute()}>{end.loading ? 'TERMINANDO…' : 'SÍ, TERMINAR'}</button>
+        <button type="button" className="ghost" disabled={end.loading} onClick={() => setConfirming(false)}>VOLVER</button></div>
+      : <button type="button" className="action-button" onClick={() => setConfirming(true)}>TERMINAR RENOVACIONES Y ABRIR AGENCIA LIBRE</button>)}
+    <FormFeedback mutation={end}/>
+  </section>;
+}
+
 export function MarketPage({ teams }) {
   const { isAdmin, teamId: myTeamId } = useAuth();
   const [managing, setManaging] = useState(false);
@@ -223,6 +243,7 @@ export function MarketPage({ teams }) {
   return <main className="newspaper data-page"><section className="data-paper">
     <PageHeader kicker="JUGADORES DISPONIBLES" title="MERCADO">{isAdmin && <button className="page-action" onClick={() => setManaging(value => !value)}>{managing ? 'CERRAR GESTIÓN' : '⚙ GESTIONAR'}</button>}</PageHeader>
     {managing && isAdmin && <section className="market-section market-manual"><header><h2>REGISTRAR OPERACIÓN MANUAL</h2><p>Los traspasos y trueques normalmente se hacen por Discord; usa esto solo para corregir o registrar algo a mano.</p></header><MarketAdmin teams={teams} players={asList(players.data)} onChanged={refresh}/></section>}
+    <PhaseBanner status={status.data} isAdmin={isAdmin} onChanged={refresh}/>
     {operates && <MyClubPanel team={myTeam} figures={figures} profileQuery={myTeamId ? profile : null} status={status.data} statusQuery={status}/>}
     {myTeamId && <PromiseRecord teamId={myTeamId} revision={revision}/>}
     <nav className="market-tabs" role="tablist" aria-label="SECCIONES DEL MERCADO">

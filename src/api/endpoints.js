@@ -113,6 +113,7 @@ export const endpoints = {
   approveTrade: (tradeId, signal) => apiClient.post(`/market/trades/${tradeId}/approve`, {}, { actor: 'web', signal }),
   rejectTrade: (tradeId, signal) => apiClient.post(`/market/trades/${tradeId}/reject`, {}, { actor: 'web', signal }),
   marketStatus: signal => get('/market/status', null, signal),
+  endRenewals: (body, signal) => apiClient.post('/market/end-renewals', body, { actor: 'web', signal }),
   playersForSale: signal => get('/market/for-sale', null, signal),
   setForSale: (teamId, playerId, signal) => apiClient.put(`/teams/${teamId}/for-sale/${playerId}`, {}, { actor: 'web', signal }),
   unsetForSale: (teamId, playerId, signal) => apiClient.delete(`/teams/${teamId}/for-sale/${playerId}`, {}, { actor: 'web', signal }),

@@ -74,6 +74,9 @@ function OfferCard({ offer, onChanged }) {
         <span className="offer-swap" aria-hidden="true">→</span>
         <div><small>{upper(teamLabel(offer.toTeam))} PAGA</small><b className="offer-price">{gp(offer.gpAmount)}</b></div>
       </div>}
+    {offer.contractTerms && <p className="offer-terms">📄 CONTRATO ACORDADO CON EL JUGADOR: {offer.kind === 'trade'
+      ? [offer.contractTerms.fromPlayer && `${upper(offer.fromPlayer?.name)} → ${offer.contractTerms.fromPlayer.seasons} TORNEOS, +${offer.contractTerms.fromPlayer.raisePercent}%`, offer.contractTerms.toPlayer && `${upper(offer.toPlayer?.name)} → ${offer.contractTerms.toPlayer.seasons} TORNEOS, +${offer.contractTerms.toPlayer.raisePercent}%`].filter(Boolean).join(' · ')
+      : `${offer.contractTerms.seasons} TORNEOS, +${offer.contractTerms.raisePercent}% DE AUMENTO`}.</p>}
     <p className="offer-status">{incoming ? '👉 TE TOCA RESPONDER. TAMBIÉN PUEDES HACERLO DESDE DISCORD.' : `⏳ ESPERANDO A ${upper(teamLabel(counterpart))}.`}</p>
     {confirming
       ? <div className="offer-confirm" role="group" aria-label="CONFIRMAR">
@@ -121,6 +124,24 @@ function useSquad(teamId) {
   return { squad: asList(query.data), loading: query.loading };
 }
 
+/** Jugadores de un club con el contrato vencido: para fichar por otro club tienen que acordar sus condiciones. */
+function useExpiredPlayers(teamId) {
+  const query = useApiQuery(signal => teamId ? endpoints.teamContracts(teamId, signal).catch(() => ({ data: null })) : Promise.resolve({ data: null }), [teamId]);
+  return new Set((query.data?.contracts ?? []).filter(contract => contract.status === 'expired').map(contract => contract.playerId));
+}
+
+const TERM_SEASONS = [2, 3, 4, 5, 6];
+/** Lo que se le ofrece a un jugador con contrato vencido para que firme con el club que lo recibe. */
+function TermsFields({ player, club, terms, onChange }) {
+  return <fieldset className="contract-terms">
+    <legend>📄 CONTRATO VENCIDO: {upper(player.name)} TIENE QUE ACORDAR CON {upper(club)}</legend>
+    <p className="poll-hint">SI NO ACEPTA, EL SISTEMA TE DICE CUÁNTO PIDE. DESPUÉS DE FIRMAR NO SE PUEDE REVENDER HASTA QUE SE COBRE SU PRIMER TORNEO.</p>
+    <div className="chips">{TERM_SEASONS.map(n => <button type="button" key={n} className={terms.seasons === n ? 'on' : ''} onClick={() => onChange({ ...terms, seasons: n })}>{n} TORNEOS</button>)}</div>
+    <div className="sheet-slider"><input type="range" min="1" max="100" value={terms.raisePercent} onChange={event => onChange({ ...terms, raisePercent: Number(event.target.value) })} aria-label="Aumento de sueldo en porcentaje"/><b>+{terms.raisePercent}%</b></div>
+  </fieldset>;
+}
+const DEFAULT_TERMS = { seasons: 3, raisePercent: 15 };
+
 /** Lo que queda pactado, en una línea, antes de enviar. */
 function Summary({ children, problem }) {
   return <div className={`offer-summary ${problem ? 'has-problem' : ''}`}>
@@ -148,6 +169,9 @@ function TransferProposal({ myTeamId, rivals, onDone }) {
   const price = form.gpAmount === '' ? NaN : Number(form.gpAmount);
   const band = player ? priceBand(player.gpValue ?? 0) : null;
   const problem = bandProblem(player, price);
+  const expiredAtSource = useExpiredPlayers(buying ? form.otherTeamId : myTeamId);
+  const needsTerms = Boolean(player && expiredAtSource.has(player.id));
+  const [terms, setTerms] = useState(DEFAULT_TERMS);
   const mutation = useApiMutation((body, signal) => endpoints.createTransfer(body, signal), {
     onSuccess: () => { setSent(`OFERTA ENVIADA A ${upper(other?.name)}: LE LLEGA A SU BANDEJA Y A DISCORD. SE CONCRETA CUANDO LA ACEPTE.`); setForm(empty); onDone?.(); },
   });
@@ -159,7 +183,7 @@ function TransferProposal({ myTeamId, rivals, onDone }) {
   const submit = event => {
     event.preventDefault();
     if (!ready) return;
-    mutation.execute({ playerId: form.playerId, gpAmount: price, proposerTeamId: myTeamId,
+    mutation.execute({ playerId: form.playerId, gpAmount: price, proposerTeamId: myTeamId, ...(needsTerms ? { contractTerms: terms } : {}),
       fromTeamId: buying ? form.otherTeamId : myTeamId, toTeamId: buying ? myTeamId : form.otherTeamId });
   };
   if (sent) return <Sent text={sent} onAgain={() => { setSent(''); mutation.clear(); }}/>;
@@ -171,6 +195,7 @@ function TransferProposal({ myTeamId, rivals, onDone }) {
     <label>{buying ? 'CLUB AL QUE LE COMPRAS' : 'CLUB AL QUE LE VENDES'}<select required value={form.otherTeamId} onChange={event => set('otherTeamId', event.target.value)}><option value="">ELEGIR CLUB</option>{rivals.map(team => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label>
     <label>{buying ? 'JUGADOR QUE QUIERES' : 'JUGADOR TUYO QUE VENDES'}<select required value={form.playerId} disabled={buying && !form.otherTeamId} onChange={event => set('playerId', event.target.value)}>{playerOptions(squad)}</select></label>
     <label>PRECIO EN GP{band ? ` · ENTRE ${gp(band.min)} Y ${gp(band.max)}` : ''}<input required type="number" inputMode="numeric" min={band?.min ?? 0} max={band?.max} step="1" value={form.gpAmount} disabled={!player} onChange={event => set('gpAmount', event.target.value)}/></label>
+    {needsTerms && other && <TermsFields player={player} club={buying ? 'tu club' : other.name} terms={terms} onChange={setTerms}/>}
     {player && other && Number.isFinite(price) && <Summary problem={problem}>
       {buying ? `${upper(other.name)} TE VENDE A ${upper(player.name)} POR ${gp(price)}.` : `LE VENDES ${upper(player.name)} A ${upper(other.name)} POR ${gp(price)}.`} TIENE QUE ACEPTARLO SU PRESI (EN LA WEB O EN DISCORD).
     </Summary>}
@@ -191,6 +216,12 @@ function TradeProposal({ myTeamId, rivals, onDone }) {
   const gpFrom = Number(form.gpFrom || 0);
   const gpTo = Number(form.gpTo || 0);
   const problem = tradeProblem(offered, requested, gpFrom, gpTo);
+  const expiredMine = useExpiredPlayers(myTeamId);
+  const expiredTheirs = useExpiredPlayers(form.otherTeamId);
+  const needsOfferedTerms = Boolean(offered && expiredMine.has(offered.id));
+  const needsRequestedTerms = Boolean(requested && expiredTheirs.has(requested.id));
+  const [offeredTerms, setOfferedTerms] = useState(DEFAULT_TERMS);
+  const [requestedTerms, setRequestedTerms] = useState(DEFAULT_TERMS);
   const mutation = useApiMutation((body, signal) => endpoints.createTrade(body, signal), {
     onSuccess: () => { setSent(`TRUEQUE ENVIADO A ${upper(other?.name)}: LE LLEGA A SU BANDEJA Y A DISCORD. SE CONCRETA CUANDO LO ACEPTE.`); setForm(empty); onDone?.(); },
   });
@@ -200,7 +231,8 @@ function TradeProposal({ myTeamId, rivals, onDone }) {
     event.preventDefault();
     if (!ready) return;
     mutation.execute({ fromTeamId: myTeamId, toTeamId: form.otherTeamId, fromPlayerId: form.fromPlayerId, toPlayerId: form.toPlayerId,
-      ...(gpFrom ? { gpFrom } : {}), ...(gpTo ? { gpTo } : {}) });
+      ...(gpFrom ? { gpFrom } : {}), ...(gpTo ? { gpTo } : {}),
+      ...(needsOfferedTerms || needsRequestedTerms ? { contractTerms: { ...(needsOfferedTerms ? { fromPlayer: offeredTerms } : {}), ...(needsRequestedTerms ? { toPlayer: requestedTerms } : {}) } } : {}) });
   };
   if (sent) return <Sent text={sent} onAgain={() => { setSent(''); mutation.clear(); }}/>;
   return <form className="admin-form market-form offer-form" onSubmit={submit}>
@@ -209,6 +241,8 @@ function TradeProposal({ myTeamId, rivals, onDone }) {
     <label>PIDES<select required value={form.toPlayerId} disabled={!form.otherTeamId} onChange={event => set('toPlayerId', event.target.value)}>{playerOptions(otherSquad.squad)}</select></label>
     <label>GP QUE AGREGAS TÚ (OPCIONAL)<input type="number" inputMode="numeric" min="0" step="1" placeholder="0" value={form.gpFrom} onChange={event => set('gpFrom', event.target.value)}/></label>
     <label>GP QUE AGREGA {other ? upper(other.name) : 'EL OTRO CLUB'} (OPCIONAL)<input type="number" inputMode="numeric" min="0" step="1" placeholder="0" value={form.gpTo} onChange={event => set('gpTo', event.target.value)}/></label>
+    {needsOfferedTerms && other && <TermsFields player={offered} club={other.name} terms={offeredTerms} onChange={setOfferedTerms}/>}
+    {needsRequestedTerms && other && <TermsFields player={requested} club="tu club" terms={requestedTerms} onChange={setRequestedTerms}/>}
     {offered && requested && <Summary problem={problem}>
       ENTREGAS A {upper(offered.name)}{gpFrom ? ` + ${gp(gpFrom)}` : ''} Y RECIBES A {upper(requested.name)}{gpTo ? ` + ${gp(gpTo)}` : ''}. TIENE QUE ACEPTARLO EL PRESI DE {upper(other?.name)}.
     </Summary>}
