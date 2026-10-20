@@ -100,6 +100,7 @@ export const endpoints = {
   setPlayerRole: (teamId, playerId, body, signal) => apiClient.put(`/teams/${teamId}/roles/${playerId}`, body, { actor: 'web', signal }),
   teamInbox: (teamId, signal) => get(`/teams/${teamId}/inbox`, null, signal),
   setContractBonuses: (teamId, playerId, body, signal) => apiClient.put(`/teams/${teamId}/contracts/${playerId}/bonuses`, body, { actor: 'web', signal }),
+  teamObjectives: (teamId, signal) => get(`/teams/${teamId}/objectives`, null, signal),
   teamWatchlist: (teamId, signal) => get(`/teams/${teamId}/watchlist`, null, signal),
   watchPlayer: (teamId, playerId, signal) => apiClient.put(`/teams/${teamId}/watchlist/${playerId}`, {}, { actor: 'web', signal }),
   unwatchPlayer: (teamId, playerId, signal) => apiClient.delete(`/teams/${teamId}/watchlist/${playerId}`, undefined, { actor: 'web', signal }),

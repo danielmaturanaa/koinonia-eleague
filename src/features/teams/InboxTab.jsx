@@ -6,6 +6,7 @@ import { DataState } from '../public/DataStates.jsx';
 import { useApiQuery } from '../public/useApiQuery.js';
 import { MoodMeter, roleLabel } from './SigningSheet.jsx';
 import { RoleSelect, useMarketOpen } from './RolesPanel.jsx';
+import { BoardPanel } from './BoardPanel.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
 
@@ -42,6 +43,7 @@ export function InboxTab({ team, onTab, onRead }) {
   }, [query.data?.unread, team.id]);
   return <section className="inbox-tab">
     <header><h2>BANDEJA DE ENTRADA</h2><p>AQUÍ TE ESCRIBEN TUS JUGADORES: CUANDO SU CONTRATO ESTÁ POR VENCER, CUANDO QUIEREN RENOVAR Y CUANDO NO ESTÁN CONFORMES CON SU ROL.</p></header>
+    <BoardPanel team={team}/>
     <DataState query={query}/>
     {query.data && messages.length === 0 && <p className="empty-copy data-empty">TODAVÍA NO TE HAN ESCRITO. LOS MENSAJES APARECEN CUANDO EL SISTEMA DE CONTRATOS ESTÁ ACTIVO.</p>}
     <ul className="inbox-list">{messages.map(message => {
