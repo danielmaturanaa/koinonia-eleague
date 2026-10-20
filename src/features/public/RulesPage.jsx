@@ -29,7 +29,7 @@ const Divisions = () => <section className="rules-section">
   </tbody></table>
 </section>;
 
-const Transfers = ({ squadValueLimit }) => <section className="rules-section">
+const Transfers = ({ squadValueLimit, payrollCap, contractsEnabled }) => <section className="rules-section">
   <h2>4. Mercado de Fichajes, Contratos y Traspasos</h2>
   <h3>4.1 Negociaciones y Trueques</h3>
   <ul>
@@ -39,7 +39,7 @@ const Transfers = ({ squadValueLimit }) => <section className="rules-section">
   </ul>
   <h3>4.2 Liberación y Cláusulas de Salida</h3>
   <ul>
-    <li>Un presidente puede liberar a un jugador y recibirá una compensación baja. El jugador pasará a la agencia libre al precio estándar del juego.</li>
+    <li>Un presidente puede liberar a un jugador y recibirá una compensación baja (20% de su valor). El jugador pasará a la agencia libre con su valor de mercado. Con contratos (desde el v11) liberar a alguien con contrato vigente es rescindir: ver sección 6.</li>
     <li>Los presidentes pueden blindar jugadores mediante una <strong>Cláusula de Salida</strong>.</li>
     <li>Si otro club paga la cláusula establecida, el equipo vendedor <strong>no puede retractarse</strong>.</li>
     <li>Toda venta, cláusula o liberación debe informarse al área encargada de presupuestos para su registro oficial.</li>
@@ -47,10 +47,16 @@ const Transfers = ({ squadValueLimit }) => <section className="rules-section">
   <h3>4.3 Subastas a Final de Temporada</h3>
   <p>Si dos o más presidentes desean adquirir al mismo jugador libre al final de la temporada, la operación se resolverá mediante una <strong>subasta</strong> entre los clubes interesados.</p>
   <h3>4.4 Fair Play Financiero</h3>
-  <ul>
-    <li>El valor total de una plantilla no podrá superar <strong>{squadValueLimit === null ? 'el tope definido por la liga' : `${squadValueLimit.toLocaleString('es-CL')} GP`}</strong> (valor a definir por la liga). Durante el mercado puedes pasarte mientras ordenas tu plantel: el tope se revisa al <strong>cierre del mercado</strong>. Lo que sí frena una compra es el saldo: no puedes pagar más de lo que tienes.</li>
-    <li>Para este cálculo siempre se utilizará el valor de mercado base del jugador, independientemente del precio pagado en una negociación.</li>
-  </ul>
+  {contractsEnabled
+    ? <ul>
+      <li>Desde el torneo v11 el límite es la <strong>nómina</strong> (la suma de los sueldos anuales de la plantilla): <strong>{payrollCap === null ? 'el tope lo define la liga' : `${payrollCap.toLocaleString('es-CL')} GP al año`}</strong>. Es un tope de aviso: se revisa al <strong>cierre del mercado</strong> y no frena operaciones durante él.</li>
+      <li>El tope de valor total de la plantilla deja de aplicarse. El valor de mercado de cada jugador viene de Transfermarkt y no cambia por traspasos, trueques, subastas ni liberaciones.</li>
+    </ul>
+    : <ul>
+      <li>El valor total de una plantilla no podrá superar <strong>{squadValueLimit === null ? 'el tope definido por la liga' : `${squadValueLimit.toLocaleString('es-CL')} GP`}</strong> (valor a definir por la liga). Durante el mercado puedes pasarte mientras ordenas tu plantel: el tope se revisa al <strong>cierre del mercado</strong>. Lo que sí frena una compra es el saldo: no puedes pagar más de lo que tienes.</li>
+      <li>Para este cálculo siempre se utilizará el valor de mercado del jugador, independientemente del precio pagado en una negociación. El valor de mercado viene de Transfermarkt y no cambia por traspasos, trueques, subastas ni liberaciones.</li>
+      <li>Desde el torneo v11 este límite se reemplaza por un tope de nómina (ver sección 6).</li>
+    </ul>}
 </section>;
 
 const Prizes = () => <>
@@ -67,12 +73,37 @@ const Prizes = () => <>
   </section>
 </>;
 
+const Contracts = ({ payrollCap }) => <section className="rules-section">
+  <h2>6. Contratos y Nómina (desde el torneo v11)</h2>
+  <h3>6.1 Duración</h3>
+  <ul>
+    <li>Todo contrato inicial o renovación dura entre <strong>2 y 6 temporadas</strong>, según lo defina el Presidente al firmar. Una temporada es un torneo de liga terminado.</li>
+    <li>Un mánager puede renovar a un jugador las veces que quiera. Puedes cambiar los años de un contrato mientras no se haya cobrado su primera temporada.</li>
+  </ul>
+  <h3>6.2 Sueldo y cobro</h3>
+  <ul>
+    <li>El sueldo anual es el <strong>10% del valor de mercado</strong> del jugador al firmar y queda congelado durante todo el contrato. No se paga por adelantado: se cobra al terminar cada torneo de liga, mientras el jugador siga en el club.</li>
+    <li>Al renovar, el sueldo sube entre <strong>1% y 100%</strong>. El jugador pide como mínimo su sueldo actual o el 10% de su valor de hoy, el que sea mayor; si no le ofreces eso, rechaza.</li>
+    <li>La nómina del club es la suma de los sueldos de su plantilla y {payrollCap === null ? 'tiene un tope que define la liga' : `no debería pasar de ${payrollCap.toLocaleString('es-CL')} GP al año`}. Es un aviso al cierre del mercado y no bloquea operaciones.</li>
+  </ul>
+  <h3>6.3 Término, rescisión y salidas</h3>
+  <ul>
+    <li>Cuando el contrato cumple todas sus temporadas, el jugador sigue en el club hasta el cierre del mercado: se renueva, o pasa a la agencia libre <strong>sin castigo</strong> para la subasta.</li>
+    <li>No se puede soltar a un jugador antes de que termine su contrato sin consecuencias: rescindir cuesta una <strong>indemnización del 50% de las temporadas que faltan</strong>, sin reembolso, y el presidente sufre un castigo de reputación.</li>
+    <li>Un jugador con contrato vigente solo puede cambiar de club en periodos de mercado: por traspaso directo o pagando su cláusula de salida. El contrato acompaña al jugador a su nuevo club.</li>
+  </ul>
+  <h3>6.4 Reputación</h3>
+  <p>Con el sistema de contratos la reputación de todos los clubes parte de cero. Los títulos y finales (palmarés) se mantienen intactos.</p>
+</section>;
+
 export function RulesPage() {
   const rules = useApiQuery(signal => endpoints.leagueRules(signal), []);
   const squadValueLimit = Number(rules.data?.squadValueLimit) > 0 ? Number(rules.data.squadValueLimit) : null;
+  const payrollCap = Number(rules.data?.payrollCap) > 0 ? Number(rules.data.payrollCap) : null;
+  const contractsEnabled = Boolean(rules.data?.contractsEnabled);
   return <main className="newspaper"><article className="data-paper rules-paper">
     <header className="rules-header"><p>KOINONIA e-LEAGUE · DOCUMENTO OFICIAL</p><h1>Reglamento Oficial de la Liga eFootball</h1></header>
     <p className="rules-intro">Este documento establece la normativa oficial para el desarrollo de la liga, incluyendo reglas de jugabilidad, sanciones, sistema de divisiones, mercado de fichajes y sistema de premiación. Todos los presidentes y participantes están obligados a cumplir estas normativas.</p>
-    <MatchRules/><Sanctions/><Divisions/><Transfers squadValueLimit={squadValueLimit}/><Prizes/>
+    <MatchRules/><Sanctions/><Divisions/><Transfers squadValueLimit={squadValueLimit} payrollCap={payrollCap} contractsEnabled={contractsEnabled}/><Prizes/><Contracts payrollCap={payrollCap}/>
   </article></main>;
 }

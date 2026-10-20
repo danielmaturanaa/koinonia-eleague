@@ -226,7 +226,7 @@ function ReleaseForm({ myTeamId, onDone }) {
   const refund = player ? Math.round((player.gpValue ?? 0) * RELEASE_SHARE) : null;
   return <form className="admin-form market-form offer-form" onSubmit={event => { event.preventDefault(); if (player) setConfirming(true); }}>
     <label>JUGADOR A LIBERAR<select value={playerId} required onChange={event => { setPlayerId(event.target.value); setConfirming(false); }}>{playerOptions(mySquad.squad)}</select></label>
-    <p className="poll-hint">AL LIBERAR RECIBES SOLO EL 20% DEL VALOR DEL JUGADOR{refund !== null ? `: ${gp(refund)}` : ''}. EL JUGADOR QUEDA COMO AGENTE LIBRE PARA TODA LA LIGA. LOS AGENTES LIBRES SE ACUERDAN: CADA LIBERACIÓN BAJA TU REPUTACIÓN EN LAS SUBASTAS.</p>
+    <p className="poll-hint">AL LIBERAR RECIBES SOLO EL 20% DEL VALOR DEL JUGADOR{refund !== null ? `: ${gp(refund)}` : ''}. EL JUGADOR QUEDA COMO AGENTE LIBRE PARA TODA LA LIGA. LOS AGENTES LIBRES SE ACUERDAN: CADA LIBERACIÓN BAJA TU REPUTACIÓN EN LAS SUBASTAS. SI TIENE CONTRATO VIGENTE ES UNA RESCISIÓN: PAGAS EL 50% DE LAS TEMPORADAS QUE FALTAN Y NO RECIBES NADA (MÁS DETALLE EN LA PESTAÑA NÓMINA DEL CLUB).</p>
     {confirming
       ? <div className="offer-confirm" role="group" aria-label="CONFIRMAR">
         <span>¿LIBERAR A {upper(player?.name)}? RECIBES {gp(refund)} Y NO SE PUEDE DESHACER.</span>
