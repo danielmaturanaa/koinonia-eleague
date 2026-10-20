@@ -84,6 +84,7 @@ const Contracts = ({ payrollCap }) => <section className="rules-section">
   <h3>6.2 Sueldo y cobro</h3>
   <ul>
     <li>El sueldo anual es el <strong>10% del valor de mercado</strong> del jugador al firmar y queda congelado durante todo el contrato. No se paga por adelantado: se cobra al terminar cada torneo de liga, mientras el jugador siga en el club.</li>
+    <li><strong>Ningún jugador puede cobrar más del 20% de su valor de mercado</strong> (se mide al firmar o renovar). Si su valor baja y el tope ya no alcanza ni para igualar su sueldo, no se puede renovar.</li>
     <li>Al renovar, el sueldo sube entre <strong>1% y 100%</strong>. El jugador pide como mínimo su sueldo actual o el 10% de su valor de hoy, el que sea mayor; si no le ofreces eso, rechaza.</li>
     <li>La nómina del club es la suma de los sueldos de su plantilla y {payrollCap === null ? 'tiene un tope que define la liga' : `no debería pasar de ${gpLabel(payrollCap)} al año`}. Es un aviso al cierre del mercado y no bloquea operaciones.</li>
   </ul>

@@ -3880,3 +3880,65 @@ html.pc-locked, html.pc-locked body { overflow: hidden; }
 .gp-hint { color: #0d4a2a; font: 600 12px/1.2 'Roboto Condensed', sans-serif; text-align: right; }
 .gp-hint.out { color: #b3261e; }
 .tournament-awards-table .gp-input { min-width: 150px; }
+
+/* ===== Nómina: real frente a simulación, tabla, % del valor y gráficos ===== */
+.payroll-head-tools { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; }
+.layout-toggle { display: inline-flex; }
+.layout-toggle button { min-height: 34px; padding: 0 12px; border: 2px solid #062764; background: #fff; color: #062764; font: 600 12px/1 'Oswald', sans-serif; cursor: pointer; }
+.layout-toggle button + button { border-left: 0; }
+.layout-toggle button.on { background: #062764; color: #fff; }
+.payroll-views button.sim-tab { border-style: dashed; }
+.payroll-views button.sim-tab.on { background: #3a5bbd; border-color: #3a5bbd; border-style: solid; }
+.view-badge { padding: 6px 12px; font: 700 13px/1.2 'Oswald', sans-serif; letter-spacing: .04em; }
+.view-badge.real { border-left: 6px solid #062764; background: #e8eefc; color: #062764; }
+.view-badge.sim { border: 2px dashed #3a5bbd; background: #eef3ff; color: #2c4496; }
+.payroll-real { display: grid; gap: 10px; }
+.payroll-sim { display: grid; gap: 10px; padding: 12px; border: 2px dashed #3a5bbd; background: repeating-linear-gradient(135deg, #f3f6ff 0 14px, #e9eefc 14px 28px); }
+.payroll-sim .payroll-card, .payroll-sim .payroll-tiles > div { border-style: dashed; border-color: #3a5bbd; }
+.sim-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 10px 18px; padding: 10px 12px; background: #fff; border: 2px dashed #3a5bbd; }
+.sim-controls label { display: grid; gap: 4px; color: #2c4496; font: 600 12px/1.2 'Oswald', sans-serif; }
+.sim-controls select { min-height: 34px; }
+.sim-check { grid-auto-flow: column; align-items: center; gap: 6px !important; }
+.sim-warn { border-color: #b3261e; background: #fbe9e7; color: #7a1a14; }
+.sim-card.over, .ptable tr.over td { background: #fbe9e7; }
+.sim-card.over { border-color: #b3261e !important; }
+.share-bar { display: grid; gap: 3px; min-width: 110px; }
+.share-track { display: block; height: 7px; border: 1px solid #062764; background: #fff; }
+.share-track i { display: block; height: 100%; background: #167a45; }
+.share-bar.mid .share-track i { background: #8aa800; }
+.share-bar.high .share-track i { background: #d49b00; }
+.share-bar.over .share-track i { background: #b3261e; }
+.share-bar b { color: #062764; font: 600 12px/1.1 'Oswald', sans-serif; }
+.share-bar b small { color: #55607a; font: 500 11px/1.1 'Roboto Condensed', sans-serif; }
+.share-bar.over b { color: #b3261e; }
+.ptable-wrap { overflow-x: auto; }
+.ptable { width: 100%; min-width: 640px; border-collapse: collapse; background: #fff; }
+.payroll-sim .ptable { border: 2px dashed #3a5bbd; }
+.ptable th, .ptable td { padding: 6px 10px; border-bottom: 1px solid #d5dbe8; text-align: left; vertical-align: middle; font: 500 13px/1.3 'Roboto Condensed', sans-serif; }
+.ptable th { background: #062764; color: #fff; font: 600 11px/1.2 'Oswald', sans-serif; letter-spacing: .04em; }
+.payroll-sim .ptable th { background: #3a5bbd; }
+.ptable tr.expired td { background: #fffbea; }
+.ptable td.neg, .neg { color: #b3261e; font-weight: 700; }
+.ptable-player { display: flex; align-items: center; gap: 8px; }
+.ptable-player .player-photo { width: 32px; height: 32px; flex: none; }
+.ptable-contract { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ptable-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.ptable-salary { min-width: 170px; }
+.sim-timeline { display: grid; gap: 10px; }
+.sim-timeline h3 { margin: 0; color: #2c4496; font: 600 18px/1.1 'Oswald', sans-serif; }
+.sim-charts { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }
+.sim-charts figure { margin: 0; padding: 8px 10px; background: #fff; border: 2px dashed #3a5bbd; }
+.sim-charts figcaption { color: #2c4496; font: 600 12px/1.2 'Oswald', sans-serif; }
+.chart { width: 100%; height: auto; }
+.chart .bar { fill: #3a5bbd; }
+.chart .bar.over { fill: #b3261e; }
+.chart-value { fill: #062764; font: 600 10px 'Oswald', sans-serif; text-anchor: middle; }
+.chart-value.neg { fill: #b3261e; }
+.chart-label { fill: #55607a; font: 600 10px 'Oswald', sans-serif; text-anchor: middle; }
+.chart-axis { stroke: #062764; stroke-width: 1; }
+.chart-cap { stroke: #b3261e; stroke-width: 1.5; stroke-dasharray: 5 4; }
+.chart-cap-label { fill: #b3261e; font: 600 10px 'Oswald', sans-serif; text-anchor: end; }
+.chart .line { fill: none; stroke: #3a5bbd; stroke-width: 2.5; }
+.chart .dot { fill: #3a5bbd; }
+.chart .dot.neg { fill: #b3261e; }
+@media (max-width: 560px) { .payroll-sim { padding: 8px; } .sim-controls { gap: 8px 12px; } }
