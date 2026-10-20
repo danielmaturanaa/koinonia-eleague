@@ -48,9 +48,9 @@ function ContractYears({ team, contract, onDone }) {
 
 function StartContracts({ onDone }) {
   const [confirming, setConfirming] = useState(false);
-  const start = useApiMutation(signal => endpoints.startContracts({}, signal), { onSuccess: () => { setConfirming(false); onDone(); } });
+  const start = useApiMutation(signal => endpoints.startContracts({ expireAll: true }, signal), { onSuccess: () => { setConfirming(false); onDone(); } });
   return <section className="payroll-admin">
-    <p>ADMIN: EL SISTEMA DE CONTRATOS TODAVÍA NO ESTÁ ACTIVO. AL ACTIVARLO SE CREAN LOS CONTRATOS (2 TORNEOS) DE TODAS LAS PLANTILLAS, EL TORNEO EN CURSO NO SE COBRA, SE COBRAN LOS TORNEOS DE LIGA QUE SE CREEN DESDE AHORA Y LA REPUTACIÓN DE TODOS LOS CLUBES PARTE DE CERO.</p>
+    <p>ADMIN: EL SISTEMA DE CONTRATOS TODAVÍA NO ESTÁ ACTIVO. AL ACTIVARLO, TODOS LOS CONTRATOS NACEN VENCIDOS (EL v10 ES EL ÚLTIMO TORNEO DE CADA JUGADOR) Y CADA PRESI TIENE QUE RENOVAR A LOS SUYOS; LOS QUE NO SE RENUEVEN SALEN A AGENCIA LIBRE AL CERRAR EL MERCADO QUE SIGUE AL v10. EL v10 NO SE COBRA Y LOS SUELDOS SE COBRAN AL FINAL DE CADA TORNEO DE LIGA CREADO DESDE AHORA (EL PRIMERO, EL v11).</p>
     {confirming
       ? <div className="offer-confirm" role="group" aria-label="CONFIRMAR ACTIVACIÓN">
         <span>¿ACTIVAR LOS CONTRATOS EN TODA LA LIGA? NO SE DESHACE SOLO.</span>
@@ -59,6 +59,27 @@ function StartContracts({ onDone }) {
       </div>
       : <button type="button" className="action-button" onClick={() => setConfirming(true)}>ACTIVAR CONTRATOS</button>}
     <FormFeedback mutation={start}/>
+  </section>;
+}
+
+const OUTCOME_LABEL = { accepted: ['✅', 'ACEPTÓ'], counter: ['🤝', 'CONTRAOFERTA'], refused: ['❌', 'SE NEGÓ'], error: ['⚠️', 'NO SE PUDO'] };
+
+/** Una misma propuesta para todos los jugadores con contrato vencido; cada uno responde por su cuenta. */
+function RenewAll({ team, expiredCount, onDone }) {
+  const [seasons, setSeasons] = useState(3);
+  const [raise, setRaise] = useState(15);
+  const [results, setResults] = useState(null);
+  const send = useApiMutation((body, signal) => endpoints.negotiateAllContracts(team.id, body, signal), { onSuccess: response => { setResults(response?.data ?? []); onDone(); } });
+  if (!expiredCount && !results) return null;
+  return <section className="renew-all">
+    <header><h3>RENOVAR A TODOS</h3><p>{expiredCount} JUGADOR(ES) CON CONTRATO VENCIDO. LA MISMA PROPUESTA PARA TODOS: CADA UNO ACEPTA, CONTRAOFERTA O SE NIEGA SEGÚN SU ÁNIMO Y PERSONALIDAD. A LOS QUE NO ACEPTEN LOS NEGOCIAS UNO A UNO EN SU HOJA (HASTA 3 PROPUESTAS EN TOTAL).</p></header>
+    {expiredCount > 0 && <div className="renew-all-form">
+      <span className="chips">{SEASONS.map(n => <button type="button" key={n} className={seasons === n ? 'on' : ''} onClick={() => setSeasons(n)}>{n} TORNEOS</button>)}</span>
+      <span className="sheet-slider"><input type="range" min="1" max="100" value={raise} onChange={event => setRaise(Number(event.target.value))} aria-label="Aumento de sueldo en porcentaje"/><b>+{raise}%</b></span>
+      <button type="button" className="action-button positive" disabled={send.loading} onClick={() => send.execute({ seasons, raisePercent: raise })}>{send.loading ? 'ENVIANDO…' : 'ENVIAR A TODOS'}</button>
+    </div>}
+    <FormFeedback mutation={send}/>
+    {results && <ul className="renew-all-results">{results.map(item => { const [icon, label] = OUTCOME_LABEL[item.outcome] ?? ['•', item.outcome]; return <li key={item.playerId} className={item.outcome}><b>{icon} {item.name}</b> <small>{label}</small> <span>{item.reply}</span></li>; })}</ul>}
   </section>;
 }
 
@@ -118,6 +139,7 @@ export function PayrollTab({ team, balance, onChanged }) {
           ['ALCANZA PARA', covered(livePayroll)],
           ['POR PAGAR EN CONTRATOS', gp(remainingCost)],
         ]}/>
+        {canEdit && <RenewAll team={team} expiredCount={expired.length} onDone={refresh}/>}
         {canEdit && sheets.map(contract => <SigningSheet key={contract.id} team={team} contract={contract} args={query.data?.arguments ?? []} maxRounds={query.data?.maxRounds ?? 3} onDone={refresh} onAccepted={() => keepSigned(contract)}/>)}
         <div className="payroll-grid">{contracts.map(contract => <article key={contract.id} className={`payroll-card ${contract.status}`}>
           <header><PlayerFace src={contract.faceUrl} name={contract.playerName}/><div><b>{contract.playerName}</b><small>{contract.position} · VALE {gp(contract.marketValue)}</small></div></header>

@@ -3859,3 +3859,12 @@ html.pc-locked, html.pc-locked body { overflow: hidden; }
 .roles-table th { color: #55607a; font: 600 11px/1.2 'Oswald', sans-serif; }
 .roles-table select { min-height: 34px; }
 .payroll-table-wrap { overflow-x: auto; }
+
+.renew-all { display: grid; gap: 8px; padding: 12px; border: 2px solid #062764; background: #e8eefc; }
+.renew-all h3 { margin: 0; color: #062764; font: 600 18px/1.1 'Oswald', sans-serif; }
+.renew-all p { margin: 0; color: #3b4a54; font: 500 13px/1.4 'Roboto Condensed', sans-serif; }
+.renew-all-form { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.renew-all-results { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; font: 500 13px/1.35 'Roboto Condensed', sans-serif; }
+.renew-all-results li.accepted b { color: #167a45; }
+.renew-all-results li.refused b, .renew-all-results li.error b { color: #b3261e; }
+.renew-all-results small { color: #55607a; font: 600 11px/1 'Oswald', sans-serif; }

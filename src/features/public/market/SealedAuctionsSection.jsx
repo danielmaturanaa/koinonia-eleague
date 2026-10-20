@@ -98,6 +98,7 @@ function BidPanel({ auction, onChanged, teams = [], clubs: allowedClubs = null }
     <label>{mine ? `CAMBIAR MI OFERTA (HOY ${gp(mine.amount)})` : 'MI OFERTA (GP)'}
       <input type="number" min={minimum} max={auction.maxBid ?? undefined} step="1" required value={amount} onChange={event => setAmount(event.target.value)}/>
     </label>
+    {auction.player?.gpValue > 0 && <p className="poll-hint sealed-bid-help">📄 SI GANAS: CONTRATO DE 2 TORNEOS CON SUELDO DE <b>{gp(Math.max(10_000, Math.round(auction.player.gpValue * 0.1 / 10_000) * 10_000))}</b> POR TORNEO (10% DE SU VALOR), QUE SE COBRA AL TERMINAR CADA TORNEO DE LIGA. PUEDES CAMBIAR LOS AÑOS EN LA PESTAÑA NÓMINA ANTES DEL PRIMER COBRO.</p>}
     <p className="poll-hint sealed-bid-help">
       ENTRE <b>{gp(minimum)}</b>{auction.maxBid != null ? <> Y <b>{gp(auction.maxBid)}</b></> : null} · 🔒 SECRETA: NADIE VE TU MONTO, SE RETIENE Y SE DEVUELVE SI NO GANAS.
     </p>

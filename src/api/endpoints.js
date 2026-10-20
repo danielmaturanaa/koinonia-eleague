@@ -102,6 +102,7 @@ export const endpoints = {
   markInboxRead: (teamId, signal) => apiClient.post(`/teams/${teamId}/inbox/read`, {}, { actor: 'web', signal }),
   negotiateContract: (teamId, body, signal) => apiClient.post(`/teams/${teamId}/contracts/negotiate`, body, { actor: 'web', signal }),
   renewContract: (teamId, body, signal) => apiClient.post(`/teams/${teamId}/contracts/renew`, body, { actor: 'web', signal }),
+  negotiateAllContracts: (teamId, body, signal) => apiClient.post(`/teams/${teamId}/contracts/negotiate-all`, body, { actor: 'web', signal }),
   startContracts: (body, signal) => apiClient.post('/admin/contracts/start', body, { actor: 'web', signal }),
   releasePlayer: (playerId, body, signal) => apiClient.post(`/players/${playerId}/release`, body, { actor: 'web', signal }),
   createTransfer: (body, signal) => apiClient.post('/market/transfers', body, { actor: 'web', signal }),
