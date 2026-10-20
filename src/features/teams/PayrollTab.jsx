@@ -94,6 +94,7 @@ const RISK_DETAIL = {
 const TRAIT_NAME = { ganador: 'GANADOR', titular: 'TITULAR', sociable: 'SOCIABLE', mercenario: 'MERCENARIO', ego: 'EGO', leal: 'LEAL' };
 /** Qué haría hoy si le ofrecieras renovar, según su ánimo (rol, sueldo, resultados y personalidad). */
 function RiskChip({ row }) {
+  if (!row.renewalRisk) return null; // el ánimo de un club ajeno no se publica
   const detail = `${RISK_DETAIL[row.renewalRisk] ?? ''} Ánimo: ${row.moodLabel} (${row.mood}/100). Personalidad: ${(row.traits ?? []).map(trait => (TRAIT_NAME[trait] ?? trait).toLowerCase()).join(', ')}.`;
   return <span className={`risk-chip ${row.renewalRisk}`} title={detail}>{RISK_LABEL[row.renewalRisk]}</span>;
 }
@@ -138,6 +139,8 @@ function BonusEditor({ team, contract, editable, onDone }) {
   const [goal, setGoal] = useState(String(contract.goalBonus ?? 0));
   const [playoffs, setPlayoffs] = useState(String(contract.playoffBonus ?? 0));
   const [title, setTitle] = useState(String(contract.titleBonus ?? 0));
+  // Si las primas cambian por fuera (renovación, recorte), el formulario parte de las nuevas.
+  useEffect(() => { setGoal(String(contract.goalBonus ?? 0)); setPlayoffs(String(contract.playoffBonus ?? 0)); setTitle(String(contract.titleBonus ?? 0)); }, [contract.goalBonus, contract.playoffBonus, contract.titleBonus]);
   const save = useApiMutation((body, signal) => endpoints.setContractBonuses(team.id, contract.playerId, body, signal), { onSuccess: () => { setOpen(false); onDone(); } });
   const summary = contract.goalBonus || contract.playoffBonus || contract.titleBonus
     ? [contract.goalBonus ? `${gp(contract.goalBonus)} POR GOL` : null, contract.playoffBonus ? `${gp(contract.playoffBonus)} POR PLAYOFFS` : null, contract.titleBonus ? `${gp(contract.titleBonus)} POR TÍTULO` : null].filter(Boolean).join(' · ')
