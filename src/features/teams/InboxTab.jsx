@@ -46,13 +46,17 @@ export function InboxTab({ team, onTab, onRead }) {
     {query.data && messages.length === 0 && <p className="empty-copy data-empty">TODAVÍA NO TE HAN ESCRITO. LOS MENSAJES APARECEN CUANDO EL SISTEMA DE CONTRATOS ESTÁ ACTIVO.</p>}
     <ul className="inbox-list">{messages.map(message => {
       const [icon, label] = KIND[message.kind] ?? ['✉️', 'MENSAJE'];
+      // El mensaje es una foto del momento en que se escribió: si desde entonces le cambiaste el rol, se avisa y no se muestra el ánimo viejo.
+      const nowRow = roleOf.get(message.playerId);
+      const stale = message.kind === 'unhappy' && nowRow && message.meta?.role && nowRow.role !== message.meta.role;
       return <li key={message.id} className={`inbox-item ${message.read ? '' : 'unread'}`}>
         <PlayerFace src={message.faceUrl} name={message.playerName}/>
         <div className="inbox-body">
           <div className="inbox-meta"><b>{message.playerName}</b><small>{icon} {label} · {formatDate(message.createdAt)}</small></div>
           <h4>{message.subject}</h4>
           <p>{message.body}</p>
-          {message.meta?.moodLabel && message.kind !== 'renewal' && <div className="inbox-mood"><MoodMeter mood={message.meta.mood} label={message.meta.moodLabel}/>{message.meta.role && <small>ROL: {roleLabel(message.meta.role)}</small>}</div>}
+          {stale && <p className="request-note">↻ ESTE MENSAJE ES DE CUANDO ERA {roleLabel(message.meta.role)}. DESDE ENTONCES LO PASASTE A {roleLabel(nowRow.role)}.</p>}
+          {!stale && message.meta?.moodLabel && message.kind !== 'renewal' && <div className="inbox-mood"><MoodMeter mood={message.meta.mood} label={message.meta.moodLabel}/>{message.meta.role && <small>ROL: {roleLabel(message.meta.role)}</small>}</div>}
           {['expired', 'expiring'].includes(message.kind) && <button type="button" className="action-button" onClick={() => onTab?.('nomina')}>{message.kind === 'expired' ? 'IR A LA HOJA DE FIRMA' : 'VER CONTRATO'}</button>}
           {message.request && <RequestActions team={team} request={message.request} locked={marketOpen} onDone={() => { query.retry(); rolesQuery.retry(); }}/>}
           {message.kind === 'unhappy' && roleOf.get(message.playerId) && <div className="inbox-role">
