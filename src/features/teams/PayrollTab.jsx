@@ -186,27 +186,36 @@ function SimView({ team, projection, balance, canEdit, layout }) {
     const years = own.years ?? (player.contract ? Math.max(1, player.contract.seasons - player.contract.seasonsPaid) : 2);
     const salary = own.salary ?? player.contract?.salary ?? player.projectedSalary;
     const limit = player.salaryCap ?? maxSalaryFor(player.marketValue);
-    return { ...player, years, salary, over: salary > limit };
+    // Aumento y renovación por jugador: vacío = el global.
+    return { ...player, years, salary, over: salary > limit, raiseOwn: own.raise, raise: own.raise ?? sim.raise, renew: own.renew ?? sim.renew, sold: own.sell === true };
   });
-  const timeline = simulate(rows.map(row => ({ value: row.marketValue, salary: row.salary, years: row.years })), {
+  const timeline = simulate(rows.map(row => ({ value: row.marketValue, salary: row.salary, years: row.years, raise: row.raiseOwn, renew: row.renew, sold: row.sold })), {
     raise: sim.raise, renew: sim.renew, position: sim.position, playoff: sim.playoff, balance: typeof balance === 'number' ? balance : 0, cap,
   });
-  const payroll = rows.reduce((sum, row) => sum + row.salary, 0);
-  const total = rows.reduce((sum, row) => sum + row.salary * row.years, 0);
-  const overCount = rows.filter(row => row.over).length;
+  const kept = rows.filter(row => !row.sold);
+  const payroll = kept.reduce((sum, row) => sum + row.salary, 0);
+  const total = kept.reduce((sum, row) => sum + row.salary * row.years, 0);
+  const overCount = kept.filter(row => row.over).length;
   const first = timeline[0];
 
   const salaryInput = row => canEdit
     ? <GpInput aria-label={`Sueldo simulado de ${row.playerName}`} value={row.salary} onChange={event => changePlayer(row.playerId, { salary: event.target.value === '' ? undefined : Number(event.target.value) })}/>
     : <b>{gp(row.salary)}</b>;
+  // Por jugador: aumento al renovar (vacío = el global), si renueva y si se vende (sale desde el T1).
+  const renewControls = row => <span className="sim-player-controls">
+    <label title="Aumento al renovar. Vacío usa el global.">AUMENTO<span className="mini-percent"><input type="number" min="0" max="100" step="1" inputMode="numeric" placeholder={String(sim.raise)} disabled={!canEdit || row.sold} aria-label={`Aumento al renovar de ${row.playerName}`}
+      value={row.raiseOwn ?? ''} onChange={event => changePlayer(row.playerId, { raise: event.target.value === '' ? undefined : Math.min(100, Math.max(0, Number(event.target.value))) })}/>%</span></label>
+    <label><input type="checkbox" checked={row.renew} disabled={!canEdit || row.sold} onChange={event => changePlayer(row.playerId, { renew: event.target.checked })}/> RENUEVA</label>
+    <label className="sell"><input type="checkbox" checked={row.sold} disabled={!canEdit} onChange={event => changePlayer(row.playerId, { sell: event.target.checked })}/> VENDER</label>
+  </span>;
   const yearsInput = row => (canEdit ? <YearsChips value={row.years} onChange={years => changePlayer(row.playerId, { years })} label={`Torneos simulados de ${row.playerName}`}/> : <span>{row.years} TORNEOS</span>);
 
   return <div className="payroll-sim">
     <div className="view-badge sim">🧪 SIMULACIÓN · NADA DE ESTO ES REAL NI SE COBRA</div>
-    <p className="payroll-note">PRUEBA SUELDOS, AÑOS Y UN AUMENTO AL RENOVAR PARA VER CÓMO SE MUEVEN LA NÓMINA Y EL SALDO EN LOS PRÓXIMOS TORNEOS. USA LOS VALORES DE MERCADO DE HOY (CAMBIAN CON CADA REFRESCO DE TRANSFERMARKT) Y TODO QUEDA SOLO EN ESTE NAVEGADOR. SI UN JUGADOR PASA EL 20% DE SU VALOR, SALE EN ROJO: ESE SUELDO NO SE PODRÍA FIRMAR.</p>
+    <p className="payroll-note">PRUEBA SUELDOS, AÑOS, UN AUMENTO AL RENOVAR (GLOBAL O POR JUGADOR) Y VENTAS PARA VER CÓMO SE MUEVEN LA NÓMINA Y EL SALDO EN LOS PRÓXIMOS TORNEOS. USA LOS VALORES DE MERCADO DE HOY (CAMBIAN CON CADA REFRESCO DE TRANSFERMARKT) Y TODO QUEDA SOLO EN ESTE NAVEGADOR. SI UN JUGADOR PASA EL 20% DE SU VALOR, SALE EN ROJO: ESE SUELDO NO SE PODRÍA FIRMAR.</p>
     <section className="sim-controls">
-      <label>AUMENTO AL RENOVAR<span className="sheet-slider"><input type="range" min="0" max="100" value={sim.raise} onChange={event => change({ raise: Number(event.target.value) })} aria-label="Aumento al renovar en porcentaje"/><b>+{sim.raise}%</b></span></label>
-      <label className="sim-check"><input type="checkbox" checked={sim.renew} onChange={event => change({ renew: event.target.checked })}/> RENOVAR A QUIEN LE VENZA EL CONTRATO</label>
+      <label>AUMENTO AL RENOVAR (POR DEFECTO)<span className="sheet-slider"><input type="range" min="0" max="100" value={sim.raise} onChange={event => change({ raise: Number(event.target.value) })} aria-label="Aumento al renovar en porcentaje"/><b>+{sim.raise}%</b></span></label>
+      <label className="sim-check"><input type="checkbox" checked={sim.renew} onChange={event => change({ renew: event.target.checked })}/> RENOVAR A QUIEN LE VENZA EL CONTRATO (POR DEFECTO)</label>
       <label>PUESTO EN LA LIGA<select value={sim.position} onChange={event => change({ position: Number(event.target.value) })}>{Array.from({ length: 8 }, (_, i) => i + 1).map(n => <option key={n} value={n}>{n}.º · {gp(leaguePrize(n))}</option>)}</select></label>
       <label>PLAYOFFS<select value={sim.playoff} onChange={event => change({ playoff: event.target.value })}>{Object.keys(PLAYOFF_PRIZES).map(key => <option key={key} value={key}>{PLAYOFF_LABEL[key]}{PLAYOFF_PRIZES[key] ? ` · ${gp(PLAYOFF_PRIZES[key])}` : ''}</option>)}</select></label>
       {canEdit && <button type="button" className="ghost" onClick={reset}>RESTABLECER</button>}
@@ -220,22 +229,24 @@ function SimView({ team, projection, balance, canEdit, layout }) {
     ]}/>
     {overCount > 0 && <p className="payroll-empty sim-warn">⚠️ {overCount} JUGADOR(ES) SOBRE EL 20% DE SU VALOR: ESOS SUELDOS NO SE PODRÍAN FIRMAR.</p>}
     {layout === 'cards'
-      ? <div className="payroll-grid">{rows.map(row => <article key={row.playerId} className={`payroll-card sim-card ${row.over ? 'over' : ''}`}>
+      ? <div className="payroll-grid">{rows.map(row => <article key={row.playerId} className={`payroll-card sim-card ${row.over && !row.sold ? 'over' : ''} ${row.sold ? 'sold' : ''}`}>
         <header><PlayerFace src={row.faceUrl} name={row.playerName}/><div><b>{row.playerName}</b><small>{row.position} · VALE {gp(row.marketValue)}</small></div></header>
         {salaryInput(row)}
         <ShareBar salary={row.salary} value={row.marketValue}/>
         {yearsInput(row)}
-        <small className="payroll-card-total">{row.years} TORNEOS × {gp(row.salary)} = <b>{gp(row.salary * row.years)}</b></small>
+        {renewControls(row)}
+        <small className="payroll-card-total">{row.sold ? 'VENDIDO: NO CUENTA DESDE EL T1' : <>{row.years} TORNEOS × {gp(row.salary)} = <b>{gp(row.salary * row.years)}</b></>}</small>
       </article>)}</div>
       : <div className="ptable-wrap"><table className="ptable sim">
-        <thead><tr><th>JUGADOR</th><th>VALOR</th><th>SUELDO / TORNEO</th><th>% DEL VALOR</th><th>TORNEOS</th><th>COSTO TOTAL</th></tr></thead>
-        <tbody>{rows.map(row => <tr key={row.playerId} className={row.over ? 'over' : ''}>
+        <thead><tr><th>JUGADOR</th><th>VALOR</th><th>SUELDO / TORNEO</th><th>% DEL VALOR</th><th>TORNEOS</th><th>AL RENOVAR</th><th>COSTO TOTAL</th></tr></thead>
+        <tbody>{rows.map(row => <tr key={row.playerId} className={`${row.over && !row.sold ? 'over' : ''} ${row.sold ? 'sold' : ''}`}>
           <td><span className="ptable-player"><PlayerFace src={row.faceUrl} name={row.playerName}/><span><b>{row.playerName}</b> <small>{row.position}</small></span></span></td>
           <td>{gp(row.marketValue)}</td>
           <td className="ptable-salary">{salaryInput(row)}</td>
           <td><ShareBar salary={row.salary} value={row.marketValue} compact/></td>
           <td>{yearsInput(row)}</td>
-          <td>{gp(row.salary * row.years)}</td>
+          <td>{renewControls(row)}</td>
+          <td>{row.sold ? 'VENDIDO' : gp(row.salary * row.years)}</td>
         </tr>)}</tbody>
       </table></div>}
 
@@ -250,7 +261,7 @@ function SimView({ team, projection, balance, canEdit, layout }) {
         <tbody>{timeline.map(row => <tr key={row.torneo} className={row.overCap || row.balance < 0 ? 'over' : ''}>
           <td><b>T{row.torneo}</b></td><td>{gp(row.payroll)}{row.overCap ? ' ⚠️' : ''}</td><td>{gp(row.prize)}</td>
           <td className={row.net < 0 ? 'neg' : ''}>{row.net >= 0 ? '+' : '−'}{gp(Math.abs(row.net))}</td><td className={row.balance < 0 ? 'neg' : ''}>{gp(row.balance)}</td>
-          <td>{row.expiring ? `${row.expiring} (${sim.renew ? `RENUEVAN +${sim.raise}%` : 'SALEN'})` : '—'}</td>
+          <td>{row.expiring ? `${row.expiring} · ${row.renewed ? `${row.renewed} RENUEVA(N)` : ''}${row.renewed && row.leaving ? ' · ' : ''}${row.leaving ? `${row.leaving} SALE(N)` : ''}` : '—'}</td>
         </tr>)}</tbody>
       </table></div>
       <p className="payroll-note">T1 ES EL PRIMER TORNEO CON CONTRATOS. LOS PREMIOS SON LOS DE LA TABLA DE LA LIGA SEGÚN EL PUESTO QUE ELIJAS (EL MISMO TODOS LOS TORNEOS); NO INCLUYE FICHAJES NI VENTAS.</p>

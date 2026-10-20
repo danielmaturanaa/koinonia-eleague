@@ -3942,3 +3942,10 @@ html.pc-locked, html.pc-locked body { overflow: hidden; }
 .chart .dot { fill: #3a5bbd; }
 .chart .dot.neg { fill: #b3261e; }
 @media (max-width: 560px) { .payroll-sim { padding: 8px; } .sim-controls { gap: 8px 12px; } }
+
+.sim-player-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; color: #2c4496; font: 600 11px/1.2 'Oswald', sans-serif; }
+.sim-player-controls label { display: inline-flex; align-items: center; gap: 4px; }
+.sim-player-controls .sell { color: #8a6d2f; }
+.mini-percent { display: inline-flex; align-items: center; gap: 2px; }
+.mini-percent input { width: 52px; min-height: 28px; padding: 0 4px; text-align: right; border: 2px solid #3a5bbd; background: #fff; }
+.sim-card.sold, .ptable tr.sold td { opacity: .5; background: repeating-linear-gradient(135deg, #f1f1f1 0 8px, #e6e6e6 8px 16px); }

@@ -13,11 +13,15 @@ export const maxSalaryFor = value => Math.max(SALARY_STEP, Math.floor(Number(val
 export const leaguePrize = position => Math.max(0, LEAGUE_FIRST_PRIZE - LEAGUE_PRIZE_STEP * (Math.max(1, position) - 1));
 
 /**
- * `players`: [{ value, salary, years }]. `options`: { raise (%), renew (bool), position (1..), playoff (clave de PLAYOFF_PRIZES),
+ * `players`: [{ value, salary, years, raise?, renew?, sold? }]: `raise` y `renew` de un jugador mandan sobre los globales, y `sold` lo saca desde el T1.
+ * `options`: { raise (%), renew (bool), position (1..), playoff (clave de PLAYOFF_PRIZES),
  * balance, cap (nómina máxima o null) }. Devuelve una fila por torneo con nómina, premios, neto, saldo y cuántos contratos vencen.
  */
 export function simulate(players, { raise = 15, renew = true, position = 4, playoff = 'none', balance = 0, cap = null } = {}) {
-  const state = players.map(player => ({ value: player.value, salary: player.salary, left: player.years, alive: true }));
+  const state = players.map(player => ({
+    value: player.value, salary: player.salary, left: player.years, alive: !player.sold,
+    raise: player.raise ?? raise, renew: player.renew ?? renew,
+  }));
   const prize = leaguePrize(position) + (PLAYOFF_PRIZES[playoff] ?? 0);
   const rows = [];
   let running = balance;
@@ -29,7 +33,7 @@ export function simulate(players, { raise = 15, renew = true, position = 4, play
       item.left -= 1;
       if (item.left <= 0) {
         expiring += 1;
-        if (renew) { item.salary = Math.min(roundStep(item.salary * (1 + raise / 100)), maxSalaryFor(item.value)); item.left = 2; renewed += 1; }
+        if (item.renew) { item.salary = Math.min(roundStep(item.salary * (1 + item.raise / 100)), maxSalaryFor(item.value)); item.left = 2; renewed += 1; }
         else { item.alive = false; leaving += 1; }
       }
     }
