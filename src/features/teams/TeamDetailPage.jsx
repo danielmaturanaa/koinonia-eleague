@@ -20,6 +20,7 @@ import { useApiQuery } from '../public/useApiQuery.js';
 import { useLiveStandings } from '../public/useLiveStandings.js';
 import { InboxTab } from './InboxTab.jsx';
 import { PayrollTab } from './PayrollTab.jsx';
+import { RolesPanel } from './RolesPanel.jsx';
 import { gpNumber } from '../../utils/money.js';
 import { PitchBoard } from './PitchBoard.jsx';
 import { SimulationTools } from './SimulationTools.jsx';
@@ -748,10 +749,11 @@ function SquadTab({ team, squad, starters, substitutes, onChanged }) {
   const canEdit = canEditTeam(team.id);
   const [mode, setMode] = useState('view');
   return <div className="club-squad-tab">
-    <nav className="club-squad-modes" aria-label="Acciones del plantel">{[['view', 'VER PLANTEL'], ...(canEdit ? [['edit', 'EDITAR PLANTEL']] : [])].map(([id, label]) => <button type="button" key={id} className={mode === id ? 'active' : ''} aria-pressed={mode === id} onClick={() => setMode(id)}>{label}</button>)}</nav>
+    <nav className="club-squad-modes" aria-label="Acciones del plantel">{[['view', 'VER PLANTEL'], ['roles', 'ROLES Y ÁNIMO'], ...(canEdit ? [['edit', 'EDITAR PLANTEL']] : [])].map(([id, label]) => <button type="button" key={id} className={mode === id ? 'active' : ''} aria-pressed={mode === id} onClick={() => setMode(id)}>{label}</button>)}</nav>
     {mode === 'view' && <div className="club-squad-layout club-squad-layout-list">
       <div className="roster-panel club-roster"><h3>TITULARES <small>{starters.length} / 11</small></h3><div className="roster-table-scroll"><RosterHeader/><div className="roster-list">{starters.length ? starters.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay titulares definidos.</p>}</div></div><h3>SUPLENTES <small>{substitutes.length}</small></h3><div className="roster-table-scroll"><RosterHeader/><div className="roster-list substitutes">{substitutes.length ? substitutes.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay suplentes registrados.</p>}</div></div></div>
     </div>}
+    {mode === 'roles' && <RolesPanel team={team}/>}
     {mode === 'edit' && canEdit && <div className="club-squad-editor"><SquadEditor team={team} squad={squad} onChanged={onChanged}/></div>}
   </div>;
 }

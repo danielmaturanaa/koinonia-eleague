@@ -30,7 +30,7 @@ function Signatures({ playerName }) {
 }
 
 /** La hoja de firma de una renovación: se negocia hasta en 3 propuestas y, si hay acuerdo, se firma. */
-export function SigningSheet({ team, contract, args = [], maxRounds = 3, onDone }) {
+export function SigningSheet({ team, contract, args = [], maxRounds = 3, onDone, onAccepted }) {
   const info = contract.renewal;
   const talk = contract.talk;
   const [seasons, setSeasons] = useState(3);
@@ -39,7 +39,13 @@ export function SigningSheet({ team, contract, args = [], maxRounds = 3, onDone 
   const [argument, setArgument] = useState('');
   const [last, setLast] = useState(null);
   const negotiate = useApiMutation((body, signal) => endpoints.negotiateContract(team.id, body, signal), {
-    onSuccess: response => { setLast(response?.data ?? null); onDone?.(); },
+    onSuccess: response => {
+      const result = response?.data ?? null;
+      setLast(result);
+      // La hoja firmada tiene que seguir a la vista para ver la firma: el padre la mantiene aunque el contrato ya no esté vencido.
+      if (result?.outcome === 'accepted') onAccepted?.(contract.id);
+      onDone?.();
+    },
   });
   const outcome = last?.outcome ?? (talk?.status === 'refused' ? 'refused' : null);
   const round = last?.round ?? talk?.rounds ?? 0;
@@ -70,6 +76,7 @@ export function SigningSheet({ team, contract, args = [], maxRounds = 3, onDone 
     </div>)}</div>}
 
     {outcome === 'accepted' && <>
+      {last?.contract && <p className="sheet-terms">NUEVO CONTRATO: <b>{last.contract.seasons} TEMPORADAS</b> · <b>{gpLabel(last.contract.salary)} AL AÑO</b>{last.contract.promised_role ? <> · ROL PROMETIDO: <b>{roleLabel(last.contract.promised_role)}</b></> : null}</p>}
       <Signatures playerName={contract.playerName}/>
       <div className="sheet-stamp good" role="status">FIRMADO ✔</div>
     </>}

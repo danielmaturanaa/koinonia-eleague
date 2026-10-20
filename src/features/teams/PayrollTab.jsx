@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { useAuth } from '../../app/AuthGate.jsx';
+import { PlayerFace } from '../../components/PlayerFace.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { DataState, gp } from '../public/DataStates.jsx';
 import { useApiQuery } from '../public/useApiQuery.js';
-import { RolesPanel } from './RolesPanel.jsx';
 import { SigningSheet } from './SigningSheet.jsx';
 
 const SEASONS = [2, 3, 4, 5, 6];
@@ -20,29 +20,37 @@ function saveDraft(teamId, draft) {
   try { window.localStorage.setItem(draftKey(teamId), JSON.stringify(draft)); } catch { /* sin almacenamiento: la proyección sigue funcionando */ }
 }
 
+/** Puntos de los torneos de un contrato: llenos los ya pagados, vacíos los que quedan. */
+function SeasonDots({ paid, total }) {
+  return <span className="season-dots" aria-label={`${paid} de ${total} torneos pagados`}>{Array.from({ length: total }, (_, index) => <i key={index} className={index < paid ? 'paid' : ''}/>)}</span>;
+}
+
 function TerminateButton({ team, contract, onDone }) {
   const [confirming, setConfirming] = useState(false);
   const release = useApiMutation(signal => endpoints.releasePlayer(contract.playerId, { teamId: team.id }, signal), { onSuccess: () => { setConfirming(false); onDone(); } });
   if (!confirming) return <button type="button" className="ghost" onClick={() => setConfirming(true)}>RESCINDIR</button>;
   return <span className="offer-confirm" role="group" aria-label="CONFIRMAR RESCISIÓN">
-    <span>¿RESCINDIR A {upper(contract.playerName)}? PAGAS {gp(contract.terminationCost)} (50% DE {contract.seasonsLeft} TEMPORADA(S)), NO RECIBES NADA Y BAJA LA REPUTACIÓN. NO SE DESHACE.</span>
+    <span>¿RESCINDIR A {upper(contract.playerName)}? PAGAS {gp(contract.terminationCost)} (50% DE {contract.seasonsLeft} TORNEO(S)), NO RECIBES NADA Y BAJA LA REPUTACIÓN. NO SE DESHACE.</span>
     <button type="button" disabled={release.loading} onClick={() => release.execute()}>{release.loading ? 'RESCINDIENDO…' : 'SÍ, RESCINDIR'}</button>
     <button type="button" className="ghost" disabled={release.loading} onClick={() => setConfirming(false)}>VOLVER</button>
     <FormFeedback mutation={release}/>
   </span>;
 }
 
-function SeasonsSelect({ team, contract, onDone }) {
+function YearsChips({ value, onChange, disabled = false, label }) {
+  return <span className="chips years-chips" role="group" aria-label={label}>{SEASONS.map(n => <button type="button" key={n} disabled={disabled} className={value === n ? 'on' : ''} onClick={() => onChange(n)}>{n}</button>)}</span>;
+}
+
+function ContractYears({ team, contract, onDone }) {
   const change = useApiMutation((body, signal) => endpoints.setContractSeasons(team.id, contract.id, body, signal), { onSuccess: onDone });
-  return <span><select aria-label={`Temporadas de ${contract.playerName}`} value={contract.seasons} disabled={change.loading}
-    onChange={event => change.execute({ seasons: Number(event.target.value) })}>{SEASONS.map(n => <option key={n} value={n}>{n}</option>)}</select><FormFeedback mutation={change}/></span>;
+  return <><YearsChips value={contract.seasons} disabled={change.loading} onChange={seasons => change.execute({ seasons })} label={`Torneos de ${contract.playerName}`}/><FormFeedback mutation={change}/></>;
 }
 
 function StartContracts({ onDone }) {
   const [confirming, setConfirming] = useState(false);
   const start = useApiMutation(signal => endpoints.startContracts({}, signal), { onSuccess: () => { setConfirming(false); onDone(); } });
   return <section className="payroll-admin">
-    <p>ADMIN: EL SISTEMA DE CONTRATOS TODAVÍA NO ESTÁ ACTIVO. AL ACTIVARLO SE CREAN LOS CONTRATOS (2 TEMPORADAS) DE TODAS LAS PLANTILLAS, EL TORNEO EN CURSO NO SE COBRA, SE COBRAN LOS TORNEOS DE LIGA QUE SE CREEN DESDE AHORA Y LA REPUTACIÓN PARTE DE CERO.</p>
+    <p>ADMIN: EL SISTEMA DE CONTRATOS TODAVÍA NO ESTÁ ACTIVO. AL ACTIVARLO SE CREAN LOS CONTRATOS (2 TORNEOS) DE TODAS LAS PLANTILLAS, EL TORNEO EN CURSO NO SE COBRA, SE COBRAN LOS TORNEOS DE LIGA QUE SE CREEN DESDE AHORA Y LA REPUTACIÓN DE TODOS LOS CLUBES PARTE DE CERO.</p>
     {confirming
       ? <div className="offer-confirm" role="group" aria-label="CONFIRMAR ACTIVACIÓN">
         <span>¿ACTIVAR LOS CONTRATOS EN TODA LA LIGA? NO SE DESHACE SOLO.</span>
@@ -54,61 +62,92 @@ function StartContracts({ onDone }) {
   </section>;
 }
 
-/** Nómina del club: proyección antes del v11 y, con el sistema activo, contratos, renovaciones y rescisiones. */
+function Tiles({ items }) {
+  return <div className="payroll-tiles">{items.map(([label, value, note]) => <div key={label}><small>{label}</small><b>{value}</b>{note && <em>{note}</em>}</div>)}</div>;
+}
+
+/** Nómina del club: la real (contratos firmados) y la proyección (qué pasaría con el sueldo del 10% y los años que elijas). */
 export function PayrollTab({ team, balance, onChanged }) {
   const { canEditTeam, isAdmin } = useAuth();
   const canEdit = canEditTeam(team.id);
   const query = useApiQuery(signal => endpoints.teamContracts(team.id, signal), [team.id]);
   const [draft, setDraft] = useState(() => loadDraft(team.id));
+  const [view, setView] = useState(null);
+  const [signedIds, setSignedIds] = useState([]);
+  const [signedSnapshots, setSignedSnapshots] = useState({});
   const refresh = () => { query.retry(); onChanged?.(); };
   const projection = query.data?.projection;
   const contracts = query.data?.contracts ?? [];
   const enabled = Boolean(projection?.enabled);
-  const contractByPlayer = new Map(contracts.map(contract => [contract.playerId, contract]));
-  const setYears = (playerId, years) => { const next = { ...draft, [playerId]: years }; setDraft(next); saveDraft(team.id, next); };
-  const yearsFor = player => draft[player.playerId] ?? 2;
-  const payroll = enabled ? projection.payroll : (projection?.players ?? []).reduce((sum, player) => sum + player.projectedSalary, 0);
+  const current = view ?? (enabled ? 'actual' : 'proyeccion');
   const cap = projection?.cap ?? null;
-  const seasonsCovered = payroll > 0 && typeof balance === 'number' ? Math.floor(balance / payroll * 10) / 10 : null;
+
+  // Las hojas que ya se firmaron siguen a la vista (con su firma animada) aunque el contrato ya no esté vencido.
   const expired = contracts.filter(contract => contract.status === 'expired');
+  const sheets = [...expired, ...signedIds.filter(id => !expired.some(contract => contract.id === id)).map(id => signedSnapshots[id]).filter(Boolean)];
+  const keepSigned = contract => { setSignedSnapshots(items => ({ ...items, [contract.id]: contract })); setSignedIds(ids => ids.includes(contract.id) ? ids : [...ids, contract.id]); };
+
+  const setYears = (playerId, years) => { const next = { ...draft, [playerId]: years }; setDraft(next); saveDraft(team.id, next); };
+  const simulated = (projection?.players ?? []).map(player => ({ ...player, years: draft[player.playerId] ?? 2 }));
+  const simulatedPayroll = simulated.reduce((sum, player) => sum + player.projectedSalary, 0);
+  const simulatedTotal = simulated.reduce((sum, player) => sum + player.projectedSalary * player.years, 0);
+  const livePayroll = projection?.payroll ?? 0;
+  const remainingCost = contracts.filter(contract => contract.status === 'active').reduce((sum, contract) => sum + contract.salary * contract.seasonsLeft, 0);
+  const covered = payroll => payroll > 0 && typeof balance === 'number' ? `${(Math.floor(balance / payroll * 10) / 10).toLocaleString('es-CL')} TORNEOS` : '—';
 
   return <section className="payroll-tab">
     <header className="payroll-head">
       <h2>NÓMINA</h2>
-      <p>{enabled
-        ? 'CADA JUGADOR TIENE UN CONTRATO DE 2 A 6 TEMPORADAS. SU SUELDO ES EL 10% DE SU VALOR AL FIRMAR, QUEDA CONGELADO Y SE COBRA AL TERMINAR CADA TORNEO DE LIGA MIENTRAS SIGA EN EL CLUB.'
-        : 'ASÍ SE VERÍA TU NÓMINA CON EL SISTEMA DE CONTRATOS: SUELDO ANUAL = 10% DEL VALOR DE CADA JUGADOR, COBRADO AL TERMINAR CADA TORNEO DE LIGA. ELIGE LOS AÑOS PARA SIMULAR; TODAVÍA NO SE COBRA NADA.'}</p>
+      <nav className="payroll-views" role="tablist" aria-label="Vista de la nómina">
+        <button type="button" role="tab" aria-selected={current === 'actual'} className={current === 'actual' ? 'on' : ''} onClick={() => setView('actual')}>NÓMINA ACTUAL</button>
+        <button type="button" role="tab" aria-selected={current === 'proyeccion'} className={current === 'proyeccion' ? 'on' : ''} onClick={() => setView('proyeccion')}>PROYECCIÓN</button>
+      </nav>
     </header>
     <DataState query={query}/>
-    {projection && <>
-      <div className="payroll-tiles">
-        <div><small>{enabled ? 'NÓMINA ANUAL' : 'NÓMINA PROYECTADA'}</small><b>{gp(payroll)}</b></div>
-        <div><small>TOPE DE NÓMINA</small><b>{cap === null ? 'SIN DEFINIR' : gp(cap)}</b>{cap !== null && payroll > cap && <em>TE PASAS POR {gp(payroll - cap)}</em>}</div>
-        <div><small>SALDO</small><b>{gp(balance)}</b></div>
-        <div><small>ALCANZA PARA</small><b>{seasonsCovered === null ? '—' : `${seasonsCovered.toLocaleString('es-CL')} TEMPORADAS`}</b></div>
-      </div>
-      {isAdmin && !enabled && <StartContracts onDone={refresh}/>}
-      {canEdit && expired.map(contract => <SigningSheet key={contract.id} team={team} contract={contract} args={query.data?.arguments ?? []} maxRounds={query.data?.maxRounds ?? 3} onDone={refresh}/>)}
-      <div className="payroll-table-wrap"><table className="payroll-table">
-        <thead><tr><th>JUGADOR</th><th>VALOR</th><th>SUELDO/AÑO</th><th>TEMPORADAS</th><th>ESTADO</th>{canEdit && enabled && <th></th>}</tr></thead>
-        <tbody>{projection.players.map(player => {
-          const contract = contractByPlayer.get(player.playerId);
-          const salary = contract?.salary ?? player.projectedSalary;
-          const editable = canEdit && contract && contract.status === 'active' && contract.seasonsPaid === 0;
-          return <tr key={player.playerId}>
-            <td><b>{player.playerName}</b> <small>{player.position}</small></td>
-            <td>{gp(player.marketValue)}</td>
-            <td>{gp(salary)}</td>
-            <td>{contract
-              ? (editable ? <SeasonsSelect team={team} contract={contract} onDone={refresh}/> : `${contract.seasonsPaid}/${contract.seasons} PAGADAS`)
-              : (canEdit ? <select aria-label={`Temporadas proyectadas de ${player.playerName}`} value={yearsFor(player)} onChange={event => setYears(player.playerId, Number(event.target.value))}>{SEASONS.map(n => <option key={n} value={n}>{n}</option>)}</select> : '—')}</td>
-            <td>{!contract ? 'PROYECCIÓN' : contract.status === 'expired' ? 'VENCIDO: RENOVAR' : `QUEDAN ${contract.seasonsLeft}`}</td>
-            {canEdit && enabled && <td>{contract && contract.status === 'active' ? <TerminateButton team={team} contract={contract} onDone={refresh}/> : null}</td>}
-          </tr>;
-        })}</tbody>
-      </table></div>
-      {enabled && <RolesPanel team={team}/>}
-      {!enabled && canEdit && <p className="poll-hint">COSTO TOTAL DE LOS CONTRATOS SIMULADOS (SUELDO × AÑOS ELEGIDOS): {gp(projection.players.reduce((sum, player) => sum + player.projectedSalary * yearsFor(player), 0))}.</p>}
+    {projection && current === 'actual' && <>
+      <p className="payroll-note">CADA JUGADOR TIENE UN CONTRATO DE 2 A 6 TORNEOS. SU SUELDO ES EL 10% DE SU VALOR AL FIRMAR, QUEDA CONGELADO Y SE COBRA AL TERMINAR CADA TORNEO DE LIGA MIENTRAS SIGA EN EL CLUB.</p>
+      {!enabled && <>
+        <p className="payroll-empty">LOS CONTRATOS TODAVÍA NO ESTÁN ACTIVOS: ENTRAN CON EL TORNEO v11. MIENTRAS TANTO MIRA LA <button type="button" className="link-button" onClick={() => setView('proyeccion')}>PROYECCIÓN</button> PARA PLANIFICAR.</p>
+        {isAdmin && <StartContracts onDone={refresh}/>}
+      </>}
+      {enabled && <>
+        <Tiles items={[
+          ['NÓMINA ANUAL', gp(livePayroll)],
+          ['TOPE DE NÓMINA', cap === null ? 'SIN DEFINIR' : gp(cap), cap !== null && livePayroll > cap ? `TE PASAS POR ${gp(livePayroll - cap)}` : null],
+          ['SALDO', gp(balance)],
+          ['ALCANZA PARA', covered(livePayroll)],
+          ['POR PAGAR EN CONTRATOS', gp(remainingCost)],
+        ]}/>
+        {canEdit && sheets.map(contract => <SigningSheet key={contract.id} team={team} contract={contract} args={query.data?.arguments ?? []} maxRounds={query.data?.maxRounds ?? 3} onDone={refresh} onAccepted={() => keepSigned(contract)}/>)}
+        <div className="payroll-grid">{contracts.map(contract => <article key={contract.id} className={`payroll-card ${contract.status}`}>
+          <header><PlayerFace src={contract.faceUrl} name={contract.playerName}/><div><b>{contract.playerName}</b><small>{contract.position} · VALE {gp(contract.marketValue)}</small></div></header>
+          <div className="payroll-card-salary"><b>{gp(contract.salary)}</b><small>POR TORNEO</small></div>
+          <div className="payroll-card-years">
+            <SeasonDots paid={contract.seasonsPaid} total={contract.seasons}/>
+            <span>{contract.status === 'expired' ? 'VENCIDO: RENOVAR' : `QUEDAN ${contract.seasonsLeft} DE ${contract.seasons} TORNEOS`}</span>
+          </div>
+          {canEdit && contract.status === 'active' && contract.seasonsPaid === 0 && <ContractYears team={team} contract={contract} onDone={refresh}/>}
+          {canEdit && contract.status === 'active' && <TerminateButton team={team} contract={contract} onDone={refresh}/>}
+        </article>)}</div>
+      </>}
+    </>}
+    {projection && current === 'proyeccion' && <>
+      <p className="payroll-note">ASÍ SE VERÍA TU NÓMINA CON CONTRATOS: SUELDO = 10% DEL VALOR DE CADA JUGADOR POR TORNEO DE LIGA. ELIGE LOS TORNEOS DE CADA CONTRATO PARA SIMULAR; NO SE COBRA NADA TODAVÍA.</p>
+      <Tiles items={[
+        ['NÓMINA ANUAL PROYECTADA', gp(simulatedPayroll)],
+        ['TOPE DE NÓMINA', cap === null ? 'SIN DEFINIR' : gp(cap), cap !== null && simulatedPayroll > cap ? `TE PASAS POR ${gp(simulatedPayroll - cap)}` : null],
+        ['SALDO', gp(balance)],
+        ['ALCANZA PARA', covered(simulatedPayroll)],
+        ['COSTO TOTAL DE LOS CONTRATOS', gp(simulatedTotal)],
+      ]}/>
+      <div className="payroll-grid">{simulated.map(player => <article key={player.playerId} className="payroll-card">
+        <header><PlayerFace src={player.faceUrl} name={player.playerName}/><div><b>{player.playerName}</b><small>{player.position} · VALE {gp(player.marketValue)}</small></div></header>
+        <div className="payroll-card-salary"><b>{gp(player.projectedSalary)}</b><small>POR TORNEO</small></div>
+        {canEdit
+          ? <YearsChips value={player.years} onChange={years => setYears(player.playerId, years)} label={`Torneos proyectados de ${player.playerName}`}/>
+          : <span className="payroll-card-years"><span>{player.years} TORNEOS</span></span>}
+        <small className="payroll-card-total">{player.years} TORNEOS × {gp(player.projectedSalary)} = <b>{gp(player.projectedSalary * player.years)}</b></small>
+      </article>)}</div>
     </>}
   </section>;
 }

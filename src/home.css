@@ -3751,11 +3751,6 @@ html.pc-locked, html.pc-locked body { overflow: hidden; }
 .payroll-renewal-fields label { display: grid; gap: 3px; color: #062764; font: 600 12px/1.2 'Oswald', sans-serif; }
 .payroll-renewal-fields input { width: 90px; min-height: 38px; }
 .payroll-offer { color: #0d4a2a; font: 600 13px/1.2 'Roboto Condensed', sans-serif; }
-.payroll-table-wrap { overflow-x: auto; }
-.payroll-table { width: 100%; min-width: 620px; border-collapse: collapse; }
-.payroll-table th, .payroll-table td { padding: 6px 8px; border-bottom: 1px solid #d5dbe8; text-align: left; font: 500 13px/1.3 'Roboto Condensed', sans-serif; }
-.payroll-table th { color: #55607a; font: 600 11px/1.2 'Oswald', sans-serif; }
-.payroll-table select { min-height: 34px; }
 
 /* ===== Hoja de firma, roles y bandeja ===== */
 .mood-meter { display: inline-flex; align-items: center; gap: 6px; font: 600 12px/1 'Oswald', sans-serif; color: #062764; }
@@ -3827,3 +3822,40 @@ html.pc-locked, html.pc-locked body { overflow: hidden; }
 .inbox-body p { margin: 0; font: 500 14px/1.45 'Roboto Condensed', sans-serif; }
 .inbox-mood { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
 .inbox-body .action-button { justify-self: start; }
+
+.sheet-terms { margin: 0; color: #062764; font: 500 14px/1.4 'Roboto Condensed', sans-serif; }
+
+/* ===== Nómina: vistas y tarjetas ===== */
+.payroll-tab { gap: 10px; }
+.payroll-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; }
+.payroll-head h2 { margin: 0; }
+.payroll-views { display: flex; gap: 6px; }
+.payroll-views button { min-height: 36px; padding: 0 16px; border: 2px solid #062764; background: #fff; color: #062764; font: 600 13px/1 'Oswald', sans-serif; cursor: pointer; }
+.payroll-views button.on { background: #062764; color: #fff; }
+.payroll-note, .payroll-empty { margin: 0; color: #3b4a54; font: 500 13px/1.4 'Roboto Condensed', sans-serif; }
+.payroll-empty { padding: 10px 12px; border: 2px dashed #8a6d2f; background: #fffaf0; }
+.link-button { padding: 0; border: 0; background: none; color: #062764; font: inherit; font-weight: 700; text-decoration: underline; cursor: pointer; }
+.payroll-grid { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); }
+.payroll-card { display: grid; gap: 8px; align-content: start; padding: 10px 12px; border: 2px solid #062764; background: #fff; }
+.payroll-card.expired { border-color: #b8860b; background: #fffbea; }
+.payroll-card header { display: flex; align-items: center; gap: 10px; }
+.payroll-card header .player-photo { width: 44px; height: 44px; flex: none; }
+.payroll-card header div { display: grid; min-width: 0; }
+.payroll-card header b { overflow: hidden; color: #062764; font: 600 16px/1.15 'Oswald', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+.payroll-card header small { color: #55607a; font: 500 12px/1.2 'Roboto Condensed', sans-serif; }
+.payroll-card-salary { display: flex; align-items: baseline; gap: 6px; }
+.payroll-card-salary b { color: #0d4a2a; font: 600 20px/1 'Oswald', sans-serif; }
+.payroll-card-salary small, .payroll-card-total { color: #55607a; font: 500 12px/1.3 'Roboto Condensed', sans-serif; }
+.payroll-card-total b { color: #062764; }
+.payroll-card-years { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; color: #062764; font: 600 12px/1.2 'Oswald', sans-serif; }
+.season-dots { display: inline-flex; gap: 4px; }
+.season-dots i { width: 12px; height: 12px; border: 2px solid #062764; border-radius: 50%; background: #fff; }
+.season-dots i.paid { background: #062764; }
+.years-chips button { min-width: 34px; min-height: 30px; padding: 0 8px; }
+.roles-player { display: flex; align-items: center; gap: 8px; }
+.roles-player .player-photo { width: 32px; height: 32px; flex: none; }
+.roles-table { width: 100%; min-width: 640px; border-collapse: collapse; }
+.roles-table th, .roles-table td { padding: 6px 8px; border-bottom: 1px solid #d5dbe8; text-align: left; font: 500 13px/1.3 'Roboto Condensed', sans-serif; }
+.roles-table th { color: #55607a; font: 600 11px/1.2 'Oswald', sans-serif; }
+.roles-table select { min-height: 34px; }
+.payroll-table-wrap { overflow-x: auto; }
