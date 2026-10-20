@@ -4,6 +4,7 @@ import { PlayerFace } from '../../../components/PlayerFace.jsx';
 import { gp } from '../DataStates.jsx';
 import { PlayerPicker } from './PlayerPicker.jsx';
 import { Stars } from './stars.jsx';
+import { GpInput } from '../../../components/GpInput.jsx';
 
 const TOPIC_LABEL = { minutos: 'MINUTOS', companeros: 'COMPAÑEROS', dt: 'ENTRENADOR', prestigio: 'PRESTIGIO', proyecto: 'PROYECTO' };
 const FACTOR_LABEL = { dinero: 'DINERO', minutos: 'MINUTOS', companeros: 'COMPAÑEROS', dt: 'ENTRENADOR', prestigio: 'PRESTIGIO', proyecto: 'PROYECTO', reputacion: 'REPUTACIÓN' };
@@ -105,7 +106,7 @@ export function AuctionSimulator({ teams = [] }) {
             <b>{(clubs.find(team => team.id === entry.teamId)?.name ?? entry.teamId).toUpperCase()}{isWinner ? ' 🏆' : ''}</b>
             <button type="button" className="link-button muted" onClick={() => setEntries(current => current.filter((_, at) => at !== index))}>QUITAR</button>
           </header>
-          <label>OFERTA (GP)<input type="number" value={entry.offer} min={result?.minBid ?? 0} max={result?.maxBid ?? undefined} onChange={event => update(index, { offer: event.target.value })}/></label>
+          <label>OFERTA (GP)<GpInput value={entry.offer} min={result?.minBid ?? 0} max={result?.maxBid ?? null} onChange={event => update(index, { offer: event.target.value })}/></label>
           {(result?.order ?? Object.keys(TOPIC_LABEL)).filter(topic => TOPIC_LABEL[topic]).map(topic => <label key={topic}>{TOPIC_LABEL[topic]}
             <select value={entry.answers[topic] ?? ''} onChange={event => answer(index, topic, event.target.value)}>
               <option value="">(SIN RESPONDER)</option>

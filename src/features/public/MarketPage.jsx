@@ -16,6 +16,7 @@ import { AuctionHistory } from './market/AuctionHistory.jsx';
 import { SealedAuctionsSection } from './market/SealedAuctionsSection.jsx';
 import { AuctionSimulator } from './market/AuctionSimulator.jsx';
 import { gpLabel } from '../../utils/money.js';
+import { GpInput } from '../../components/GpInput.jsx';
 
 const asList = value => Array.isArray(value) ? value : [];
 
@@ -47,7 +48,7 @@ function TransferForm({ teams, players, onChanged }) {
     <label>EQUIPO DE ORIGEN<select name="fromTeamId" value={form.fromTeamId} onChange={change}><TeamOptions teams={teams}/></select></label>
     <label>JUGADOR<select name="playerId" required value={form.playerId} onChange={change}><PlayerOptions players={players} teamId={form.fromTeamId}/></select></label>
     <label>EQUIPO DE DESTINO<select name="toTeamId" required value={form.toTeamId} onChange={change}><TeamOptions teams={teams.filter(team => team.id !== form.fromTeamId)}/></select></label>
-    <label>MONTO GP<input name="gpAmount" required type="number" min="0" step="1" value={form.gpAmount} onChange={change}/></label>
+    <label>MONTO GP<GpInput name="gpAmount" required value={form.gpAmount} onChange={change}/></label>
     <button className="action-button" disabled={mutation.loading || !form.fromTeamId || !form.playerId || !form.toTeamId || form.gpAmount === ''}>REGISTRAR TRANSFERENCIA</button>
     <FormFeedback mutation={mutation}/>
   </form>;
@@ -67,8 +68,8 @@ function TradeForm({ teams, players, onChanged }) {
     <label>JUGADOR A<select name="fromPlayerId" required value={form.fromPlayerId} onChange={change}><PlayerOptions players={players} teamId={form.fromTeamId}/></select></label>
     <label>EQUIPO B<select name="toTeamId" value={form.toTeamId} onChange={change}><TeamOptions teams={teams.filter(team => team.id !== form.fromTeamId)}/></select></label>
     <label>JUGADOR B<select name="toPlayerId" required value={form.toPlayerId} onChange={change}><PlayerOptions players={players} teamId={form.toTeamId}/></select></label>
-    <label>GP ADICIONAL DE A<input name="gpFrom" type="number" min="0" step="1" value={form.gpFrom} onChange={change}/></label>
-    <label>GP ADICIONAL DE B<input name="gpTo" type="number" min="0" step="1" value={form.gpTo} onChange={change}/></label>
+    <label>GP ADICIONAL DE A<GpInput name="gpFrom" value={form.gpFrom} onChange={change}/></label>
+    <label>GP ADICIONAL DE B<GpInput name="gpTo" value={form.gpTo} onChange={change}/></label>
     <button className="action-button" disabled={mutation.loading || !form.fromTeamId || !form.toTeamId || !form.fromPlayerId || !form.toPlayerId}>REGISTRAR TRUEQUE</button>
     <FormFeedback mutation={mutation}/>
   </form>;

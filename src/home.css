@@ -3873,3 +3873,10 @@ html.pc-locked, html.pc-locked body { overflow: hidden; }
 .contract-terms legend { padding: 0 6px; color: #8a6d2f; font: 600 12px/1.2 'Oswald', sans-serif; }
 .offer-terms { margin: 0; padding: 6px 10px; border: 2px dashed #b8860b; background: #fffaf0; color: #062764; font: 600 12px/1.4 'Roboto Condensed', sans-serif; }
 
+
+/* ===== Campo de monto ===== */
+.gp-input { display: grid; gap: 2px; width: 100%; }
+.gp-input input { width: 100%; font-variant-numeric: tabular-nums; text-align: right; }
+.gp-hint { color: #0d4a2a; font: 600 12px/1.2 'Roboto Condensed', sans-serif; text-align: right; }
+.gp-hint.out { color: #b3261e; }
+.tournament-awards-table .gp-input { min-width: 150px; }

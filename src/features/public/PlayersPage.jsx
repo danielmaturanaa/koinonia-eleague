@@ -8,6 +8,7 @@ import { PLAYING_STYLES, skillLabel, STAT_GROUPS } from './EfootballCard.jsx';
 import { useApiQuery } from './useApiQuery.js';
 import { addToComparison, comparisonCandidate, readComparison, writeComparison } from '../../utils/playerComparison.js';
 import { gpLabel, gpNumber } from '../../utils/money.js';
+import { GpInput } from '../../components/GpInput.jsx';
 
 const positions = ['PT','LD','DEC','LI','MC','MO','ED','EI','DC'];
 
@@ -96,7 +97,7 @@ function FilterPanel({ filters, teams, set, togglePosition, total, onClose }) {
       </div>;
     })}</fieldset>
     <fieldset><legend>PRECIO (GP)</legend>{PRICE_RANGES.map(([min, max, label]) => <label key={label} className="filter-option"><input type="radio" name="price" checked={!custom && priceKey === `${min}-${max}`} onChange={() => set({ minGp: min, maxGp: max })}/>{label}</label>)}
-      <div className="filter-range"><input type="number" min="0" step="1000000" value={filters.minGp} onChange={event => set({ minGp: event.target.value })} placeholder="Mín." aria-label="GP mínimo"/><span>–</span><input type="number" min="0" step="1000000" value={filters.maxGp} onChange={event => set({ maxGp: event.target.value })} placeholder="Máx." aria-label="GP máximo"/></div>
+      <div className="filter-range"><GpInput hint={false} value={filters.minGp} onChange={event => set({ minGp: event.target.value })} placeholder="Mín." aria-label="GP mínimo"/><span>–</span><GpInput hint={false} value={filters.maxGp} onChange={event => set({ maxGp: event.target.value })} placeholder="Máx." aria-label="GP máximo"/></div>
     </fieldset>
     <fieldset><legend>EQUIPO</legend><select value={filters.teamId} onChange={event => set({ teamId: event.target.value })} aria-label="Equipo"><option value="">Todos los equipos</option>{teams.map(team => <option value={team.id} key={team.id}>{team.name}</option>)}</select></fieldset>
     <fieldset><legend>NACIONALIDAD</legend><input value={filters.nationality} onChange={event => set({ nationality: event.target.value })} placeholder="Ej: Argentina" aria-label="Nacionalidad"/></fieldset>

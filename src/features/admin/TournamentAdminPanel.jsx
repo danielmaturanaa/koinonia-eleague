@@ -6,6 +6,7 @@ import { FormFeedback } from './FormFeedback.jsx';
 import { useApiMutation } from './useApiMutation.js';
 import { TeamMark } from '../../components/TeamMark.jsx';
 import { gpLabel } from '../../utils/money.js';
+import { GpInput } from '../../components/GpInput.jsx';
 
 function MutationAction({ action, label, confirmText, onChanged, danger = false }) {
   const mutation = useApiMutation(signal => action(signal), { onSuccess: onChanged });
@@ -84,9 +85,9 @@ export function TournamentAwardsPanel({ tournament, onChanged }) {
         const place = places[row.team_id];
         return <tr key={row.team_id}>
           <td>{index + 1}</td><td>{row.name}</td><td><b>{row.points}</b></td>
-          <td><input aria-label={`GP de liga para ${row.name}`} type="number" min="0" step="1000000" value={entry.league ?? ''} onChange={event => set(row.team_id, 'league', event.target.value)} placeholder="0"/></td>
+          <td><GpInput aria-label={`GP de liga para ${row.name}`} value={entry.league ?? ''} onChange={event => set(row.team_id, 'league', event.target.value)} placeholder="0"/></td>
           <td>{place ? PLAYOFF_PRIZES[place].label : '—'}</td>
-          <td><input aria-label={`GP de playoffs para ${row.name}`} type="number" min="0" step="1000000" value={entry.playoff ?? ''} onChange={event => set(row.team_id, 'playoff', event.target.value)} placeholder="0"/></td>
+          <td><GpInput aria-label={`GP de playoffs para ${row.name}`} value={entry.playoff ?? ''} onChange={event => set(row.team_id, 'playoff', event.target.value)} placeholder="0"/></td>
         </tr>;
       })}</tbody>
     </table></div>}

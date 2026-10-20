@@ -6,6 +6,7 @@ import { useApiMutation } from '../../admin/useApiMutation.js';
 import { DataState, gp } from '../DataStates.jsx';
 import { useApiQuery } from '../useApiQuery.js';
 import { useAutoRefresh } from './PollsSection.jsx';
+import { GpInput } from '../../../components/GpInput.jsx';
 
 const RELEASE_SHARE = 0.2;
 // La misma banda que valida el servidor: todo precio queda entre 0,7× y 1,25× el valor del jugador.
@@ -194,7 +195,7 @@ function TransferProposal({ myTeamId, rivals, onDone }) {
     </div>
     <label>{buying ? 'CLUB AL QUE LE COMPRAS' : 'CLUB AL QUE LE VENDES'}<select required value={form.otherTeamId} onChange={event => set('otherTeamId', event.target.value)}><option value="">ELEGIR CLUB</option>{rivals.map(team => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label>
     <label>{buying ? 'JUGADOR QUE QUIERES' : 'JUGADOR TUYO QUE VENDES'}<select required value={form.playerId} disabled={buying && !form.otherTeamId} onChange={event => set('playerId', event.target.value)}>{playerOptions(squad)}</select></label>
-    <label>PRECIO EN GP{band ? ` · ENTRE ${gp(band.min)} Y ${gp(band.max)}` : ''}<input required type="number" inputMode="numeric" min={band?.min ?? 0} max={band?.max} step="1" value={form.gpAmount} disabled={!player} onChange={event => set('gpAmount', event.target.value)}/></label>
+    <label>PRECIO EN GP{band ? ` · ENTRE ${gp(band.min)} Y ${gp(band.max)}` : ''}<GpInput required min={band?.min ?? 0} max={band?.max} value={form.gpAmount} disabled={!player} onChange={event => set('gpAmount', event.target.value)}/></label>
     {needsTerms && other && <TermsFields player={player} club={buying ? 'tu club' : other.name} terms={terms} onChange={setTerms}/>}
     {player && other && Number.isFinite(price) && <Summary problem={problem}>
       {buying ? `${upper(other.name)} TE VENDE A ${upper(player.name)} POR ${gp(price)}.` : `LE VENDES ${upper(player.name)} A ${upper(other.name)} POR ${gp(price)}.`} TIENE QUE ACEPTARLO SU PRESI (EN LA WEB O EN DISCORD).
@@ -239,8 +240,8 @@ function TradeProposal({ myTeamId, rivals, onDone }) {
     <label>CLUB CON EL QUE TRUECAS<select required value={form.otherTeamId} onChange={event => set('otherTeamId', event.target.value)}><option value="">ELEGIR CLUB</option>{rivals.map(team => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label>
     <label>ENTREGAS<select required value={form.fromPlayerId} onChange={event => set('fromPlayerId', event.target.value)}>{playerOptions(mySquad.squad)}</select></label>
     <label>PIDES<select required value={form.toPlayerId} disabled={!form.otherTeamId} onChange={event => set('toPlayerId', event.target.value)}>{playerOptions(otherSquad.squad)}</select></label>
-    <label>GP QUE AGREGAS TÚ (OPCIONAL)<input type="number" inputMode="numeric" min="0" step="1" placeholder="0" value={form.gpFrom} onChange={event => set('gpFrom', event.target.value)}/></label>
-    <label>GP QUE AGREGA {other ? upper(other.name) : 'EL OTRO CLUB'} (OPCIONAL)<input type="number" inputMode="numeric" min="0" step="1" placeholder="0" value={form.gpTo} onChange={event => set('gpTo', event.target.value)}/></label>
+    <label>GP QUE AGREGAS TÚ (OPCIONAL)<GpInput placeholder="0" value={form.gpFrom} onChange={event => set('gpFrom', event.target.value)}/></label>
+    <label>GP QUE AGREGA {other ? upper(other.name) : 'EL OTRO CLUB'} (OPCIONAL)<GpInput placeholder="0" value={form.gpTo} onChange={event => set('gpTo', event.target.value)}/></label>
     {needsOfferedTerms && other && <TermsFields player={offered} club={other.name} terms={offeredTerms} onChange={setOfferedTerms}/>}
     {needsRequestedTerms && other && <TermsFields player={requested} club="tu club" terms={requestedTerms} onChange={setRequestedTerms}/>}
     {offered && requested && <Summary problem={problem}>

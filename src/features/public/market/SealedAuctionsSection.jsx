@@ -12,6 +12,7 @@ import { PlayerChat } from './PlayerChat.jsx';
 import { PlayerPicker } from './PlayerPicker.jsx';
 import { ReadyControl } from './ReadyControl.jsx';
 import { useAutoRefresh } from './PollsSection.jsx';
+import { GpInput } from '../../../components/GpInput.jsx';
 
 const STATUS_LABEL = { open: 'ABIERTA', resolved: 'FIRMADO', no_sale: 'SIN VENTA', cancelled: 'CANCELADA' };
 
@@ -96,7 +97,7 @@ function BidPanel({ auction, onChanged, teams = [], clubs: allowedClubs = null }
   return <form className="poll-auction-form sealed-bid" onSubmit={submit}>
     {selector}
     <label>{mine ? `CAMBIAR MI OFERTA (HOY ${gp(mine.amount)})` : 'MI OFERTA (GP)'}
-      <input type="number" min={minimum} max={auction.maxBid ?? undefined} step="1" required value={amount} onChange={event => setAmount(event.target.value)}/>
+      <GpInput min={minimum} max={auction.maxBid ?? null} required value={amount} onChange={event => setAmount(event.target.value)}/>
     </label>
     {auction.player?.gpValue > 0 && <p className="poll-hint sealed-bid-help">📄 SI GANAS: CONTRATO DE 2 TORNEOS CON SUELDO DE <b>{gp(Math.max(10_000, Math.round(auction.player.gpValue * 0.1 / 10_000) * 10_000))}</b> POR TORNEO (10% DE SU VALOR), QUE SE COBRA AL TERMINAR CADA TORNEO DE LIGA. PUEDES CAMBIAR LOS AÑOS EN LA PESTAÑA NÓMINA ANTES DEL PRIMER COBRO.</p>}
     <p className="poll-hint sealed-bid-help">

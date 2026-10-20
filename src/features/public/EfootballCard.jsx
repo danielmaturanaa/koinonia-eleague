@@ -9,6 +9,7 @@ import { useApiMutation } from '../admin/useApiMutation.js';
 import { DataState, OverallBadge, gp } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
 import { addToComparison, comparisonCandidate, readComparison, writeComparison } from '../../utils/playerComparison.js';
+import { GpInput } from '../../components/GpInput.jsx';
 
 // Medias agrupadas como en eFootballDB, con los nombres en español del juego.
 export const STAT_GROUPS = [
@@ -63,7 +64,7 @@ function RegisterCard({ card, onRegistered }) {
     event.preventDefault();
     register.execute({ name: card.name, position: card.position, gpValue: Number(value || 0), efootballPesId: card.pesId, efootballVariation: card.variation, faceUrl: card.faceUrl, nationality: card.nationality });
   };
-  return <form className="card-register" onSubmit={submit}><p>NADIE LO TIENE Y AÚN NO ESTÁ INSCRITO EN LA LIGA.</p><label>VALOR GP EN LA LIGA<input type="number" min="0" value={value} onChange={event => setValue(event.target.value)}/></label><button className="action-button positive" disabled={register.loading}>INSCRIBIR EN LA LIGA</button><FormFeedback mutation={register}/></form>;
+  return <form className="card-register" onSubmit={submit}><p>NADIE LO TIENE Y AÚN NO ESTÁ INSCRITO EN LA LIGA.</p><label>VALOR GP EN LA LIGA<GpInput value={value} onChange={event => setValue(event.target.value)}/></label><button className="action-button positive" disabled={register.loading}>INSCRIBIR EN LA LIGA</button><FormFeedback mutation={register}/></form>;
 }
 
 export function EfootballCardPage({ pesId, variation = 0, navigate, onBack, backLabel = '← VOLVER A JUGADORES' }) {

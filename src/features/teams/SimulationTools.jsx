@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { gpNumber } from '../../utils/money.js';
+import { gpDigits, gpNumber, parseGp } from '../../utils/money.js';
 
 const format = gpNumber;
 
@@ -11,11 +11,11 @@ export function SimulationTools({ name, value, edited, onPrice, onReset, onRemov
   const input = useRef(null);
   useEffect(() => { if (editing) input.current?.select(); }, [editing]);
 
-  const start = () => { setDraft(String(value)); setEditing(true); };
+  const start = () => { setDraft(gpDigits(value)); setEditing(true); };
   const commit = () => {
-    const digits = draft.replace(/\D/g, '');
+    const parsed = parseGp(draft);
     setEditing(false);
-    if (digits !== '' && Number(digits) !== value) onPrice(Number(digits));
+    if (parsed !== null && parsed !== value) onPrice(parsed);
   };
   const onKeyDown = event => {
     if (event.key === 'Enter') { event.preventDefault(); commit(); }
@@ -24,7 +24,7 @@ export function SimulationTools({ name, value, edited, onPrice, onReset, onRemov
 
   return <span className="pitch-tools">
     {editing
-      ? <input ref={input} className="pitch-price-input" inputMode="numeric" autoComplete="off" value={draft} aria-label={`Precio de ${name} en GP`} onChange={event => setDraft(event.target.value)} onKeyDown={onKeyDown} onBlur={commit}/>
+      ? <input ref={input} className="pitch-price-input" inputMode="numeric" autoComplete="off" value={draft} aria-label={`Precio de ${name} en GP`} onChange={event => setDraft(/^[\d.\s]*$/.test(event.target.value) && parseGp(event.target.value) !== null ? gpDigits(parseGp(event.target.value)) : event.target.value)} onKeyDown={onKeyDown} onBlur={commit}/>
       : <button type="button" className={`pitch-price ${edited ? 'edited' : ''}`} onClick={start} title={`Editar precio de ${name}${edited ? ' (editado)' : ''}`} aria-label={`Editar precio de ${name}: ${format(value)} GP`}>{format(value)}</button>}
     {edited && !editing && <button type="button" className="pitch-tool" onClick={onReset} title="Volver al precio real" aria-label={`Volver al precio real de ${name}`}>↺</button>}
     {!editing && <button type="button" className="pitch-tool remove" onClick={onRemove} title="Quitar de la simulación" aria-label={`Quitar a ${name} de la simulación`}>×</button>}
