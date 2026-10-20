@@ -5,11 +5,11 @@ import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { DataState, gp } from '../public/DataStates.jsx';
 import { useApiQuery } from '../public/useApiQuery.js';
+import { RolesPanel } from './RolesPanel.jsx';
+import { SigningSheet } from './SigningSheet.jsx';
 
 const SEASONS = [2, 3, 4, 5, 6];
 const upper = text => String(text ?? '').toUpperCase();
-const SALARY_STEP = 10_000;
-const roundStep = amount => Math.max(SALARY_STEP, Math.round(amount / SALARY_STEP) * SALARY_STEP);
 
 // Los años elegidos antes de activar el sistema son una proyección: quedan en este navegador.
 const draftKey = teamId => `payroll-years:${teamId}`;
@@ -18,26 +18,6 @@ function loadDraft(teamId) {
 }
 function saveDraft(teamId, draft) {
   try { window.localStorage.setItem(draftKey(teamId), JSON.stringify(draft)); } catch { /* sin almacenamiento: la proyección sigue funcionando */ }
-}
-
-function RenewalForm({ team, contract, onDone }) {
-  const quote = contract.renewalQuote;
-  const [raise, setRaise] = useState(String(Math.min(100, quote?.minRaisePercent ?? 1)));
-  const [seasons, setSeasons] = useState('2');
-  const renew = useApiMutation((body, signal) => endpoints.renewContract(team.id, body, signal), { onSuccess: onDone });
-  if (!quote) return null;
-  const offered = roundStep(contract.salary * (1 + Number(raise || 0) / 100));
-  return <div className="payroll-renewal">
-    <p><b>{upper(contract.playerName)}</b> TERMINÓ SU CONTRATO. PIDE AL MENOS {gp(quote.demand)} AL AÑO (UN AUMENTO DE {quote.minRaisePercent}% O MÁS)
-      {!quote.feasible && ' — ESO ES MÁS DEL 100% QUE SE PUEDE OFRECER: NO ACEPTARÁ RENOVAR'}. SI NO SE RENUEVA ANTES DEL CIERRE DEL MERCADO, SALE A AGENCIA LIBRE SIN CASTIGO.</p>
-    <div className="payroll-renewal-fields">
-      <label>AUMENTO %<input type="number" min="1" max="100" step="1" value={raise} onChange={event => setRaise(event.target.value)}/></label>
-      <label>TEMPORADAS<select value={seasons} onChange={event => setSeasons(event.target.value)}>{SEASONS.map(n => <option key={n} value={n}>{n}</option>)}</select></label>
-      <span className="payroll-offer">SUELDO NUEVO: <b>{gp(offered)}</b></span>
-      <button type="button" className="action-button positive" disabled={renew.loading || !quote.feasible} onClick={() => renew.execute({ playerId: contract.playerId, seasons: Number(seasons), raisePercent: Number(raise) })}>{renew.loading ? 'RENOVANDO…' : 'RENOVAR'}</button>
-    </div>
-    <FormFeedback mutation={renew}/>
-  </div>;
 }
 
 function TerminateButton({ team, contract, onDone }) {
@@ -108,7 +88,7 @@ export function PayrollTab({ team, balance, onChanged }) {
         <div><small>ALCANZA PARA</small><b>{seasonsCovered === null ? '—' : `${seasonsCovered.toLocaleString('es-CL')} TEMPORADAS`}</b></div>
       </div>
       {isAdmin && !enabled && <StartContracts onDone={refresh}/>}
-      {canEdit && expired.map(contract => <RenewalForm key={contract.id} team={team} contract={contract} onDone={refresh}/>)}
+      {canEdit && expired.map(contract => <SigningSheet key={contract.id} team={team} contract={contract} args={query.data?.arguments ?? []} maxRounds={query.data?.maxRounds ?? 3} onDone={refresh}/>)}
       <div className="payroll-table-wrap"><table className="payroll-table">
         <thead><tr><th>JUGADOR</th><th>VALOR</th><th>SUELDO/AÑO</th><th>TEMPORADAS</th><th>ESTADO</th>{canEdit && enabled && <th></th>}</tr></thead>
         <tbody>{projection.players.map(player => {
@@ -127,6 +107,7 @@ export function PayrollTab({ team, balance, onChanged }) {
           </tr>;
         })}</tbody>
       </table></div>
+      {enabled && <RolesPanel team={team}/>}
       {!enabled && canEdit && <p className="poll-hint">COSTO TOTAL DE LOS CONTRATOS SIMULADOS (SUELDO × AÑOS ELEGIDOS): {gp(projection.players.reduce((sum, player) => sum + player.projectedSalary * yearsFor(player), 0))}.</p>}
     </>}
   </section>;

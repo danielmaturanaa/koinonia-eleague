@@ -18,6 +18,7 @@ import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { useApiQuery } from '../public/useApiQuery.js';
 import { useLiveStandings } from '../public/useLiveStandings.js';
+import { InboxTab } from './InboxTab.jsx';
 import { PayrollTab } from './PayrollTab.jsx';
 import { gpNumber } from '../../utils/money.js';
 import { PitchBoard } from './PitchBoard.jsx';
@@ -644,7 +645,8 @@ function SquadValueSimulator({ team, squad, balance }) {
   </section>;
 }
 
-const TABS = [['resumen', 'RESUMEN'], ['plantel', 'PLANTEL'], ['partidos', 'PARTIDOS'], ['tabla', 'TABLA'], ['fichajes', 'FICHAJES'], ['historia', 'HISTORIA'], ['nomina', 'NÓMINA'], ['finanzas', 'SIMULADOR DE PRESUPUESTO']];
+const BASE_TABS = [['resumen', 'RESUMEN'], ['plantel', 'PLANTEL'], ['partidos', 'PARTIDOS'], ['tabla', 'TABLA'], ['fichajes', 'FICHAJES'], ['historia', 'HISTORIA'], ['nomina', 'NÓMINA'], ['finanzas', 'SIMULADOR DE PRESUPUESTO']];
+const INBOX_TAB = ['bandeja', 'BANDEJA'];
 
 const finishedMatches = (matches, teamId) => matches
   .filter(match => match.status === 'finished' && (match.homeTeam?.id === teamId || match.awayTeam?.id === teamId))
@@ -762,6 +764,10 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
   const [personRevision, setPersonRevision] = useState(0);
   const [crestEditorOpen, setCrestEditorOpen] = useState(false);
   const [coversOpen, setCoversOpen] = useState(false);
+  // Bandeja de entrada: solo la ve el presi (o un admin) y muestra cuántos mensajes sin leer hay.
+  const inbox = useApiQuery(signal => canEdit && team?.id ? endpoints.teamInbox(team.id, signal).catch(() => ({ data: null })) : Promise.resolve({ data: null }), [team?.id, canEdit]);
+  const unread = inbox.data?.unread ?? 0;
+  const TABS = canEdit && inbox.data ? [...BASE_TABS.slice(0, 6), [INBOX_TAB[0], `${INBOX_TAB[1]}${unread > 0 ? ` (${unread})` : ''}`], ...BASE_TABS.slice(6)] : BASE_TABS;
   const activeTab = TABS.some(([id]) => id === tab) ? tab : 'resumen';
   const liveStandings = useLiveStandings(standingsTournamentId);
   const displayStandings = Array.isArray(liveStandings.data) && liveStandings.data.length ? liveStandings.data : standings;
@@ -823,6 +829,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
         {activeTab === 'tabla' && <ClubTable standings={displayStandings} teamId={team.id} teams={teams}/>}
         {activeTab === 'fichajes' && <ClubTransfers teamId={team.id}/>}
         {activeTab === 'historia' && <div className="club-history-tab-content"><HonoursList honours={honours} historyError={historyError}/><ClubHistory team={team} onEdit={canEdit ? setHistoryEditor : undefined}/></div>}
+        {activeTab === 'bandeja' && <InboxTab team={team} onTab={onTab} onRead={inbox.retry}/>}
         {activeTab === 'nomina' && <PayrollTab team={team} balance={balance} onChanged={onChanged}/>}
         {activeTab === 'finanzas' && <div className="club-budget-tab"><SquadValueSimulator team={team} squad={squad} balance={balance}/></div>}
       </section>
