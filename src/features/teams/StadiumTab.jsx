@@ -43,7 +43,7 @@ export function StadiumTab({ team, balance, onChanged }) {
           const affordable = balance === null || balance === undefined || cost <= balance;
           return <article key={stadium.id} className={`stadium-card ${owned ? 'is-mine' : ''} ${free ? '' : 'is-taken'}`}>
             <b>{stadium.name}</b>
-            <small>{upper(stadium.kind)} · {gpLabel(stadium.price)}</small>
+            <small>{upper(stadium.kind)} · {gpLabel(stadium.price)}{stadium.capacity ? ` · ${stadium.capacity.toLocaleString('es-CL')} ESPECTADORES` : ''}</small>
             {owned ? <em>✅ ES TUYO</em> : free
               ? (canEdit && (confirming === stadium.id
                 ? <span className="offer-confirm">{mine ? `¿CAMBIAR? PAGAS ${gpLabel(Math.max(0, cost))}${cost < 0 ? ` Y RECIBES ${gpLabel(-cost)}` : ''}.` : `¿COMPRAR POR ${gpLabel(stadium.price)}?`}
