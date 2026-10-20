@@ -35,7 +35,10 @@ function useSim(teamId) {
   const change = patch => setSim(current => { const next = { ...current, ...patch }; writeJson(`payroll-sim:${teamId}`, next); return next; });
   const changePlayer = (playerId, patch) => change({ players: { ...sim.players, [playerId]: { ...sim.players[playerId], ...patch } } });
   const reset = () => change({ ...DEFAULT_SIM });
-  return { sim, change, changePlayer, reset };
+  // El aumento y la renovación "por defecto" se aplican a todos los jugadores (borran lo que se había ajustado a mano);
+  // después se corrige a los que se quiera distintos.
+  const applyToAll = patch => change({ ...patch, players: Object.fromEntries(Object.entries(sim.players).map(([id, own]) => { const { raise, renew, ...rest } = own; return [id, rest]; })) });
+  return { sim, change, changePlayer, reset, applyToAll };
 }
 
 function useLayout() {
@@ -55,12 +58,17 @@ function ShareBar({ salary, value, compact = false }) {
   </span>;
 }
 
-const RISK_LABEL = { alto: 'RIESGO ALTO: PODRÍA NEGARSE A RENOVAR', medio: 'RIESGO MEDIO: PEDIRÍA MÁS AL RENOVAR', bajo: 'RIESGO BAJO: DEBERÍA RENOVAR SIN PROBLEMAS' };
+const RISK_LABEL = { alto: '🔴 SE NEGARÍA', medio: '🟠 PEDIRÁ MÁS', bajo: '🟢 RENOVARÍA' };
+const RISK_DETAIL = {
+  alto: 'Hoy se negaría a renovar: está muy molesto. Arregla su rol o su sueldo antes de ofrecerle algo.',
+  medio: 'Renovaría, pero pedirá un sueldo más alto de lo normal porque no está del todo conforme.',
+  bajo: 'Debería renovar sin problemas con un aumento normal.',
+};
 const TRAIT_NAME = { ganador: 'GANADOR', titular: 'TITULAR', sociable: 'SOCIABLE', mercenario: 'MERCENARIO', ego: 'EGO', leal: 'LEAL' };
-/** Qué tan probable es que renueve, según su ánimo hoy (rol, sueldo, resultados y personalidad). */
+/** Qué haría hoy si le ofrecieras renovar, según su ánimo (rol, sueldo, resultados y personalidad). */
 function RiskChip({ row }) {
-  const detail = `${RISK_LABEL[row.renewalRisk] ?? ''}. ÁNIMO: ${upper(row.moodLabel)} (${row.mood}/100). PERSONALIDAD: ${(row.traits ?? []).map(trait => TRAIT_NAME[trait] ?? trait).join(', ')}.`;
-  return <span className={`risk-chip ${row.renewalRisk}`} title={detail}>{row.renewalRisk === 'alto' ? '🔴' : row.renewalRisk === 'medio' ? '🟠' : '🟢'} RENOVACIÓN {upper(row.renewalRisk)}</span>;
+  const detail = `${RISK_DETAIL[row.renewalRisk] ?? ''} Ánimo: ${row.moodLabel} (${row.mood}/100). Personalidad: ${(row.traits ?? []).map(trait => (TRAIT_NAME[trait] ?? trait).toLowerCase()).join(', ')}.`;
+  return <span className={`risk-chip ${row.renewalRisk}`} title={detail}>{RISK_LABEL[row.renewalRisk]}</span>;
 }
 
 function LayoutToggle({ layout, onChange }) {
@@ -189,7 +197,7 @@ function RealView({ team, query, balance, marketOpen, canEdit, layout, refresh }
 
 // ---------- vista SIMULACIÓN ----------
 function SimView({ team, projection, balance, canEdit, layout, currentPosition }) {
-  const { sim, change, changePlayer, reset } = useSim(team.id);
+  const { sim, change, changePlayer, reset, applyToAll } = useSim(team.id);
   // Sin elegir, parte de tu puesto actual en la tabla (o 4.º si no hay torneo en curso).
   const defaultPosition = sim.position ?? currentPosition ?? 4;
   const setTorneo = (key, index, value) => change({ [key]: Array.from({ length: HORIZON }, (_, i) => (i === index ? value : sim[key]?.[i] ?? null)) });
@@ -216,8 +224,8 @@ function SimView({ team, projection, balance, canEdit, layout, currentPosition }
     : <b>{gp(row.salary)}</b>;
   // Por jugador: aumento al renovar (vacío = el global), si renueva y si se vende (sale desde el T1).
   const renewControls = row => <span className="sim-player-controls">
-    <label title="Aumento al renovar. Vacío usa el global.">AUMENTO<span className="mini-percent"><input type="number" min="0" max="100" step="1" inputMode="numeric" placeholder={String(sim.raise)} disabled={!canEdit || row.sold} aria-label={`Aumento al renovar de ${row.playerName}`}
-      value={row.raiseOwn ?? ''} onChange={event => changePlayer(row.playerId, { raise: event.target.value === '' ? undefined : Math.min(100, Math.max(0, Number(event.target.value))) })}/>%</span></label>
+    <label title="Aumento al renovar. Parte con el valor por defecto de arriba; cámbialo si este jugador va distinto.">AUMENTO<span className={`mini-percent ${row.raiseOwn !== undefined && row.raiseOwn !== sim.raise ? 'custom' : ''}`}><input type="number" min="0" max="100" step="1" inputMode="numeric" disabled={!canEdit || row.sold} aria-label={`Aumento al renovar de ${row.playerName}`}
+      value={row.raise} onChange={event => changePlayer(row.playerId, { raise: event.target.value === '' ? undefined : Math.min(100, Math.max(0, Number(event.target.value))) })}/>%</span></label>
     <label><input type="checkbox" checked={row.renew} disabled={!canEdit || row.sold} onChange={event => changePlayer(row.playerId, { renew: event.target.checked })}/> RENUEVA</label>
     <RiskChip row={row}/>
     <label className="sell"><input type="checkbox" checked={row.sold} disabled={!canEdit} onChange={event => changePlayer(row.playerId, { sell: event.target.checked })}/> VENDER</label>
@@ -228,8 +236,8 @@ function SimView({ team, projection, balance, canEdit, layout, currentPosition }
     <div className="view-badge is-sim">🧪 SIMULACIÓN · NADA DE ESTO ES REAL NI SE COBRA</div>
     <p className="payroll-note">PRUEBA SUELDOS, AÑOS, UN AUMENTO AL RENOVAR (GLOBAL O POR JUGADOR) Y VENTAS PARA VER CÓMO SE MUEVEN LA NÓMINA Y EL SALDO EN LOS PRÓXIMOS TORNEOS. USA LOS VALORES DE MERCADO DE HOY (CAMBIAN CON CADA REFRESCO DE TRANSFERMARKT) Y TODO QUEDA SOLO EN ESTE NAVEGADOR. SI UN JUGADOR PASA EL 20% DE SU VALOR, SALE EN ROJO: ESE SUELDO NO SE PODRÍA FIRMAR.</p>
     <section className="sim-controls">
-      <label>AUMENTO AL RENOVAR (POR DEFECTO)<span className="sheet-slider"><input type="range" min="0" max="100" value={sim.raise} onChange={event => change({ raise: Number(event.target.value) })} aria-label="Aumento al renovar en porcentaje"/><b>+{sim.raise}%</b></span></label>
-      <label className="sim-check"><input type="checkbox" checked={sim.renew} onChange={event => change({ renew: event.target.checked })}/> RENOVAR A QUIEN LE VENZA EL CONTRATO (POR DEFECTO)</label>
+      <label>AUMENTO AL RENOVAR (POR DEFECTO)<span className="sheet-slider"><input type="range" min="0" max="100" value={sim.raise} onChange={event => applyToAll({ raise: Number(event.target.value) })} aria-label="Aumento al renovar en porcentaje"/><b>+{sim.raise}%</b></span><small className="sim-hint">SE APLICA A TODOS LOS JUGADORES; DESPUÉS CAMBIAS A LOS QUE QUIERAS DISTINTOS.</small></label>
+      <label className="sim-check"><input type="checkbox" checked={sim.renew} onChange={event => applyToAll({ renew: event.target.checked })}/> RENOVAR A QUIEN LE VENZA EL CONTRATO (POR DEFECTO)</label>
       <label>PUESTO POR DEFECTO{sim.position === null && currentPosition ? ' (TU PUESTO HOY)' : ''}<select value={defaultPosition} onChange={event => change({ position: Number(event.target.value) })}>{Array.from({ length: 8 }, (_, i) => i + 1).map(n => <option key={n} value={n}>{n}.º · {gp(leaguePrize(n))}</option>)}</select></label>
       <label>PLAYOFFS POR DEFECTO<select value={sim.playoff} onChange={event => change({ playoff: event.target.value })}>{Object.keys(PLAYOFF_PRIZES).map(key => <option key={key} value={key}>{PLAYOFF_LABEL[key]}{PLAYOFF_PRIZES[key] ? ` · ${gp(PLAYOFF_PRIZES[key])}` : ''}</option>)}</select></label>
       {canEdit && <button type="button" className="ghost" onClick={reset}>RESTABLECER</button>}

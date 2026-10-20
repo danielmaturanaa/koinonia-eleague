@@ -3962,3 +3962,6 @@ html.pc-locked, html.pc-locked body { overflow: hidden; }
 .inbox-role { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; padding: 6px 8px; border: 2px dashed #062764; background: #f4f7ff; color: #062764; font: 600 12px/1.2 'Oswald', sans-serif; }
 .inbox-role select { min-height: 34px; }
 .inbox-role small { color: #55607a; font: 500 12px/1.2 'Roboto Condensed', sans-serif; }
+
+.sim-hint { color: #55607a; font: 500 11px/1.3 'Roboto Condensed', sans-serif; max-width: 260px; }
+.mini-percent.custom input { border-color: #d49b00; background: #fff8e1; font-weight: 700; }
