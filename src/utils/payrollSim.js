@@ -14,18 +14,21 @@ export const leaguePrize = position => Math.max(0, LEAGUE_FIRST_PRIZE - LEAGUE_P
 
 /**
  * `players`: [{ value, salary, years, raise?, renew?, sold? }]: `raise` y `renew` de un jugador mandan sobre los globales, y `sold` lo saca desde el T1.
- * `options`: { raise (%), renew (bool), position (1..), playoff (clave de PLAYOFF_PRIZES),
+ * `options`: { raise (%), renew (bool), position (1..) y playoff (clave de PLAYOFF_PRIZES) por defecto, positions[] y playoffs[]
+ * con el puesto y los playoffs de cada torneo (null = el por defecto),
  * balance, cap (nómina máxima o null) }. Devuelve una fila por torneo con nómina, premios, neto, saldo y cuántos contratos vencen.
  */
-export function simulate(players, { raise = 15, renew = true, position = 4, playoff = 'none', balance = 0, cap = null } = {}) {
+export function simulate(players, { raise = 15, renew = true, position = 4, playoff = 'none', positions = [], playoffs = [], balance = 0, cap = null } = {}) {
   const state = players.map(player => ({
     value: player.value, salary: player.salary, left: player.years, alive: !player.sold,
     raise: player.raise ?? raise, renew: player.renew ?? renew,
   }));
-  const prize = leaguePrize(position) + (PLAYOFF_PRIZES[playoff] ?? 0);
   const rows = [];
   let running = balance;
   for (let torneo = 1; torneo <= HORIZON; torneo += 1) {
+    const place = positions[torneo - 1] ?? position;
+    const bonus = playoffs[torneo - 1] ?? playoff;
+    const prize = leaguePrize(place) + (PLAYOFF_PRIZES[bonus] ?? 0);
     let payroll = 0; let expiring = 0; let renewed = 0; let leaving = 0;
     for (const item of state) {
       if (!item.alive) continue;
@@ -38,7 +41,7 @@ export function simulate(players, { raise = 15, renew = true, position = 4, play
       }
     }
     running += prize - payroll;
-    rows.push({ torneo, payroll, prize, net: prize - payroll, balance: running, expiring, renewed, leaving, overCap: cap !== null && payroll > cap });
+    rows.push({ torneo, position: place, playoff: bonus, payroll, prize, net: prize - payroll, balance: running, expiring, renewed, leaving, overCap: cap !== null && payroll > cap });
   }
   return rows;
 }

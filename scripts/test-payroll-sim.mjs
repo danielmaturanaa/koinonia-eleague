@@ -41,4 +41,12 @@ assert.equal(perPlayer[0].leaving, 1);
 const flagged = simulate(base, { renew: false, cap: 25_000_000 });
 assert.deepEqual(flagged.map(row => row.overCap), [true, true, false, false, false, false]);
 
+// Puesto y playoffs por torneo: cada uno manda sobre el valor por defecto.
+const perTorneo = simulate([{ value: 100_000_000, salary: 10_000_000, years: 6 }], {
+  position: 4, playoff: 'none', positions: [1, null, 8], playoffs: ['champion', null, 'runnerUp'], balance: 0,
+});
+assert.deepEqual(perTorneo.slice(0, 4).map(row => row.prize), [240_000_000, 140_000_000, 80_000_000, 140_000_000]);
+assert.deepEqual(perTorneo.slice(0, 3).map(row => row.position), [1, 4, 8]);
+assert.equal(perTorneo[2].balance, (240e6 - 10e6) + (140e6 - 10e6) + (80e6 - 10e6));
+
 console.log('simulación de nómina: ok');

@@ -832,7 +832,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
         {activeTab === 'fichajes' && <ClubTransfers teamId={team.id}/>}
         {activeTab === 'historia' && <div className="club-history-tab-content"><HonoursList honours={honours} historyError={historyError}/><ClubHistory team={team} onEdit={canEdit ? setHistoryEditor : undefined}/></div>}
         {activeTab === 'bandeja' && <InboxTab team={team} onTab={onTab} onRead={inbox.retry}/>}
-        {activeTab === 'nomina' && <PayrollTab team={team} balance={balance} onChanged={onChanged}/>}
+        {activeTab === 'nomina' && <PayrollTab team={team} balance={balance} onChanged={onChanged} currentPosition={(displayStandings ?? []).findIndex(row => (row.team_id ?? row.teamId) === team.id) + 1 || null}/>}
         {activeTab === 'finanzas' && <div className="club-budget-tab"><SquadValueSimulator team={team} squad={squad} balance={balance}/></div>}
       </section>
 

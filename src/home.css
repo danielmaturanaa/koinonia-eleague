@@ -3890,8 +3890,8 @@ html.pc-locked, html.pc-locked body { overflow: hidden; }
 .payroll-views button.sim-tab { border-style: dashed; }
 .payroll-views button.sim-tab.on { background: #3a5bbd; border-color: #3a5bbd; border-style: solid; }
 .view-badge { padding: 6px 12px; font: 700 13px/1.2 'Oswald', sans-serif; letter-spacing: .04em; }
-.view-badge.real { border-left: 6px solid #062764; background: #e8eefc; color: #062764; }
-.view-badge.sim { border: 2px dashed #3a5bbd; background: #eef3ff; color: #2c4496; }
+.view-badge.is-real { border-left: 6px solid #062764; background: #e8eefc; color: #062764; }
+.view-badge.is-sim { border: 2px dashed #3a5bbd; background: #eef3ff; color: #2c4496; }
 .payroll-real { display: grid; gap: 10px; }
 .payroll-sim { display: grid; gap: 10px; padding: 12px; border: 2px dashed #3a5bbd; background: repeating-linear-gradient(135deg, #f3f6ff 0 14px, #e9eefc 14px 28px); }
 .payroll-sim .payroll-card, .payroll-sim .payroll-tiles > div { border-style: dashed; border-color: #3a5bbd; }
@@ -3918,7 +3918,7 @@ html.pc-locked, html.pc-locked body { overflow: hidden; }
 .ptable th { background: #062764; color: #fff; font: 600 11px/1.2 'Oswald', sans-serif; letter-spacing: .04em; }
 .payroll-sim .ptable th { background: #3a5bbd; }
 .ptable tr.expired td { background: #fffbea; }
-.ptable td.neg, .neg { color: #b3261e; font-weight: 700; }
+.payroll-tab .neg { color: #b3261e; font-weight: 700; }
 .ptable-player { display: flex; align-items: center; gap: 8px; }
 .ptable-player .player-photo { width: 32px; height: 32px; flex: none; }
 .ptable-contract { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
@@ -3949,3 +3949,12 @@ html.pc-locked, html.pc-locked body { overflow: hidden; }
 .mini-percent { display: inline-flex; align-items: center; gap: 2px; }
 .mini-percent input { width: 52px; min-height: 28px; padding: 0 4px; text-align: right; border: 2px solid #3a5bbd; background: #fff; }
 .sim-card.sold, .ptable tr.sold td { opacity: .5; background: repeating-linear-gradient(135deg, #f1f1f1 0 8px, #e6e6e6 8px 16px); }
+
+.risk-chip { display: inline-block; padding: 2px 6px; border: 1px solid currentColor; font: 600 10px/1.2 'Oswald', sans-serif; letter-spacing: .03em; }
+.risk-chip.alto { color: #b3261e; background: #fbe9e7; }
+.risk-chip.medio { color: #8a5a00; background: #fff4d6; }
+.risk-chip.bajo { color: #167a45; background: #e4f4ea; }
+.sim-timeline-table select { min-height: 30px; }
+.ptable-sim td:not(:first-child) { white-space: nowrap; }
+.ptable-sim .years-chips { flex-wrap: nowrap; }
+.ptable-sim .sim-player-controls { flex-wrap: nowrap; }
