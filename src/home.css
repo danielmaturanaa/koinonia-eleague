@@ -3965,3 +3965,6 @@ html.pc-locked, html.pc-locked body { overflow: hidden; }
 
 .sim-hint { color: #55607a; font: 500 11px/1.3 'Roboto Condensed', sans-serif; max-width: 260px; }
 .mini-percent.custom input { border-color: #d49b00; background: #fff8e1; font-weight: 700; }
+
+.renew-result { color: #0d4a2a; font: 600 11px/1.2 'Roboto Condensed', sans-serif; }
+.ptable-sim .renew-result { white-space: nowrap; }

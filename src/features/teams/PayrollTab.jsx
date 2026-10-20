@@ -6,8 +6,9 @@ import { PlayerFace } from '../../components/PlayerFace.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { DataState, gp } from '../public/DataStates.jsx';
+import { gpNumber } from '../../utils/money.js';
 import { useApiQuery } from '../public/useApiQuery.js';
-import { HORIZON, PLAYOFF_PRIZES, leaguePrize, maxSalaryFor, simulate } from '../../utils/payrollSim.js';
+import { HORIZON, PLAYOFF_PRIZES, leaguePrize, maxSalaryFor, roundStep, simulate } from '../../utils/payrollSim.js';
 import { BalanceLine, PayrollBars } from './PayrollCharts.jsx';
 import { SigningSheet } from './SigningSheet.jsx';
 
@@ -208,7 +209,8 @@ function SimView({ team, projection, balance, canEdit, layout, currentPosition }
     const salary = own.salary ?? player.contract?.salary ?? player.projectedSalary;
     const limit = player.salaryCap ?? maxSalaryFor(player.marketValue);
     // Aumento y renovación por jugador: vacío = el global.
-    return { ...player, years, salary, over: salary > limit, raiseOwn: own.raise, raise: own.raise ?? sim.raise, renew: own.renew ?? sim.renew, sold: own.sell === true };
+    const renewedSalary = Math.min(roundStep(salary * (1 + (own.raise ?? sim.raise) / 100)), maxSalaryFor(player.marketValue));
+    return { ...player, years, salary, renewedSalary, cappedAtRenewal: roundStep(salary * (1 + (own.raise ?? sim.raise) / 100)) > maxSalaryFor(player.marketValue), over: salary > limit, raiseOwn: own.raise, raise: own.raise ?? sim.raise, renew: own.renew ?? sim.renew, sold: own.sell === true };
   });
   const timeline = simulate(rows.map(row => ({ value: row.marketValue, salary: row.salary, years: row.years, raise: row.raiseOwn, renew: row.renew, sold: row.sold })), {
     raise: sim.raise, renew: sim.renew, position: defaultPosition, playoff: sim.playoff, positions: sim.positions, playoffs: sim.playoffs, balance: typeof balance === 'number' ? balance : 0, cap,
@@ -218,6 +220,8 @@ function SimView({ team, projection, balance, canEdit, layout, currentPosition }
   const total = kept.reduce((sum, row) => sum + row.salary * row.years, 0);
   const overCount = kept.filter(row => row.over).length;
   const first = timeline[0];
+  const last = timeline[timeline.length - 1];
+  const timelineCost = timeline.reduce((sum, row) => sum + row.payroll, 0);
 
   const salaryInput = row => canEdit
     ? <GpInput aria-label={`Sueldo simulado de ${row.playerName}`} value={row.salary} onChange={event => changePlayer(row.playerId, { salary: event.target.value === '' ? undefined : Number(event.target.value) })}/>
@@ -226,6 +230,7 @@ function SimView({ team, projection, balance, canEdit, layout, currentPosition }
   const renewControls = row => <span className="sim-player-controls">
     <label title="Aumento al renovar. Parte con el valor por defecto de arriba; cámbialo si este jugador va distinto.">AUMENTO<span className={`mini-percent ${row.raiseOwn !== undefined && row.raiseOwn !== sim.raise ? 'custom' : ''}`}><input type="number" min="0" max="100" step="1" inputMode="numeric" disabled={!canEdit || row.sold} aria-label={`Aumento al renovar de ${row.playerName}`}
       value={row.raise} onChange={event => changePlayer(row.playerId, { raise: event.target.value === '' ? undefined : Math.min(100, Math.max(0, Number(event.target.value))) })}/>%</span></label>
+    <small className="renew-result" title="Sueldo por torneo después de renovar, con el aumento elegido y sin pasar el 20% de su valor.">{row.sold ? '' : row.renew ? `AL RENOVAR: ${gpNumber(row.renewedSalary)} GP${row.cappedAtRenewal ? ' (TOPE 20%)' : ''}` : 'NO RENUEVA: SALE'}</small>
     <label><input type="checkbox" checked={row.renew} disabled={!canEdit || row.sold} onChange={event => changePlayer(row.playerId, { renew: event.target.checked })}/> RENUEVA</label>
     <RiskChip row={row}/>
     <label className="sell"><input type="checkbox" checked={row.sold} disabled={!canEdit} onChange={event => changePlayer(row.playerId, { sell: event.target.checked })}/> VENDER</label>
@@ -234,7 +239,7 @@ function SimView({ team, projection, balance, canEdit, layout, currentPosition }
 
   return <div className="payroll-sim">
     <div className="view-badge is-sim">🧪 SIMULACIÓN · NADA DE ESTO ES REAL NI SE COBRA</div>
-    <p className="payroll-note">PRUEBA SUELDOS, AÑOS, UN AUMENTO AL RENOVAR (GLOBAL O POR JUGADOR) Y VENTAS PARA VER CÓMO SE MUEVEN LA NÓMINA Y EL SALDO EN LOS PRÓXIMOS TORNEOS. USA LOS VALORES DE MERCADO DE HOY (CAMBIAN CON CADA REFRESCO DE TRANSFERMARKT) Y TODO QUEDA SOLO EN ESTE NAVEGADOR. SI UN JUGADOR PASA EL 20% DE SU VALOR, SALE EN ROJO: ESE SUELDO NO SE PODRÍA FIRMAR.</p>
+    <p className="payroll-note">PRUEBA SUELDOS, AÑOS, UN AUMENTO AL RENOVAR (PARA TODOS O POR JUGADOR) Y VENTAS. EL AUMENTO SE APLICA CUANDO VENCE CADA CONTRATO (CON 2 TORNEOS, DESDE EL T3), ASÍ QUE SE VE EN "NÓMINA EN EL TORNEO 6", EN EL COSTO A 6 TORNEOS Y EN LOS GRÁFICOS. PARA VER CÓMO SE MUEVEN LA NÓMINA Y EL SALDO EN LOS PRÓXIMOS TORNEOS. USA LOS VALORES DE MERCADO DE HOY (CAMBIAN CON CADA REFRESCO DE TRANSFERMARKT) Y TODO QUEDA SOLO EN ESTE NAVEGADOR. SI UN JUGADOR PASA EL 20% DE SU VALOR, SALE EN ROJO: ESE SUELDO NO SE PODRÍA FIRMAR.</p>
     <section className="sim-controls">
       <label>AUMENTO AL RENOVAR (POR DEFECTO)<span className="sheet-slider"><input type="range" min="0" max="100" value={sim.raise} onChange={event => applyToAll({ raise: Number(event.target.value) })} aria-label="Aumento al renovar en porcentaje"/><b>+{sim.raise}%</b></span><small className="sim-hint">SE APLICA A TODOS LOS JUGADORES; DESPUÉS CAMBIAS A LOS QUE QUIERAS DISTINTOS.</small></label>
       <label className="sim-check"><input type="checkbox" checked={sim.renew} onChange={event => applyToAll({ renew: event.target.checked })}/> RENOVAR A QUIEN LE VENZA EL CONTRATO (POR DEFECTO)</label>
@@ -247,7 +252,9 @@ function SimView({ team, projection, balance, canEdit, layout, currentPosition }
       ['TOPE DE NÓMINA', cap === null ? 'SIN DEFINIR' : gp(cap), cap !== null && payroll > cap ? `TE PASAS POR ${gp(payroll - cap)}` : null],
       ['SALDO HOY', gp(balance)],
       ['SALDO AL TORNEO 1', first ? gp(first.balance) : '—', first && first.net < 0 ? 'GASTAS MÁS DE LO QUE GANAS' : null],
-      ['COSTO TOTAL DE LOS CONTRATOS', gp(total)],
+      ['CONTRATOS DE HOY (SUELDO × TORNEOS)', gp(total)],
+      [`NÓMINA EN EL TORNEO ${HORIZON}`, gp(last.payroll), `${last.payroll >= payroll ? '+' : '−'}${gp(Math.abs(last.payroll - payroll))} VS HOY, CON LAS RENOVACIONES`],
+      [`COSTO EN ${HORIZON} TORNEOS`, gp(timelineCost), 'INCLUYE RENOVACIONES CON EL AUMENTO ELEGIDO'],
     ]}/>
     {kept.filter(row => row.renew && row.renewalRisk === 'alto').length > 0 && <p className="payroll-empty sim-warn">🔴 {kept.filter(row => row.renew && row.renewalRisk === 'alto').map(row => row.playerName).join(', ')}: HOY SE NEGARÍA(N) A RENOVAR. LA SIMULACIÓN SUPONE QUE RENUEVAN; ARREGLA SU ROL O SU SUELDO ANTES.</p>}
     {overCount > 0 && <p className="payroll-empty sim-warn">⚠️ {overCount} JUGADOR(ES) SOBRE EL 20% DE SU VALOR: ESOS SUELDOS NO SE PODRÍAN FIRMAR.</p>}
