@@ -125,7 +125,7 @@ function OfferCard({ offer, onChanged }) {
       : countering ? <CounterForm offer={offer} me={counterpart} other={proposer} onDone={() => { setCountering(false); onChanged?.(); }} onCancel={() => setCountering(false)}/>
       : (canAccept || canReject) && <div className="mini-actions">
         {canAccept && <button type="button" onClick={() => setConfirming('approve')}>{acceptLabel}</button>}
-        {canAccept && incoming && <button type="button" className="ghost" onClick={() => setCountering(true)}>CONTRAOFERTAR</button>}
+        {canAccept && <button type="button" className="ghost" onClick={() => setCountering(true)}>{incoming ? 'CONTRAOFERTAR' : `CONTRAOFERTAR POR ${upper(counterpart?.name)}`}</button>}
         {canReject && <button type="button" className="danger" onClick={() => setConfirming('reject')}>{rejectLabel}</button>}
       </div>}
     {mutation.error && <p className="form-feedback error" role="alert">{mutation.error.message}</p>}

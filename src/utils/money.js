@@ -29,7 +29,9 @@ export function parseGp(text) {
   if (!match || match[1] === '') return null;
   const [, digits, suffix] = match;
   if (suffix) {
-    const value = Number.parseFloat(digits.replace(',', '.'));
+    // El campo ya pone puntos de miles mientras se escribe ("1.500" + k): si son grupos de tres, son miles y no decimales.
+    const thousands = /^\d{1,3}(\.\d{3})+$/.test(digits);
+    const value = Number.parseFloat(thousands ? digits.replace(/\./g, '') : digits.replace(',', '.'));
     return Number.isFinite(value) ? Math.round(value * (suffix === 'k' ? 1_000 : 1_000_000)) : null;
   }
   const plain = digits.replace(/[.,]/g, '');

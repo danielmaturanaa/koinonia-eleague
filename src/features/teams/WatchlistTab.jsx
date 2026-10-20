@@ -23,17 +23,17 @@ export function WatchlistTab({ team }) {
     <div className="watchlist-search">
       <input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="BUSCAR JUGADOR PARA SEGUIR" aria-label="Buscar jugador para seguir"/>
       {found.length > 0 && <ul>{found.map(player => <li key={player.id}>
-        <PlayerFace src={player.faceUrl} name={player.name}/>
+        <PlayerFace src={player.faceUrl} name={player.name} className="watch-face"/>
         <span><b>{player.name}</b><small>{player.position} · {gp(player.gpValue)} · {player.team ? upper(player.team.name) : 'LIBRE'}</small></span>
         <button type="button" disabled={watched.has(player.id) || act.loading} onClick={() => act.execute(signal => endpoints.watchPlayer(team.id, player.id, signal))}>{watched.has(player.id) ? 'SIGUIENDO' : '☆ SEGUIR'}</button>
       </li>)}</ul>}
     </div>
     <FormFeedback mutation={act}/>
-    <DataState query={list}/>
+    {!(list.data && rows.length === 0) && <DataState query={list}/>}
     {list.data && rows.length === 0 && <p className="empty-copy data-empty">TODAVÍA NO SIGUES A NADIE. BUSCA UN JUGADOR ARRIBA.</p>}
     {alerting.length > 0 && <div className="watchlist-seen"><span>🔔 {alerting.length} CON NOVEDADES</span><button type="button" className="ghost" onClick={() => act.execute(signal => endpoints.watchlistSeen(team.id, {}, signal))}>DAR TODO POR VISTO</button></div>}
     <ul className="watchlist-list">{rows.map(row => <li key={row.playerId} className={row.alerts.length ? 'has-alerts' : ''}>
-      <PlayerFace src={null} name={row.name}/>
+      <PlayerFace src={row.faceUrl} name={row.name} className="watch-face"/>
       <div>
         <div className="watchlist-meta"><b>{row.name}</b><small>{row.position} · VALE {gp(row.gpValue)} · {row.freeAgent ? 'AGENTE LIBRE' : upper(row.holder.name)}{row.forSale ? ' · EN VENTA' : ''}{row.lastSeason ? ' · ÚLTIMO TORNEO DE CONTRATO' : ''}</small></div>
         {row.alerts.map(alert => <p key={alert.key} className={`watchlist-alert ${alert.key}`}>🔔 {alert.text}</p>)}
