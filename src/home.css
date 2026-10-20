@@ -4021,3 +4021,13 @@ html.pc-locked, html.pc-locked body { overflow: hidden; }
 .board-block li small { display: block; color: #666; }
 .board-block li em { font-style: normal; font: 700 12px/1.2 'Roboto Condensed', sans-serif; }
 .board-met em { color: #0a6b2d; } .board-failed em { color: #a11; }
+
+.stadium-tab { display: grid; gap: 12px; }
+.stadium-mine { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; padding: 10px 12px; background: #eef7ee; border: 1px solid #8cc58c; font: 700 14px/1.3 'Roboto Condensed', sans-serif; }
+.stadium-group h3 { margin: 0 0 6px; }
+.stadium-grid { display: grid; gap: 8px; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.stadium-card { display: grid; gap: 4px; align-content: start; padding: 10px; background: #fff; border: 1px solid #d9d9d9; font: 600 13px/1.3 'Roboto Condensed', sans-serif; }
+.stadium-card.is-mine { border-color: #0a6b2d; background: #f1faf1; }
+.stadium-card.is-taken { opacity: .75; }
+.stadium-card em { font-style: normal; color: #555; }
+.stadium-card button { min-height: 40px; }

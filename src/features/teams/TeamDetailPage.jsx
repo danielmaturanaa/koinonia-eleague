@@ -20,6 +20,7 @@ import { useApiQuery } from '../public/useApiQuery.js';
 import { useLiveStandings } from '../public/useLiveStandings.js';
 import { InboxTab } from './InboxTab.jsx';
 import { WatchlistTab } from './WatchlistTab.jsx';
+import { StadiumTab } from './StadiumTab.jsx';
 import { PayrollTab } from './PayrollTab.jsx';
 import { RolesPanel } from './RolesPanel.jsx';
 import { gpNumber } from '../../utils/money.js';
@@ -660,7 +661,7 @@ function SquadValueSimulator({ team, squad, balance }) {
   </section>;
 }
 
-const BASE_TABS = [['resumen', 'RESUMEN'], ['plantel', 'PLANTEL'], ['partidos', 'PARTIDOS'], ['tabla', 'TABLA'], ['fichajes', 'FICHAJES'], ['historia', 'HISTORIA'], ['nomina', 'NÓMINA'], ['finanzas', 'SIMULADOR DE PRESUPUESTO']];
+const BASE_TABS = [['resumen', 'RESUMEN'], ['plantel', 'PLANTEL'], ['partidos', 'PARTIDOS'], ['tabla', 'TABLA'], ['fichajes', 'FICHAJES'], ['historia', 'HISTORIA'], ['estadio', 'ESTADIO'], ['nomina', 'NÓMINA'], ['finanzas', 'SIMULADOR DE PRESUPUESTO']];
 const INBOX_TAB = ['bandeja', 'BANDEJA'];
 const WATCH_TAB = ['seguimiento', 'SEGUIMIENTO'];
 
@@ -846,6 +847,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
         {activeTab === 'tabla' && <ClubTable standings={displayStandings} teamId={team.id} teams={teams}/>}
         {activeTab === 'fichajes' && <ClubTransfers teamId={team.id}/>}
         {activeTab === 'historia' && <div className="club-history-tab-content"><HonoursList honours={honours} historyError={historyError}/><ClubHistory team={team} onEdit={canEdit ? setHistoryEditor : undefined}/></div>}
+        {activeTab === 'estadio' && <StadiumTab team={team} balance={balance} onChanged={onChanged}/>}
         {activeTab === 'seguimiento' && <WatchlistTab team={team}/>}
         {activeTab === 'bandeja' && <InboxTab team={team} onTab={onTab} onRead={inbox.retry}/>}
         {activeTab === 'nomina' && <PayrollTab team={team} balance={balance} onChanged={onChanged} onTab={onTab} currentPosition={(displayStandings ?? []).findIndex(row => (row.team_id ?? row.teamId) === team.id) + 1 || null}/>}
