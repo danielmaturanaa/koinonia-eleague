@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { useAuth } from '../../app/AuthGate.jsx';
 import { GpInput } from '../../components/GpInput.jsx';
@@ -31,9 +31,35 @@ function loadSim(teamId) {
   return { ...DEFAULT_SIM, players: Object.fromEntries(Object.entries(years).map(([id, value]) => [id, { years: value }])) };
 }
 
+const SIM_SYNC_DELAY = 1200;
 function useSim(teamId) {
   const [sim, setSim] = useState(() => loadSim(teamId));
-  const change = patch => setSim(current => { const next = { ...current, ...patch }; writeJson(`payroll-sim:${teamId}`, next); return next; });
+  const timer = useRef(null);
+  // Se guarda en el navegador al tiro y en la cuenta con un pequeño retraso, para seguirla desde otro dispositivo.
+  const change = patch => setSim(current => {
+    const next = { ...current, ...patch, savedAt: Date.now() };
+    writeJson(`payroll-sim:${teamId}`, next);
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => { endpoints.savePayrollSim(teamId, next).catch(() => {}); }, SIM_SYNC_DELAY);
+    return next;
+  });
+  // Al abrir: gana la copia más nueva entre este navegador y la cuenta.
+  useEffect(() => {
+    let active = true;
+    endpoints.payrollSim(teamId).then(response => {
+      if (!active) return;
+      const remote = response?.data?.draft ?? null;
+      const local = readJson(`payroll-sim:${teamId}`, null);
+      if (remote && (!local || (remote.savedAt ?? 0) > (local.savedAt ?? 0))) {
+        const merged = { ...DEFAULT_SIM, ...remote };
+        writeJson(`payroll-sim:${teamId}`, merged);
+        setSim(merged);
+      } else if (local && (!remote || (local.savedAt ?? 0) > (remote.savedAt ?? 0))) {
+        endpoints.savePayrollSim(teamId, { ...local, savedAt: local.savedAt ?? Date.now() }).catch(() => {});
+      }
+    }).catch(() => {});
+    return () => { active = false; };
+  }, [teamId]);
   const changePlayer = (playerId, patch) => change({ players: { ...sim.players, [playerId]: { ...sim.players[playerId], ...patch } } });
   const reset = () => change({ ...DEFAULT_SIM });
   // El aumento y la renovación "por defecto" se aplican a todos los jugadores (borran lo que se había ajustado a mano);
@@ -237,7 +263,7 @@ function RealView({ team, query, balance, marketOpen, canEdit, layout, refresh }
 }
 
 // ---------- vista SIMULACIÓN ----------
-function SimView({ team, projection, balance, canEdit, layout, currentPosition, upcoming = [] }) {
+function SimView({ team, projection, balance, canEdit, layout, currentPosition, upcoming = [], onTab = null }) {
   const labelOf = index => (upcoming[index] ? upper(upcoming[index]) : `T${index + 1}`);
   const { sim, change, changePlayer, reset, applyToAll } = useSim(team.id);
   // Sin elegir, parte de tu puesto actual en la tabla (o 4.º si no hay torneo en curso).
@@ -280,6 +306,7 @@ function SimView({ team, projection, balance, canEdit, layout, currentPosition, 
 
   return <div className="payroll-sim">
     <div className="view-badge is-sim">🧪 SIMULACIÓN · NADA DE ESTO ES REAL NI SE COBRA</div>
+    {onTab && <p className="payroll-note sim-link">¿QUIERES PROBAR FICHAJES Y VENTAS CON SU PRECIO, SU SUELDO Y TU SALDO? <button type="button" className="ghost" onClick={() => onTab('finanzas')}>ABRIR EL SIMULADOR DE PRESUPUESTO →</button> (LA SIMULACIÓN DE AMBOS SE GUARDA EN TU CUENTA)</p>}
     <p className="payroll-note">PRUEBA SUELDOS, AÑOS, UN AUMENTO AL RENOVAR (PARA TODOS O POR JUGADOR) Y VENTAS PARA VER CÓMO SE MUEVEN LA NÓMINA Y EL SALDO EN LOS PRÓXIMOS TORNEOS. EL AUMENTO SE APLICA CUANDO VENCE CADA CONTRATO, ASÍ QUE SE NOTA EN LOS ÚLTIMOS TORNEOS, EN EL COSTO TOTAL Y EN LOS GRÁFICOS. USA LOS VALORES DE MERCADO DE HOY (CAMBIAN CON CADA REFRESCO DE TRANSFERMARKT) Y TODO QUEDA SOLO EN ESTE NAVEGADOR. SI UN JUGADOR PASA EL 20% DE SU VALOR, SALE EN ROJO: ESE SUELDO NO SE PODRÍA FIRMAR.</p>
     <section className="sim-controls">
       <label>AUMENTO AL RENOVAR (POR DEFECTO)<span className="sheet-slider"><input type="range" min="0" max="100" value={sim.raise} onChange={event => applyToAll({ raise: Number(event.target.value) })} aria-label="Aumento al renovar en porcentaje"/><b>+{sim.raise}%</b></span><small className="sim-hint">SE APLICA A TODOS LOS JUGADORES; DESPUÉS CAMBIAS A LOS QUE QUIERAS DISTINTOS.</small></label>
@@ -344,7 +371,7 @@ function SimView({ team, projection, balance, canEdit, layout, currentPosition, 
 }
 
 /** Nómina del club: la real (contratos firmados) y la simulación (qué pasaría con otros sueldos, años y premios). */
-export function PayrollTab({ team, balance, onChanged, currentPosition = null }) {
+export function PayrollTab({ team, balance, onChanged, onTab = null, currentPosition = null }) {
   const { canEditTeam } = useAuth();
   const canEdit = canEditTeam(team.id);
   const query = useApiQuery(signal => endpoints.teamContracts(team.id, signal), [team.id]);
@@ -370,6 +397,6 @@ export function PayrollTab({ team, balance, onChanged, currentPosition = null })
     </header>
     <DataState query={query}/>
     {projection && current === 'actual' && <RealView team={team} query={query} balance={balance} marketOpen={marketOpen} canEdit={canEdit} layout={layout} refresh={refresh}/>}
-    {projection && current === 'proyeccion' && <SimView team={team} projection={projection} balance={balance} canEdit={canEdit} layout={layout} currentPosition={currentPosition} upcoming={query.data?.upcoming ?? []}/>}
+    {projection && current === 'proyeccion' && <SimView team={team} projection={projection} balance={balance} canEdit={canEdit} layout={layout} currentPosition={currentPosition} upcoming={query.data?.upcoming ?? []} onTab={onTab}/>}
   </section>;
 }

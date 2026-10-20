@@ -23,6 +23,7 @@ import { WatchlistTab } from './WatchlistTab.jsx';
 import { PayrollTab } from './PayrollTab.jsx';
 import { RolesPanel } from './RolesPanel.jsx';
 import { gpNumber } from '../../utils/money.js';
+import { roundStep } from '../../utils/payrollSim.js';
 import { PitchBoard } from './PitchBoard.jsx';
 import { SimulationTools } from './SimulationTools.jsx';
 import { bandFor, defaultFormationPositions, pitchPositionFor } from '../../utils/formationPositions.js';
@@ -259,6 +260,7 @@ function AnthemEditor({ team, onChanged, onSaved }) {
 }
 
 const simulatorPlayerId = player => String(player?.id ?? player?.playerId ?? '');
+const idOfPlayer = simulatorPlayerId;
 const SIMULATOR_STARTERS = 11;
 const simulatorPlayerTeamId = player => String(player?.team?.id ?? player?.teamId ?? player?.team_id ?? '');
 const simulatorPlayerTeamName = player => player?.team?.name ?? player?.teamName ?? player?.team_name ?? '';
@@ -528,6 +530,15 @@ function SquadValueSimulator({ team, squad, balance }) {
   const capRoom = budgetLimit === null ? null : budgetLimit - simulatedValue;
   const exceedsLimit = capRoom !== null && capRoom < 0;
   const exceedsBalance = projectedBalance !== null && projectedBalance < 0;
+  // Nómina simulada: la real + el sueldo de cada fichaje (10% de lo que cuesta) − el sueldo real de cada salida. Solo avisa, no bloquea.
+  const contractsQuery = useApiQuery(signal => team?.id ? endpoints.teamContracts(team.id, signal).catch(() => ({ data: null })) : Promise.resolve({ data: null }), [team?.id]);
+  const payrollInfo = contractsQuery.data?.projection?.enabled ? contractsQuery.data.projection : null;
+  const realSalaries = new Map((contractsQuery.data?.contracts ?? []).filter(contract => contract.status === 'active').map(contract => [String(contract.playerId), contract.salary]));
+  const signingsPayroll = signings.reduce((total, player) => total + roundStep(simulatorValue(player) * 0.1), 0);
+  const departuresPayroll = removedPlayers.reduce((total, player) => total + (realSalaries.get(idOfPlayer(player)) ?? 0), 0);
+  const simulatedPayroll = payrollInfo ? payrollInfo.payroll + signingsPayroll - departuresPayroll : null;
+  const payrollCapValue = payrollInfo?.cap ?? null;
+  const exceedsPayroll = simulatedPayroll !== null && payrollCapValue !== null && simulatedPayroll > payrollCapValue;
   const changed = simulatorLayoutSignature(simulatedRoster) !== simulatorLayoutSignature(baseRoster) || removedPlayers.length > 0;
   const starters = simulatedRoster.filter(player => player.section === 'starters');
   const substitutes = simulatedRoster.filter(player => player.section !== 'starters');
@@ -634,10 +645,12 @@ function SquadValueSimulator({ team, squad, balance }) {
     <header className="squad-simulator-header"><div><h3>SIMULADOR DE PLANTEL</h3><p>Prueba fichajes y salidas sobre la misma alineación del resumen. Es solo una simulación: no modifica el plantel real y se guarda en tu cuenta, así la ves igual en cualquier dispositivo.</p>{syncState !== 'idle' && <small className={`squad-sim-sync ${syncState}`} role="status">{SYNC_LABELS[syncState]}</small>}</div><button type="button" className="club-link-button" onClick={reset} disabled={!changed}>↺ RESTABLECER</button></header>
     <div className="squad-sim-summary"><div className="squad-sim-meters" aria-label="Resumen del presupuesto simulado">
       <SimulatorMeter label="VALOR DEL PLANTEL" value={`${gp(simulatedValue)} GP`} ratio={budgetLimit === null ? undefined : simulatedValue / budgetLimit} over={exceedsLimit} detail={budgetLimit === null ? 'Tope no publicado' : exceedsLimit ? `Excede el tope de ${gp(budgetLimit)} GP en ${gp(-capRoom)} GP` : `Tope ${gp(budgetLimit)} GP · quedan ${gp(capRoom)} GP`}/>
+      {simulatedPayroll !== null && <SimulatorMeter label="NÓMINA ANUAL SIMULADA" value={`${gp(simulatedPayroll)} GP`} ratio={payrollCapValue ? simulatedPayroll / payrollCapValue : undefined} over={exceedsPayroll} detail={`${payrollCapValue ? `Tope ${gp(payrollCapValue)} GP (solo avisa) · ` : ''}Hoy ${gp(payrollInfo.payroll)} GP · altas +${gp(signingsPayroll)} · bajas −${gp(departuresPayroll)}`}/>}
       <SimulatorMeter label="SALDO TRAS LOS CAMBIOS" value={projectedBalance === null ? '—' : `${gp(projectedBalance)} GP`} over={exceedsBalance} detail={balance === null ? 'Saldo no publicado' : `Saldo actual ${gp(balance)} GP · movimiento ${signedGp(-movement)}`}/>
       <SimulatorMeter label="CAMBIOS" value={`${signings.length} ALTA${signings.length === 1 ? '' : 'S'} · ${removedPlayers.length} BAJA${removedPlayers.length === 1 ? '' : 'S'}`} detail={changesDetail}/>
     </div>
     <p className={`squad-simulator-status ${exceedsLimit || exceedsBalance ? 'over-budget' : ''}`} role="status">{statusMessage}</p>
+    {exceedsPayroll && <p className="squad-simulator-status over-budget" role="status">⚠️ LA NÓMINA SIMULADA PASA EL TOPE POR {gp(simulatedPayroll - payrollCapValue)} GP (SOLO AVISA, NO BLOQUEA). EL SUELDO DE UN FICHAJE ES EL 10% DE LO QUE CUESTA.</p>}
     {starters.length !== SIMULATOR_STARTERS && <p className="squad-simulator-status over-budget" role="status">TITULARES: {starters.length} / {SIMULATOR_STARTERS}. LA ALINEACIÓN DEBERÍA TENER {SIMULATOR_STARTERS}.</p>}</div>
     <SimulatorPlayerSearch teamId={team?.id} excludedIds={simulatedIds} onAdd={addPlayerToSimulation}/>
     {lastAddedPlayer && <p className="squad-simulator-player-note" role="status">✓ {splitPlayerName(lastAddedPlayer.name).rest} AÑADIDO A {lastAddedPlayer.section === 'starters' ? 'TITULARES' : 'SUPLENTES'}{simulatorPlayerTeamId(lastAddedPlayer) && simulatorPlayerTeamId(lastAddedPlayer) !== String(team?.id) ? ` · HOY JUEGA EN ${simulatorPlayerTeamName(lastAddedPlayer)}` : ''}.</p>}
@@ -835,7 +848,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
         {activeTab === 'historia' && <div className="club-history-tab-content"><HonoursList honours={honours} historyError={historyError}/><ClubHistory team={team} onEdit={canEdit ? setHistoryEditor : undefined}/></div>}
         {activeTab === 'seguimiento' && <WatchlistTab team={team}/>}
         {activeTab === 'bandeja' && <InboxTab team={team} onTab={onTab} onRead={inbox.retry}/>}
-        {activeTab === 'nomina' && <PayrollTab team={team} balance={balance} onChanged={onChanged} currentPosition={(displayStandings ?? []).findIndex(row => (row.team_id ?? row.teamId) === team.id) + 1 || null}/>}
+        {activeTab === 'nomina' && <PayrollTab team={team} balance={balance} onChanged={onChanged} onTab={onTab} currentPosition={(displayStandings ?? []).findIndex(row => (row.team_id ?? row.teamId) === team.id) + 1 || null}/>}
         {activeTab === 'finanzas' && <div className="club-budget-tab"><SquadValueSimulator team={team} squad={squad} balance={balance}/></div>}
       </section>
 
