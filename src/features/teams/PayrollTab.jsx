@@ -8,7 +8,7 @@ import { useApiQuery } from '../public/useApiQuery.js';
 
 const SEASONS = [2, 3, 4, 5, 6];
 const upper = text => String(text ?? '').toUpperCase();
-const SALARY_STEP = 10;
+const SALARY_STEP = 10_000;
 const roundStep = amount => Math.max(SALARY_STEP, Math.round(amount / SALARY_STEP) * SALARY_STEP);
 
 // Los años elegidos antes de activar el sistema son una proyección: quedan en este navegador.

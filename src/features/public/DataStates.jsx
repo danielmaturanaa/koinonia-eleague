@@ -1,3 +1,5 @@
+import { gpLabel } from '../../utils/money.js';
+
 export function DataState({ query, empty = 'NO HAY REGISTROS PUBLICADOS.' }) {
   if (query.loading) return <div className="arcade-state compact">CARGANDO DATOS...</div>;
   if (query.error) return <div className="data-error"><b>{query.error.status === 404 ? 'NO DISPONIBLE EN LA API ACTUAL' : 'NO FUE POSIBLE CARGAR'}</b><span>{query.error.message}</span><button onClick={query.retry}>REINTENTAR</button></div>;
@@ -16,7 +18,7 @@ export function Pagination({ pagination, page, onPage }) {
 }
 
 export const formatDate = value => value ? new Intl.DateTimeFormat('es-CL', { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(value)) : '—';
-export const gp = value => typeof value === 'number' ? `${value.toLocaleString('es-CL')} GP` : '—';
+export const gp = value => typeof value === 'number' ? gpLabel(value) : '—';
 export function OverallBadge({ value, className = '' }) {
   return <span className={`overall-badge ${className}`.trim()} title={value == null ? 'Media eFootball no disponible' : `Media eFootball: ${value}`}>OVR {value ?? '—'}</span>;
 }

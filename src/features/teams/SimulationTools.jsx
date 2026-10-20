@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
+import { gpNumber } from '../../utils/money.js';
 
-const format = value => Number(value).toLocaleString('es-CL');
+const format = gpNumber;
 
 // Herramientas de una carta en el simulador: precio editable (clic para escribir, Enter guarda,
 // Esc cancela), restablecer al precio real y quitar. Van fuera del <button> de la carta.

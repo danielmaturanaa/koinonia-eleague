@@ -1,5 +1,6 @@
 import { endpoints } from '../../api/endpoints.js';
 import { useApiQuery } from './useApiQuery.js';
+import { gpLabel } from '../../utils/money.js';
 
 const MatchRules = () => <section className="rules-section">
   <h2>1. Configuración de Partidos y Jugabilidad</h2>
@@ -49,11 +50,11 @@ const Transfers = ({ squadValueLimit, payrollCap, contractsEnabled }) => <sectio
   <h3>4.4 Fair Play Financiero</h3>
   {contractsEnabled
     ? <ul>
-      <li>Desde el torneo v11 el límite es la <strong>nómina</strong> (la suma de los sueldos anuales de la plantilla): <strong>{payrollCap === null ? 'el tope lo define la liga' : `${payrollCap.toLocaleString('es-CL')} GP al año`}</strong>. Es un tope de aviso: se revisa al <strong>cierre del mercado</strong> y no frena operaciones durante él.</li>
+      <li>Desde el torneo v11 el límite es la <strong>nómina</strong> (la suma de los sueldos anuales de la plantilla): <strong>{payrollCap === null ? 'el tope lo define la liga' : `${gpLabel(payrollCap)} al año`}</strong>. Es un tope de aviso: se revisa al <strong>cierre del mercado</strong> y no frena operaciones durante él.</li>
       <li>El tope de valor total de la plantilla deja de aplicarse. El valor de mercado de cada jugador viene de Transfermarkt y no cambia por traspasos, trueques, subastas ni liberaciones.</li>
     </ul>
     : <ul>
-      <li>El valor total de una plantilla no podrá superar <strong>{squadValueLimit === null ? 'el tope definido por la liga' : `${squadValueLimit.toLocaleString('es-CL')} GP`}</strong> (valor a definir por la liga). Durante el mercado puedes pasarte mientras ordenas tu plantel: el tope se revisa al <strong>cierre del mercado</strong>. Lo que sí frena una compra es el saldo: no puedes pagar más de lo que tienes.</li>
+      <li>El valor total de una plantilla no podrá superar <strong>{squadValueLimit === null ? 'el tope definido por la liga' : gpLabel(squadValueLimit)}</strong> (valor a definir por la liga). Durante el mercado puedes pasarte mientras ordenas tu plantel: el tope se revisa al <strong>cierre del mercado</strong>. Lo que sí frena una compra es el saldo: no puedes pagar más de lo que tienes.</li>
       <li>Para este cálculo siempre se utilizará el valor de mercado del jugador, independientemente del precio pagado en una negociación. El valor de mercado viene de Transfermarkt y no cambia por traspasos, trueques, subastas ni liberaciones.</li>
       <li>Desde el torneo v11 este límite se reemplaza por un tope de nómina (ver sección 6).</li>
     </ul>}
@@ -63,11 +64,11 @@ const Prizes = () => <>
   <section className="rules-section">
     <h2>5. Sistema de Premios</h2>
     <h3>Tabla de la liga</h3>
-    <ul><li><strong>1.º:</strong> 200.000 GP</li><li><strong>Desde el 2.º:</strong> 20.000 GP menos por cada puesto (2.º 180.000, 3.º 160.000, 4.º 140.000, y así).</li></ul>
+    <ul><li><strong>1.º:</strong> 200 M GP</li><li><strong>Desde el 2.º:</strong> 20 M GP menos por cada puesto (2.º 180 M, 3.º 160 M, 4.º 140 M, y así).</li></ul>
     <h3>Playoffs</h3>
     <ul>
-      <li><strong>Campeón:</strong> 40.000 GP.</li>
-      <li><strong>Subcampeón:</strong> 20.000 GP.</li>
+      <li><strong>Campeón:</strong> 40 M GP.</li>
+      <li><strong>Subcampeón:</strong> 20 M GP.</li>
     </ul>
     <p>Los premios de los playoffs se suman a los de la tabla.</p>
   </section>
@@ -84,7 +85,7 @@ const Contracts = ({ payrollCap }) => <section className="rules-section">
   <ul>
     <li>El sueldo anual es el <strong>10% del valor de mercado</strong> del jugador al firmar y queda congelado durante todo el contrato. No se paga por adelantado: se cobra al terminar cada torneo de liga, mientras el jugador siga en el club.</li>
     <li>Al renovar, el sueldo sube entre <strong>1% y 100%</strong>. El jugador pide como mínimo su sueldo actual o el 10% de su valor de hoy, el que sea mayor; si no le ofreces eso, rechaza.</li>
-    <li>La nómina del club es la suma de los sueldos de su plantilla y {payrollCap === null ? 'tiene un tope que define la liga' : `no debería pasar de ${payrollCap.toLocaleString('es-CL')} GP al año`}. Es un aviso al cierre del mercado y no bloquea operaciones.</li>
+    <li>La nómina del club es la suma de los sueldos de su plantilla y {payrollCap === null ? 'tiene un tope que define la liga' : `no debería pasar de ${gpLabel(payrollCap)} al año`}. Es un aviso al cierre del mercado y no bloquea operaciones.</li>
   </ul>
   <h3>6.3 Término, rescisión y salidas</h3>
   <ul>

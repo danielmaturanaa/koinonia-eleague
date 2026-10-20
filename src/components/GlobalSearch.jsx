@@ -1,3 +1,4 @@
+import { gpLabel } from '../utils/money.js';
 import { useEffect, useId, useRef, useState } from 'react';
 import { endpoints } from '../api/endpoints.js';
 import { PlayerFace } from './PlayerFace.jsx';
@@ -5,7 +6,7 @@ import { TeamMark } from './TeamMark.jsx';
 import { matchRoundLabel } from '../utils/matchPresentation.js';
 
 const MIN_QUERY = 2;
-const gp = value => typeof value === 'number' ? `${value.toLocaleString('es-CL')} GP` : '—';
+const gp = value => typeof value === 'number' ? gpLabel(value) : '—';
 
 // Une la plantilla de la liga con el catálogo de eFootballDB y responde, para cada
 // jugador, quién lo tiene: un equipo, nadie (agente libre) o nadie porque aún no está inscrito.

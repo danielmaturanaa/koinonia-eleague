@@ -5,6 +5,7 @@ import { useApiQuery } from '../public/useApiQuery.js';
 import { FormFeedback } from './FormFeedback.jsx';
 import { useApiMutation } from './useApiMutation.js';
 import { TeamMark } from '../../components/TeamMark.jsx';
+import { gpLabel } from '../../utils/money.js';
 
 function MutationAction({ action, label, confirmText, onChanged, danger = false }) {
   const mutation = useApiMutation(signal => action(signal), { onSuccess: onChanged });
@@ -13,15 +14,15 @@ function MutationAction({ action, label, confirmText, onChanged, danger = false 
 }
 
 // Premios sugeridos (se pre-llenan y el admin los puede cambiar antes de otorgar):
-// liga: 1.º 200.000 y bajando de a 20.000; playoffs: subcampeón 20.000 y campeón 40.000.
-const LEAGUE_FIRST = 200000;
-const LEAGUE_STEP = 20000;
+// liga: 1.º 200 M y bajando de a 20 M; playoffs: subcampeón 20 M y campeón 40 M (1 GP = 1 €).
+const LEAGUE_FIRST = 200_000_000;
+const LEAGUE_STEP = 20_000_000;
 const PLAYOFF_PRIZES = {
-  champion: { label: 'CAMPEÓN', gp: 40000 },
-  runnerUp: { label: 'SUBCAMPEÓN', gp: 20000 },
+  champion: { label: 'CAMPEÓN', gp: 40_000_000 },
+  runnerUp: { label: 'SUBCAMPEÓN', gp: 20_000_000 },
   semifinal: { label: 'SEMIFINALISTA', gp: 0 },
 };
-const gpText = value => `${Number(value || 0).toLocaleString('es-CL')} GP`;
+const gpText = value => gpLabel(Number(value || 0));
 
 /** Cómo terminó cada club en los playoffs del torneo (si los hubo y ya se jugaron). */
 function playoffPlaces(playoffs) {
@@ -74,7 +75,7 @@ export function TournamentAwardsPanel({ tournament, onChanged }) {
 
   if (done) return <section className="tournament-awards"><p className="form-feedback success">✅ PREMIOS OTORGADOS: {gpText(done.totalGp)} A {done.teams} CLUBES.</p></section>;
   return <section className="tournament-awards">
-    <header><div><h3>CLASIFICACIÓN FINAL Y PREMIOS</h3><p>VIENEN PRE-LLENADOS (1.º DE LA LIGA 200.000 Y BAJANDO DE A 20.000; SUBCAMPEÓN 20.000; CAMPEÓN 40.000). REVISA, AJUSTA Y OTORGA TODO CON UN SOLO GUARDADO.</p></div><b>{gpText(totalGp)}</b></header>
+    <header><div><h3>CLASIFICACIÓN FINAL Y PREMIOS</h3><p>VIENEN PRE-LLENADOS (1.º DE LA LIGA 200 M GP Y BAJANDO DE A 20 M; SUBCAMPEÓN 20 M; CAMPEÓN 40 M). REVISA, AJUSTA Y OTORGA TODO CON UN SOLO GUARDADO.</p></div><b>{gpText(totalGp)}</b></header>
     <DataState query={standings}/>
     {rows.length > 0 && <div className="tournament-awards-table"><table>
       <thead><tr><th>#</th><th>CLUB</th><th>PTS</th><th>GP LIGA</th><th>PLAYOFFS</th><th>GP PLAYOFFS</th></tr></thead>
@@ -83,9 +84,9 @@ export function TournamentAwardsPanel({ tournament, onChanged }) {
         const place = places[row.team_id];
         return <tr key={row.team_id}>
           <td>{index + 1}</td><td>{row.name}</td><td><b>{row.points}</b></td>
-          <td><input aria-label={`GP de liga para ${row.name}`} type="number" min="0" step="1000" value={entry.league ?? ''} onChange={event => set(row.team_id, 'league', event.target.value)} placeholder="0"/></td>
+          <td><input aria-label={`GP de liga para ${row.name}`} type="number" min="0" step="1000000" value={entry.league ?? ''} onChange={event => set(row.team_id, 'league', event.target.value)} placeholder="0"/></td>
           <td>{place ? PLAYOFF_PRIZES[place].label : '—'}</td>
-          <td><input aria-label={`GP de playoffs para ${row.name}`} type="number" min="0" step="1000" value={entry.playoff ?? ''} onChange={event => set(row.team_id, 'playoff', event.target.value)} placeholder="0"/></td>
+          <td><input aria-label={`GP de playoffs para ${row.name}`} type="number" min="0" step="1000000" value={entry.playoff ?? ''} onChange={event => set(row.team_id, 'playoff', event.target.value)} placeholder="0"/></td>
         </tr>;
       })}</tbody>
     </table></div>}

@@ -5,6 +5,7 @@ import { endpoints } from '../../../api/endpoints.js';
 import { useAuth } from '../../../app/AuthGate.jsx';
 import { PlayerFace } from '../../../components/PlayerFace.jsx';
 import { useApiMutation } from '../../admin/useApiMutation.js';
+import { gpLabel } from '../../../utils/money.js';
 
 const LEVEL = { frio: [1, '🧊 FRÍO'], tibio: [2, '🌤️ TIBIO'], caliente: [3, '🔥 CALIENTE'] };
 const KIND_TAG = { dato: 'DATO', promesa: 'PROMESA · QUEDA REGISTRADA', argumento: 'ARGUMENTO · NO OBLIGA', negativa: 'HONESTA', pedido_si: 'ACEPTAR', pedido_no: 'RECHAZAR' };
@@ -357,7 +358,7 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
                 className={`pc-chip ${kind} ${option.promiseKind ? `promise-${option.promiseKind}` : ''} ${on ? 'on' : ''} ${blocked ? 'blocked' : ''}`} onClick={() => tapOption(option)}>
                 <em>{tagOf(option)}</em>
                 <span>{option.text}</span>
-                {option.action?.type === 'raise' && <small className="pc-chip-action">SUBE TU OFERTA DE VERDAD A {Number(option.action.amount).toLocaleString('es-CL')} GP</small>}
+                {option.action?.type === 'raise' && <small className="pc-chip-action">SUBE TU OFERTA DE VERDAD A {gpLabel(Number(option.action.amount))}</small>}
               </button>;
             })}
           </div>

@@ -15,6 +15,7 @@ import { ForSaleSection } from './market/ForSaleSection.jsx';
 import { AuctionHistory } from './market/AuctionHistory.jsx';
 import { SealedAuctionsSection } from './market/SealedAuctionsSection.jsx';
 import { AuctionSimulator } from './market/AuctionSimulator.jsx';
+import { gpLabel } from '../../utils/money.js';
 
 const asList = value => Array.isArray(value) ? value : [];
 
@@ -40,7 +41,7 @@ function TransferForm({ teams, players, onChanged }) {
   const change = event => setForm(current => ({ ...current, [event.target.name]: event.target.value, ...(event.target.name === 'fromTeamId' ? { playerId: '' } : {}) }));
   const submit = event => {
     event.preventDefault();
-    if (window.confirm(`¿REGISTRAR ESTA TRANSFERENCIA POR ${Number(form.gpAmount).toLocaleString('es-CL')} GP?`)) mutation.execute({ ...form, gpAmount: Number(form.gpAmount) });
+    if (window.confirm(`¿REGISTRAR ESTA TRANSFERENCIA POR ${gpLabel(Number(form.gpAmount))}?`)) mutation.execute({ ...form, gpAmount: Number(form.gpAmount) });
   };
   return <form className="admin-form market-form" onSubmit={submit}>
     <label>EQUIPO DE ORIGEN<select name="fromTeamId" value={form.fromTeamId} onChange={change}><TeamOptions teams={teams}/></select></label>

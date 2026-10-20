@@ -19,11 +19,12 @@ import { useApiMutation } from '../admin/useApiMutation.js';
 import { useApiQuery } from '../public/useApiQuery.js';
 import { useLiveStandings } from '../public/useLiveStandings.js';
 import { PayrollTab } from './PayrollTab.jsx';
+import { gpNumber } from '../../utils/money.js';
 import { PitchBoard } from './PitchBoard.jsx';
 import { SimulationTools } from './SimulationTools.jsx';
 import { bandFor, defaultFormationPositions, pitchPositionFor } from '../../utils/formationPositions.js';
 
-const gp = value => typeof value === 'number' ? value.toLocaleString('es-CL') : '—';
+const gp = value => typeof value === 'number' ? gpNumber(value) : '—';
 const FLAG_REGEX = /^(\p{Regional_Indicator}{2})\s*/u;
 const SIMULATOR_SEARCH_DELAY = 250;
 const SIMULATOR_SEARCH_MIN_LENGTH = 2;

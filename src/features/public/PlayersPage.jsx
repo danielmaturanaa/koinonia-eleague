@@ -7,6 +7,7 @@ import { DataState, OverallBadge, PageHeader, Pagination, gp } from './DataState
 import { PLAYING_STYLES, skillLabel, STAT_GROUPS } from './EfootballCard.jsx';
 import { useApiQuery } from './useApiQuery.js';
 import { addToComparison, comparisonCandidate, readComparison, writeComparison } from '../../utils/playerComparison.js';
+import { gpLabel, gpNumber } from '../../utils/money.js';
 
 const positions = ['PT','LD','DEC','LI','MC','MO','ED','EI','DC'];
 
@@ -24,7 +25,7 @@ export function PlayerActions({ player, teams, onChanged }) {
   };
   const releasePlayer = () => {
     const amount = Math.round(Number(player.gpValue ?? 0) * 0.2);
-    if (window.confirm(`¿LIBERAR A ${player.name}? EL CLUB RECIBE EL 20% DE SU VALOR (${amount.toLocaleString('es-CL')} GP), EL JUGADOR QUEDA LIBRE Y BAJA LA REPUTACIÓN DEL CLUB ANTE LOS AGENTES LIBRES.`)) release.execute({ teamId: currentTeamId });
+    if (window.confirm(`¿LIBERAR A ${player.name}? EL CLUB RECIBE EL 20% DE SU VALOR (${gpLabel(amount)}), EL JUGADOR QUEDA LIBRE Y BAJA LA REPUTACIÓN DEL CLUB ANTE LOS AGENTES LIBRES.`)) release.execute({ teamId: currentTeamId });
   };
 
   return <section className="player-actions">
@@ -47,7 +48,7 @@ export function PlayerAdmin({ player, onChanged }) {
 const STATUS_OPTIONS = [['', 'Todos'], ['registered', 'En la liga'], ['owned', 'Con equipo'], ['free', 'Agentes libres']];
 const SORT_OPTIONS = [['price_desc', 'Precio: mayor a menor'], ['price_asc', 'Precio: menor a mayor'], ['overall_desc', 'Media: mayor a menor'], ['overall_asc', 'Media: menor a mayor'],['name', 'Nombre A-Z'], ['age_asc', 'Más jóvenes'], ['age_desc', 'Más veteranos']];
 const POSITION_LINES = [['PORTERO', ['PT']], ['DEFENSA', ['DEC', 'LI', 'LD']], ['MEDIOCAMPO', ['MC', 'MO']], ['ATAQUE', ['EI', 'ED', 'DC']]];
-const PRICE_RANGES = [['', '', 'Cualquier precio'], ['', '50000', 'Hasta 50.000'], ['50000', '100000', '50.000 – 100.000'], ['100000', '200000', '100.000 – 200.000'], ['200000', '', 'Más de 200.000']];
+const PRICE_RANGES = [['', '', 'Cualquier precio'], ['', '50000000', 'Hasta 50 M'], ['50000000', '100000000', '50 M – 100 M'], ['100000000', '200000000', '100 M – 200 M'], ['200000000', '', 'Más de 200 M']];
 const EMPTY_FILTERS = { q: '', positions: [], status: '', teamId: '', minGp: '', maxGp: '', nationality: '', sort: 'price_desc', page: 1 };
 const filtersFromQuery = query => ({
   ...EMPTY_FILTERS,
@@ -95,7 +96,7 @@ function FilterPanel({ filters, teams, set, togglePosition, total, onClose }) {
       </div>;
     })}</fieldset>
     <fieldset><legend>PRECIO (GP)</legend>{PRICE_RANGES.map(([min, max, label]) => <label key={label} className="filter-option"><input type="radio" name="price" checked={!custom && priceKey === `${min}-${max}`} onChange={() => set({ minGp: min, maxGp: max })}/>{label}</label>)}
-      <div className="filter-range"><input type="number" min="0" step="1000" value={filters.minGp} onChange={event => set({ minGp: event.target.value })} placeholder="Mín." aria-label="GP mínimo"/><span>–</span><input type="number" min="0" step="1000" value={filters.maxGp} onChange={event => set({ maxGp: event.target.value })} placeholder="Máx." aria-label="GP máximo"/></div>
+      <div className="filter-range"><input type="number" min="0" step="1000000" value={filters.minGp} onChange={event => set({ minGp: event.target.value })} placeholder="Mín." aria-label="GP mínimo"/><span>–</span><input type="number" min="0" step="1000000" value={filters.maxGp} onChange={event => set({ maxGp: event.target.value })} placeholder="Máx." aria-label="GP máximo"/></div>
     </fieldset>
     <fieldset><legend>EQUIPO</legend><select value={filters.teamId} onChange={event => set({ teamId: event.target.value })} aria-label="Equipo"><option value="">Todos los equipos</option>{teams.map(team => <option value={team.id} key={team.id}>{team.name}</option>)}</select></fieldset>
     <fieldset><legend>NACIONALIDAD</legend><input value={filters.nationality} onChange={event => set({ nationality: event.target.value })} placeholder="Ej: Argentina" aria-label="Nacionalidad"/></fieldset>
@@ -108,7 +109,7 @@ function activeTags(filters, teams) {
   if (filters.q) tags.push(['q', `“${filters.q}”`, { q: '' }]);
   if (filters.status) tags.push(['status', STATUS_OPTIONS.find(([value]) => value === filters.status)?.[1], { status: '' }]);
   for (const value of filters.positions) tags.push([`position-${value}`, value, { positions: filters.positions.filter(item => item !== value) }]);
-  if (filters.minGp || filters.maxGp) tags.push(['price', `${filters.minGp ? Number(filters.minGp).toLocaleString('es-CL') : '0'} – ${filters.maxGp ? Number(filters.maxGp).toLocaleString('es-CL') : '∞'} GP`, { minGp: '', maxGp: '' }]);
+  if (filters.minGp || filters.maxGp) tags.push(['price', `${filters.minGp ? gpNumber(Number(filters.minGp)) : '0'} – ${filters.maxGp ? gpNumber(Number(filters.maxGp)) : '∞'} GP`, { minGp: '', maxGp: '' }]);
   if (filters.teamId) tags.push(['team', teams.find(team => team.id === filters.teamId)?.name ?? 'Equipo', { teamId: '' }]);
   if (filters.nationality) tags.push(['nationality', filters.nationality, { nationality: '' }]);
   return tags;
