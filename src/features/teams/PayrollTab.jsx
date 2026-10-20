@@ -48,22 +48,6 @@ function ContractYears({ team, contract, onDone }) {
   return <><YearsChips value={contract.seasons} disabled={change.loading} onChange={seasons => change.execute({ seasons })} label={`Torneos de ${contract.playerName}`}/><FormFeedback mutation={change}/></>;
 }
 
-function StartContracts({ onDone }) {
-  const [confirming, setConfirming] = useState(false);
-  const start = useApiMutation(signal => endpoints.startContracts({}, signal), { onSuccess: () => { setConfirming(false); onDone(); } });
-  return <section className="payroll-admin">
-    <p>ADMIN: EL SISTEMA DE CONTRATOS TODAVÍA NO ESTÁ ACTIVO. AL ACTIVARLO, TODOS LOS JUGADORES QUEDAN CON UN CONTRATO DE 2 TORNEOS: EL v11 Y EL v12 SON LOS ÚLTIMOS (EL TORNEO EN CURSO NO SE COBRA). LOS SUELDOS SE COBRAN AL FINAL DE CADA TORNEO DE LIGA CREADO DESDE AHORA, Y CADA PRESI PUEDE CAMBIAR LOS AÑOS DE SUS JUGADORES ANTES DEL PRIMER COBRO. LA REPUTACIÓN YA PARTIÓ DE CERO.</p>
-    {confirming
-      ? <div className="offer-confirm" role="group" aria-label="CONFIRMAR ACTIVACIÓN">
-        <span>¿ACTIVAR LOS CONTRATOS EN TODA LA LIGA? NO SE DESHACE SOLO.</span>
-        <button type="button" disabled={start.loading} onClick={() => start.execute()}>{start.loading ? 'ACTIVANDO…' : 'SÍ, ACTIVAR'}</button>
-        <button type="button" className="ghost" disabled={start.loading} onClick={() => setConfirming(false)}>VOLVER</button>
-      </div>
-      : <button type="button" className="action-button" onClick={() => setConfirming(true)}>ACTIVAR CONTRATOS</button>}
-    <FormFeedback mutation={start}/>
-  </section>;
-}
-
 const OUTCOME_LABEL = { accepted: ['✅', 'ACEPTÓ'], counter: ['🤝', 'CONTRAOFERTA'], refused: ['❌', 'SE NEGÓ'], error: ['⚠️', 'NO SE PUDO'] };
 
 /** Una misma propuesta para todos los jugadores con contrato vencido; cada uno responde por su cuenta. */
@@ -91,7 +75,7 @@ function Tiles({ items }) {
 
 /** Nómina del club: la real (contratos firmados) y la proyección (qué pasaría con el sueldo del 10% y los años que elijas). */
 export function PayrollTab({ team, balance, onChanged }) {
-  const { canEditTeam, isAdmin } = useAuth();
+  const { canEditTeam } = useAuth();
   const canEdit = canEditTeam(team.id);
   const query = useApiQuery(signal => endpoints.teamContracts(team.id, signal), [team.id]);
   const [draft, setDraft] = useState(() => loadDraft(team.id));
@@ -131,7 +115,6 @@ export function PayrollTab({ team, balance, onChanged }) {
       <p className="payroll-note">CADA JUGADOR TIENE UN CONTRATO DE 2 A 6 TORNEOS. SU SUELDO ES EL 10% DE SU VALOR AL FIRMAR, QUEDA CONGELADO Y SE COBRA AL TERMINAR CADA TORNEO DE LIGA MIENTRAS SIGA EN EL CLUB.</p>
       {!enabled && <>
         <p className="payroll-empty">LOS CONTRATOS TODAVÍA NO ESTÁN ACTIVOS: ENTRAN CON EL TORNEO v11. MIENTRAS TANTO MIRA LA <button type="button" className="link-button" onClick={() => setView('proyeccion')}>PROYECCIÓN</button> PARA PLANIFICAR.</p>
-        {isAdmin && <StartContracts onDone={refresh}/>}
       </>}
       {enabled && <>
         <Tiles items={[
