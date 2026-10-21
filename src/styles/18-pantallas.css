@@ -265,3 +265,8 @@ a.tile:focus-visible, button.tile:focus-visible { outline: 3px solid var(--c-yel
 .mood-meter b small { color: var(--c-ink-muted); font-weight: 500; }
 .role-mood .mood-meter-bar { flex: 1 1 auto; width: auto; }
 .club-life-stats .mood-meter-bar { width: 100%; margin-top: 6px; }
+/* Pestañas: parte de la hoja, sin quedar fijas al bajar. */
+.screen-panel { display: grid; min-width: 0; box-shadow: var(--shadow-pixel); }
+.screen-tabs { position: static; z-index: auto; box-shadow: none; border-bottom: 0; }
+.screen-panel .screen-body { box-shadow: none; }
+.screen-panel .screen-tabs + .screen-body { border-top: 2px solid var(--c-navy-800); }

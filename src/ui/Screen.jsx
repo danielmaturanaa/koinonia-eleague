@@ -29,8 +29,11 @@ export function Screen({ kicker, title, intro, tabs = null, active = null, onTab
       </div>
       {actions && <div className="screen-actions">{actions}</div>}
     </header>}
-    {tabs && tabs.length > 1 && <Tabs className="screen-tabs" tabs={tabs} value={active} onChange={changeTab} label={`Secciones de ${String(title).toLowerCase()}`}/>}
-    <div className="screen-body"><EmbeddedContext.Provider value={true}>{children}</EmbeddedContext.Provider></div>
+    {/* Las pestañas van pegadas al contenido, como la parte de arriba de la misma hoja (no flotan ni se quedan fijas). */}
+    <div className="screen-panel">
+      {tabs && tabs.length > 1 && <Tabs className="screen-tabs" tabs={tabs} value={active} onChange={changeTab} label={`Secciones de ${String(title).toLowerCase()}`}/>}
+      <div className="screen-body"><EmbeddedContext.Provider value={true}>{children}</EmbeddedContext.Provider></div>
+    </div>
   </main>;
 }
 
