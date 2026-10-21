@@ -1,0 +1,42 @@
+/* Tokens de diseño: todo valor nuevo sale de aquí. Breakpoints (no admiten variables): 560 · 900 · 1180. */
+:root {
+  --c-navy-900: #062764;
+  --c-navy-800: #10285b;
+  --c-navy-700: #092e77;
+  --c-ice: #72b4e3;
+  --c-red: #a90020;
+  --c-red-dark: #8c0019;
+  --c-green: #07502a;
+  --c-green-bright: #1c7a3e;
+  --c-cream: #fff9e8;
+  --c-gold-bg: #fff3c4;
+  --c-gold-line: #e3c764;
+  --c-paper: #e9dfc7;
+  --c-paper-deep: #e4d9c0;
+  --c-paper-line: #d9cfb8;
+  --c-ink: #11120e;
+  --c-ink-muted: #625d4e;
+  --c-yellow: #ffd42a;
+  --c-white: #fff;
+
+  --font-display: 'Anton', sans-serif;
+  --font-ui: 'Oswald', sans-serif;
+  --font-body: 'Roboto Condensed', Arial, sans-serif;
+
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-md: 15px;
+  --fs-lg: 18px;
+  --fs-xl: 22px;
+  --fs-2xl: 30px;
+
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+
+  --border: 2px solid var(--c-navy-800);
+  --shadow-pixel: 4px 4px 0 rgba(0, 0, 0, .2);
+  --tap: 40px;
+}

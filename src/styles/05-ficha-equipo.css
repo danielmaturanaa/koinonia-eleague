@@ -1,0 +1,322 @@
+/* Enlaces a equipos, partidos y jugadores. */
+.entity-link { color: inherit; text-decoration: none; cursor: pointer; }
+a.entity-link:hover { color: #a90020; }
+a.entity-link:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+.result-match { display: block; transition: background 120ms ease; }
+a.result-match:hover { color: inherit; background: #fff3c4; }
+.table-team-link { display: flex; min-width: 0; align-items: center; gap: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+a.table-team-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.ranking-row a.entity-link:hover, .playoff-series a.entity-link:hover { text-decoration: underline; text-underline-offset: 3px; }
+.player-team-value > a, .player-team-value > span { display: inline-flex; align-items: center; gap: 6px; }
+
+/* Ficha de equipo en secciones. */
+.club-page .club-paper { gap: 14px; }
+.club-squad-pitch h3,
+.club-roster h3,
+.club-matches h3,
+.club-history h3 { display: flex; justify-content: space-between; align-items: baseline; margin: 0 0 6px; color: #062764; font: 600 17px/1 'Oswald', sans-serif; letter-spacing: .5px; }
+.club-squad-pitch h3 small,
+.club-roster h3 small,
+.club-matches h3 small,
+.club-history h3 small { color: #8c0019; font-size: 14px; }
+.club-squad-layout { display: grid; grid-template-columns: minmax(280px, 400px) minmax(0, 1fr); gap: 16px; align-items: start; }
+.club-squad-pitch .club-pitch { width: 100%; }
+.club-roster { min-height: 0; }
+.club-roster h3:not(:first-child) { margin-top: 12px; }
+.club-roster .roster-row { min-height: 38px; padding: 5px 8px; font-size: 15px; }
+.club-roster .roster-row:hover { background: #fff3c4; }
+.roster-table-scroll { width: 100%; min-width: 0; max-width: 100%; }
+/* La ficha del club usa columnas explícitas: OVR y precio nunca compiten por
+   el mismo espacio, incluso con nombres o valores largos. */
+.club-roster .roster-columns, .club-roster .roster-row { grid-template-columns: 64px minmax(240px, 1fr) minmax(185px, max-content) minmax(140px, max-content); gap: 10px; }
+.club-roster .roster-columns { padding-right: 12px; padding-left: 12px; }
+.club-roster .roster-row { padding-right: 12px; padding-left: 12px; }
+.club-roster .roster-row > small { text-align: right; font-size: 14px; }
+.club-roster .roster-row > strong { min-width: 140px; font-size: 15px; white-space: nowrap; }
+.club-matches { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.club-matches > section { display: grid; gap: 6px; }
+.club-matches > .club-more-button { grid-column: 1 / -1; }
+.club-match-row { display: grid; gap: 5px; padding: 8px 10px; border: 2px solid #8f846e; border-left-width: 6px; background: #fff9e8; }
+.club-match-row:hover { color: inherit; background: #fff3c4; }
+.club-match-row.won { border-left-color: #1c7a3e; }
+.club-match-row.lost { border-left-color: #a90020; }
+.club-match-row.drawn { border-left-color: #c28b00; }
+.club-match-row > small { color: #8c0019; font: 700 12px/1 'Oswald', sans-serif; letter-spacing: .35px; text-transform: uppercase; }
+.club-match-row > div { display: grid; grid-template-columns: minmax(0, 1fr) 58px minmax(0, 1fr); align-items: center; gap: 8px; }
+.club-match-row span { display: flex; align-items: center; min-width: 0; gap: 8px; }
+.club-match-row span:last-child { justify-content: flex-end; text-align: right; }
+.club-match-row b { min-width: 0; overflow: hidden; font: 600 15px/1.1 'Roboto Condensed', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+.club-match-row strong { color: #a90020; text-align: center; font: 400 20px/1 'Anton', sans-serif; }
+.club-match-row .team-mark { width: 30px; height: 30px; flex: 0 0 30px; }
+.club-more-button { justify-self: center; padding: 9px 16px; border: 2px solid #10285b; color: #fff; background: #062764; font: 600 14px/1 'Oswald', sans-serif; letter-spacing: .5px; }
+.club-more-button:hover { background: #a90020; }
+.club-inline-edit { padding: 5px 9px; border: 2px solid #10285b; color: #062764; background: #e4d9c0; font: 600 13px/1 'Oswald', sans-serif; letter-spacing: .4px; }
+.club-inline-edit:hover { color: #fff; background: #a90020; }
+.club-history { display: grid; grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr); gap: 16px; align-items: start; }
+.club-history header { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.club-history h3 { margin: 0; }
+.club-history-review,
+.club-history-anthem { padding: 12px 14px; border: 2px solid #10285b; background: #fff9e8; }
+.club-history-review > p { font: 500 17px/1.45 'Roboto Condensed', sans-serif; white-space: pre-line; }
+.club-history-review > p.clamped { display: -webkit-box; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 12; }
+.club-history-review .club-more-button { display: block; margin: 10px auto 0; }
+.club-history-anthem audio { width: 100%; margin-bottom: 8px; }
+.club-history-anthem summary { cursor: pointer; color: #062764; font: 600 15px/1.4 'Oswald', sans-serif; }
+.anthem-lyrics { display: grid; gap: 10px; margin-top: 8px; font: 500 16px/1.4 'Roboto Condensed', sans-serif; white-space: pre-line; }
+@media (max-width: 900px) {
+  .club-squad-layout,
+  .club-matches,
+  .club-history { grid-template-columns: 1fr; }
+  .club-squad-pitch .club-pitch { max-width: 420px; margin: 0 auto; }
+  /* El desplazamiento vive sólo aquí; nunca debe ensanchar la ficha ni la página. */
+  .club-squad-layout-list { grid-template-columns: minmax(0, 1fr); min-width: 0; }
+  .club-roster { width: 100%; min-width: 0; }
+  .club-roster .roster-table-scroll { display: block; width: 100%; max-width: 100%; overflow-x: auto; overscroll-behavior-x: contain; padding-bottom: 7px; -webkit-overflow-scrolling: touch; scrollbar-color: #a90020 #d9cfb8; box-shadow: inset -10px 0 8px -10px #062764; }
+  .club-roster .roster-columns, .club-roster .roster-list { min-width: 540px; }
+  .club-roster .roster-columns { display: grid; }
+  .club-roster .roster-columns, .club-roster .roster-row { grid-template-columns: 44px minmax(170px, 1fr) 165px 110px; grid-template-areas: none; gap: 7px; }
+  .club-roster .roster-columns { padding-right: 8px; padding-left: 8px; font-size: 11px; }
+  .club-roster .roster-row { min-height: 42px; padding: 6px 8px; }
+  .club-roster .roster-row > b, .club-roster .roster-row > span, .club-roster .roster-row > small, .club-roster .roster-row > strong { grid-area: auto; }
+  .club-roster .roster-row > span { overflow: hidden; font-size: 15px; font-weight: 700; white-space: nowrap; overflow-wrap: normal; }
+  .club-roster .roster-row > small { min-width: 0; font-size: 12px; text-align: right; }
+  .club-roster .roster-row > strong { min-width: 0; font-size: 13px; }
+}
+
+.roster-row .player-flag { margin-right: 6px; }
+
+/* Jugadores: vista de la liga e importación separadas. */
+.player-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 8px; }
+.player-card { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 10px; border: 2px solid #10285b; background: #fff9e8; }
+.player-card:hover { color: inherit; border-color: #a90020; background: #fff3c4; }
+.player-card-face { width: 64px; height: 64px; border: 2px solid #062764; background: #d9cfb8; object-fit: cover; font-size: 26px; }
+.player-card-body { display: grid; min-width: 0; gap: 4px; }
+.player-card-body b { overflow: hidden; font: 600 17px/1.1 'Roboto Condensed', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+.player-card-body small { color: #625d4e; font: 500 13px/1.1 'Roboto Condensed', sans-serif; }
+.player-card-body .player-flag { margin-right: 5px; font-style: normal; }
+.player-card-details { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.player-card-details em { padding: 3px 6px; color: #fff; background: #062764; font: 600 13px/1 'Oswald', sans-serif; font-style: normal; }
+.player-card-details strong { color: #a90020; font: 600 15px/1 'Oswald', sans-serif; white-space: nowrap; }
+.player-card-team-mark { display: grid; place-items: center; width: 46px; height: 46px; border: 2px solid #10285b; background: #e4d9c0; }
+.player-card-team-mark img { width: 38px; height: 38px; object-fit: contain; }
+.player-card-status-mark { width: 46px; height: 46px; border: 0; background: transparent; }
+.player-card-status-mark .search-status { display: grid; width: 46px; height: 46px; box-sizing: border-box; place-items: center; justify-content: center; padding: 3px; font-size: 9px; line-height: 1.05; text-align: center; white-space: normal; }
+.directory-results .pagination { margin-top: 18px; }
+.player-card-team { display: flex; align-items: center; gap: 5px; min-width: 0; overflow: hidden; color: #062764; font: 600 13px/1.1 'Oswald', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+.player-card-team img { width: 18px; height: 18px; flex: 0 0 18px; object-fit: contain; }
+.player-management { margin-top: 12px; border: 2px solid #10285b; background: #e4d9c0; }
+.player-management summary { padding: 10px 12px; cursor: pointer; color: #fff; background: #0b3f8d; font: 500 16px/1 'Oswald', sans-serif; letter-spacing: .5px; }
+.player-management[open] summary { background: #a90020; }
+.player-management > div { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); align-items: start; gap: 12px; padding: 0 12px 12px; }
+@media (max-width: 560px) {
+  .player-card-grid { grid-template-columns: 1fr; }
+}
+
+@media (min-width: 901px) {
+  /* El directorio ocupa todo su contenido: filtros, 18 tarjetas y paginación
+     quedan en el flujo normal, sin un segundo scroll dentro del periódico. */
+  .site-body:has(.player-page-tabs) { min-height: 0; flex: 0 0 auto; overflow: visible; }
+  .site-body:has(.player-page-tabs) .site-content { min-height: 0; height: auto; }
+  .site-body:has(.player-page-tabs) .newspaper { height: auto; min-height: 0; overflow: visible; }
+  .site-body:has(.player-page-tabs) .data-paper { display: block; height: auto; min-height: 0; overflow: visible; }
+  .site-body:has(.player-page-tabs) .directory-layout { min-height: 0; align-items: start; overflow: visible; }
+  .site-body:has(.player-page-tabs) .filter-panel { position: static; top: auto; max-height: none; overflow: visible; }
+  .site-body:has(.player-page-tabs) .directory-results { min-height: 0; height: auto; overflow: visible; padding-right: 0; }
+  .site-body:has(.player-page-tabs) .player-comparator { min-height: 0; overflow: visible; }
+}
+
+/* Foto de jugador con iniciales de respaldo (PlayerFace). */
+.player-photo { flex-shrink: 0; }
+span.player-photo.player-photo-fallback { display: inline-grid; place-items: center; overflow: hidden; color: #ffd42a; background: #062764 url('/paper-grain.svg'); font-family: 'Anton', sans-serif; font-weight: 400; line-height: 1; letter-spacing: .5px; }
+.roster-player-face.player-photo-fallback { font-size: 12px; }
+.club-pitch-face.player-photo-fallback { font-size: 14px; }
+.player-profile-face.player-photo-fallback { font-size: 58px; }
+
+/* Buscador global: ¿quién tiene a este jugador? */
+.global-search { position: relative; flex: 0 0 auto; }
+.global-search-toggle { display: flex; align-items: center; gap: 6px; height: 40px; padding: 0 12px; border: 2px solid #43a8d6; color: #fff; background: #062764; font: 600 15px/1 'Oswald', sans-serif; letter-spacing: .5px; }
+.global-search-toggle span { color: #ffd42a; font-size: 22px; line-height: 1; }
+.global-search-toggle:hover, .global-search-toggle[aria-expanded='true'] { border-color: #ffd42a; background: #a90020; }
+.global-search-panel { position: absolute; top: calc(100% + 12px); right: 0; z-index: 30; display: grid; width: min(640px, calc(100vw - 32px)); gap: 8px; padding: 12px; border: 3px solid #43a8d6; background: #031d58 url('/paper-grain.svg'); box-shadow: 6px 6px #000c24; }
+.global-search-panel > input { width: 100%; height: 46px; padding: 0 12px; border: 2px solid #ffd42a; color: #111; background: #fff9e8; font: 600 18px/1 'Roboto Condensed', sans-serif; }
+.global-search-results { display: grid; gap: 4px; max-height: min(60vh, 520px); overflow-y: auto; scrollbar-color: #72b4e3 #021238; }
+.global-search-hint { padding: 12px 4px; color: #b8d8f0; font: 500 15px/1.35 'Roboto Condensed', sans-serif; }
+.global-search-result { display: grid; grid-template-columns: 48px minmax(0, 1fr) auto; align-items: center; gap: 10px; width: 100%; padding: 6px 8px; border: 2px solid transparent; color: #111; background: #fff9e8; text-align: left; }
+.global-search-result.active { border-color: #ffd42a; background: #fff3c4; }
+.global-search-result .player-photo { width: 48px; height: 48px; object-fit: cover; background: #d9cfb8; font-size: 18px; }
+.global-search-name { display: grid; min-width: 0; gap: 3px; }
+.global-search-name b { overflow: hidden; font: 700 17px/1.1 'Roboto Condensed', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+.global-search-name small { overflow: hidden; color: #625d4e; font: 500 13px/1.1 'Roboto Condensed', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
+.search-status { display: inline-flex; align-items: center; gap: 6px; max-width: 240px; padding: 6px 8px; color: #fff; font: 600 13px/1.1 'Oswald', sans-serif; letter-spacing: .3px; text-align: right; }
+.search-status img { width: 22px; height: 22px; flex: 0 0 22px; object-fit: contain; }
+.search-status.owned { background: #062764; }
+.search-status.free { color: #111; background: #ffd42a; }
+.search-status.unregistered { border: 2px dashed #062764; color: #062764; background: transparent; }
+.global-search-hint ul { display: grid; gap: 8px; margin: 10px 0 0; padding: 0; list-style: none; }
+.global-search-hint li { display: flex; align-items: center; gap: 8px; }
+.global-search-hint .search-status { flex: 0 0 118px; justify-content: center; }
+.global-search-hint .search-status.unregistered { border-color: #b8d8f0; color: #b8d8f0; }
+.global-search-all { padding: 9px; border: 2px solid #72b4e3; color: #fff; background: #062764; font: 600 14px/1 'Oswald', sans-serif; letter-spacing: .5px; }
+.global-search-all:hover { background: #a90020; }
+@media (max-width: 1320px) {
+  .global-search { order: 2; }
+  .global-search-panel { position: fixed; top: var(--site-header-height); right: 16px; left: 16px; width: auto; }
+}
+@media (max-width: 560px) {
+  .global-search-result { grid-template-columns: 44px minmax(0, 1fr); }
+  .search-status { grid-column: 1 / -1; justify-self: start; max-width: none; text-align: left; }
+}
+
+/* Celular: tarjeta de partido en dos filas (local arriba, visita abajo). */
+@media (max-width: 560px) {
+  .team-chip-bar { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; padding: 6px; }
+  .team-chip { height: 58px; min-height: 58px; max-height: 58px; padding: 2px; font-size: 12px; }
+  .team-chip .team-mark { width: 46px; height: 46px; flex-basis: 46px; }
+}
+@media (max-width: 560px) {
+  .site-body { padding-right: 8px; padding-left: 8px; }
+  .newspaper { padding: 6px 6px 10px; }
+  .data-paper, .team-list-paper, .club-paper { padding: 8px; border-width: 2px; }
+}
+
+/* Ficha de equipo: cabecera con colores del club y pestañas. */
+.club-hero { position: relative; display: grid; grid-template-columns: 96px minmax(0, 1fr) auto; align-items: center; gap: 18px; padding: 18px 20px; overflow: hidden; color: #fff; background: linear-gradient(115deg, #062764 0 66%, var(--club-primary) 66% 76%, var(--club-secondary) 76% 86%, var(--club-tertiary) 86%); border: 3px solid #0a1634; box-shadow: inset 0 0 0 3px #ffffff22; }
+.club-hero::after { content: ''; position: absolute; inset: 0; background: url('/paper-grain.svg'); opacity: .35; pointer-events: none; }
+.club-hero > * { position: relative; z-index: 1; }
+.club-hero .club-crest { width: 96px; height: 96px; filter: drop-shadow(3px 4px 0 #0008); }
+.club-hero-copy { min-width: 0; }
+.club-hero-copy p { color: #ffd42a; font: 600 13px/1 'Oswald', sans-serif; letter-spacing: 1.4px; }
+.club-hero-copy h1 { margin: 6px 0 10px; font: italic 400 clamp(30px, 4vw, 46px)/.95 'Anton', Impact, sans-serif; letter-spacing: .6px; text-shadow: 3px 3px 0 #0009; overflow-wrap: anywhere; }
+.club-hero-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.club-hero-rank { padding: 6px 10px; color: #111; background: #ffd42a; font: 600 14px/1 'Oswald', sans-serif; letter-spacing: .5px; }
+.club-hero-rank b { font: 400 20px/1 'Anton', sans-serif; }
+.club-form { display: flex; gap: 4px; }
+.club-form-pill { display: grid; place-items: center; width: 28px; height: 28px; border: 2px solid #fff; color: #fff; font: 600 14px/1 'Oswald', sans-serif; }
+.club-form-pill.form-G { background: #1c7a3e; }
+.club-form-pill.form-E { color: #111; background: #e0b400; }
+.club-form-pill.form-P { background: #a90020; }
+a.club-form-pill:hover { color: #fff; transform: translateY(-2px); }
+.club-tabs { position: static; display: flex; gap: 2px; overflow-x: auto; border-bottom: 3px solid #062764; background: var(--paper) url('/paper-grain.svg'); scrollbar-width: none; }
+.club-tabs button { flex: 0 0 auto; padding: 12px 16px 10px; border: 0; border-bottom: 4px solid transparent; color: #062764; background: none; font: 600 16px/1 'Oswald', sans-serif; letter-spacing: .6px; }
+.club-tabs button:hover { background: #fff3c4; }
+.club-tabs button.active { border-bottom-color: #a90020; color: #a90020; }
+.club-tab-content { min-height: 320px; }
+.club-overview { display: grid; grid-template-columns: minmax(300px, 420px) minmax(0, 1fr); gap: 14px; align-items: start; }
+.club-card { padding: 12px 14px; border: 2px solid #10285b; background: #fff9e8; }
+.club-card > h3 { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin: 0 0 10px; color: #062764; font: 600 17px/1 'Oswald', sans-serif; letter-spacing: .6px; }
+.club-card > h3 small { color: #8c0019; font-size: 14px; }
+.club-link-button { padding: 0; border: 0; color: #a90020; background: none; font: 600 13px/1 'Oswald', sans-serif; letter-spacing: .5px; }
+.club-link-button:hover { text-decoration: underline; }
+.club-match-list { display: grid; gap: 6px; }
+.club-league-table tr.current-team td { background: #ffe9a6; font-weight: 700; }
+.club-league-table tr.current-team td:first-child { box-shadow: inset 5px 0 0 #a90020; }
+.club-transfers { display: grid; gap: 6px; }
+.club-transfers article { display: grid; grid-template-columns: 70px minmax(0, 1fr) auto; align-items: center; gap: 12px; padding: 8px 12px; border: 2px solid #10285b; background: #fff9e8; }
+.club-transfer-kind { padding: 5px 0; color: #fff; text-align: center; font: 600 13px/1 'Oswald', sans-serif; letter-spacing: .6px; }
+.club-transfers .arrival .club-transfer-kind { background: #1c7a3e; }
+.club-transfers .departure .club-transfer-kind { background: #a90020; }
+.club-transfers span { display: grid; gap: 3px; min-width: 0; font: 700 17px/1.1 'Roboto Condensed', sans-serif; }
+.club-transfers small { color: #625d4e; font: 600 13px/1 'Oswald', sans-serif; }
+.club-transfers strong { color: #062764; font: 600 16px/1 'Oswald', sans-serif; white-space: nowrap; }
+@media (max-width: 900px) {
+  .club-overview { grid-template-columns: 1fr; }
+}
+@media (max-width: 560px) {
+  .club-hero { grid-template-columns: 64px minmax(0, 1fr); gap: 12px; padding: 14px; }
+  .club-hero .club-crest { width: 64px; height: 64px; }
+  .club-tabs button { padding: 11px 12px 9px; font-size: 15px; }
+  .club-transfers article { grid-template-columns: 58px minmax(0, 1fr); }
+  .club-transfers strong { grid-column: 2; }
+}
+.club-league-table { width: 100%; font-size: 15px; }
+.club-league-table th:nth-child(2), .club-league-table td:nth-child(2) { width: 42%; }
+.club-league-table td { padding-top: 7px; padding-bottom: 7px; }
+.club-league-table .team-mark { width: 24px; height: 24px; flex: 0 0 24px; }
+@media (max-width: 560px) {
+  .club-match-row > div { grid-template-columns: minmax(0, 1fr) 50px; grid-template-areas: "home score" "away score"; row-gap: 6px; }
+  .club-match-row > div > span:first-child { grid-area: home; }
+  .club-match-row > div > strong { grid-area: score; }
+  .club-match-row > div > span:last-child { grid-area: away; flex-direction: row-reverse; justify-content: flex-end; text-align: left; }
+}
+
+.club-hero-value { display: grid; justify-items: end; gap: 2px; padding: 10px 14px; border: 2px solid #ffd42a; color: #fff; background: #001449d9; text-align: right; }
+.club-hero-value small { color: #ffd42a; font: 600 13px/1 'Oswald', sans-serif; letter-spacing: 1px; }
+.club-hero-value b { font: 400 clamp(28px, 3.4vw, 40px)/1 'Anton', sans-serif; letter-spacing: .5px; }
+.club-hero-value span { color: #b8d8f0; font: 600 12px/1 'Oswald', sans-serif; letter-spacing: .6px; }
+.club-squad-modes { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+.club-squad-modes button { padding: 9px 14px; border: 2px solid #10285b; color: #062764; background: #fff9e8; font: 600 14px/1 'Oswald', sans-serif; letter-spacing: .5px; }
+.club-squad-modes button.active { border-color: #a90020; color: #fff; background: #a90020; }
+.club-scorers { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.club-scorers li { display: grid; grid-template-columns: 22px 36px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 5px 6px; border-bottom: 1px solid #d8ccb0; font: 700 16px/1.1 'Roboto Condensed', sans-serif; }
+.club-scorers li > b { color: #a90020; font: 400 18px/1 'Anton', sans-serif; }
+.club-scorers .player-photo { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; background: #d9cfb8; font-size: 13px; }
+.club-scorers strong { color: #062764; font: 400 20px/1 'Anton', sans-serif; }
+.club-scorers strong small { font: 600 11px/1 'Oswald', sans-serif; }
+.club-card .club-more-button { display: block; margin: 10px auto 0; }
+.club-transfer-balance { margin-bottom: 10px; color: #625d4e; font: 600 15px/1.3 'Oswald', sans-serif; letter-spacing: .4px; }
+.club-transfer-balance b { color: #062764; }
+.club-transfers .move-in .club-transfer-kind, .club-transfers .move-purchase .club-transfer-kind { background: #1c7a3e; }
+.club-transfers .move-assignment .club-transfer-kind { background: #0b3f8d; }
+.club-transfers .move-out .club-transfer-kind { background: #a90020; }
+.club-transfers .move-trade .club-transfer-kind { color: #111; background: #ffd42a; }
+.club-history-tab-content { display: grid; gap: 14px; }
+@media (max-width: 900px) {
+  .club-overview { grid-template-columns: 1fr; }
+  .club-hero { grid-template-columns: 72px minmax(0, 1fr); }
+  .club-hero-value { grid-column: 1 / -1; grid-template-columns: auto auto 1fr; align-items: baseline; justify-items: start; gap: 8px; text-align: left; }
+}
+/* La celda de equipo sigue siendo celda de tabla; el flex vive en el enlace. */
+.club-league-table td:nth-child(2) { display: table-cell; max-width: 0; }
+.club-league-table .table-team-link { gap: 8px; }
+@media (max-width: 560px) {
+  .club-league-table th:nth-child(4), .club-league-table td:nth-child(4),
+  .club-league-table th:nth-child(5), .club-league-table td:nth-child(5),
+  .club-league-table th:nth-child(6), .club-league-table td:nth-child(6) { display: none; }
+  .club-league-table th:nth-child(2), .club-league-table td:nth-child(2) { width: 60%; }
+}
+
+/* Resumen del club: finanzas, directiva (presidente y DT) y plantel titular,
+   sin repetir próximos partidos, titulares ni goleadores en esta vista. */
+.club-overview-reorganized { display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; align-items: start; }
+.club-overview-reorganized .club-overview-secondary { order: 2; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; min-width: 0; }
+.club-overview-left-column { display: grid; gap: 14px; min-width: 0; align-content: start; }
+@media (max-width: 900px) {
+  .club-overview-reorganized .club-overview-secondary { grid-template-columns: 1fr; }
+}
+
+/* Menú desplegable de equipos (solo escritorio). */
+
+/* Directorio único de jugadores. */
+.directory-search { flex: 1 1 260px; min-width: 0; height: 44px; padding: 0 12px; border: 2px solid #092e77; background: #fff9e8; font: 600 17px/1 'Roboto Condensed', sans-serif; }
+.player-card { position: relative; }
+.player-card.status-unregistered { border-style: dashed; background: #fbf5e4; }
+.player-card-body .search-status { justify-self: start; max-width: 100%; padding: 4px 7px; overflow: hidden; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.player-card-body .search-status img { width: 16px; height: 16px; flex-basis: 16px; }
+.player-page-tabs { display: flex; gap: 6px; margin: 10px 0 12px; border-bottom: 3px solid #10285b; }
+.player-page-tabs button { flex: 1 1 0; min-width: 0; padding: 10px 14px; border: 2px solid #10285b; border-bottom: 0; color: #062764; background: #e4d9c0; font: 600 15px/1 'Oswald', sans-serif; letter-spacing: .45px; cursor: pointer; }
+.player-page-tabs button:hover { background: #fff3c4; }
+.player-page-tabs button.active { color: #fff; background: #a90020; }
+.data-page-header .player-page-tabs { position: absolute; right: 8px; bottom: 9px; width: min(360px, 44%); margin: 0; border-bottom: 0; }
+.data-page-header .player-page-tabs button { border-bottom: 2px solid #10285b; }
+@media (max-width: 760px) {
+  .data-page-header .player-page-tabs { position: static; width: auto; margin: 8px 0 0; }
+}
+.player-card { grid-template-columns: 1fr; gap: 0; padding: 0; overflow: hidden; }
+.player-card-link { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 10px; min-width: 0; padding: 8px 10px; color: inherit; text-decoration: none; }
+.player-card-link:hover { color: inherit; }
+.overall-badge { display: inline-block; width: max-content; padding: 3px 5px; border: 1px solid #062764; color: #fff; background: #062764; font: 700 11px/1 'Oswald', sans-serif; letter-spacing: .45px; white-space: nowrap; }
+.overall-badge-hero { border-color: #ffd42a; color: #ffd42a; background: #001449; font-size: 14px; }
+.player-card-details .overall-badge { align-self: center; }
+.market-player-link .overall-badge { margin-top: 2px; font-size: 10px; }
+.player-comparator { display: grid; gap: 10px; margin: 12px 0; padding: 12px; border: 3px solid #10285b; background: #e4d9c0; }
+.player-comparator > header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-bottom: 8px; border-bottom: 2px solid #10285b; }
+.player-comparator > header h2 { margin: 0; color: #062764; font: 400 27px/1 'Anton', sans-serif; }
+.player-comparator > header p { margin: 5px 0 0; color: #625d4e; font: 500 15px/1.2 'Roboto Condensed', sans-serif; }
+.player-comparator > header > small { color: #a90020; font: 600 14px/1 'Oswald', sans-serif; white-space: nowrap; }
+.player-comparison-face { width: 72px; height: 72px; border: 2px solid #ffd42a; background: #d9cfb8; object-fit: cover; font-size: 25px; }
+.player-comparison-score { display: inline-block; margin-top: 6px; padding: 3px 6px; color: #062764; background: #ffd42a; font: 700 11px/1 'Oswald', sans-serif; letter-spacing: .35px; }
+.player-comparison-remove { align-self: start; padding: 1px 5px; border: 1px solid #ffd42a; color: #ffd42a; background: transparent; font: 700 18px/1 sans-serif; cursor: pointer; }
+.player-comparison-remove:hover { color: #fff; background: #a90020; }
+@media (max-width: 680px) {
+  .player-comparator > header { align-items: flex-start; flex-direction: column; gap: 5px; }
+}

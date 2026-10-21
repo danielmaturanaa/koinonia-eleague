@@ -1,0 +1,156 @@
+/* ===== Ofertas (traspasos y trueques): bandeja en tarjetas y formulario guiado ===== */
+.offer-group { display: grid; gap: 8px; margin-top: 6px; }
+.offer-list { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 420px), 1fr)); }
+.offer-card { display: grid; gap: 10px; padding: 12px; border: 2px solid #b8c3dd; background: #fff; }
+.offer-card.is-incoming { border-color: #062764; box-shadow: 0 0 0 3px rgba(255, 212, 42, .45); }
+.offer-card > header { display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: baseline; justify-content: space-between; }
+.offer-kind { color: #062764; font: 600 16px/1 'Oswald', sans-serif; letter-spacing: .3px; }
+.offer-card > header small { color: #55607a; font: 500 12px/1.2 'Roboto Condensed', sans-serif; }
+.offer-sides { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; align-items: center; }
+.offer-sides > div { display: grid; gap: 5px; align-content: start; min-width: 0; }
+.offer-sides > div > small { color: #55607a; font: 600 11px/1.2 'Oswald', sans-serif; letter-spacing: .3px; overflow-wrap: anywhere; }
+.offer-swap { color: #0b3a8c; font: 600 22px/1 'Oswald', sans-serif; }
+.offer-player { display: flex; gap: 8px; align-items: center; min-width: 0; }
+.offer-player .player-photo { width: 40px; height: 40px; flex: 0 0 auto; border-radius: 50%; background: radial-gradient(circle at 50% 35%, #2a5bb8, #062764); object-fit: cover; object-position: center top; }
+.offer-player .player-photo-fallback { display: grid; place-items: center; color: #fff; font: 600 13px/1 'Oswald', sans-serif; }
+.offer-player > span { display: grid; gap: 2px; min-width: 0; }
+.offer-player b { color: #1a1f33; font: 600 15px/1.1 'Oswald', sans-serif; overflow-wrap: anywhere; }
+.offer-player small { color: #55607a; font: 500 12px/1.2 'Roboto Condensed', sans-serif; }
+.offer-price, .offer-gp { color: #145c33; font: 600 20px/1.1 'Oswald', sans-serif; }
+.offer-gp { font-size: 15px; }
+.offer-status { margin: 0; color: #062764; font: 600 13px/1.3 'Roboto Condensed', sans-serif; }
+.offer-card .mini-actions button { min-height: 40px; font-size: 14px; }
+.offer-confirm { display: grid; gap: 8px; padding: 8px 10px; background: #fff3c4; border: 1px solid #e3c764; color: #5a4700; font: 600 13px/1.3 'Roboto Condensed', sans-serif; }
+.offer-confirm .mini-actions button { min-height: 40px; }
+.offer-counter { display: grid; gap: 8px; padding: 10px; background: #eef4ff; border: 1px solid #9db8e8; color: #1d3a6b; font: 600 13px/1.3 'Roboto Condensed', sans-serif; }
+.offer-counter label { display: grid; gap: 4px; }
+.offer-counter select { min-height: 40px; }
+.offer-counter-gp { display: grid; gap: 8px; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); }
+.offer-counter .mini-actions button { min-height: 40px; }
+.mini-actions button.ghost { background: #fff; color: #062764; border-color: #062764; }
+.offer-tabs { margin-bottom: 8px; }
+.offer-form { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); align-items: end; }
+.offer-form > .offer-toggle, .offer-form > .offer-summary, .offer-form > .offer-confirm, .offer-form > .poll-hint, .offer-form > .form-feedback, .offer-form > .action-button { grid-column: 1 / -1; }
+.offer-form > .action-button { min-height: 46px; }
+.offer-toggle { display: grid; grid-template-columns: 1fr 1fr; border: 2px solid #062764; }
+.offer-toggle button { min-height: 42px; border: 0; background: #fff; color: #062764; font: 600 15px/1 'Oswald', sans-serif; cursor: pointer; }
+.offer-toggle button.on { background: #062764; color: #fff9e8; }
+.offer-summary { padding: 8px 10px; border-left: 4px solid #25a244; background: #e4f4ea; color: #0d4a2a; }
+.offer-summary.has-problem { border-left-color: #a90020; background: #fdecef; color: #7a0017; }
+.offer-summary p { margin: 0; font: 600 13px/1.35 'Roboto Condensed', sans-serif; }
+.offer-sent { display: grid; gap: 10px; justify-items: start; padding: 12px; border: 2px solid #167a45; background: #e4f4ea; }
+.offer-sent p { margin: 0; color: #0d4a2a; font: 600 14px/1.35 'Roboto Condensed', sans-serif; }
+.poll-empty { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
+@media (max-width: 560px) {
+  .offer-sides { grid-template-columns: 1fr; }
+  .offer-swap { justify-self: center; transform: rotate(90deg); }
+}
+
+/* ===== Pestaña de encuestas: buscador de agentes libres y filtros ===== */
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.poll-search-box { display: block; margin: 4px 0 10px; }
+.poll-search-box input { width: 100%; min-height: 48px; padding: 0 14px; border: 2px solid #062764; background: #fff; color: #1a1f33; font: 500 16px/1.2 'Roboto Condensed', sans-serif; }
+.poll-search-box input:focus { outline: 3px solid #ffd42a; outline-offset: 1px; }
+.poll-filters { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; align-items: end; margin: 4px 0 12px; }
+.poll-filters label { display: grid; gap: 3px; color: #062764; font: 600 12px/1.2 'Oswald', sans-serif; }
+.poll-filters select { min-height: 42px; }
+.profile-poll { display: inline-grid; gap: 6px; }
+.profile-poll.done { margin: 0; padding: 8px 12px; border: 2px solid #167a45; background: #e4f4ea; color: #0d4a2a; font: 600 13px/1.35 'Roboto Condensed', sans-serif; }
+.profile-poll.done a { color: #062764; }
+@media (max-width: 560px) { .poll-filters { grid-template-columns: 1fr; } }
+
+/* ===== Premios del torneo ===== */
+.tournament-awards select { min-height: 34px; }
+.tournament-awards .button-row { display: flex; flex-wrap: wrap; gap: 8px; }
+.tournament-awards-table { overflow-x: auto; }
+.tournament-awards-table table { width: 100%; min-width: 640px; }
+.tournament-awards-table td:nth-child(2), .tournament-awards-table th:nth-child(2) { text-align: left; }
+.tournament-awards-table td:nth-child(5) { white-space: nowrap; font: 600 12px/1.2 'Oswald', sans-serif; }
+.tournament-awards-table input { width: 100%; min-width: 96px; }
+.tournament-awards-table select { min-width: 118px; }
+.tournament-awards-table table { table-layout: auto; }
+.tournament-awards-table th:first-child, .tournament-awards-table td:first-child { width: 32px; text-align: center; }
+.signing-note { display: block; color: #6b4e00; font: 600 12px/1.35 'Roboto Condensed', sans-serif; }
+
+/* ===== Jugadores a la venta ===== */
+.for-sale-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; margin-bottom: 10px; }
+.for-sale-form label { display: grid; gap: 3px; color: #062764; font: 600 12px/1.2 'Oswald', sans-serif; }
+.for-sale-form select, .for-sale-form .action-button { min-height: 42px; }
+.for-sale-form .form-feedback { grid-column: 1 / -1; }
+.for-sale-list { display: grid; gap: 6px; }
+.for-sale-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 10px; align-items: center; padding: 8px 10px; border: 1px solid #c9bd9f; background: #fff; }
+.for-sale-row > a { color: inherit; text-decoration: none; }
+.for-sale-team { color: #062764; font: 600 13px/1.2 'Oswald', sans-serif; }
+.for-sale-row strong { color: #a90020; font: 600 16px/1 'Oswald', sans-serif; }
+.for-sale-remove { min-height: 34px; padding: 0 10px; border: 2px solid #a90020; background: #fff; color: #a90020; font: 600 12px/1 'Oswald', sans-serif; cursor: pointer; }
+@media (max-width: 560px) {
+  .for-sale-form { grid-template-columns: 1fr; }
+  .for-sale-row { grid-template-columns: minmax(0, 1fr) auto; }
+  .for-sale-team { grid-column: 1; }
+}
+
+/* Reputación del presi: chip junto al cargo (abre el ranking) y resumen al pasar el mouse por la foto. */
+/* El chip va sobre la esquina de la foto (misma celda de la grilla) para no descuadrar las dos tarjetas en el teléfono. */
+.club-person-entry > .club-person-role { grid-row: 1; grid-column: 1; }
+.club-person-entry > .club-person-card { grid-row: 2; grid-column: 1; }
+.reputation-chip { grid-row: 2; grid-column: 1; align-self: start; justify-self: end; z-index: 2; display: inline-flex; align-items: baseline; gap: 4px; margin: 6px; padding: 2px 7px; box-shadow: 2px 2px 0 #0006; border: 2px solid #10285b; color: #062764; background: #fff9e8; font: 600 11px/1.2 'Oswald', sans-serif; letter-spacing: .4px; cursor: pointer; }
+.reputation-chip b { font: 400 14px/1 'Anton', sans-serif; }
+.reputation-chip:hover, .reputation-chip:focus-visible { background: #fff3c4; }
+.reputation-summary { display: grid; gap: 6px; padding: 8px 9px; border: 2px solid #10285b; background: #fff9e8; color: #062764; }
+.reputation-summary-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; }
+.reputation-summary-title span { display: grid; gap: 2px; }
+.reputation-summary-title b { font: 400 16px/1.05 'Anton', sans-serif; letter-spacing: .2px; }
+.reputation-summary-title small, .reputation-summary-hint { color: #4d4839; font: 500 11px/1.2 'Oswald', sans-serif; letter-spacing: .4px; }
+.reputation-summary-hint { margin: 0; }
+.reputation-score { display: inline-grid; place-items: center; min-width: 38px; padding: 3px 5px; color: #fff; font: 400 20px/1 'Anton', sans-serif; }
+.reputation-score.high { background: #1c7a3e; }
+.reputation-score.mid { background: #b07d00; }
+.reputation-score.low { background: #a90020; }
+.reputation-parts { display: grid; gap: 3px; margin: 0; padding: 0; list-style: none; }
+.reputation-parts li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 3px; border-top: 1px solid #10285b22; font: 600 12px/1.15 'Oswald', sans-serif; letter-spacing: .3px; }
+.reputation-parts li span { display: grid; gap: 1px; }
+.reputation-parts small { color: #4d4839; font-weight: 500; font-size: 10.5px; }
+.reputation-parts em, .reputation-table td.negative { font-style: normal; font-weight: 700; }
+.reputation-parts em.positive { color: #1c7a3e; }
+.reputation-parts em.negative, .reputation-table td.negative { color: #a90020; }
+.person-modal.reputation-modal { width: min(820px, 100%); }
+.reputation-modal > :not(header) { margin-left: 14px; margin-right: 14px; }
+.reputation-modal > .reputation-intro { margin-top: 12px; }
+.reputation-modal > .reputation-table-wrap { margin-bottom: 14px; }
+.reputation-intro { margin: 0 0 8px; color: #2b2a24; font: 400 14px/1.4 'Roboto Condensed', sans-serif; }
+.reputation-rules { display: grid; gap: 4px; margin-top: 0; margin-bottom: 12px; padding-left: 32px; color: #2b2a24; font: 400 13.5px/1.35 'Roboto Condensed', sans-serif; }
+.reputation-table-wrap { overflow-x: auto; }
+.reputation-table { width: 100%; border-collapse: collapse; font: 500 13px/1.2 'Oswald', sans-serif; }
+.reputation-table th { padding: 5px 6px; color: #fff; background: #062764; font-weight: 600; font-size: 11px; letter-spacing: .4px; text-align: right; white-space: nowrap; }
+.reputation-table th:nth-child(2), .reputation-table td:nth-child(2) { text-align: left; }
+.reputation-table td { padding: 5px 6px; border-top: 1px solid #b8b199; text-align: right; white-space: nowrap; }
+.reputation-table tr.current-team td { background: #fff3c4; }
+.reputation-table .table-team-link { display: flex; align-items: center; gap: 6px; color: inherit; text-decoration: none; }
+.reputation-table .table-team-link span { display: grid; }
+.reputation-table .table-team-link small { color: #4d4839; font-size: 11px; }
+.reputation-table .team-mark { width: 22px; height: 22px; flex: 0 0 22px; }
+/* En el teléfono quedan club, liberaciones y total. */
+@media (max-width: 560px) { .reputation-table :is(th, td):is(:nth-child(3), :nth-child(4), :nth-child(5), :nth-child(7)) { display: none; } .reputation-table td { white-space: normal; } .reputation-table th, .reputation-table td { padding: 5px 4px; } }
+
+.reputation-table small.reputation-count { display: block; color: #4d4839; font-size: 10.5px; font-weight: 500; }
+
+/* Media de la plantilla: XI inicial, banca y total, con y sin los potenciadores del DT. */
+.squad-averages-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.squad-average { display: grid; align-content: start; justify-items: center; gap: 4px; min-width: 0; padding: 10px 6px; border: 2px solid #172758; background: #efe6cf; text-align: center; }
+.squad-average small { color: #4d4839; font: 600 12px/1.1 'Oswald', sans-serif; letter-spacing: .5px; }
+.squad-average b { color: #062764; font: 400 30px/1 'Anton', sans-serif; letter-spacing: .3px; }
+.squad-average em { color: #1c7a3e; font: 600 13px/1.2 'Oswald', sans-serif; font-style: normal; letter-spacing: .3px; }
+.squad-average em span { color: #4d4839; font-size: 11px; }
+.squad-average i { color: #4d4839; font: 500 11px/1.2 'Roboto Condensed', sans-serif; font-style: normal; }
+.squad-averages-note { margin: 8px 0 0; color: #4d4839; font: 500 12px/1.3 'Roboto Condensed', sans-serif; }
+@media (max-width: 560px) { .squad-average b { font-size: 24px; } .squad-average small { font-size: 11px; } }
+
+/* Indicador de sincronización del borrador del simulador. */
+.squad-sim-sync { display: inline-block; margin-top: 4px; color: #1c7a3e; font: 600 12px/1 'Oswald', sans-serif; letter-spacing: .5px; }
+.squad-sim-sync.saving { color: #4d4839; }
+.squad-sim-sync.error { color: #a90020; }
+
+/* La banca se desplaza en horizontal: sus cartas no se arrastran, así que dejan pasar el gesto de scroll
+   (touch-action: none, pensado para arrastrar titulares en la cancha, impedía desplazarse empezando sobre una carta). */
+.pitch-card.bench { touch-action: pan-x pan-y; }
+.pitch-board-bench > div { overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; }
