@@ -452,3 +452,27 @@ a.tile:focus-visible, button.tile:focus-visible { outline: 3px solid var(--c-yel
 .match-center-below { grid-template-columns: 1fr; grid-auto-rows: auto; }
 .match-center-below .match-center-h2h > .match-card-panel { position: static; max-height: 420px; }
 @media (max-width: 1100px) { .match-center-arena { grid-template-columns: 1fr; } }
+/* Modo estadio v2: el marcador afuera y las incidencias pintadas sobre la cancha. */
+.match-center-arena { grid-template-columns: minmax(300px, 0.85fr) minmax(0, 1.5fr); align-items: stretch; }
+/* El cara a cara llena lo que queda bajo el marcador hasta el alto del estadio (si el marcador crece, se achica). */
+.match-center-arena > .match-center-main { display: flex; flex-direction: column; gap: 12px; }
+.match-center-arena .match-center-h2h { position: relative; flex: 1 1 0; min-height: 200px; }
+.match-center-arena .match-center-h2h > .match-card-panel { position: absolute; inset: 0; display: flex; flex-direction: column; overflow: hidden; margin: 0; width: 100%; }
+.match-center-arena .match-center-h2h .h2h-list { flex: 1 1 auto; min-height: 0; overflow-y: auto; scrollbar-width: thin; }
+.match-center-arena > .match-center-main { min-width: 0; }
+.match-center-arena .stadium360-pitch { height: 360px; }
+.match-center-below { gap: 14px; }
+.stadium360-center { width: min(520px, 100%); }
+.stadium360-center .match-incidents-panel { margin: 0; padding: 10px 14px; border: 2px solid rgba(255, 255, 255, .55); background: rgba(8, 30, 14, .72); color: #fff; box-shadow: none; }
+.stadium360-center .match-incidents-panel h2 { justify-content: center; margin: 0 0 6px; color: #ffd42a; font-size: 18px; letter-spacing: 2px; text-shadow: 2px 2px 0 #000; }
+.stadium360-center .match-incidents-panel h3 { color: #fff; font-size: 14px; text-shadow: 1px 1px 0 #000; }
+.stadium360-center .match-incidents-panel :is(li, a, small, p) { color: #fff; }
+.stadium360-center .match-incidents-panel small { opacity: .8; }
+.stadium360-center .match-incidents-panel em { color: #ffd42a; }
+.stadium360-center .match-incidents > div:last-child { text-align: right; }
+.stadium360-center .match-incidents > div:last-child li { justify-content: flex-end; }
+.pitch-live-tag { margin: 0; justify-self: center; padding: 6px 14px; border: 2px solid #000; background: #c8102e; color: #fff; font: 700 14px/1 var(--font-ui); letter-spacing: 2px; animation: arena-flash-text 1.2s steps(2) infinite; }
+@media (max-width: 1100px) { .match-center-arena { grid-template-columns: 1fr; } }
+.match-center-arena .match-center-score .scoreboard-full .scoreboard-team b { font-size: 16px; white-space: normal; text-align: center; }
+.stadium360-center .match-incidents > div:last-child h3 { justify-content: flex-end; text-align: right; }
+@media (max-width: 1100px) { .match-center-arena .match-center-h2h { flex: none; } .match-center-arena .match-center-h2h > .match-card-panel { position: static; max-height: 420px; } }

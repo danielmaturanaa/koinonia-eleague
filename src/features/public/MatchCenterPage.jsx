@@ -141,13 +141,16 @@ export function MatchCenterPage({ matchId, teams = [], navigate }) {
         : <div className="match-center-score"><Scoreboard matchId={matchId} mode="manage" density="full" teams={teams} refreshKey={revision} onChanged={bump} showActa={false}/>{match.sanctioned && <p className="match-sanction-banner"><SanctionBadge match={match}/> Resultado administrativo 0-3: el partido no se jugó.</p>}{match.simulated && <SimulationBanner match={match} simulation={simulation} onReplay={durationSeconds => setLocalReplay({ startsAt: Date.now(), durationSeconds })}/>}</div>;
       const incidents = !replaying && !loadingSimulation && (match.status === 'pending' ? <SimulationPreview key={revision} match={match} onSimulated={bump}/> : <Incidents match={match}/>);
       const h2h = <div className="match-center-h2h"><HeadToHead match={match} resolveTeam={resolveTeam}/></div>;
-      // Estadio: el marcador sobre la cancha rodeado de tribunas, las incidencias al lado y el cara a cara abajo.
+      // Estadio: el marcador y el cara a cara afuera (a la izquierda) y el estadio con las incidencias sobre el pasto; la
+      // previa, abajo. Durante la transmisión la cancha no muestra incidencias (serían spoiler).
       if (stadium) return <>
         <div className="match-center-arena">
-          <PixelStadium home={resolveTeam(match.homeTeam)} away={resolveTeam(match.awayTeam)} fx={fx} derby={Boolean(match.derby)}>{score}</PixelStadium>
-          {incidents && <div className="match-center-side">{incidents}</div>}
+          <div className="match-center-main">{score}{h2h}</div>
+          <PixelStadium home={resolveTeam(match.homeTeam)} away={resolveTeam(match.awayTeam)} fx={fx} derby={Boolean(match.derby)}>
+            {replaying || loadingSimulation ? <p className="pitch-live-tag">TRANSMISIÓN EN CURSO</p> : <Incidents match={match}/>}
+          </PixelStadium>
         </div>
-        <div className="match-center-below">{h2h}</div>
+        {match.status === 'pending' && !replaying && <div className="match-center-below"><SimulationPreview key={revision} match={match} onSimulated={bump}/></div>}
       </>;
       // Clásico: marcador + incidencias a la izquierda y cara a cara a la derecha, con el mismo alto.
       return <div className="match-center-top"><div className="match-center-main">{score}{incidents}</div>{h2h}</div>;
