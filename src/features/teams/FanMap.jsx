@@ -59,14 +59,14 @@ function heatLevels(countries) {
 
 /** Mapa de hinchas: dónde viven, cuántos en el país del club y cuántos afuera, y de dónde sale el número. */
 export function FanMap({ fans, title = 'HINCHAS EN EL MUNDO' }) {
-  const countries = fans.map ?? [];
+  // Los países con lugar en el mapa (el "resto del mundo" no tiene).
+  const countries = (fans.map ?? []).filter(country => country.lat !== null);
   const levels = useMemo(() => heatLevels(countries), [countries]);
   const [focus, setFocus] = useState(null);
   if (!countries.length) return null;
   const top = countries.slice(0, 6);
   const shownFans = top.reduce((sum, country) => sum + country.fans, 0);
   const biggest = Math.max(1, ...top.map(country => country.fans));
-  const others = countries.filter(country => country.fans > 0).length - top.length;
   const abroad = fans.followers - fans.homeFans;
   const homeShare = percent(fans.homeFans, fans.followers);
   const origin = fans.origin;
@@ -98,12 +98,12 @@ export function FanMap({ fans, title = 'HINCHAS EN EL MUNDO' }) {
         <b>{compact(country.fans)}</b>
       </li>)}
     </ol>
-    {others > 0 && <p className="fan-others">Y {compact(fans.followers - shownFans)} MÁS REPARTIDOS EN {others} PAÍSES.</p>}
+    {fans.followers > shownFans && <p className="fan-others">Y {compact(fans.followers - shownFans)} MÁS REPARTIDOS EN EL RESTO DEL MUNDO.</p>}
     {formula && <HowItWorks title="¿De dónde salen estos números?">
       <p>Los clubes de la liga son gigantes, como los grandes de verdad. Son personas que se declaran hinchas, no seguidores de redes.</p>
       <ul>
         <li><b>Cuántos son: el prestigio.</b> El club más prestigioso de la liga parte con 500 millones y el resto, hacia abajo hasta 50 millones. Tu prestigio es {Math.round(formula.prestige * 100)} de 100 (el más grande tiene {Math.round(formula.topPrestige * 100)}): mezcla historial ({people(formula.honorPoints)} puntos de títulos, finales y playoffs) y plantel ({Math.round(formula.squadShare * 100)}% del más caro de la liga).</li>
-        <li><b>Dónde viven: el país.</b> En {formula.countryName} ({people(formula.population)} millones de habitantes) vive una parte; el resto se reparte por el mundo según la población de cada país, cuánto le gusta el fútbol y sus lazos con {formula.countryName}.</li>
+        <li><b>Dónde viven: el país.</b> En {formula.countryName} ({people(formula.population)} millones de habitantes) vive una parte; el resto se reparte por el mundo según la población de cada país, cuánto le gusta el fútbol y sus lazos con {formula.countryName}. Ningún país de afuera supera a la casa.</li>
       </ul>
       <p>Partiste con <b>{compact(origin.start)}</b> y {origin.change >= 0 ? 'ganaste' : 'perdiste'} <b>{compact(Math.abs(origin.change))}</b> jugando: partidos, clásicos, títulos, posición final y conciertos.</p>
       <p>Al estadio van los que viven cerca: los de {formula.countryName} y unos pocos de afuera que viajan. Los derechos de TV, en cambio, miran a todos tus hinchas en el mundo.</p>
