@@ -18,7 +18,7 @@ const compact = value => {
   return people(number);
 };
 const signed = value => `${value > 0 ? '+' : value < 0 ? '−' : ''}${people(Math.abs(value))}`;
-const MOOD_TONE = value => (value >= 80 ? 'good' : value < 50 ? 'bad' : 'default');
+const MOOD_TONE = value => (value >= 70 ? 'good' : value < 50 ? 'bad' : 'default');
 const when = value => {
   const date = new Date(`${String(value).replace(' ', 'T')}${/Z|\+/.test(String(value)) ? '' : 'Z'}`);
   return Number.isNaN(date.getTime()) ? '' : date.toLocaleDateString('es-CL', { day: '2-digit', month: 'short', timeZone: 'America/Santiago' }).toUpperCase();
@@ -91,7 +91,7 @@ export function VenueTab({ team, onTab: _onTab }) {
     {!fans.enabled ? <OffNotice/> : <>
       <div className="club-life-stats">
         <Card><Stat label="HINCHAS EN EL MUNDO" value={compact(fans.followers)} hint={`${compact(fans.homeFans)} EN ${upper(fans.countryName)}${fans.rank ? ` · ${fans.rank}.º DE ${fans.clubs}` : ''}`}/></Card>
-        <Card><Stat label="LA HINCHADA ESTÁ" value={upper(fans.moodLabel)} hint={`ÁNIMO ${fans.mood} / 100`} tone={MOOD_TONE(fans.mood)}/><span className={`mood-meter-bar ${fans.mood >= 80 ? 'good' : fans.mood >= 50 ? 'mid' : 'bad'}`} aria-hidden="true"><i style={{ width: `${fans.mood}%` }}/></span></Card>
+        <Card><Stat label="LA HINCHADA ESTÁ" value={upper(fans.moodLabel)} hint={`ÁNIMO ${fans.mood} / 100`} tone={MOOD_TONE(fans.mood)}/><span className={`mood-meter-bar ${fans.mood >= 70 ? 'good' : fans.mood >= 50 ? 'mid' : 'bad'}`} aria-hidden="true"><i style={{ width: `${fans.mood}%` }}/></span></Card>
         <Card><Stat label="TAQUILLA RECIENTE" value={gp(fans.seasonRevenue)} hint={`${fans.gates.length} PARTIDO${fans.gates.length === 1 ? '' : 'S'} DE LOCAL`}/></Card>
         <Card><Stat label="OCUPACIÓN" value={`${average}%`} hint={full ? `${full} ${full === 1 ? 'VEZ' : 'VECES'} CON ESTADIO LLENO` : 'SIN LLENOS TODAVÍA'} tone={average >= 90 ? 'good' : 'default'}/></Card>
       </div>
