@@ -65,7 +65,7 @@ export function PixelStadium({ home, away, fx = null, derby = false, children })
   return <div className={`pixel-arena pixel-stadium360 ${fx?.kind === 'goal' ? 'is-goal' : ''}`}>
     <div className="arena-sky" aria-hidden="true"><i className="arena-light left"/><i className="arena-light right"/>{derby && <span className="arena-derby">CLÁSICO</span>}</div>
     <div className="arena-roof" aria-hidden="true"/>
-    <div className="arena-stands" aria-hidden="true"><SideStand sides={sides} rows={6} perSide={76} sizeOf={row => 5 + row}/></div>
+    <div className="arena-stands" aria-hidden="true"><SideStand sides={sides} rows={4} perSide={76} sizeOf={row => 4 + row}/></div>
     <div className="arena-board" aria-hidden="true"><span>{board.repeat(4)}</span></div>
     <div className="stadium360-middle">
       <EndStand {...sides[0]} local={sides[0]}/>
@@ -77,17 +77,17 @@ export function PixelStadium({ home, away, fx = null, derby = false, children })
       <EndStand {...sides[1]} local={sides[0]}/>
     </div>
     <div className="arena-board south" aria-hidden="true"><span>{board.repeat(4)}</span></div>
-    <div className="arena-stands south" aria-hidden="true"><SideStand sides={sides} rows={3} perSide={56} back sizeOf={row => 8 + row * 2}/></div>
+    <div className="arena-stands south" aria-hidden="true"><SideStand sides={sides} rows={2} perSide={56} back sizeOf={row => 7 + row * 2}/></div>
   </div>;
 }
 
 // Lo que suena con cada evento: [sonido, a los cuántos ms]. En modo estadio se suma la hinchada (rugido y vasos).
 function soundsFor(kind, { derby, stadium }) {
   const crowd = sounds => (stadium ? sounds : []);
-  if (kind === 'goal') return [['goal', 0], ...crowd([['roar', 0], ...(derby ? [['cups', 1400]] : [])])];
+  if (kind === 'goal') return [['goal', 0], ...crowd(derby ? [['cups', 1400]] : [])];
   if (kind === 'red') return [['whistle', 0]];
-  if (kind === 'kickoff') return [['whistle', 0], ...crowd([['roar', 300]])];
-  if (kind === 'fulltime') return [['whistle', 0], ['whistle', 450], ...crowd([['roar', 900]])];
+  if (kind === 'kickoff') return [['whistle', 0]];
+  if (kind === 'fulltime') return [['whistle', 0], ['whistle', 450]];
   if (kind === 'halftime') return [['whistle', 0]];
   return [['notify', 0]];
 }

@@ -181,7 +181,6 @@ export const SOUNDS = {
   goal: { label: 'GOL', notes: [392, 523, 659, 784, 1047, 1319], options: { type: 'square', gap: 0.07, last: 0.5, volume: 0.06 } },
   chat: { label: 'MENSAJE', notes: [880, 1175], options: { type: 'sine', gap: 0.09, last: 0.18, volume: 0.07 } },
   whistle: { label: 'SILBATO', whistle: true },
-  roar: { label: 'HINCHADA', crowd: 'roar' },
   cups: { label: 'VASOS', crowd: 'cups' },
 };
 
