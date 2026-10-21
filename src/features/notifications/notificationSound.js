@@ -2,6 +2,8 @@
 const SOUND_BY_KIND = {
   offer_received: 'offer', offer_countered: 'offer', offer_accepted: 'signed', offer_rejected: 'error',
   season_salaries: 'cash', bonus_playoffs: 'cash', bonus_title: 'cash', season_objectives: 'confirm',
+  stadium_bought: 'cash', stadium_sold: 'cash', match_sanctioned: 'error', match_awarded: 'confirm',
+  watch_for_sale: 'offer', watch_free: 'offer', promise_due: 'error',
 };
 
 export const soundFor = item => SOUND_BY_KIND[item.kind] ?? 'notify';

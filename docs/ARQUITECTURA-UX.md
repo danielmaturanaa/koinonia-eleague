@@ -63,9 +63,15 @@ Todo pasa por `notify()` (backend `src/core/notifications.js`): una fila en `not
 | Resultado de los objetivos de la directiva | board | Cada club | `#/equipos/:id?tab=central` | confirmar |
 | Prima por playoffs / por título pagada | finance | Club | `?tab=nomina` | caja |
 | Concierto realizado (asistencia, ganancia o pérdida) | finance | Club | `#/equipos/:id?tab=eventos` | aviso |
-| Ibai abre la postulación a La Velada / elige sede | league | Todos los clubes | `#/equipos/:id?tab=eventos` | aviso |
+| Ibai abre la búsqueda de estadio de La Velada / elige sede | league | Todos los clubes | `#/equipos/:id?tab=eventos` | aviso |
+| Arranca un torneo (pasa a activo) | league | Clubes que lo juegan | `#/torneos?torneo=` | aviso |
+| Termina un torneo (con el puesto si es liga) | league | Clubes que lo jugaron | `#/torneos?torneo=` | aviso |
+| Partido dado por sanción (0-3) | matches | Club castigado (alta) y su rival | `#/partidos/:id` | error / confirmar |
+| Compra o venta de estadio | finance (propio) · league baja (resto) | Club y todos los demás | `?tab=estadio` / `#/equipos/estadios` | caja / sin sonido |
+| Seguimiento: cambió de club, quedó libre, a la venta, último torneo, valor ±10% | watchlist | Club que lo sigue | `#/jugadores/:id` | oferta (libre y a la venta) |
+| Promesa "vendo a X" / "te traigo a X" pendiente con el mercado abierto (y último día) | market | Club que prometió | `#/transferencias?tab=ofertas` | error |
 
-Pendientes de conectar (no notifican todavía): alertas del seguimiento, compra de estadio, sanciones al presi, torneo creado o cerrado, promesas por vencer.
+El seguimiento y las promesas los revisa el bot cada minuto (`core/notification-sweeps.js`); cada aviso sale una vez gracias a su clave. Los avisos de prioridad baja no suenan.
 
 Entrega por Discord (`syncNotificationDMs`): DM agrupado (hasta 10 tarjetas + botón a la web), respeta categoría, silencio total y horario de no molestar; DM cerrado se anota y la web lo explica; los errores pasajeros se reintentan.
 

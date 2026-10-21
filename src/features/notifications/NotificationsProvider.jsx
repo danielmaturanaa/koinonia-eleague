@@ -37,7 +37,8 @@ export function NotificationsProvider({ children }) {
     // Un solo sonido por tanda (el del aviso más urgente), solo si sus preferencias lo permiten.
     if (fresh.length) {
       const prefs = (await endpoints.notificationPreferences().catch(() => null))?.data ?? null;
-      const audible = fresh.filter(item => soundAllowed(prefs, item.category));
+      // Los avisos de prioridad baja (lo que hizo otro club, cambios de valor) no suenan.
+      const audible = fresh.filter(item => item.priority !== 'low' && soundAllowed(prefs, item.category));
       const top = audible.find(item => item.priority === 'high') ?? audible[0];
       if (top) playSound(soundFor(top));
     }
