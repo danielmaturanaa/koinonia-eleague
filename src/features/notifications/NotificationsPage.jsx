@@ -66,7 +66,7 @@ function Preferences() {
   const quietValue = value => (value === null || value === undefined ? '' : String(value));
   const setQuiet = (from, to) => save({ quietFrom: from === '' ? null : Number(from), quietTo: to === '' ? null : Number(to) });
   return <section className="notif-prefs">
-    <p className="notif-note">ELIGE QUÉ AVISOS QUIERES POR CADA CANAL. LA WEB, DISCORD (MENSAJE DIRECTO DEL BOT) Y LOS SONIDOS YA FUNCIONAN. EL SONIDO SUENA CUANDO TIENES LA WEB ABIERTA.</p>
+    <p className="notif-note">ELIGE QUÉ AVISOS QUIERES EN LA WEB, POR DISCORD Y CON SONIDO (SUENA CON LA WEB ABIERTA).</p>
     {prefs.discordDmBlocked && <Notice tone="error">DISCORD NO NOS DEJA ESCRIBIRTE POR MENSAJE DIRECTO. ACTIVA «PERMITIR MENSAJES DIRECTOS DE MIEMBROS DEL SERVIDOR» EN LOS AJUSTES DE PRIVACIDAD DEL SERVIDOR; CON EL PRÓXIMO AVISO SE RESTABLECE SOLO. MIENTRAS TANTO TODO SE VE EN LA CAMPANA.</Notice>}
     <table className="notif-prefs-table">
       <thead><tr><th scope="col">CATEGORÍA</th><th scope="col">WEB</th><th scope="col">DISCORD</th><th scope="col">SONIDO</th></tr></thead>

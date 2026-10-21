@@ -36,15 +36,17 @@ export function signingNotes(figures, price) {
   return notes;
 }
 
-export function MyClubPanel({ team, figures, profileQuery, status, statusQuery }) {
-  return <section className="market-section market-myclub">
-    <header><h2>MI CLUB {team && <small>{team.name}</small>}</h2><p>{marketStatusText(status) ?? 'ESTADO DEL MERCADO NO DISPONIBLE'}</p></header>
+export function MyClubPanel({ team, figures, profileQuery, status, statusQuery, children = null }) {
+  // Una sola franja: lo que el presi necesita mirar antes de ofertar (saldo, margen bajo el tope y el reloj del mercado).
+  return <section className="market-section market-myclub" aria-label="Tu club en el mercado">
+    <span className={`market-myclub-status ${status?.open ? 'is-open' : ''}`}>{marketStatusText(status) ?? 'ESTADO DEL MERCADO NO DISPONIBLE'}</span>
+    {team && <b className="market-myclub-name">{team.name}</b>}
     {profileQuery && <DataState query={profileQuery}/>}
     {figures && <dl className="market-figures">
       <div><dt>SALDO</dt><dd>{figures.balance === null ? '—' : gp(figures.balance)}</dd></div>
-      <div><dt>VALOR DE PLANTILLA</dt><dd>{figures.squadValue === null ? '—' : gp(figures.squadValue)}</dd></div>
-      <div><dt>MARGEN BAJO EL TOPE</dt><dd>{figures.room === null ? '—' : gp(figures.room)}</dd><small>TOPE {figures.limit === null ? '—' : gp(figures.limit)}</small></div>
+      <div title={figures.limit === null ? undefined : `Tope de plantilla: ${gp(figures.limit)}`}><dt>MARGEN BAJO EL TOPE</dt><dd>{figures.room === null ? '—' : gp(figures.room)}</dd></div>
     </dl>}
+    {children}
     {statusQuery?.error && statusQuery.error.status !== 404 && <p className="signing-warning">NO SE PUDO LEER EL ESTADO DEL MERCADO.</p>}
   </section>;
 }

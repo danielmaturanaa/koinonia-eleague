@@ -106,7 +106,7 @@ export function PeoplePage({ teams = [], embedded = false }) {
       <div className="people-filters" role="tablist" aria-label="Filtrar personas">{FILTERS.map(([id, label]) => <button type="button" role="tab" key={id} aria-selected={filter === id} className={filter === id ? 'active' : ''} onClick={() => setFilter(id)}>{label}</button>)}</div>
       <input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="BUSCAR NOMBRE, EQUIPO O ID" aria-label="Buscar personas"/>
     </div>
-    <DataState query={people}/>
+    <DataState query={people} empty={null}/>
     {!people.loading && !people.error && list.length > 0 && (visible.length
       ? <ul className="people-list">{visible.map(person => <PersonRow key={person.discordUserId} person={person} clubs={clubs} holders={holders} viewerIsOwner={isOwner} onChanged={people.retry}/>)}</ul>
       : <p className="empty-copy data-empty">NADIE COINCIDE CON ESE FILTRO.</p>)}

@@ -10,12 +10,12 @@ Menú principal (`src/app/navigation.js`): **Inicio · Partidos · Torneos · Eq
 |---|---|---|
 | Inicio | `/`, `/noticias`, `/noticias/:id` | Las noticias viven en Inicio; "Noticias" también en el pie y en el menú de cuenta |
 | Partidos | `/partidos[/jugados\|pendientes\|calendario]`, `/partidos/:id`, `/sanciones`, `/marcador/:id` | Sanciones es un botón del Centro de partidos |
-| Torneos | `/torneos`, `/calculadora` | Barra propia (Torneos · Calculadora) |
+| Torneos | `/torneos?torneo=&vista=tabla\|goleadores\|playoffs`, `/calculadora` | Barra propia (Torneos · Calculadora). El torneo y la vista quedan en el enlace |
 | Equipos | `/equipos`, `/equipos/estadios\|rankings\|plantillas\|presupuestos\|presidentes\|directores-tecnicos\|emblemas\|selecciones`, fichas de clubes ajenos | `LeagueSectionTabs` muestra la barra de Equipos; Estadios es el catálogo global (comprar, cambiar, vender, fotos) |
 | Jugadores | `/equipos/jugadores[/importar]`, `/jugadores/:id`, `/efootball/:id` | |
 | Mercado | `/transferencias?tab=subastas\|encuestas\|ofertas\|venta\|historial&id=` | `tab` e `id` los respeta el enlace de los avisos |
 | Mi club | `/equipos/:miClubId?tab=` | Central y seis secciones (ver §2) |
-| Admin | `/admin?tab=personas\|torneos\|mercado\|equipos\|jugadores\|partidos\|noticias[&id=]`, alias `/personas` | Sala de control |
+| Admin | `/admin?tab=personas\|torneos\|mercado\|vida\|atajos[&id=]`, alias `/personas` | Sala de control. Las pestañas viejas (equipos, jugadores, partidos, noticias) caen en Clubes y atajos |
 | Cuenta | `/notificaciones?tab=avisos\|preferencias`, `/reglas` | Menú de cuenta y pie |
 
 ## 2. Mi club frente a la ficha pública
@@ -24,7 +24,7 @@ Menú principal (`src/app/navigation.js`): **Inicio · Partidos · Torneos · Eq
 
 - **Presidente de ese club → Mi club** (abre en Central): CENTRAL · EQUIPO (Resumen | Partidos | Tabla | Clásico | Historia, con los fichajes) · PLANTEL · FINANZAS (Contratos y nómina | Caja | Simulador) · ESTADIO (Estadio y taquilla | Eventos | Derechos de TV) · SEGUIMIENTO · BANDEJA. Comprar o cambiar de estadio se hace en Equipos › Estadios.
 - **Cualquier otra persona → ficha pública**: Resumen · Plantel · Partidos · Tabla · Clásico · Historia (con los fichajes) · Nómina (solo lectura) · Estadio (hinchada y taquilla, sin el negocio).
-- **Admin en un club ajeno** entra como visitante; con "Actuar como presi" ve las herramientas del club (banner visible y todo queda registrado a su nombre). Un enlace a una herramienta privada le ofrece activarlo.
+- **Admin en un club ajeno** ve la ficha del presi, con un aviso arriba de que actúa por él y que todo queda registrado a su nombre.
 
 El id de la pestaña en la URL es siempre la "hoja" (`central`, `nomina`, `finanzas`, `seguimiento`, `fichajes`, `bandeja`, `resumen`, `partidos`, `tabla`, `historia`, `estadio`, `eventos`, `tv`, `clasico`, `plantel`); la sección se deduce de ella. Los enlaces viejos siguen funcionando: `catalogo` cae en `estadio`, `fichajes` en `historia` y `auspicio` en `tv`.
 

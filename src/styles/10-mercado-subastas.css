@@ -1,10 +1,17 @@
 /* Mercado: operación de presidentes (Mi club, encuestas, ofertas). */
 .market-myclub, .market-polls, .market-offers, .market-propose { margin-top: 10px; }
-.market-figures { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; margin: 0; }
-.market-figures > div { padding: 8px 10px; border: 1px solid #d0c4a8; background: #fff; display: grid; gap: 2px; }
+/* Franja "tu club en el mercado": estado, saldo, margen y promesas en una sola línea. */
+.market-myclub { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; padding: 8px 12px; border: 2px solid #10285b; background: #fff9e8; }
+.market-myclub > header { display: none; }
+.market-myclub-status { padding: 4px 8px; color: #fff; background: #5a5f6e; font: 600 12px/1.1 'Oswald', sans-serif; letter-spacing: .5px; }
+.market-myclub-status.is-open { background: #167a45; }
+.market-myclub-name { color: #062764; font: 600 15px/1.1 'Oswald', sans-serif; }
+.market-figures { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0; }
+.market-figures > div { display: flex; align-items: baseline; gap: 6px; }
 .market-figures dt { color: #8c0019; font: 600 12px/1 'Oswald', sans-serif; letter-spacing: .5px; }
-.market-figures dd { margin: 0; color: #062764; font: 400 22px/1.1 'Anton', sans-serif; }
-.market-figures small { color: #625d4e; font: 500 12px/1 'Oswald', sans-serif; }
+.market-figures dd { margin: 0; color: #062764; font: 400 18px/1.1 'Anton', sans-serif; }
+.market-myclub .promise-record { margin-left: auto; padding: 0; border: 0; background: transparent; }
+@media (max-width: 560px) { .market-myclub .promise-record { margin-left: 0; flex-basis: 100%; } }
 .market-subtitle { margin: 10px 0 4px; color: #8c0019; font: 600 14px/1 'Oswald', sans-serif; letter-spacing: .6px; }
 .market-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 8px; }
 .market-tabs button { padding: 7px 12px; border: 2px solid #092e77; color: #092e77; background: #fff9e8; font: 600 13px/1 'Oswald', sans-serif; letter-spacing: .5px; }
@@ -288,6 +295,7 @@
 /* "Me interesa" y lo más pedido */
 .interest-toggle { display: inline-flex; align-items: center; gap: 3px; min-width: 44px; min-height: 40px; padding: 0 8px; border: 2px solid #c9bd9f; border-radius: 20px; color: #8a6500; background: #fff; font: 600 20px/1 'Oswald', sans-serif; transition: transform .15s ease; }
 .interest-toggle small { font-size: 12px; color: #625d4e; }
+.interest-toggle span { font: 600 12px/1 'Oswald', sans-serif; letter-spacing: .4px; }
 .interest-toggle.on { border-color: #e0a800; background: #fff3c4; color: #b07d00; animation: interest-pop .35s ease; }
 .interest-toggle:disabled { cursor: default; opacity: .75; }
 @keyframes interest-pop { 50% { transform: scale(1.18); } }
@@ -626,3 +634,6 @@ html.pc-locked, html.pc-locked body { overflow: hidden; }
   .sealed-chat .pc-closed { position: sticky; bottom: 10px; z-index: 5; }
   .sealed-chat .pc-closed .pc-open { width: 100%; justify-content: flex-start; box-shadow: 0 4px 14px rgba(0, 0, 0, .25); }
 }
+
+.for-sale-offer { display: inline-flex; align-items: center; min-height: 36px; padding: 0 10px; border: 2px solid #167a45; color: #fff; background: #167a45; font: 600 12px/1 'Oswald', sans-serif; letter-spacing: .5px; text-decoration: none; }
+.for-sale-offer:hover { background: #0d5a32; }

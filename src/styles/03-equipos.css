@@ -526,3 +526,4 @@
 .club-anthem-editor > .action-button { grid-column: 1 / -1; }
 .honours-api-note { margin-top: 10px; color: #8c0019; font: 600 13px/1.2 'Oswald', sans-serif; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+.club-history-tools { display: flex; justify-content: flex-end; }

@@ -24,7 +24,7 @@ function PublishForm({ teamId, listedIds, onDone }) {
   </form>;
 }
 
-function ForSaleRow({ row, mine, onChanged }) {
+function ForSaleRow({ row, mine, canOffer, onChanged }) {
   const remove = useApiMutation(signal => endpoints.unsetForSale(row.team.id, row.player.id, signal), { onSuccess: onChanged });
   return <article className="for-sale-row">
     <a href={`#/jugadores/${encodeURIComponent(row.player.id)}?from=mercado`} className="offer-player">
@@ -34,6 +34,7 @@ function ForSaleRow({ row, mine, onChanged }) {
     <span className="for-sale-team">{row.team.emoji ?? '⚽'} {row.team.name}</span>
     <strong>{gp(row.player.gpValue)}</strong>
     {mine && <button type="button" className="for-sale-remove" disabled={remove.loading} onClick={() => remove.execute()}>QUITAR</button>}
+    {!mine && canOffer && <a className="for-sale-offer" href={`#/transferencias?tab=ofertas&jugador=${encodeURIComponent(row.player.id)}&club=${encodeURIComponent(row.team.id)}`}>HACER OFERTA</a>}
   </article>;
 }
 
@@ -48,7 +49,7 @@ export function ForSaleSection({ teams, revision, onChanged }) {
   const counts = rows.reduce((map, row) => map.set(row.team.id, (map.get(row.team.id) ?? 0) + 1), new Map());
   const refresh = () => { list.retry(); onChanged?.(); };
   return <section className="market-section market-for-sale">
-    <header><h2>🏷️ A LA VENTA <small>{rows.length}</small></h2><p>JUGADORES QUE SUS CLUBES ESTÁN DISPUESTOS A VENDER. ES SOLO INFORMATIVO: SI TE INTERESA UNO, HAZLE UNA OFERTA EN LA PESTAÑA OFERTAS.</p></header>
+    <header><h2>A LA VENTA <small>{rows.length}</small></h2><p>JUGADORES QUE SUS CLUBES ESTÁN DISPUESTOS A VENDER.</p></header>
     {myTeamId && <PublishForm teamId={myTeamId} listedIds={new Set(rows.filter(row => row.team.id === myTeamId).map(row => row.player.id))} onDone={refresh}/>}
     <div className="poll-filters">
       <label>EQUIPO<select value={teamFilter} onChange={event => setTeamFilter(event.target.value)}>
@@ -56,9 +57,9 @@ export function ForSaleSection({ teams, revision, onChanged }) {
         {teams.filter(team => counts.has(team.id)).map(team => <option key={team.id} value={team.id}>{team.name} ({counts.get(team.id)})</option>)}
       </select></label>
     </div>
-    <DataState query={list}/>
+    <DataState query={list} empty={null}/>
     {!list.loading && !list.error && (shown.length
-      ? <div className="for-sale-list">{shown.map(row => <ForSaleRow key={`${row.team.id}-${row.player.id}`} row={row} mine={myTeams.has(row.team.id)} onChanged={refresh}/>)}</div>
+      ? <div className="for-sale-list">{shown.map(row => <ForSaleRow key={`${row.team.id}-${row.player.id}`} row={row} mine={myTeams.has(row.team.id)} canOffer={Boolean(myTeamId)} onChanged={refresh}/>)}</div>
       : <p className="empty-copy">{teamFilter ? 'ESE EQUIPO NO TIENE JUGADORES A LA VENTA.' : 'NINGÚN CLUB TIENE JUGADORES A LA VENTA.'}</p>)}
   </section>;
 }

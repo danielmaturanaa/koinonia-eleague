@@ -85,7 +85,7 @@ const tournamentStartTime = tournament => {
 
 function ScorersPanel({ query }) {
   const rows = Array.isArray(query.data) ? query.data : [];
-  return <section className="workspace-panel tournament-scorers"><h3>GOLEADORES</h3><DataState query={query}/>
+  return <section className="workspace-panel tournament-scorers"><h3>GOLEADORES</h3><DataState query={query} empty={null}/>
     {!query.loading && !query.error && (rows.length ? <ol className="tournament-scorer-list">{rows.map((row, index) => <li key={row.playerId ?? row.name}><b>{index + 1}</b><EntityLink to="player" id={row.playerId}>{row.playerName ?? row.name}</EntityLink><strong>{row.goals ?? 0}</strong></li>)}</ol> : <p className="empty-copy">AÚN NO HAY GOLES.</p>)}
   </section>;
 }
@@ -100,9 +100,10 @@ function PlayoffsSection({ tournamentId, resolveTeam }) {
   return <section className="workspace-panel playoff-workspace"><h3>PLAYOFFS <small>TOP 4 · SEMIFINALES {data.semifinalLegs === 1 ? 'A PARTIDO ÚNICO' : 'IDA Y VUELTA'} · FINAL {data.finalLegs === 1 ? 'A PARTIDO ÚNICO' : 'IDA Y VUELTA'}</small></h3><div className="playoff-bracket"><div className="playoff-semi-rounds">{semis.map(series => <section className="playoff-round" key={series.id}><h4>SEMIFINAL {series.slot}</h4><PlayoffSeriesCard series={series} resolveTeam={resolveTeam}/></section>)}</div><div className="playoff-connector" aria-hidden="true"/><section className="playoff-round playoff-final-round"><h4>FINAL</h4>{final ? <PlayoffSeriesCard series={final} resolveTeam={resolveTeam} showWinner={false}/> : <p className="playoff-awaiting">ESPERANDO FINALISTAS</p>}</section></div>{champion && <div className="playoff-champion" role="status"><span aria-hidden="true">🏆</span><strong>CAMPEÓN: {champion.name}</strong></div>}</section>;
 }
 
-function TournamentWorkspace({ tournamentId, teams, onChanged, onDeleted, initialTab = 'standings' }) {
+function TournamentWorkspace({ tournamentId, teams, onChanged, onDeleted, initialTab = 'standings', onTab = null }) {
   const { isAdmin } = useAuth();
-  const [workspaceTab, setWorkspaceTab] = useState(initialTab);
+  const [workspaceTab, setWorkspaceTabState] = useState(['standings', 'scorers', 'playoffs'].includes(initialTab) ? initialTab : 'standings');
+  const setWorkspaceTab = value => { setWorkspaceTabState(value); onTab?.(value); };
   const detail = useApiQuery(signal => endpoints.tournament(tournamentId, signal), [tournamentId]);
   const standings = useLiveStandings(tournamentId);
   const scorers = useApiQuery(signal => endpoints.scorers(tournamentId, signal), [tournamentId]);
@@ -142,10 +143,21 @@ function TournamentWorkspace({ tournamentId, teams, onChanged, onDeleted, initia
   </>}</section>;
 }
 
-export function TournamentsPage({ teams = [] }) {
+// Torneo y vista quedan en el enlace (#/torneos?torneo=…&vista=…) para compartirlo o volver al mismo lugar.
+const VIEW_PARAM = { standings: 'tabla', scorers: 'goleadores', playoffs: 'playoffs' };
+const VIEW_FROM_PARAM = Object.fromEntries(Object.entries(VIEW_PARAM).map(([key, value]) => [value, key]));
+const writeUrl = (id, view) => {
+  const params = new URLSearchParams();
+  if (id) params.set('torneo', id);
+  if (view && view !== 'standings') params.set('vista', VIEW_PARAM[view]);
+  const query = params.toString();
+  try { window.history.replaceState(null, '', `#/torneos${query ? `?${query}` : ''}`); } catch { /* sin historial: no pasa nada */ }
+};
+
+export function TournamentsPage({ teams = [], initialId = null, initialView = null }) {
   const tournaments = useApiQuery(signal => endpoints.tournaments({ page: 1, pageSize: 100 }, signal));
-  const [selectedId, setSelectedId] = useState(null);
-  const [tournamentTab, setTournamentTab] = useState('active');
+  const [selectedId, setSelectedId] = useState(initialId);
+  const [view, setView] = useState(VIEW_FROM_PARAM[initialView] ?? 'standings');
   const { isAdmin } = useAuth();
   const all = Array.isArray(tournaments.data) ? tournaments.data : [];
   const priority = tournament => tournament.format === 'league' || /liga/i.test(tournament.name ?? '') ? 0 : 1;
@@ -153,32 +165,36 @@ export function TournamentsPage({ teams = [] }) {
   const completed = useMemo(() => all
     .filter(item => item.status === 'completed')
     .sort((a, b) => tournamentStartTime(b) - tournamentStartTime(a) || (a.name ?? '').localeCompare(b.name ?? '', 'es')), [all]);
+  // Por defecto, el torneo en curso más importante (o el último jugado si no hay ninguno en curso).
   useEffect(() => {
-    if (!all.length) return;
-    const visible = tournamentTab === 'completed' ? completed : active;
-    if (!visible.some(item => item.id === selectedId)) setSelectedId(visible[0]?.id ?? null);
-  }, [all, active, completed, selectedId, tournamentTab]);
+    if (!all.length || all.some(item => item.id === selectedId)) return;
+    setSelectedId(active[0]?.id ?? completed[0]?.id ?? null);
+  }, [all, active, completed, selectedId]);
+  // Un enlace nuevo a otro torneo (desde una noticia o un partido) cambia la selección.
+  useEffect(() => { if (initialId) setSelectedId(initialId); }, [initialId]);
+  const choose = id => { setSelectedId(id); setView('standings'); writeUrl(id, 'standings'); };
+  const changeView = value => { setView(value); writeUrl(selectedId, value); };
   const deleted = () => { setSelectedId(null); tournaments.retry(); };
   const selectedCompletedId = completed.some(item => item.id === selectedId) ? selectedId : '';
   return <main className="newspaper data-page"><section className="data-paper">
     <PageHeader kicker="COMPETICIONES OFICIALES" title="TORNEOS">{isAdmin && <a className="page-action" href="#/admin?tab=torneos">⚙ ADMINISTRAR TORNEOS</a>}</PageHeader>
     <LeagueSectionTabs current="/torneos"/>
-    <DataState query={tournaments}/>
-    {all.length > 0 && <>
-      <nav className="tournament-tabs" aria-label="Secciones de torneos" role="tablist">
-        <button type="button" role="tab" aria-selected={tournamentTab === 'active'} className={tournamentTab === 'active' ? 'active' : ''} onClick={() => setTournamentTab('active')}>TORNEO EN CURSO</button>
-        <button type="button" role="tab" aria-selected={tournamentTab === 'completed'} className={tournamentTab === 'completed' ? 'active' : ''} onClick={() => setTournamentTab('completed')} disabled={!completed.length}>TORNEOS ANTERIORES</button>
-      </nav>
-      {tournamentTab === 'active'
-        ? <div className="tournament-picker tournament-active-picker" role="tabpanel" aria-label="Torneos en curso">
-          {active.length > 0 ? active.map(item => <button type="button" key={item.id} className={selectedId === item.id ? 'active' : ''} aria-pressed={selectedId === item.id} onClick={() => setSelectedId(item.id)}>{item.name}</button>) : <p className="empty-copy">NO HAY TORNEOS EN CURSO.</p>}
-        </div>
-        : <div className="tournament-history-selector" role="tabpanel" aria-label="Torneos anteriores">
-          {completed.length > 0 ? <label>SELECCIONA UN TORNEO JUGADO<select value={selectedCompletedId} onChange={event => event.target.value && setSelectedId(event.target.value)}><option value="">ELEGIR TORNEO…</option>{completed.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}</select></label> : <p className="empty-copy">AÚN NO HAY TORNEOS TERMINADOS.</p>}
-        </div>}
-    </>}
+    <DataState query={tournaments} empty={null}/>
+    {all.length > 0 && <div className="tournament-chooser">
+      {/* Con un solo torneo en curso no hace falta elegir: los botones aparecen desde dos. */}
+      {active.length > 1 && <div className="tournament-picker" role="group" aria-label="Torneos en curso">
+        {active.map(item => <button type="button" key={item.id} className={selectedId === item.id ? 'active' : ''} aria-pressed={selectedId === item.id} onClick={() => choose(item.id)}>{item.name}</button>)}
+      </div>}
+      {active.length === 1 && <span className="tournament-live-label"><i aria-hidden="true"/>EN CURSO: <b>{active[0].name}</b>{selectedId !== active[0].id && <button type="button" onClick={() => choose(active[0].id)}>VOLVER</button>}</span>}
+      {completed.length > 0 && <label className="tournament-history-select">ANTERIORES
+        <select value={selectedCompletedId} onChange={event => event.target.value && choose(event.target.value)}>
+          <option value="">{selectedCompletedId ? 'ELEGIR…' : 'VER UN TORNEO JUGADO…'}</option>
+          {completed.map(item => <option key={item.id} value={item.id}>{item.name}</option>)}
+        </select>
+      </label>}
+    </div>}
     {!tournaments.loading && !all.length && <p className="empty-copy">AÚN NO HAY TORNEOS.</p>}
-    {selectedId && <TournamentWorkspace key={selectedId} tournamentId={selectedId} teams={teams} onChanged={() => tournaments.retry()} onDeleted={deleted}/>}
+    {selectedId && <TournamentWorkspace key={selectedId} tournamentId={selectedId} teams={teams} initialTab={view} onTab={changeView} onChanged={() => tournaments.retry()} onDeleted={deleted}/>}
   </section></main>;
 }
 

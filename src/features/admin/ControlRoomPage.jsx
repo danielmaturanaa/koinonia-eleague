@@ -17,11 +17,11 @@ const SECTIONS = [
   { id: 'torneos', label: 'TORNEOS' },
   { id: 'mercado', label: 'MERCADO' },
   { id: 'vida', label: 'VIDA DE CLUB' },
-  { id: 'equipos', label: 'EQUIPOS' },
-  { id: 'jugadores', label: 'JUGADORES' },
-  { id: 'partidos', label: 'PARTIDOS' },
-  { id: 'noticias', label: 'NOTICIAS' },
+  { id: 'atajos', label: 'CLUBES Y ATAJOS' },
 ];
+// Pestañas antiguas que eran solo enlaces: ahora viven juntas en "Clubes y atajos".
+const MOVED = { equipos: 'atajos', jugadores: 'atajos', partidos: 'atajos', noticias: 'atajos' };
+const sectionOf = id => (SECTIONS.some(item => item.id === id) ? id : MOVED[id] ?? null);
 
 function ShortcutCards({ items }) {
   return <div className="control-shortcuts">{items.map(([href, icon, title, text]) => <a key={href} href={href} className="control-shortcut">
@@ -72,8 +72,8 @@ function MarketSection({ teams }) {
 /** Control de la liga para administradores: todo lo que antes estaba suelto en las páginas públicas. */
 export function ControlRoomPage({ teams = [], initialTab = 'personas', tournamentId = null }) {
   const { isAdmin } = useAuth();
-  const [tab, setTab] = useState(SECTIONS.some(item => item.id === initialTab) ? initialTab : 'personas');
-  useEffect(() => { if (SECTIONS.some(item => item.id === initialTab)) setTab(initialTab); }, [initialTab, tournamentId]);
+  const [tab, setTab] = useState(sectionOf(initialTab) ?? 'personas');
+  useEffect(() => { if (sectionOf(initialTab)) setTab(sectionOf(initialTab)); }, [initialTab, tournamentId]);
   if (!isAdmin) {
     return <main className="newspaper data-page"><section className="data-paper"><PageHeader kicker="ADMINISTRACIÓN" title="SALA DE CONTROL"/>
       <EmptyState icon="lock" title="SOLO PARA ADMINISTRADORES">SI NECESITAS ALGO DE AQUÍ, PÍDELO A UN ADMIN DE LA LIGA.</EmptyState></section></main>;
@@ -85,16 +85,21 @@ export function ControlRoomPage({ teams = [], initialTab = 'personas', tournamen
     {tab === 'torneos' && <TournamentsSection teams={teams} initialId={tournamentId}/>}
     {tab === 'mercado' && <MarketSection teams={teams}/>}
     {tab === 'vida' && <ClubLifeAdmin/>}
-    {tab === 'equipos' && <div className="control-section"><Card title="CREAR CLUB O SELECCIÓN"><CreateTeamForm/></Card>
-      <p className="control-note">PARA EDITAR UN CLUB (ESCUDO, PRESIDENTE, DT, HIMNO) ENTRA A SU FICHA: EL ADMIN PUEDE EDITARLO IGUAL QUE SU PRESIDENTE.</p></div>}
-    {tab === 'jugadores' && <div className="control-section">
-      <ShortcutCards items={[['#/equipos/jugadores/importar', 'search', 'AGREGAR E IMPORTAR JUGADORES', 'DESDE EFOOTBALLDB O A MANO'], ['#/equipos/jugadores', 'shield', 'DIRECTORIO DE JUGADORES', 'EDITAR O ELIMINAR UN JUGADOR DESDE SU FICHA']]}/>
-    </div>}
-    {tab === 'partidos' && <div className="control-section">
-      <ShortcutCards items={[['#/partidos/calendario', 'clock', 'CALENDARIO', 'ARRASTRA PARTIDOS A OTRO DÍA'], ['#/partidos', 'ball', 'CENTRO DE PARTIDOS', 'CREAR, INICIAR, ANOTAR Y CORREGIR'], ['#/sanciones', 'warning', 'SANCIONES', 'EXPULSIONES Y SUSPENSIONES']]}/>
-    </div>}
-    {tab === 'noticias' && <div className="control-section">
-      <ShortcutCards items={[['#/noticias', 'mail', 'PERIÓDICO DE LA LIGA', 'PLANTILLAS E IMÁGENES GENÉRICAS (BOTONES DE ADMIN EN LA PÁGINA)']]}/>
+    {tab === 'atajos' && <div className="control-section">
+      <Card title="ATAJOS">
+        <ShortcutCards items={[
+          ['#/partidos', 'ball', 'CENTRO DE PARTIDOS', 'CREAR, INICIAR, ANOTAR Y CORREGIR'],
+          ['#/partidos/calendario', 'clock', 'CALENDARIO', 'ARRASTRA PARTIDOS A OTRO DÍA'],
+          ['#/sanciones', 'warning', 'SANCIONES', 'EXPULSIONES Y SUSPENSIONES'],
+          ['#/equipos/jugadores/importar', 'search', 'AGREGAR JUGADORES', 'DESDE EFOOTBALLDB O A MANO'],
+          ['#/equipos/jugadores', 'shield', 'DIRECTORIO DE JUGADORES', 'EDITAR O ELIMINAR DESDE SU FICHA'],
+          ['#/equipos/estadios', 'stadium', 'ESTADIOS', 'SUBIR FOTOS DEL CATÁLOGO'],
+          ['#/noticias', 'mail', 'PERIÓDICO DE LA LIGA', 'PLANTILLAS E IMÁGENES GENÉRICAS'],
+        ]}/>
+      </Card>
+      <Card title="CREAR CLUB O SELECCIÓN"><CreateTeamForm/>
+        <p className="control-note">PARA EDITAR UN CLUB (ESCUDO, PRESIDENTE, DT, HIMNO) ENTRA A SU FICHA: EL ADMIN LO EDITA IGUAL QUE SU PRESIDENTE.</p>
+      </Card>
     </div>}
   </section></main>;
 }

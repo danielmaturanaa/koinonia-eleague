@@ -1,6 +1,7 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { TeamMark } from '../../components/TeamMark.jsx';
+import { Button } from '../../ui/index.js';
 import { SanctionBadge } from '../../components/SanctionBadge.jsx';
 import { SimulatedBadge } from '../../components/SimulatedBadge.jsx';
 import { EntityLink } from '../../components/EntityLink.jsx';
@@ -636,16 +637,21 @@ function SquadValueSimulator({ team, squad, balance }) {
   };
 
   return <section className="club-card squad-value-simulator">
-    <header className="squad-simulator-header"><div><h3>SIMULADOR DE PLANTEL</h3><p>Prueba fichajes y salidas sobre la misma alineación del resumen. Es solo una simulación: no modifica el plantel real y se guarda en tu cuenta, así la ves igual en cualquier dispositivo.</p>{syncState !== 'idle' && <small className={`squad-sim-sync ${syncState}`} role="status">{SYNC_LABELS[syncState]}</small>}</div><button type="button" className="club-link-button" onClick={reset} disabled={!changed}>↺ RESTABLECER</button></header>
+    <header className="squad-simulator-header"><div><p>Prueba fichajes y salidas sobre tu alineación. No cambia el plantel real y se guarda en tu cuenta.</p>{syncState !== 'idle' && <small className={`squad-sim-sync ${syncState}`} role="status">{SYNC_LABELS[syncState]}</small>}</div><button type="button" className="club-link-button" onClick={reset} disabled={!changed}>↺ RESTABLECER</button></header>
     <div className="squad-sim-summary"><div className="squad-sim-meters" aria-label="Resumen del presupuesto simulado">
       <SimulatorMeter label="VALOR DEL PLANTEL" value={`${gp(simulatedValue)} GP`} ratio={budgetLimit === null ? undefined : simulatedValue / budgetLimit} over={exceedsLimit} detail={budgetLimit === null ? 'Tope no publicado' : exceedsLimit ? `Excede el tope de ${gp(budgetLimit)} GP en ${gp(-capRoom)} GP` : `Tope ${gp(budgetLimit)} GP · quedan ${gp(capRoom)} GP`}/>
       {simulatedPayroll !== null && <SimulatorMeter label="NÓMINA ANUAL SIMULADA" value={`${gp(simulatedPayroll)} GP`} ratio={payrollCapValue ? simulatedPayroll / payrollCapValue : undefined} over={exceedsPayroll} detail={`${payrollCapValue ? `Tope ${gp(payrollCapValue)} GP (solo avisa) · ` : ''}Hoy ${gp(payrollInfo.payroll)} GP · altas +${gp(signingsPayroll)} · bajas −${gp(departuresPayroll)}`}/>}
       <SimulatorMeter label="SALDO TRAS LOS CAMBIOS" value={projectedBalance === null ? '—' : `${gp(projectedBalance)} GP`} over={exceedsBalance} detail={balance === null ? 'Saldo no publicado' : `Saldo actual ${gp(balance)} GP · movimiento ${signedGp(-movement)}`}/>
       <SimulatorMeter label="CAMBIOS" value={`${signings.length} ALTA${signings.length === 1 ? '' : 'S'} · ${removedPlayers.length} BAJA${removedPlayers.length === 1 ? '' : 'S'}`} detail={changesDetail}/>
     </div>
-    <p className={`squad-simulator-status ${exceedsLimit || exceedsBalance ? 'over-budget' : ''}`} role="status">{statusMessage}</p>
-    {exceedsPayroll && <p className="squad-simulator-status over-budget" role="status">⚠️ LA NÓMINA SIMULADA PASA EL TOPE POR {gp(simulatedPayroll - payrollCapValue)} GP (SOLO AVISA, NO BLOQUEA). EL SUELDO DE UN FICHAJE ES EL 10% DE LO QUE CUESTA.</p>}
-    {starters.length !== SIMULATOR_STARTERS && <p className="squad-simulator-status over-budget" role="status">TITULARES: {starters.length} / {SIMULATOR_STARTERS}. LA ALINEACIÓN DEBERÍA TENER {SIMULATOR_STARTERS}.</p>}</div>
+    {/* Un solo aviso: el estado del presupuesto y, debajo, lo que conviene revisar. */}
+    <div className={`squad-simulator-status ${exceedsLimit || exceedsBalance || exceedsPayroll || starters.length !== SIMULATOR_STARTERS ? 'over-budget' : ''}`} role="status">
+      <p>{statusMessage}</p>
+      {(exceedsPayroll || starters.length !== SIMULATOR_STARTERS) && <ul>
+        {exceedsPayroll && <li>LA NÓMINA PASA EL TOPE POR {gp(simulatedPayroll - payrollCapValue)} GP (SOLO AVISA). EL SUELDO DE UN FICHAJE ES EL 10% DE LO QUE CUESTA.</li>}
+        {starters.length !== SIMULATOR_STARTERS && <li>TITULARES: {starters.length} DE {SIMULATOR_STARTERS}.</li>}
+      </ul>}
+    </div></div>
     <SimulatorPlayerSearch teamId={team?.id} excludedIds={simulatedIds} onAdd={addPlayerToSimulation}/>
     {lastAddedPlayer && <p className="squad-simulator-player-note" role="status">✓ {splitPlayerName(lastAddedPlayer.name).rest} AÑADIDO A {lastAddedPlayer.section === 'starters' ? 'TITULARES' : 'SUPLENTES'}{simulatorPlayerTeamId(lastAddedPlayer) && simulatorPlayerTeamId(lastAddedPlayer) !== String(team?.id) ? ` · HOY JUEGA EN ${simulatorPlayerTeamName(lastAddedPlayer)}` : ''}.</p>}
     <nav className="club-squad-modes squad-sim-views" aria-label="Vista del simulador">{SIMULATOR_VIEWS.map(([id, label]) => <button type="button" key={id} className={view === id ? 'active' : ''} aria-pressed={view === id} onClick={() => changeView(id)}>{label}</button>)}</nav>
@@ -672,8 +678,8 @@ function FinanceSimulator({ team, squad, balance, onChanged, onTab, currentPosit
   const [mode, setMode] = useState('plantel');
   return <section className="finance-sim">
     <nav className="finance-sim-modes" role="tablist" aria-label="Qué quieres simular">
-      <button type="button" role="tab" aria-selected={mode === 'plantel'} className={mode === 'plantel' ? 'on' : ''} onClick={() => setMode('plantel')}>FICHAJES Y SALIDAS DEL PLANTEL</button>
-      <button type="button" role="tab" aria-selected={mode === 'contratos'} className={mode === 'contratos' ? 'on' : ''} onClick={() => setMode('contratos')}>CONTRATOS, RENOVACIONES Y NÓMINA</button>
+      <button type="button" role="tab" aria-selected={mode === 'plantel'} className={mode === 'plantel' ? 'on' : ''} onClick={() => setMode('plantel')}>SIMULAR FICHAJES</button>
+      <button type="button" role="tab" aria-selected={mode === 'contratos'} className={mode === 'contratos' ? 'on' : ''} onClick={() => setMode('contratos')}>SIMULAR CONTRATOS</button>
     </nav>
     {mode === 'plantel'
       ? <div className="club-budget-tab"><SquadValueSimulator team={team} squad={squad} balance={balance}/></div>
@@ -837,7 +843,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
   const colors = team?.colors ?? {};
   const heroStyle = { '--club-primary': colors.primary ?? '#062764', '--club-secondary': colors.secondary ?? '#0b3f8d', '--club-tertiary': colors.tertiary ?? '#ffd42a' };
 
-  return <main className="newspaper club-page"><section className="club-paper"><div className="club-actions">{!ownerMode && <button className="back-button" onClick={onBack}>← VOLVER A EQUIPOS</button>}{canEdit && <button className="action-button club-covers-button" onClick={() => setCoversOpen(true)}>▣ PORTADAS</button>}{onProjection && team && <button type="button" className="action-button club-projection-button" onClick={onProjection}>CALCULADORA PARA CLASIFICAR</button>}</div>
+  return <main className="newspaper club-page"><section className="club-paper"><div className="club-actions">{!ownerMode && <button className="back-button" onClick={onBack}>← VOLVER A EQUIPOS</button>}{onProjection && team && <button type="button" className="action-button club-projection-button" onClick={onProjection}>CALCULADORA PARA CLASIFICAR</button>}</div>
     {loading || !team ? <div className="arcade-state">CARGANDO FICHA...</div> : <>
       <header className="club-hero" style={heroStyle}>
         <div className="club-crest-wrap"><TeamMark team={team} className="club-crest"/>{canEdit && <button type="button" className="club-crest-edit" onClick={() => setCrestEditorOpen(true)} aria-label="Editar escudo y nombre del club" title="Editar escudo y nombre">✎</button>}</div>
@@ -876,7 +882,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
         {activeTab === 'plantel' && <SquadTab team={team} squad={squad} starters={starters} substitutes={substitutes} onChanged={onChanged}/>}
         {activeTab === 'partidos' && <ClubMatches matches={matches} teams={teams} teamId={team.id}/>}
         {activeTab === 'tabla' && <ClubTable standings={displayStandings} teamId={team.id} teams={teams}/>}
-        {activeTab === 'historia' && <div className="club-history-tab-content"><HonoursList honours={honours} historyError={historyError}/><ClubHistory team={team} onEdit={canEdit ? setHistoryEditor : undefined}/><ClubTransfers teamId={team.id}/></div>}
+        {activeTab === 'historia' && <div className="club-history-tab-content">{canEdit && <div className="club-history-tools"><Button size="sm" variant="ghost" icon="camera" onClick={() => setCoversOpen(true)}>PORTADAS DEL CLUB</Button></div>}<HonoursList honours={honours} historyError={historyError}/><ClubHistory team={team} onEdit={canEdit ? setHistoryEditor : undefined}/><ClubTransfers teamId={team.id}/></div>}
         {activeTab === 'movimientos' && <LedgerTab team={team} balance={balance}/>}
         {activeTab === 'estadio' && <VenueTab team={team} onTab={ownerMode ? onTab : null}/>}
         {activeTab === 'eventos' && <EventsTab team={team} onChanged={onChanged}/>}

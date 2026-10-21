@@ -84,7 +84,7 @@ export function App() {
   } else if (route.name === 'match') {
     page = <MatchCenterPage key={route.matchId} matchId={route.matchId} teams={league.teams} navigate={navigate}/>;
   } else if (route.path === '/torneos') {
-    page = <TournamentsPage teams={league.teams}/>;
+    page = <TournamentsPage teams={league.teams} initialId={route.query.torneo ?? null} initialView={route.query.vista ?? null}/>;
   } else if (route.path === '/calculadora') {
     const requestedId = route.query.torneo;
     const calculatorTournament = activeTournaments.find(item => String(item.id) === String(requestedId)) ?? tournament;

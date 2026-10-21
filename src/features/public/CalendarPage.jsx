@@ -126,7 +126,7 @@ export function CalendarPage({ teams, navigate }) {
     {isAdmin && <p className="calendar-help">ARRASTRA UN PARTIDO A OTRO DÍA, O TÓCALO Y LUEGO TOCA «MOVER AQUÍ». EL AUTOMÁTICO RESPETA EL ORDEN DEL FIXTURE: CADA DÍA, CADA EQUIPO JUEGA SUS {perDay} SIGUIENTES.</p>}
     {status.error && <p className="calendar-status error">{status.error}</p>}
     {status.message && <p className="calendar-status">{status.message}</p>}
-    <DataState query={fixtures}/>
+    <DataState query={fixtures} empty={null}/>
     {!fixtures.loading && !fixtures.error && (columns.length
       ? <div className="calendar-board" style={{ '--days': columns.length }}>{columns.map(column => {
         const { offCount, repeated } = column.day ? dayWarnings(column.rows, participants, Number(perDay)) : { offCount: [], repeated: false };

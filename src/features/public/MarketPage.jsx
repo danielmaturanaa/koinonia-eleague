@@ -114,16 +114,18 @@ function PollForm({ player, myTeamId, figures, marketOpen, onDone }) {
   </div>;
 }
 
-/** "Me interesa": el presi marca libres que quiere ver en subasta. El conteo de clubes es público. */
+/** "Pedir subasta": el presi marca libres que quiere ver en subasta. El conteo de clubes es público. */
 function InterestButton({ player, interest }) {
   const { teamId: myTeamId } = useAuth();
   const count = interest.demand.find(row => row.playerId === player.playerId)?.count ?? 0;
   const mine = interest.mine.includes(player.playerId);
   if (!player.playerId) return null;
   return <button type="button" className={`interest-toggle ${mine ? 'on' : ''}`} aria-pressed={mine} disabled={!myTeamId || interest.busy}
-    title={myTeamId ? (mine ? 'YA NO ME INTERESA' : 'ME INTERESA: QUIERO VERLO EN SUBASTA') : 'SOLO LOS PRESIS MARCAN INTERÉS'}
+    title={myTeamId ? (mine ? 'YA NO LO PIDES EN SUBASTA' : 'PEDIR QUE SALGA A SUBASTA') : 'SOLO LOS PRESIS PIDEN SUBASTAS'}
+    aria-label={`${mine ? 'Quitar pedido de subasta' : 'Pedir subasta'} de ${player.name ?? 'este jugador'}${count ? ` (lo piden ${count} clubes)` : ''}`}
     onClick={() => interest.toggle(player.playerId, !mine)}>
-    {mine ? '★' : '☆'}{count > 0 && <small>{count}</small>}
+    {/* Martillo, no estrella: la estrella es "Seguir" (Mi club > Seguimiento). */}
+    <Icon name="gavel" size={14}/><span>{mine ? 'PEDIDA' : 'PEDIR'}</span>{count > 0 && <small>{count}</small>}
   </button>;
 }
 
@@ -170,7 +172,7 @@ function PollSearch({ teams, club, interest, onChanged }) {
     <label className="poll-search-box"><span className="sr-only">BUSCAR AGENTE LIBRE</span>
       <input type="search" value={text} placeholder="🔎 BUSCAR AGENTE LIBRE (EJ.: MBAPPÉ)" autoComplete="off" onChange={event => setText(event.target.value)}/>
     </label>
-    {query && <DataState query={players}/>}
+    {query && <DataState query={players} empty={null}/>}
     {query && !players.loading && !players.error && (rows.length
       ? <div className="market-player-list">{rows.map(player => <MarketPlayer key={player.playerId ?? `${player.pesId}-${player.variation}`} player={player} teams={teams} club={club} interest={interest} onChanged={() => { players.retry(); onChanged?.(); }}/>)}</div>
       : <p className="empty-copy">NO HAY AGENTES LIBRES QUE COINCIDAN CON «{query.toUpperCase()}».</p>)}
@@ -189,7 +191,7 @@ function PromiseRecord({ teamId, revision }) {
   const active = data.active ?? [];
   if (!kept && !broken && !active.length) return null;
   return <details className="promise-record">
-    <summary>📜 PROMESAS · <b className="ok">✅ {kept} CUMPLIDAS</b> · <b className={broken ? 'bad' : ''}>💔 {broken} ROTAS</b>{active.length ? ` · ${active.length} PENDIENTES` : ''}</summary>
+    <summary>PROMESAS · <b className="ok">{kept} CUMPLIDAS</b> · <b className={broken ? 'bad' : ''}>{broken} ROTAS</b>{active.length ? ` · ${active.length} PENDIENTES` : ''}</summary>
     {active.length > 0 && <ul>{active.map((item, index) => <li key={index}><b>{item.playerName}:</b> {item.text}{item.status === 'voting' ? ' · 🗳️ EN VOTACIÓN EN DISCORD' : ''}</li>)}</ul>}
     <p className="poll-hint">ROMPER UNA PROMESA BAJA TU REPUTACIÓN: LOS JUGADORES LIBRES SE ACUERDAN. LAS DE PALABRA (CAPITANÍA, PENALES, TIROS LIBRES…) LAS JUZGAN LOS PRESIS VOTANDO EN DISCORD.</p>
   </details>;
@@ -222,8 +224,9 @@ export function MarketPage({ teams, initialTab = null, highlightId = null, prefi
   const current = tabs.some(([key]) => key === tab) ? tab : 'subastas';
   return <main className="newspaper data-page"><section className="data-paper">
     <PageHeader kicker="JUGADORES DISPONIBLES" title="MERCADO">{isAdmin && <a className="page-action" href="#/admin?tab=mercado">⚙ ADMINISTRAR MERCADO</a>}</PageHeader>
-    {operates && <MyClubPanel team={myTeam} figures={figures} profileQuery={myTeamId ? profile : null} status={status.data} statusQuery={status}/>}
-    {myTeamId && <PromiseRecord teamId={myTeamId} revision={revision}/>}
+    {operates && <MyClubPanel team={myTeam} figures={figures} profileQuery={myTeamId ? profile : null} status={status.data} statusQuery={status}>
+      {myTeamId && <PromiseRecord teamId={myTeamId} revision={revision}/>}
+    </MyClubPanel>}
     <nav className="market-tabs" role="tablist" aria-label="SECCIONES DEL MERCADO">
       {tabs.map(([key, icon, label, badge]) => <button key={key} type="button" role="tab" aria-selected={current === key} className={current === key ? 'active' : ''} onClick={() => setTab(key)}>
         <Icon name={icon} size={14}/> {label}{badge ? <span className="market-tab-badge">{badge}</span> : null}

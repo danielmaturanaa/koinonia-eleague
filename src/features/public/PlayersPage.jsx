@@ -329,7 +329,7 @@ export function PlayersPage({ teams, initialQuery = {} }) {
           {tags.map(([key, label, patch]) => <button type="button" key={key} className="filter-tag" onClick={() => set(patch)} aria-label={`Quitar filtro ${label}`}>{label} <span aria-hidden="true">×</span></button>)}
           {tags.length > 0 && <button type="button" className="club-link-button" onClick={() => { setSearch(''); setFilters(EMPTY_FILTERS); }}>LIMPIAR TODO</button>}
         </div>
-        <DataState query={directory}/>
+        <DataState query={directory} empty={null}/>
         {!directory.loading && !directory.error && (rows.length ? <div className="player-card-grid">{rows.map(player => { const playerKey = player.playerId ?? `${player.pesId}-${player.variation}`; return <article className={`player-card status-${player.status}`} key={playerKey}>
           <a className="player-card-link" href={open(player)}>
             <PlayerFace src={player.faceUrl} name={player.name} className="player-card-face"/>

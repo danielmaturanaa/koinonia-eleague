@@ -19,6 +19,8 @@
 .squad-sim-meter.over-budget .squad-sim-meter-bar i { background: #a90020; }
 .squad-simulator-status { margin: 0; padding: 8px 10px; border-left: 5px solid #1c7a3e; color: #145c2e; background: #e3efdc; font: 600 14px/1.2 'Oswald', sans-serif; letter-spacing: .4px; }
 .squad-simulator-status.over-budget { border-left-color: #a90020; color: #a90020; background: #f8e1dc; }
+.squad-simulator-status p { margin: 0; }
+.squad-simulator-status ul { margin: 6px 0 0; padding-left: 18px; font-size: 13px; }
 .squad-sim-search { position: relative; display: grid; gap: 6px; }
 .squad-sim-search label { color: #8c0019; font: 600 14px/1 'Oswald', sans-serif; letter-spacing: .4px; }
 .squad-sim-search input { width: 100%; min-width: 0; padding: 11px 12px; border: 2px solid #092e77; color: #062764; background: #fff; font: 500 16px/1.1 'Roboto Condensed', sans-serif; }

@@ -60,7 +60,7 @@ export function InboxTab({ team, onTab, onRead, highlightId = null }) {
   }, [highlightId, query.data]);
   return <section className="inbox-tab">
     <header><h2>BANDEJA DE ENTRADA</h2>{unread > 0 && <Button variant="ghost" size="sm" onClick={() => markRead(null)}>MARCAR TODO COMO LEÍDO ({unread})</Button>}<p>TUS JUGADORES TE ESCRIBEN POR CONTRATOS, RENOVACIONES Y SU ROL.</p></header>
-    <DataState query={query}/>
+    <DataState query={query} empty={null}/>
     {query.data && messages.length === 0 && <p className="empty-copy data-empty">TODAVÍA NO TE HAN ESCRITO. LOS MENSAJES APARECEN CUANDO EL SISTEMA DE CONTRATOS ESTÁ ACTIVO.</p>}
     <ul className="inbox-list">{messages.map(message => {
       const [icon, label] = KIND[message.kind] ?? ['✉️', 'MENSAJE'];

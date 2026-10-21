@@ -310,9 +310,9 @@ function SimView({ team, projection, balance, canEdit, layout, currentPosition, 
 
   return <div className="payroll-sim">
     <div className="view-badge is-sim">🧪 SIMULACIÓN · NADA DE ESTO ES REAL NI SE COBRA</div>
-    {onTab && <p className="payroll-note sim-link">¿QUIERES PROBAR FICHAJES Y VENTAS CON SU PRECIO, SU SUELDO Y TU SALDO? <button type="button" className="ghost" onClick={() => onTab('finanzas')}>ABRIR EL SIMULADOR DE PRESUPUESTO →</button> (LA SIMULACIÓN DE AMBOS SE GUARDA EN TU CUENTA)</p>}
+    {onTab && <p className="payroll-note sim-link">¿QUIERES PROBAR FICHAJES Y VENTAS? <button type="button" className="ghost" onClick={() => onTab('finanzas')}>IR AL SIMULADOR →</button></p>}
     <p className="payroll-note">PRUEBA SUELDOS, AÑOS, AUMENTOS Y VENTAS: NADA DE ESTO SE GUARDA EN LA LIGA.</p>
-    <HowItWorks><p>El aumento se aplica cuando vence cada contrato, así que se nota en los últimos torneos, en el costo total y en los gráficos.</p><p>Usa los valores de mercado de hoy (cambian con cada refresco de Transfermarkt) y todo queda solo en este navegador. Si un jugador pasa el 20% de su valor sale en rojo: ese sueldo no se podría firmar.</p></HowItWorks>
+    <HowItWorks><p>El aumento se aplica cuando vence cada contrato, así que se nota en los últimos torneos, en el costo total y en los gráficos.</p><p>Usa los valores de mercado de hoy (cambian con cada refresco de Transfermarkt). La simulación se guarda en tu cuenta, no en la liga. Si un jugador pasa el 20% de su valor sale en rojo: ese sueldo no se podría firmar.</p></HowItWorks>
     <section className="sim-controls">
       <label>AUMENTO AL RENOVAR (POR DEFECTO)<span className="sheet-slider"><input type="range" min="0" max="100" value={sim.raise} onChange={event => applyToAll({ raise: Number(event.target.value) })} aria-label="Aumento al renovar en porcentaje"/><b>+{sim.raise}%</b></span><small className="sim-hint">SE APLICA A TODOS LOS JUGADORES; DESPUÉS CAMBIAS A LOS QUE QUIERAS DISTINTOS.</small></label>
       <label className="sim-check"><input type="checkbox" checked={sim.renew} onChange={event => applyToAll({ renew: event.target.checked })}/> RENOVAR A QUIEN LE VENZA EL CONTRATO (POR DEFECTO)</label>
@@ -394,7 +394,7 @@ export function PayrollTab({ team, balance, onChanged, onTab = null, currentPosi
 
   return <section className={`payroll-tab ${current === 'proyeccion' ? 'is-sim' : 'is-real'}`}>
     <header className="payroll-head">
-      <h2>{forcedView === 'proyeccion' ? 'SIMULADOR DE CONTRATOS' : 'CONTRATOS Y NÓMINA'}</h2>
+      {forcedView !== 'proyeccion' && <h2>CONTRATOS Y NÓMINA</h2>}
       <div className="payroll-head-tools">
         <LayoutToggle layout={layout} onChange={setLayout}/>
         {!forcedView && canEdit && <nav className="payroll-views" role="tablist" aria-label="Vista de la nómina">
