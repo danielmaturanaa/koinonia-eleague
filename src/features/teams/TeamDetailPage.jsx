@@ -809,16 +809,16 @@ function SquadTab({ team, squad, starters, substitutes, onChanged, ownerMode, to
   const canEdit = canEditTeam(team.id);
   const [editing, setEditing] = useState(false);
   return <div className="club-squad-tab">
-    {canEdit && <div className="screen-toolbar"><Button icon="shirt" onClick={() => setEditing(true)}>Editar plantel y alineación</Button></div>}
     <div className="squad-top">
-      <PitchBoard team={team} starters={starters} substitutes={substitutes} onChanged={onChanged} readOnly={!canEdit} aside={<SquadAveragesBadge starters={starters} substitutes={substitutes}/>}/>
+      <PitchBoard team={team} starters={starters} substitutes={substitutes} onChanged={onChanged} readOnly={!canEdit} aside={<SquadAveragesBadge starters={starters} substitutes={substitutes}/>}
+        actions={canEdit ? <Button size="sm" variant="ghost" icon="shirt" onClick={() => setEditing(true)}>Editar dorsales</Button> : null}/>
       <div className="squad-side">
         <div className="squad-leaders"><LeaderCard {...president}/><LeaderCard {...coach}/></div>
         <ClubScorers teamId={team.id} limit={5} tournaments={tournaments}/>
       </div>
     </div>
     {ownerMode ? <RolesPanel team={team}/> : <div className="roster-panel club-roster"><h3>TITULARES <small>{starters.length} / 11</small></h3><div className="roster-table-scroll"><RosterHeader/><div className="roster-list">{starters.length ? starters.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay titulares definidos.</p>}</div></div><h3>SUPLENTES <small>{substitutes.length}</small></h3><div className="roster-table-scroll"><RosterHeader/><div className="roster-list substitutes">{substitutes.length ? substitutes.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay suplentes registrados.</p>}</div></div></div>}
-    {editing && <PersonEditorModal title="EDITAR PLANTEL" onClose={() => setEditing(false)}><div className="club-squad-editor"><SquadEditor team={team} squad={squad} onChanged={onChanged}/></div></PersonEditorModal>}
+    {editing && <PersonEditorModal title="EDITAR DORSALES" onClose={() => setEditing(false)}><div className="club-squad-editor"><SquadEditor team={team} squad={squad} onChanged={onChanged}/></div></PersonEditorModal>}
   </div>;
 }
 

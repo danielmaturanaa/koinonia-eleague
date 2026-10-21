@@ -295,3 +295,6 @@ a.tile:focus-visible, button.tile:focus-visible { outline: 3px solid var(--c-yel
 .role-traits { display: flex; flex-wrap: wrap; gap: 4px; }
 .role-traits em { padding: 2px 6px; border: 1px solid var(--c-paper-line); color: var(--c-ink-muted); background: var(--c-cream); font: 600 var(--fs-xs)/1.2 var(--font-ui); font-style: normal; text-transform: uppercase; }
 .role-now { text-transform: capitalize; }
+.pitch-board-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2); margin-bottom: var(--sp-2); }
+.pitch-board-tools .pitch-board-formation { margin: 0; }
+.pitch-board-tools .ui-btn { margin-left: auto; }

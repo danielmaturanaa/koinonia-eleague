@@ -82,7 +82,7 @@ function PitchCard({ player, selected, swappable, editing, style, onPointerDown,
 // Con bare se omiten cabecera, ayuda y banca.
 // Con simulation los cambios no van a la API: se delegan en sus callbacks (onSwap, onMove,
 // onReorder, onPrice, onResetPrice, onRemove) y cada carta muestra su precio editable.
-export function PitchBoard({ team, starters, substitutes = [], onChanged, readOnly = false, bare = false, simulation = null, className = '', aside = null }) {
+export function PitchBoard({ team, starters, substitutes = [], onChanged, readOnly = false, bare = false, simulation = null, className = '', aside = null, actions = null }) {
   const editing = !readOnly;
   const [selectedId, setSelectedId] = useState(null);
   const [localPositions, setLocalPositions] = useState({});
@@ -205,7 +205,7 @@ export function PitchBoard({ team, starters, substitutes = [], onChanged, readOn
   return <section className={`club-card pitch-board is-editing ${className}`} style={cardColors}>
     <header><h3>ALINEACIÓN <small>{starters.length} TITULARES · {substitutes.length} SUPLENTES</small></h3>{aside}</header>
     {(busy || hint) && <p className="pitch-board-hint" role="status">{busy ? 'GUARDANDO…' : hint}</p>}
-    {formationPicker}
+    {(formationPicker || actions) && <div className="pitch-board-tools">{formationPicker}{actions}</div>}
     {field}
     <div className="pitch-board-bench"><h4>BANCA</h4>{substitutes.length ? <div>{substitutes.map(player => {
       const card = <PitchCard bench player={player} editing={editing} selected={selectedId === player.id} swappable={Boolean(selectedId) && selectedId !== player.id} isNew={simulation?.isNew(player)} highlighted={simulation?.isHighlighted(player)} onClick={onBenchClick(player)}/>;
