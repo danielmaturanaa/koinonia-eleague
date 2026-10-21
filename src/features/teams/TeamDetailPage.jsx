@@ -22,7 +22,8 @@ import { useApiQuery } from '../public/useApiQuery.js';
 import { useLiveStandings } from '../public/useLiveStandings.js';
 import { useNotifications } from '../notifications/NotificationsProvider.jsx';
 import { MessagesTab } from './MessagesTab.jsx';
-import { EventsTab, TvRightsTab, VenueTab } from './ClubLife.jsx';
+import { EventsTab, FansTab, TvRightsTab, VenueTab } from './ClubLife.jsx';
+import { DirectivaTab } from './DirectivaTab.jsx';
 import { RivalryTab } from './RivalryTab.jsx';
 import { LedgerTab } from './LedgerTab.jsx';
 import { PayrollTab } from './PayrollTab.jsx';
@@ -670,19 +671,29 @@ function SquadValueSimulator({ team, squad, balance }) {
   </section>;
 }
 
-// Dos fichas con la misma forma (seis pestañas, sin subpestañas): la del presidente (Mi club) y la pública de otro club.
+// Dos fichas con la misma forma (sin subpestañas): la del presidente (Mi club) y la pública de otro club. Cada cosa en la
+// pestaña donde uno la buscaría: la plata en Nómina y Caja, el recinto en Estadio, la gente en Hinchada (con el clásico) y
+// lo que se vende (TV, conciertos, La Velada) en Negocios.
 const OWNER_TABS = [
-  { id: 'plantel', label: 'Plantel' }, { id: 'mensajes', label: 'Mensajes' }, { id: 'finanzas', label: 'Finanzas' },
-  { id: 'estadio', label: 'Estadio' }, { id: 'clasico', label: 'Clásico' }, { id: 'historia', label: 'Historia' },
+  { id: 'plantel', label: 'Plantel' }, { id: 'mensajes', label: 'Mensajes' }, { id: 'directiva', label: 'Directiva' },
+  { id: 'nomina', label: 'Nómina' }, { id: 'caja', label: 'Caja' }, { id: 'estadio', label: 'Estadio' },
+  { id: 'hinchada', label: 'Hinchada' }, { id: 'negocios', label: 'Negocios' }, { id: 'historia', label: 'Historia' },
 ];
 const VISITOR_TABS = [
   { id: 'plantel', label: 'Plantel' }, { id: 'partidos', label: 'Partidos' }, { id: 'nomina', label: 'Nómina' },
-  { id: 'estadio', label: 'Estadio' }, { id: 'clasico', label: 'Clásico' }, { id: 'historia', label: 'Historia' },
+  { id: 'estadio', label: 'Estadio' }, { id: 'hinchada', label: 'Hinchada' }, { id: 'historia', label: 'Historia' },
 ];
 // Enlaces viejos (avisos, marcadores): a qué pestaña (y a qué parte de ella) caen ahora.
-const OWNER_MOVED = { resumen: ['plantel'], bandeja: ['mensajes'], nomina: ['finanzas', 'nomina'], movimientos: ['finanzas', 'caja'], eventos: ['estadio', 'eventos'], tv: ['estadio', 'tv'], auspicio: ['estadio', 'tv'], catalogo: ['estadio'], fichajes: ['historia'] };
-const OWNER_ELSEWHERE = { central: '/', directiva: '/', seguimiento: '/transferencias?tab=seguidos', partidos: '/partidos', tabla: '/torneos' };
-const VISITOR_MOVED = { resumen: ['plantel'], tabla: ['partidos'], finanzas: ['nomina'], movimientos: ['nomina'], eventos: ['estadio'], tv: ['estadio'], auspicio: ['estadio'], catalogo: ['estadio'], fichajes: ['historia'] };
+const BUSINESS = new Set(['eventos', 'velada', 'tv', 'conciertos']);
+const OWNER_MOVED = { resumen: ['plantel'], bandeja: ['mensajes'], central: ['directiva'], movimientos: ['caja'], eventos: ['negocios', 'eventos'], tv: ['negocios', 'tv'], auspicio: ['negocios', 'tv'], catalogo: ['estadio'], fichajes: ['historia'], clasico: ['hinchada', 'clasico'] };
+const OWNER_ELSEWHERE = { seguimiento: '/transferencias?tab=seguidos', partidos: '/partidos', tabla: '/torneos' };
+const VISITOR_MOVED = { resumen: ['plantel'], tabla: ['partidos'], finanzas: ['nomina'], movimientos: ['nomina'], caja: ['nomina'], directiva: ['plantel'], negocios: ['estadio'], eventos: ['estadio'], tv: ['estadio'], auspicio: ['estadio'], catalogo: ['estadio'], fichajes: ['historia'], clasico: ['hinchada', 'clasico'] };
+/** Pestaña (y sección) a la que cae un enlace, contando los que dependen de `ver` (finanzas y estadio se partieron). */
+function movedFor(tab, ver, ownerMode) {
+  if (ownerMode && tab === 'finanzas') return ver === 'nomina' || ver === 'simulador' ? ['nomina', ver === 'nomina' ? null : ver] : ['caja', ver === 'caja' ? null : ver];
+  if (ownerMode && tab === 'estadio' && BUSINESS.has(ver)) return ['negocios', ver];
+  return (ownerMode ? OWNER_MOVED : VISITOR_MOVED)[tab] ?? [tab, null];
+}
 
 /** Simulador de finanzas: un solo lugar con dos modos (fichajes y salidas del plantel, o contratos y nómina). */
 function FinanceSimulator({ team, squad, balance, onChanged, onTab, currentPosition }) {
@@ -855,12 +866,12 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
   const unread = inbox.data?.unread ?? 0;
   const tabs = (ownerMode ? OWNER_TABS : VISITOR_TABS).map(item => (item.id === 'mensajes' ? { ...item, badge: unread } : item));
   const elsewhere = ownerMode ? OWNER_ELSEWHERE[tab] : null;
-  const [movedTab, movedAnchor] = (ownerMode ? OWNER_MOVED : VISITOR_MOVED)[tab] ?? [tab, null];
+  const [movedTab, movedAnchor] = movedFor(tab, ver, ownerMode);
   const activeTab = tabs.some(item => item.id === movedTab) ? movedTab : tabs[0].id;
-  const anchor = ver ?? movedAnchor ?? (tab === 'finanzas' && !ownerMode ? null : null);
+  const anchor = movedAnchor ?? (movedTab === tab ? ver : null);
   useEffect(() => { if (elsewhere && navigate) navigate(elsewhere); }, [elsewhere]);
-  useEffect(() => { if (tab === 'finanzas' && ver === 'simulador') setSimulatorOpen(true); }, [tab, ver]);
-  useEffect(() => { if (activeTab !== 'finanzas') setSimulatorOpen(false); }, [activeTab]);
+  useEffect(() => { if (ownerMode && activeTab === 'nomina' && ver === 'simulador') setSimulatorOpen(true); }, [activeTab, ver, ownerMode]);
+  useEffect(() => { if (activeTab !== 'nomina') setSimulatorOpen(false); }, [activeTab]);
   useScrollTo(anchor, !loading && Boolean(team));
   const liveStandings = useLiveStandings(standingsTournamentId);
   const displayStandings = Array.isArray(liveStandings.data) && liveStandings.data.length ? liveStandings.data : standings;
@@ -901,25 +912,30 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
       president={{ key: `president-${personRevision}`, photo, name: presidentName, age: presidentProfile.age, country: presidentProfile.country, customFields: team.president?.customFields, role: 'PRESIDENTE', reputation: team.president?.reputation ?? null, onReputation: () => setPersonEditor('reputation'), onEdit: canEdit ? () => setPersonEditor('president') : undefined }}
       coach={{ key: `coach-${personRevision}`, photo: managerPhoto, name: coachName, age: coachProfile.age, country: coachProfile.country, customFields: team.coach?.customFields, role: 'DT', manager: team.coach?.manager, onEdit: canEdit ? () => setPersonEditor('coach') : undefined }}/>}
     {activeTab === 'mensajes' && <MessagesTab team={team} onTab={onTab} onRead={inbox.retry} highlightId={msg}/>}
-    {activeTab === 'finanzas' && (simulatorOpen
-      // El simulador va a todo el ancho, en vez de los contratos y la caja (con un botón para volver).
+    {activeTab === 'directiva' && <DirectivaTab team={team} balance={balance} onReputation={() => setPersonEditor('reputation')}/>}
+    {activeTab === 'nomina' && (!ownerMode
+      ? <PayrollTab team={team} balance={balance} onChanged={onChanged} onTab={onTab} forcedView="actual" currentPosition={position}/>
+      : simulatorOpen
+      // El simulador va a todo el ancho, en vez de los contratos (con un botón para volver).
       ? <div className="finance-page finance-sim-page">
-        <div className="screen-subhead"><Button variant="ghost" size="sm" icon="back" onClick={() => setSimulatorOpen(false)}>Finanzas</Button><h2>Simulador</h2></div>
+        <div className="screen-subhead"><Button variant="ghost" size="sm" icon="back" onClick={() => setSimulatorOpen(false)}>Nómina</Button><h2>Simulador</h2></div>
         <FinanceSimulator team={team} squad={squad} balance={balance} onChanged={onChanged} onTab={onTab} currentPosition={position}/>
       </div>
       : <div className="finance-page">
         <div className="screen-toolbar"><Button icon="table" onClick={() => setSimulatorOpen(true)}>Simular fichajes y contratos</Button></div>
-        <section id="ver-nomina"><PayrollTab team={team} balance={balance} onChanged={onChanged} onTab={onTab} forcedView="actual" currentPosition={position}/></section>
-        <section id="ver-caja"><LedgerTab team={team} balance={balance}/></section>
+        <PayrollTab team={team} balance={balance} onChanged={onChanged} onTab={id => (id === 'finanzas' ? setSimulatorOpen(true) : onTab?.(id))} forcedView="actual" currentPosition={position}/>
       </div>)}
-    {activeTab === 'nomina' && <PayrollTab team={team} balance={balance} onChanged={onChanged} onTab={onTab} forcedView="actual" currentPosition={position}/>}
+    {activeTab === 'caja' && <LedgerTab team={team} balance={balance}/>}
     {activeTab === 'partidos' && <div className="club-matches-page"><ClubStandingSnippet standings={displayStandings} teamId={team.id} teams={teams} onMore={() => navigate?.('/torneos')}/><ClubMatches matches={matches} teams={teams} teamId={team.id}/></div>}
-    {activeTab === 'estadio' && <div className="stadium-page">
-      <section id="ver-estadio"><VenueTab team={team}/></section>
-      {ownerMode && <section id="ver-eventos"><EventsTab team={team} onChanged={onChanged}/></section>}
-      {ownerMode && <section id="ver-tv"><TvRightsTab team={team} onChanged={onChanged}/></section>}
+    {activeTab === 'estadio' && <VenueTab team={team}/>}
+    {activeTab === 'hinchada' && <div className="stadium-page">
+      <FansTab team={team}/>
+      <section id="ver-clasico"><RivalryTab team={team} teams={teams}/></section>
     </div>}
-    {activeTab === 'clasico' && <RivalryTab team={team} teams={teams}/>}
+    {activeTab === 'negocios' && <div className="stadium-page">
+      <section id="ver-tv"><TvRightsTab team={team} onChanged={onChanged}/></section>
+      <section id="ver-eventos"><EventsTab team={team} onChanged={onChanged}/></section>
+    </div>}
     {activeTab === 'historia' && <div className="club-history-tab-content">
       {canEdit && <div className="screen-toolbar"><Button size="sm" variant="ghost" icon="camera" onClick={() => setCoversOpen(true)}>Portadas del club</Button></div>}
       <HonoursList honours={honours} historyError={historyError}/>

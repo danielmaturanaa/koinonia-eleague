@@ -81,7 +81,7 @@ function GateRow({ gate }) {
   </li>;
 }
 
-/** Estadio, hinchada y taquilla: lo ve cualquiera; el presi además elige el precio de la entrada. */
+/** Estadio y taquilla: lo ve cualquiera; el presi además elige el precio de la entrada. La hinchada va en FansTab. */
 export function VenueTab({ team, onTab: _onTab }) {
   const { canEditTeam } = useAuth();
   const canEdit = canEditTeam(team.id);
@@ -102,8 +102,6 @@ export function VenueTab({ team, onTab: _onTab }) {
     </Card>
     {!fans.enabled ? <OffNotice/> : <>
       <div className="club-life-stats">
-        <Card><Stat label="HINCHAS EN EL MUNDO" value={compact(fans.followers)} hint={`${compact(fans.homeFans)} EN ${upper(fans.countryName)}${fans.rank ? ` · ${fans.rank}.º DE ${fans.clubs}` : ''}`}/></Card>
-        <Card><Stat label="LA HINCHADA ESTÁ" value={upper(fans.moodLabel)} hint={`ÁNIMO ${fans.mood} / 100`} tone={MOOD_TONE(fans.mood)}/><span className={`mood-meter-bar ${fans.mood >= 70 ? 'good' : fans.mood >= 50 ? 'mid' : 'bad'}`} aria-hidden="true"><i style={{ width: `${fans.mood}%` }}/></span></Card>
         <Card><Stat label="TAQUILLA RECIENTE" value={gp(fans.seasonRevenue)} hint={`${fans.gates.length} PARTIDO${fans.gates.length === 1 ? '' : 'S'} DE LOCAL`}/></Card>
         <Card><Stat label="OCUPACIÓN" value={`${average}%`} hint={full ? `${full} ${full === 1 ? 'VEZ' : 'VECES'} CON ESTADIO LLENO` : 'SIN LLENOS TODAVÍA'} tone={average >= 90 ? 'good' : 'default'}/></Card>
       </div>
@@ -113,12 +111,26 @@ export function VenueTab({ team, onTab: _onTab }) {
           : <EmptyState icon="ticket" title="SIN PARTIDOS DE LOCAL AÚN">Cuando juegues de local verás aquí cuánta gente fue y cuánto recaudaste.</EmptyState>}
         <HowItWorks title="¿De qué depende la asistencia?"><p>De tus hinchas que viven cerca (en tu país y unos pocos de afuera), el rival, si es clásico o playoffs, el ánimo de la hinchada y el precio de la entrada. El aforo es el techo. El marcador no cambia: esto solo mueve plata, hinchas y ánimo.</p></HowItWorks>
       </Card>
-      <FanMap fans={fans}/>
-      {fans.log.length > 0 && <Card title="LO QUE MOVIÓ A LA HINCHADA">
-        <ul className="fan-log">{fans.log.slice(0, 5).map((row, index) => <FanLogRow key={index} row={row}/>)}</ul>
-        {fans.log.length > 5 && <details className="fan-log-more"><summary>VER {fans.log.length - 5} MÁS</summary><ul className="fan-log">{fans.log.slice(5).map((row, index) => <FanLogRow key={index} row={row}/>)}</ul></details>}
-      </Card>}
     </>}
+  </section>;
+}
+
+/** Hinchada: cuántos son y dónde viven, cómo están de ánimo y qué los movió. Lo ve cualquiera. */
+export function FansTab({ team }) {
+  const query = useApiQuery(signal => endpoints.teamFans(team.id, signal), [team.id]);
+  const fans = query.data;
+  if (!fans) return <DataState query={query}/>;
+  if (!fans.enabled) return <OffNotice/>;
+  return <section className="club-life fans-tab">
+    <div className="club-life-stats">
+      <Card><Stat label="HINCHAS EN EL MUNDO" value={compact(fans.followers)} hint={`${compact(fans.homeFans)} EN ${upper(fans.countryName)}${fans.rank ? ` · ${fans.rank}.º DE ${fans.clubs}` : ''}`}/></Card>
+      <Card><Stat label="LA HINCHADA ESTÁ" value={upper(fans.moodLabel)} hint={`ÁNIMO ${fans.mood} / 100`} tone={MOOD_TONE(fans.mood)}/><span className={`mood-meter-bar ${fans.mood >= 70 ? 'good' : fans.mood >= 50 ? 'mid' : 'bad'}`} aria-hidden="true"><i style={{ width: `${fans.mood}%` }}/></span></Card>
+    </div>
+    <FanMap fans={fans}/>
+    {fans.log.length > 0 && <Card title="LO QUE MOVIÓ A LA HINCHADA">
+      <ul className="fan-log">{fans.log.slice(0, 5).map((row, index) => <FanLogRow key={index} row={row}/>)}</ul>
+      {fans.log.length > 5 && <details className="fan-log-more"><summary>VER {fans.log.length - 5} MÁS</summary><ul className="fan-log">{fans.log.slice(5).map((row, index) => <FanLogRow key={index} row={row}/>)}</ul></details>}
+    </Card>}
   </section>;
 }
 

@@ -5,7 +5,8 @@ import { DataState } from '../public/DataStates.jsx';
 import { useApiQuery } from '../public/useApiQuery.js';
 import { gpLabel } from '../../utils/money.js';
 
-const PAGE = 50;
+// Se muestran los últimos movimientos; el resumen por tipo dice de dónde viene y a dónde va la plata.
+const PAGE = 15;
 const TONE = { fichajes: 'navy', subastas: 'neutral', sueldos: 'red', primas: 'yellow', premios: 'green', directiva: 'green', estadio: 'navy', ajustes: 'neutral' };
 const when = value => {
   const date = new Date(`${String(value).replace(' ', 'T')}${String(value).includes('Z') || String(value).includes('+') ? '' : 'Z'}`);
@@ -30,6 +31,17 @@ export function LedgerTab({ team, balance }) {
         <Stat label="HA ENTRADO" value={gpLabel(data.totals.income)} tone="green"/>
         <Stat label="HA SALIDO" value={gpLabel(-data.totals.expense)} tone="red"/>
       </Card>
+      {!category && <Card title="POR TIPO" className="ledger-summary">
+        <table className="ledger-summary-table"><thead><tr><th>Tipo</th><th>Entró</th><th>Salió</th><th>Neto</th></tr></thead>
+          {/* `expense` llega en negativo. */}
+          <tbody>{Object.entries(data.totals.byCategory).sort(([, a], [, b]) => (b.income - b.expense) - (a.income - a.expense)).map(([key, bucket]) => <tr key={key}>
+            <td><button type="button" className="ghost" onClick={() => pick(key)}>{(categories[key] ?? key).toUpperCase()}</button></td>
+            <td className="up">{bucket.income ? `+${gpLabel(bucket.income)}` : '—'}</td>
+            <td className="down">{bucket.expense ? `−${gpLabel(-bucket.expense)}` : '—'}</td>
+            <td className={bucket.income + bucket.expense >= 0 ? 'up' : 'down'}>{gpLabel(bucket.income + bucket.expense)}</td>
+          </tr>)}</tbody></table>
+      </Card>}
+      <h3 className="ledger-recent-title">{category ? (categories[category] ?? category).toUpperCase() : 'ÚLTIMOS MOVIMIENTOS'}</h3>
       <div className="ledger-filters" role="group" aria-label="Filtrar por tipo de movimiento">
         <button type="button" className={category === '' ? 'on' : ''} aria-pressed={category === ''} onClick={() => pick('')}>TODOS <b>{Object.values(data.totals.byCategory).reduce((sum, item) => sum + item.count, 0)}</b></button>
         {Object.entries(categories).filter(([key]) => data.totals.byCategory[key]).map(([key, label]) => {
