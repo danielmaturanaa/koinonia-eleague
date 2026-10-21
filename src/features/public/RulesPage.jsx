@@ -98,6 +98,49 @@ const Contracts = ({ payrollCap }) => <section className="rules-section">
   <p>Con el sistema de contratos la reputación de todos los clubes parte de cero. Los títulos y finales (palmarés) se mantienen intactos.</p>
 </section>;
 
+const ClubSystems = () => <>
+  <section className="rules-section">
+    <h2>7. Roles, Ánimo y Peticiones de Jugadores</h2>
+    <ul>
+      <li>El Presidente asigna a cada jugador un rol: <strong>crucial, importante, rotación o esporádico</strong>. Los roles solo se cambian con el <strong>mercado cerrado</strong>.</li>
+      <li>El ánimo del jugador (de 5 a 95) sale de su rol comparado con el que cree merecer, su sueldo frente a su valor, la forma del equipo, la reputación del club, los títulos, las promesas cumplidas y su personalidad. Un jugador muy molesto no se sienta a negociar su renovación.</li>
+      <li>Cuando un jugador no está conforme (con su rol o con su sueldo) le escribe al Presidente y abre una <strong>petición</strong>. Se responde desde la Bandeja (o por Discord) con una promesa, un regalo de confianza (cuesta el 25% de su sueldo), paciencia o ignorándolo, y cada respuesta tiene consecuencias en su ánimo. Solo se puede responder con el <strong>mercado cerrado</strong>.</li>
+      <li>Si la petición se ignora o no se responde a tiempo, el jugador <strong>pide salir</strong>: ya no se le puede renovar y solo queda venderlo o canjearlo.</li>
+    </ul>
+  </section>
+  <section className="rules-section">
+    <h2>8. Primas</h2>
+    <ul>
+      <li>Cada jugador puede tener tres primas, que paga el club: por <strong>gol</strong> (hasta el 1% de su valor por gol), por <strong>clasificar a playoffs</strong> (hasta el 5%, a los jugadores de los cuatro clasificados) y por <strong>título</strong> (hasta el 10%, al campeón de playoffs).</li>
+      <li>Las primas se fijan solo con el <strong>mercado abierto</strong>. Se pagan al cerrar la temporada (goles), al comenzar los playoffs (clasificación) y al coronarse el campeón (título).</li>
+      <li>La prima por gol cuenta para el tope del 20% del valor: se suman los goles que se esperan de su posición. Al renovar las primas se mantienen (recortadas si ya no caben con el nuevo sueldo); si el jugador cambia de club llega sin primas.</li>
+    </ul>
+  </section>
+  <section className="rules-section">
+    <h2>9. Directiva y Objetivos</h2>
+    <ul>
+      <li>Al comenzar cada torneo de liga la directiva le fija a cada club tres objetivos según lo que vale su plantel: terminar en el puesto que le corresponde por valor (<strong>15 M GP</strong>), clasificar a playoffs (<strong>10 M GP</strong>) y no pasar el tope de nómina (<strong>5 M GP</strong>).</li>
+      <li>Se evalúan al terminar el torneo. Cada objetivo cumplido da su premio en GP y sube el ánimo de la plantilla (+5); uno fallado baja el ánimo (−5), sin multa.</li>
+    </ul>
+  </section>
+  <section className="rules-section">
+    <h2>10. Estadios</h2>
+    <ul>
+      <li>La liga tiene un catálogo de estadios, reales y ficticios, ordenados en categorías <strong>S, A, B, C y D</strong> (de mayor a menor), cada uno con su capacidad y su precio en GP.</li>
+      <li>Cada estadio tiene un solo dueño y cada club puede tener uno. Comprarlo descuenta su precio del saldo; cambiar a otro reembolsa el actual a su precio de catálogo y se paga solo la diferencia; venderlo devuelve su precio de catálogo.</li>
+      <li>Por ahora el estadio es solo estético: da el nombre al estadio del club.</li>
+    </ul>
+  </section>
+  <section className="rules-section">
+    <h2>11. Ventanas del Mercado</h2>
+    <ul>
+      <li>Con el mercado <strong>abierto</strong>: contratos, renovaciones, negociaciones, contraofertas y primas.</li>
+      <li>Con el mercado <strong>cerrado</strong>: roles y respuestas a las peticiones de los jugadores, para que nadie los use para manipular las transacciones.</li>
+      <li>Rescindir un contrato se puede en cualquier momento. Los contratos vencidos pasan a la agencia libre al cierre del mercado, nunca mientras haya un torneo de liga en curso.</li>
+    </ul>
+  </section>
+</>;
+
 export function RulesPage() {
   const rules = useApiQuery(signal => endpoints.leagueRules(signal), []);
   const squadValueLimit = Number(rules.data?.squadValueLimit) > 0 ? Number(rules.data.squadValueLimit) : null;
@@ -106,6 +149,6 @@ export function RulesPage() {
   return <main className="newspaper"><article className="data-paper rules-paper">
     <header className="rules-header"><p>KOINONIA e-LEAGUE · DOCUMENTO OFICIAL</p><h1>Reglamento Oficial de la Liga eFootball</h1></header>
     <p className="rules-intro">Este documento establece la normativa oficial para el desarrollo de la liga, incluyendo reglas de jugabilidad, sanciones, sistema de divisiones, mercado de fichajes y sistema de premiación. Todos los presidentes y participantes están obligados a cumplir estas normativas.</p>
-    <MatchRules/><Sanctions/><Divisions/><Transfers squadValueLimit={squadValueLimit} payrollCap={payrollCap} contractsEnabled={contractsEnabled}/><Prizes/><Contracts payrollCap={payrollCap}/>
+    <MatchRules/><Sanctions/><Divisions/><Transfers squadValueLimit={squadValueLimit} payrollCap={payrollCap} contractsEnabled={contractsEnabled}/><Prizes/><Contracts payrollCap={payrollCap}/>{contractsEnabled && <ClubSystems/>}
   </article></main>;
 }

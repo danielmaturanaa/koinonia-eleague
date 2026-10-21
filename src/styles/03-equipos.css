@@ -106,9 +106,6 @@
 .pagination button:disabled { opacity: .4; cursor: default; }
 .workspace-panel { border: 3px double #625d4e; background: #f3ead5a8; overflow: auto; }
 .workspace-panel h3 { display: flex; justify-content: space-between; padding: 7px 9px; color: #fff9e8; background: #063172; font: 500 18px/1 'Oswald', sans-serif; }
-.market-item { display: grid; gap: 4px; padding: 9px; border-bottom: 1px solid #aa9e86; }
-.market-item b { font: 600 16px/1 'Oswald', sans-serif; }
-.market-item span, .market-item small { font: 500 14px/1.1 'Roboto Condensed', sans-serif; }
 .timeline { display: grid; gap: 5px; max-height: 575px; overflow: auto; }
 .timeline article { display: grid; grid-template-columns: 130px 1fr; gap: 12px; padding: 9px; border-left: 6px solid #073986; background: #e1d6bd; }
 .timeline time { font: 500 13px/1.1 'Oswald', sans-serif; }
@@ -218,7 +215,7 @@
 .league-table th:nth-child(2), .league-table td:nth-child(2) { text-align: left; }
 .league-table td:nth-child(2) { display: flex; min-width: 0; align-items: center; gap: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .league-table .team-mark { width: 20px; height: 20px; }
-.live-table-status { display: inline-flex; align-items: center; gap: 6px; margin: -2px 0 7px; color: #a90020; font: 700 11px/1 'Oswald', sans-serif; letter-spacing: .6px; }
+.live-table-status { display: inline-flex; align-items: center; gap: 6px; margin: -2px 0 7px; color: #a90020; font: 700 12px/1 'Oswald', sans-serif; letter-spacing: .6px; }
 .live-table-status i { width: 8px; height: 8px; border-radius: 50%; background: #d10020; box-shadow: 0 0 5px #d10020; animation: live-dot 1.2s ease-in-out infinite; }
 .live-position { display: inline-flex; align-items: center; justify-content: center; min-width: 25px; }
 .live-movement { display: inline-flex; flex: 0 0 24px; width: 24px; align-items: center; justify-content: center; color: transparent; }
@@ -276,13 +273,13 @@
 .playoff-series.status-awaiting_tiebreak { border-color: #a90020; background: #fff3c4; }
 .playoff-series-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-bottom: 5px; border-bottom: 2px solid #b4a990; }
 .playoff-series-head > small { color: #8c0019; font: 600 12px/1 'Oswald', sans-serif; letter-spacing: .5px; }
-.playoff-series-head > span { color: #625d4e; font: 600 11px/1 'Oswald', sans-serif; letter-spacing: .3px; text-align: right; }
+.playoff-series-head > span { color: #625d4e; font: 600 12px/1 'Oswald', sans-serif; letter-spacing: .3px; text-align: right; }
 .playoff-series > div { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; padding: 3px 0; border-bottom: 1px solid #d0c4a8; font: 600 14px/1.1 'Roboto Condensed', sans-serif; }
 .playoff-series > div > a, .playoff-series > div > span { display: flex; min-width: 0; align-items: center; gap: 5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .playoff-series .team-mark { width: 22px; height: 22px; flex-basis: 22px; }
 .playoff-score-table { display: grid !important; grid-template-columns: 1fr !important; grid-auto-flow: row; gap: 0 !important; padding: 0 !important; border: 2px solid #b4a990; background: #fff9e8; }
 .playoff-score-heading, .playoff-score-row { display: grid; grid-template-columns: minmax(0, 1fr) repeat(3, minmax(42px, .26fr)); align-items: center; gap: 6px; }
-.playoff-score-heading { padding: 5px 6px; color: #fff; background: #063172; font: 600 11px/1 'Oswald', sans-serif; letter-spacing: .45px; text-align: center; }
+.playoff-score-heading { padding: 5px 6px; color: #fff; background: #063172; font: 600 12px/1 'Oswald', sans-serif; letter-spacing: .45px; text-align: center; }
 .playoff-score-heading span:first-child { text-align: left; }
 .playoff-score-heading .playoff-leg-link { color: #ffd42a; text-decoration: underline; text-underline-offset: 2px; }
 .playoff-score-heading .playoff-leg-link:hover { color: #fff; }
@@ -311,7 +308,6 @@
 .team-page-header .admin-toggle { position: absolute; right: 8px; top: 8px; padding: 6px 9px; border: 2px solid #ffd42a; color: #fff; background: #a90020; font: 500 14px/1 'Oswald', sans-serif; }
 .admin-form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; padding: 10px; border: 3px double #625d4e; background: #d9cfb8; }
 .create-team-form { position: relative; z-index: 2; margin: 8px 0; }
-.team-list-paper.with-form .team-grid { max-height: 455px; }
 .admin-form label { display: grid; gap: 4px; color: #8c0019; font: 600 13px/1 'Oswald', sans-serif; letter-spacing: .5px; }
 .admin-form input, .admin-form select, .national-gallery select { min-width: 0; height: 31px; padding: 4px 6px; border: 2px solid #092e77; color: #111; background: #f8f1de; font: 500 14px/1 'Roboto Condensed', sans-serif; }
 .media-image-field { grid-column: 1 / -1; display: grid; gap: 4px; padding: 7px; border: 2px solid #8d816a; background: #eee4cc; }
@@ -324,9 +320,9 @@
 .color-pick-preview { grid-column: 1 / -1; display: grid; justify-items: center; gap: 5px; padding: 10px; border: 2px solid #8d816a; background: #fff; }
 .color-pick-preview img { width: 96px; height: 96px; object-fit: contain; }
 .color-pick-preview small { color: #063172; text-align: center; font: 500 12px/1.3 'Oswald', sans-serif; }
-.action-button { min-height: 33px; padding: 6px 12px; border: 2px solid #72b4e3; color: #fff; background: #062764; font: 500 14px/1 'Oswald', sans-serif; }
-.action-button.positive { background: #07502a; }
-.action-button.danger { background: #a90020; }
+.action-button { min-height: var(--tap); padding: 6px 14px; border: 2px solid var(--c-ice); color: var(--c-white); background: var(--c-navy-900); font: 500 var(--fs-md)/1 var(--font-ui); letter-spacing: .4px; }
+.action-button.positive { background: var(--c-green); }
+.action-button.danger { background: var(--c-red); }
 .action-button:disabled, .mini-actions button:disabled { opacity: .45; cursor: default; }
 .form-feedback { grid-column: 1 / -1; padding: 6px; border: 1px solid currentColor; font: 600 13px/1.1 'Roboto Condensed', sans-serif; }
 .form-feedback.success { color: #07502a; background: #dce8c5; }
@@ -349,7 +345,7 @@
 .balance-label b { color: #ffd42a; }
 .button-row { display: flex; gap: 8px; align-items: end; }
 .button-row button { flex: 1; }
-.mini-actions button { min-height: 28px; border: 2px solid #72b4e3; color: #fff; background: #062764; font: 500 13px/1 'Oswald', sans-serif; }
+.mini-actions button { min-height: 36px; border: 2px solid var(--c-ice); color: var(--c-white); background: var(--c-navy-900); font: 500 var(--fs-sm)/1 var(--font-ui); letter-spacing: .3px; }
 .admin-empty { padding: 30px; text-align: center; font: 500 17px/1 'Oswald', sans-serif; }
 .squad-board { display: grid; gap: 10px; }
 .squad-help { padding: 8px 10px; color: #fff; background: #063172; font: 500 13px/1.2 'Oswald', sans-serif; }
@@ -384,8 +380,7 @@
 .national-gallery article > div { display: grid; gap: 5px; min-width: 0; }
 .mini-actions { display: flex; gap: 5px; }
 .mini-actions button { flex: 1; }
-.mini-actions button.danger { background: #a90020; }
-.player-create-form { margin-bottom: 10px; grid-template-columns: 1.3fr .65fr .8fr auto; align-items: end; }
+.mini-actions button.danger { background: var(--c-red); }
 .player-actions { position: relative; z-index: 1; display: grid; gap: 7px; margin-top: 12px; padding-top: 10px; border-top: 3px solid #10285b; }
 .player-actions h3 { padding: 5px 7px; color: #fff; background: #062764; font: 500 14px/1 'Oswald', sans-serif; }
 .player-actions label { display: grid; gap: 3px; color: #8c0019; font: 600 12px/1 'Oswald', sans-serif; }
@@ -431,8 +426,8 @@
 .fixture-preview { display: grid; gap: 6px; }
 .fixture-preview-round { display: grid; gap: 2px; padding: 5px 7px; border: 1px solid #8d816a; font: 600 13px/1.2 'Roboto Condensed', sans-serif; }
 .fixture-preview-round > b { font: 600 14px/1 'Oswald', sans-serif; color: #a90020; }
-.fixture-preview-round i { color: #8d816a; font-style: normal; }
-.fixture-preview-round .resting { color: #8d816a; }
+.fixture-preview-round i { color: #6b6352; font-style: normal; }
+.fixture-preview-round .resting { color: #6b6352; }
 .tournament-awards { display: grid; gap: 8px; margin-top: 4px; padding-top: 10px; border-top: 3px double #10285b; }
 .tournament-awards > header { display: flex; align-items: start; justify-content: space-between; gap: 10px; }
 .tournament-awards > header h3 { color: #a90020; font: 500 17px/1 'Oswald', sans-serif; }

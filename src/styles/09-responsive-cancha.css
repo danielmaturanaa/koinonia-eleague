@@ -48,10 +48,8 @@
 .pitch-card-name i { color: #ffe14d; }
 
 /* Cancha: línea de mitad de borde a borde y escudo del club como marca de agua central. */
-.pitch-halfway { right: 0; left: 0; }
 .pitch-watermark { position: absolute; z-index: 0; top: 50%; left: 50%; display: grid; width: 34%; aspect-ratio: 1; place-items: center; opacity: .22; pointer-events: none; transform: translate(-50%, -50%); }
 .pitch-watermark .team-mark { width: 100%; height: 100%; flex-basis: auto; object-fit: contain; filter: grayscale(1) brightness(1.8); }
-.pitch-circle { width: 26%; }
 .pitch-board-link { padding: 0; border: 0; color: #a90020; background: none; font: 700 14px/1.3 'Roboto Condensed', sans-serif; text-decoration: underline; cursor: pointer; }
 .pitch-board > header { min-height: 0; }
 
@@ -72,7 +70,6 @@
 /* Cancha dibujada en SVG (franjas y líneas proyectadas). En escritorio va en perspectiva:
    más baja, y las cartas se achican levemente hacia el fondo sin deformarse. */
 .pitch-board-field { background: #0d4d26; }
-.pitch-board-field > .pitch-line { display: none; }
 .pitch-svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .pitch-stripe-light { fill: #218546; }
 .pitch-stripe-dark { fill: #1b7239; }
@@ -230,7 +227,7 @@
 .calendar-block small { display: flex; align-items: center; gap: 6px; color: #625d4e; font: 600 11px/1 'Oswald', sans-serif; letter-spacing: .4px; }
 .calendar-block small em { padding: 1px 4px; color: #fff; background: #1c7a3e; font-style: normal; }
 .calendar-block.calendar-live small em { background: #d10020; }
-.calendar-open { margin-left: auto; padding: 0 2px; border: 0; color: #062764; background: none; font: 600 11px/1 'Oswald', sans-serif; }
+.calendar-open { margin-left: auto; padding: 0 2px; border: 0; color: #062764; background: none; font: 600 12px/1 'Oswald', sans-serif; }
 .calendar-team { display: grid; grid-template-columns: 18px minmax(0, 1fr) auto; align-items: center; gap: 6px; }
 .calendar-team .team-mark { width: 18px; height: 18px; flex: 0 0 18px; font-size: 13px; }
 .calendar-team b { overflow: hidden; font: 700 13px/1.1 'Roboto Condensed', sans-serif; text-overflow: ellipsis; white-space: nowrap; }
@@ -370,7 +367,7 @@
 .scenario-layout { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: start; }
 .scenario-layout > h4 { grid-column: 1 / -1; }
 .scenario-table { position: sticky; top: calc(var(--site-header-height) + 8px); display: grid; gap: 6px; min-width: 0; }
-.scenario-table h4 small { color: #07502a; font-size: 11px; }
+.scenario-table h4 small { color: #07502a; font-size: 12px; }
 .scenario-board { display: grid; gap: 10px; min-width: 0; }
 .scenario-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; color: #625d4e; font: 600 13px/1 'Oswald', sans-serif; letter-spacing: .3px; }
 .scenario-actions span { flex: 1 1 100%; }
@@ -383,7 +380,7 @@
 .scenario-home { text-align: right; }
 .scenario-pick { display: flex; gap: 3px; }
 .scenario-pick button { display: grid; justify-items: center; gap: 2px; min-width: 38px; min-height: 38px; padding: 3px 4px; border: 2px solid #10285b; color: #062764; background: #e4d9c0; font: 600 15px/1 'Oswald', sans-serif; }
-.scenario-pick button small { color: #625d4e; font: 500 10px/1 'Roboto Condensed', sans-serif; }
+.scenario-pick button small { color: #625d4e; font: 500 12px/1 'Roboto Condensed', sans-serif; }
 .scenario-pick button:hover { background: #fff3c4; }
 .scenario-pick button.active { border-color: #ffd42a; color: #fff; background: #a90020; box-shadow: 2px 2px 0 #071332; }
 .scenario-pick button.active small { color: #ffe9a8; }
@@ -392,7 +389,7 @@
 .scenario-pick .scenario-exact-toggle.active { border-color: #ffd42a; background: #062764; }
 .scenario-score { grid-column: 1 / -1; display: flex; justify-content: center; align-items: center; gap: 8px; }
 .scenario-score input { width: 56px; height: 36px; border: 2px solid #092e77; color: #062764; background: #fff; font: 600 18px/1 'Oswald', sans-serif; text-align: center; }
-.scenario-live { grid-column: 1 / -1; color: #a90020; font: 600 11px/1 'Oswald', sans-serif; text-align: center; font-style: normal; }
+.scenario-live { grid-column: 1 / -1; color: #a90020; font: 600 12px/1 'Oswald', sans-serif; text-align: center; font-style: normal; }
 .needs-view { display: grid; gap: 10px; }
 .needs-picker { display: flex; align-items: center; gap: 10px; color: #625d4e; font: 600 14px/1 'Oswald', sans-serif; letter-spacing: .5px; }
 .needs-picker select { flex: 1 1 260px; min-width: 0; height: 38px; padding: 0 8px; border: 2px solid #092e77; color: #062764; background: #fff; font: 600 15px/1 'Oswald', sans-serif; }
@@ -410,7 +407,7 @@
 .needs-messages li { padding: 9px 12px; border: 2px solid #10285b; border-left: 8px solid #a90020; color: #062764; background: #fff9e8; font: 600 17px/1.15 'Oswald', sans-serif; letter-spacing: .4px; }
 .needs-facts { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0; }
 .needs-facts div { padding: 8px; border: 2px solid #10285b; background: #fff9e8; text-align: center; }
-.needs-facts dt { color: #625d4e; font: 600 11px/1.1 'Oswald', sans-serif; letter-spacing: .4px; }
+.needs-facts dt { color: #625d4e; font: 600 12px/1.1 'Oswald', sans-serif; letter-spacing: .4px; }
 .needs-facts dd { margin: 4px 0 0; color: #062764; font: 400 26px/1 'Anton', sans-serif; }
 .needs-note { color: #625d4e; font: 500 13px/1.25 'Roboto Condensed', sans-serif; }
 .needs-key-matches { display: grid; gap: 6px; }
@@ -450,10 +447,10 @@
 .manager-summary { display: grid; gap: 6px; padding: 8px 9px; border: 2px solid #10285b; background: #fff9e8; color: #062764; }
 .manager-summary-title { display: grid; gap: 2px; margin: 0; }
 .manager-summary-title b { font: 400 16px/1.05 'Anton', sans-serif; letter-spacing: .2px; }
-.manager-summary-title small { color: #4d4839; font: 500 11px/1.2 'Oswald', sans-serif; letter-spacing: .4px; }
+.manager-summary-title small { color: #4d4839; font: 500 12px/1.2 'Oswald', sans-serif; letter-spacing: .4px; }
 .manager-styles { display: grid; gap: 3px; margin: 0; padding: 0; list-style: none; }
 .manager-styles li { display: grid; grid-template-columns: minmax(90px, 1.2fr) minmax(50px, 1fr) 26px; align-items: center; gap: 6px; }
-.manager-styles span { font: 500 11px/1.1 'Oswald', sans-serif; letter-spacing: .3px; }
+.manager-styles span { font: 500 12px/1.1 'Oswald', sans-serif; letter-spacing: .3px; }
 .manager-styles i { display: block; height: 7px; border: 1px solid #10285b; background: #e9dfc7; }
 .manager-styles i b { display: block; height: 100%; background: #8c0019; }
 .manager-styles em { font: 700 12px/1 'Oswald', sans-serif; font-style: normal; text-align: right; }
@@ -470,8 +467,8 @@
 .manager-results button { display: grid; gap: 3px; padding: 8px 10px; border: 0; border-top: 1px solid #10285b22; color: #062764; background: transparent; text-align: left; }
 .manager-results button:hover { background: #fff3c4; }
 .manager-results b { font: 400 15px/1.05 'Anton', sans-serif; }
-.manager-results small { display: block; color: #4d4839; font: 500 11px/1.2 'Oswald', sans-serif; letter-spacing: .3px; }
-.manager-results em { color: #8c0019; font: 700 11px/1.2 'Oswald', sans-serif; font-style: normal; letter-spacing: .3px; }
+.manager-results small { display: block; color: #4d4839; font: 500 12px/1.2 'Oswald', sans-serif; letter-spacing: .3px; }
+.manager-results em { color: #8c0019; font: 700 12px/1.2 'Oswald', sans-serif; font-style: normal; letter-spacing: .3px; }
 .ovr-coach { color: #0a7a2f; font-weight: 700; }
 .ovr-coach-note { color: #0a7a2f; font: 600 14px/1 'Oswald', sans-serif; letter-spacing: .4px; }
 .club-people-grid { align-items: start; }
@@ -481,7 +478,7 @@
 .manager-popover { position: absolute; z-index: 30; top: 30px; right: 0; left: 0; display: none; pointer-events: none; box-shadow: 5px 6px 0 #0006; }
 .club-person-card:hover + .manager-popover, .club-person-card:focus + .manager-popover, .club-person-card:focus-within + .manager-popover { display: block; }
 .club-person-card[tabindex] { cursor: help; outline-offset: 2px; }
-.manager-style-bonus { margin: 0; color: #4d4839; font: 500 11px/1.25 'Oswald', sans-serif; letter-spacing: .3px; }
+.manager-style-bonus { margin: 0; color: #4d4839; font: 500 12px/1.25 'Oswald', sans-serif; letter-spacing: .3px; }
 .manager-style-bonus b { color: #062764; }
 
 /* Media con DT: más grande que la base y con un brillo pasajero cada pocos segundos. */

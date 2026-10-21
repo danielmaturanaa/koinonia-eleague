@@ -8,7 +8,7 @@
 .offer-card > header small { color: #55607a; font: 500 12px/1.2 'Roboto Condensed', sans-serif; }
 .offer-sides { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 8px; align-items: center; }
 .offer-sides > div { display: grid; gap: 5px; align-content: start; min-width: 0; }
-.offer-sides > div > small { color: #55607a; font: 600 11px/1.2 'Oswald', sans-serif; letter-spacing: .3px; overflow-wrap: anywhere; }
+.offer-sides > div > small { color: #55607a; font: 600 12px/1.2 'Oswald', sans-serif; letter-spacing: .3px; overflow-wrap: anywhere; }
 .offer-swap { color: #0b3a8c; font: 600 22px/1 'Oswald', sans-serif; }
 .offer-player { display: flex; gap: 8px; align-items: center; min-width: 0; }
 .offer-player .player-photo { width: 40px; height: 40px; flex: 0 0 auto; border-radius: 50%; background: radial-gradient(circle at 50% 35%, #2a5bb8, #062764); object-fit: cover; object-position: center top; }
@@ -40,7 +40,6 @@
 .offer-summary p { margin: 0; font: 600 13px/1.35 'Roboto Condensed', sans-serif; }
 .offer-sent { display: grid; gap: 10px; justify-items: start; padding: 12px; border: 2px solid #167a45; background: #e4f4ea; }
 .offer-sent p { margin: 0; color: #0d4a2a; font: 600 14px/1.35 'Roboto Condensed', sans-serif; }
-.poll-empty { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; }
 @media (max-width: 560px) {
   .offer-sides { grid-template-columns: 1fr; }
   .offer-swap { justify-self: center; transform: rotate(90deg); }
@@ -93,14 +92,14 @@
 /* El chip va sobre la esquina de la foto (misma celda de la grilla) para no descuadrar las dos tarjetas en el teléfono. */
 .club-person-entry > .club-person-role { grid-row: 1; grid-column: 1; }
 .club-person-entry > .club-person-card { grid-row: 2; grid-column: 1; }
-.reputation-chip { grid-row: 2; grid-column: 1; align-self: start; justify-self: end; z-index: 2; display: inline-flex; align-items: baseline; gap: 4px; margin: 6px; padding: 2px 7px; box-shadow: 2px 2px 0 #0006; border: 2px solid #10285b; color: #062764; background: #fff9e8; font: 600 11px/1.2 'Oswald', sans-serif; letter-spacing: .4px; cursor: pointer; }
+.reputation-chip { grid-row: 2; grid-column: 1; align-self: start; justify-self: end; z-index: 2; display: inline-flex; align-items: baseline; gap: 4px; margin: 6px; padding: 2px 7px; box-shadow: 2px 2px 0 #0006; border: 2px solid #10285b; color: #062764; background: #fff9e8; font: 600 12px/1.2 'Oswald', sans-serif; letter-spacing: .4px; cursor: pointer; }
 .reputation-chip b { font: 400 14px/1 'Anton', sans-serif; }
 .reputation-chip:hover, .reputation-chip:focus-visible { background: #fff3c4; }
 .reputation-summary { display: grid; gap: 6px; padding: 8px 9px; border: 2px solid #10285b; background: #fff9e8; color: #062764; }
 .reputation-summary-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin: 0; }
 .reputation-summary-title span { display: grid; gap: 2px; }
 .reputation-summary-title b { font: 400 16px/1.05 'Anton', sans-serif; letter-spacing: .2px; }
-.reputation-summary-title small, .reputation-summary-hint { color: #4d4839; font: 500 11px/1.2 'Oswald', sans-serif; letter-spacing: .4px; }
+.reputation-summary-title small, .reputation-summary-hint { color: #4d4839; font: 500 12px/1.2 'Oswald', sans-serif; letter-spacing: .4px; }
 .reputation-summary-hint { margin: 0; }
 .reputation-score { display: inline-grid; place-items: center; min-width: 38px; padding: 3px 5px; color: #fff; font: 400 20px/1 'Anton', sans-serif; }
 .reputation-score.high { background: #1c7a3e; }
@@ -109,7 +108,7 @@
 .reputation-parts { display: grid; gap: 3px; margin: 0; padding: 0; list-style: none; }
 .reputation-parts li { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding-top: 3px; border-top: 1px solid #10285b22; font: 600 12px/1.15 'Oswald', sans-serif; letter-spacing: .3px; }
 .reputation-parts li span { display: grid; gap: 1px; }
-.reputation-parts small { color: #4d4839; font-weight: 500; font-size: 10.5px; }
+.reputation-parts small { color: #4d4839; font-weight: 500; font-size: 12px; }
 .reputation-parts em, .reputation-table td.negative { font-style: normal; font-weight: 700; }
 .reputation-parts em.positive { color: #1c7a3e; }
 .reputation-parts em.negative, .reputation-table td.negative { color: #a90020; }
@@ -121,18 +120,18 @@
 .reputation-rules { display: grid; gap: 4px; margin-top: 0; margin-bottom: 12px; padding-left: 32px; color: #2b2a24; font: 400 13.5px/1.35 'Roboto Condensed', sans-serif; }
 .reputation-table-wrap { overflow-x: auto; }
 .reputation-table { width: 100%; border-collapse: collapse; font: 500 13px/1.2 'Oswald', sans-serif; }
-.reputation-table th { padding: 5px 6px; color: #fff; background: #062764; font-weight: 600; font-size: 11px; letter-spacing: .4px; text-align: right; white-space: nowrap; }
+.reputation-table th { padding: 5px 6px; color: #fff; background: #062764; font-weight: 600; font-size: 12px; letter-spacing: .4px; text-align: right; white-space: nowrap; }
 .reputation-table th:nth-child(2), .reputation-table td:nth-child(2) { text-align: left; }
 .reputation-table td { padding: 5px 6px; border-top: 1px solid #b8b199; text-align: right; white-space: nowrap; }
 .reputation-table tr.current-team td { background: #fff3c4; }
 .reputation-table .table-team-link { display: flex; align-items: center; gap: 6px; color: inherit; text-decoration: none; }
 .reputation-table .table-team-link span { display: grid; }
-.reputation-table .table-team-link small { color: #4d4839; font-size: 11px; }
+.reputation-table .table-team-link small { color: #4d4839; font-size: 12px; }
 .reputation-table .team-mark { width: 22px; height: 22px; flex: 0 0 22px; }
 /* En el teléfono quedan club, liberaciones y total. */
 @media (max-width: 560px) { .reputation-table :is(th, td):is(:nth-child(3), :nth-child(4), :nth-child(5), :nth-child(7)) { display: none; } .reputation-table td { white-space: normal; } .reputation-table th, .reputation-table td { padding: 5px 4px; } }
 
-.reputation-table small.reputation-count { display: block; color: #4d4839; font-size: 10.5px; font-weight: 500; }
+.reputation-table small.reputation-count { display: block; color: #4d4839; font-size: 12px; font-weight: 500; }
 
 /* Media de la plantilla: XI inicial, banca y total, con y sin los potenciadores del DT. */
 .squad-averages-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
@@ -140,10 +139,10 @@
 .squad-average small { color: #4d4839; font: 600 12px/1.1 'Oswald', sans-serif; letter-spacing: .5px; }
 .squad-average b { color: #062764; font: 400 30px/1 'Anton', sans-serif; letter-spacing: .3px; }
 .squad-average em { color: #1c7a3e; font: 600 13px/1.2 'Oswald', sans-serif; font-style: normal; letter-spacing: .3px; }
-.squad-average em span { color: #4d4839; font-size: 11px; }
-.squad-average i { color: #4d4839; font: 500 11px/1.2 'Roboto Condensed', sans-serif; font-style: normal; }
+.squad-average em span { color: #4d4839; font-size: 12px; }
+.squad-average i { color: #4d4839; font: 500 12px/1.2 'Roboto Condensed', sans-serif; font-style: normal; }
 .squad-averages-note { margin: 8px 0 0; color: #4d4839; font: 500 12px/1.3 'Roboto Condensed', sans-serif; }
-@media (max-width: 560px) { .squad-average b { font-size: 24px; } .squad-average small { font-size: 11px; } }
+@media (max-width: 560px) { .squad-average b { font-size: 24px; } .squad-average small { font-size: 12px; } }
 
 /* Indicador de sincronización del borrador del simulador. */
 .squad-sim-sync { display: inline-block; margin-top: 4px; color: #1c7a3e; font: 600 12px/1 'Oswald', sans-serif; letter-spacing: .5px; }

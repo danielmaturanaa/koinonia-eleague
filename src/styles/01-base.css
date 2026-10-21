@@ -23,7 +23,7 @@
 body { margin: 0; }
 button, a { -webkit-tap-highlight-color: transparent; }
 button { font: inherit; cursor: pointer; }
-button:focus-visible, a:focus-visible { outline: 4px solid var(--yellow); outline-offset: 3px; }
+button:focus-visible, a:focus-visible { outline: 3px solid var(--c-navy-900); outline-offset: 2px; box-shadow: 0 0 0 6px var(--yellow); }
 figure, p, blockquote, h1, h2, h3, h4 { margin: 0; }
 /* Shell del sitio: barra superior fija y contenido que scrollea con la página. */
 body { min-width: 0; overflow-x: hidden; background: #001344; }

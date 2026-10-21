@@ -3,7 +3,7 @@
 .newspaper.club-page { height: auto; }
 .team-list-paper, .club-paper, .section-paper, .data-paper { height: auto; min-height: 0; overflow: visible; }
 .club-page .club-paper { overflow: visible; }
-.team-grid, .team-list-paper.with-form .team-grid { max-height: none; }
+.team-grid { max-height: none; }
 .roster-panel { height: auto; max-height: none; overflow: visible; }
 .timeline, .fixture-panel, .workspace-panel { max-height: none; overflow: visible; }
 
@@ -70,7 +70,7 @@
   .timeline article { grid-template-columns: 1fr; gap: 5px; }
   .fixture-grid { grid-template-columns: 1fr; }
   .data-page-header h1 { font-size: 38px; }
-  .admin-form, .national-form, .player-create-form, .tournament-create-form, .compact-form, .match-result-form, .match-event-form, .match-winner-form { grid-template-columns: 1fr; }
+  .admin-form, .national-form, .tournament-create-form, .compact-form, .match-result-form, .match-event-form, .match-winner-form { grid-template-columns: 1fr; }
   .match-result-form > .action-button, .match-event-form > .action-button { grid-column: auto; }
   .page-action { position: static; margin-top: 8px; }
   .draw-team-list, .division-team-list, .admin-action-grid { grid-template-columns: 1fr; }
