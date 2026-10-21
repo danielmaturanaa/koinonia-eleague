@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react';
 import { endpoints } from '../../../api/endpoints.js';
 import { gp } from '../DataStates.jsx';
 import { useApiQuery } from '../useApiQuery.js';
+import { Button } from '../../../ui/index.js';
 
 const detail = player => [player.position, player.nationality, player.age ? `${player.age} AÑOS` : null].filter(Boolean).join(' · ');
 
@@ -44,7 +45,7 @@ export function PlayerPicker({ value, onChange, status = 'free', label = 'JUGADO
     return <div className="player-picker chosen">
       <span className="picker-label">{label}</span>
       <div className="picker-chosen"><b>{value.name}</b><small>{detail(value)} · {gp(value.price)}</small>
-        <button type="button" className="action-button" onClick={() => onChange(null)}>CAMBIAR</button></div>
+        <Button onClick={() => onChange(null)}>CAMBIAR</Button></div>
     </div>;
   }
   return <div className="player-picker" ref={root}>

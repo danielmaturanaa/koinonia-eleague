@@ -6,6 +6,7 @@ import { FormFeedback } from '../../admin/FormFeedback.jsx';
 import { useApiMutation } from '../../admin/useApiMutation.js';
 import { DataState, formatDate, gp } from '../DataStates.jsx';
 import { useApiQuery } from '../useApiQuery.js';
+import { Button } from '../../../ui/index.js';
 
 const ACTIVE = ['open', 'awaiting', 'disputed'];
 const STATUS_LABEL = {
@@ -44,7 +45,7 @@ function SendToAuction({ poll, onChanged }) {
         <option value="">ELEGIR MODERADOR</option>
         {moderators.map(item => <option key={item.id} value={item.id}>{String(item.name).toUpperCase()} · {String(item.teamName ?? '').toUpperCase()}</option>)}
       </select></label>
-      <button className="action-button" disabled={!moderatorId || open.loading}>{open.loading ? 'ABRIENDO…' : '🔨 ABRIR SUBASTA SELLADA'}</button>
+      <Button type="submit" disabled={!moderatorId || open.loading}>{open.loading ? 'ABRIENDO…' : '🔨 ABRIR SUBASTA SELLADA'}</Button>
       {open.error && <p className="form-feedback error" role="alert">{open.error.message}</p>}
     </form>}
   </div>;

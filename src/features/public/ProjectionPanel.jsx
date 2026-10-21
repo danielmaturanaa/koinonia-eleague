@@ -4,6 +4,7 @@ import { TeamMark } from '../../components/TeamMark.jsx';
 import { useAuth } from '../../app/AuthGate.jsx';
 import { DataState } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
+import { Button } from '../../ui/index.js';
 
 const DEBOUNCE_MS = 400;
 const OUTCOME_LABELS = [['home', 'L'], ['draw', 'E'], ['away', 'V']];
@@ -97,8 +98,8 @@ function ScenarioBoard({ group, fixed, setFixed, winnerTeam }) {
   return <div className="scenario-board">
     <div className="scenario-actions">
       <span>{fixedCount ? `${fixedCount} DE ${group.matches.length} FIJADOS` : `${group.matches.length} PARTIDOS POR JUGAR`}</span>
-      <button type="button" className="action-button" onClick={clear} disabled={!fixedCount}>LIMPIAR</button>
-      {winnerTeam && <button type="button" className="action-button positive" onClick={winAll}>FIJAR VICTORIAS DE {winnerTeam.name}</button>}
+      <Button onClick={clear} disabled={!fixedCount}>LIMPIAR</Button>
+      {winnerTeam && <Button variant="positive" onClick={winAll}>FIJAR VICTORIAS DE {winnerTeam.name}</Button>}
     </div>
     {rounds.map(([round, matches]) => <section className="scenario-round" key={round}>
       <h4>{round === 'sin-fecha' ? 'SIN FECHA' : `FECHA ${round}`}</h4>
@@ -139,7 +140,7 @@ function NeedsView({ group, teams, focusTeamId, setFocusTeamId, resolveTeam, onF
           <span className="needs-match-name">{nameOf(entry.homeTeamId)} – {nameOf(entry.awayTeamId)}</span>
           <span className="needs-conditional">{OUTCOME_LABELS.map(([key, label]) => <i key={key} className={entry.best === key ? 'best' : ''} title={`Si ${outcomeText(entry, key).toLowerCase()}`}>{label} {pct(entry.conditional[key])}%</i>)}</span>
           <span className="needs-best">LE CONVIENE: {outcomeText(entry, entry.best)}</span>
-          <button type="button" className="action-button" onClick={() => onFix(entry.matchId, entry.best)}>FIJAR</button>
+          <Button onClick={() => onFix(entry.matchId, entry.best)}>FIJAR</Button>
         </li>)}
       </ul></section>}
       {outlook.ownMatches.length > 0 && <section className="needs-key-matches"><h4>SUS PARTIDOS</h4><ul>

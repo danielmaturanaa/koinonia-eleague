@@ -9,6 +9,7 @@ import { useApiQuery } from './useApiQuery.js';
 import { addToComparison, comparisonCandidate, readComparison, writeComparison } from '../../utils/playerComparison.js';
 import { gpLabel, gpNumber } from '../../utils/money.js';
 import { GpInput } from '../../components/GpInput.jsx';
+import { Button } from '../../ui/index.js';
 
 const positions = ['PT','LD','DEC','LI','MC','MO','ED','EI','DC'];
 
@@ -33,9 +34,9 @@ export function PlayerActions({ player, teams, onChanged }) {
     <h3>EQUIPO</h3>
     {isFree ? <>
       <label>EQUIPO<select value={teamId} onChange={event => setTeamId(event.target.value)}><option value="">SELECCIONAR</option>{teams.map(team => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label>
-      <div className="button-row"><button className="action-button" disabled={!teamId || buy.loading} onClick={buyPlayer}>COMPRAR</button></div>
+      <div className="button-row"><Button disabled={!teamId || buy.loading} onClick={buyPlayer}>COMPRAR</Button></div>
     </> : <>
-      <button className="action-button danger" disabled={release.loading} onClick={releasePlayer}>LIBERAR JUGADOR · 20%</button>
+      <Button variant="danger" disabled={release.loading} onClick={releasePlayer}>LIBERAR JUGADOR · 20%</Button>
     </>}
     <FormFeedback mutation={feedback}/>
   </section>;
@@ -43,7 +44,7 @@ export function PlayerActions({ player, teams, onChanged }) {
 
 export function PlayerAdmin({ player, onChanged }) {
   const [name, setName] = useState(player.name); const [position, setPosition] = useState(player.position); const edit = useApiMutation((body, signal) => endpoints.updatePlayer(player.id, body, signal), { onSuccess: onChanged }); const retire = useApiMutation(signal => endpoints.deletePlayer(player.id, signal), { onSuccess: onChanged });
-  return <section className="player-actions"><h3>ADMINISTRACIÓN</h3><label>NOMBRE<input value={name} onChange={event => setName(event.target.value)}/></label><label>POSICIÓN<select value={position} onChange={event => setPosition(event.target.value)}>{positions.map(item => <option key={item}>{item}</option>)}</select></label><div className="button-row"><button className="action-button" disabled={!name.trim() || edit.loading} onClick={() => edit.execute({ name: name.trim(), position })}>GUARDAR CAMBIOS</button><button className="action-button danger" disabled={retire.loading} onClick={() => { if (window.confirm(`¿RETIRAR A ${player.name}? Se conservará su historial.`)) retire.execute(); }}>RETIRAR DE LA LIGA</button></div><FormFeedback mutation={edit.error || edit.success ? edit : retire}/></section>;
+  return <section className="player-actions"><h3>ADMINISTRACIÓN</h3><label>NOMBRE<input value={name} onChange={event => setName(event.target.value)}/></label><label>POSICIÓN<select value={position} onChange={event => setPosition(event.target.value)}>{positions.map(item => <option key={item}>{item}</option>)}</select></label><div className="button-row"><Button disabled={!name.trim() || edit.loading} onClick={() => edit.execute({ name: name.trim(), position })}>GUARDAR CAMBIOS</Button><Button variant="danger" disabled={retire.loading} onClick={() => { if (window.confirm(`¿RETIRAR A ${player.name}? Se conservará su historial.`)) retire.execute(); }}>RETIRAR DE LA LIGA</Button></div><FormFeedback mutation={edit.error || edit.success ? edit : retire}/></section>;
 }
 
 const STATUS_OPTIONS = [['', 'Todos'], ['registered', 'En la liga'], ['owned', 'Con equipo'], ['free', 'Agentes libres']];

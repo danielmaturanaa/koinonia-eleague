@@ -154,6 +154,7 @@
 }
 .squad-simulator-board { min-width: 0; max-width: 820px; width: 100%; margin: 0 auto; }
 .pitch-slot { --card-w: clamp(76px, 16%, 112px); position: absolute; width: var(--card-w); transform: translate(-50%, -50%) scale(var(--depth-scale, 1)); }
+/* El z-index de cada ficha viene en línea (profundidad); el foco tiene que pasarle por encima. */
 .pitch-slot:focus-within { z-index: 40 !important; }
 .pitch-slot .pitch-card { position: relative; width: 100%; transform: none; }
 .pitch-slot .pitch-card:hover { transform: translateY(-3px); }
@@ -239,7 +240,7 @@
 
 /* Partidos castigados (0-3 administrativo) */
 .sanction-badge { display: inline-block; padding: 2px 6px; border: 1px solid #7a0016; color: #fff; background: #a90020; font: 700 11px/1 'Oswald', sans-serif; font-style: normal; letter-spacing: .6px; vertical-align: middle; white-space: nowrap; }
-.fixture-sanctioned { border-left-color: #a90020 !important; }
+.fixture-sanctioned { border-left-color: #a90020; }
 .fixture-team.sanctioned b { text-decoration: line-through; text-decoration-thickness: 2px; text-decoration-color: #a90020; }
 .fixture-footer > .sanction-badge { flex: none; }
 .club-match-row > small .sanction-badge { margin-right: 6px; }
@@ -419,7 +420,7 @@
 .needs-conditional i { padding: 3px 5px; border: 1px solid #b4a990; color: #625d4e; font: 600 12px/1 'Roboto Condensed', sans-serif; font-style: normal; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .needs-conditional i.best { border-color: #07502a; color: #fff; background: #07502a; }
 .needs-best { grid-column: 1 / 3; color: #07502a; font: 600 12px/1.1 'Oswald', sans-serif; letter-spacing: .3px; }
-.needs-key-matches li .action-button { grid-column: 3; grid-row: 1 / span 2; }
+.needs-key-matches li .ui-btn { grid-column: 3; grid-row: 1 / span 2; }
 .club-projection-button { margin-left: auto; }
 .club-covers-button + .club-projection-button { margin-left: 0; }
 @media (max-width: 900px) {
@@ -434,7 +435,7 @@
   .needs-key-matches li { grid-template-columns: minmax(0, 1fr) auto; }
   .needs-key-matches li .needs-conditional { grid-column: 1 / -1; grid-row: 2; }
   .needs-best { grid-column: 1 / -1; }
-  .needs-key-matches li .action-button { grid-column: 2; grid-row: 1; }
+  .needs-key-matches li .ui-btn { grid-column: 2; grid-row: 1; }
   .scenario-match { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   .scenario-match .scenario-pick { grid-column: 1 / -1; grid-row: 2; justify-content: center; }
   .scenario-home { text-align: left; }

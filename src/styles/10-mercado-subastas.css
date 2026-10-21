@@ -179,7 +179,7 @@
 .pc-chip:disabled { opacity: .5; cursor: default; }
 .pc-send-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: space-between; }
 .pc-send-row small { color: #55607a; font: 500 12px/1.3 'Roboto Condensed', sans-serif; }
-.pc-send-row .action-button { min-height: 44px; min-width: 96px; }
+.pc-send-row .ui-btn { min-height: 44px; min-width: 96px; }
 .pc-send { width: 46px; height: 46px; border: 0; border-radius: 50%; background: #0b3a8c; color: #fff; font-size: 18px; cursor: pointer; }
 .pc-send:disabled { background: #b8c3dd; cursor: default; }
 @keyframes pc-in { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }

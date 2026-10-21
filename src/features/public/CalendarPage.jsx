@@ -4,6 +4,7 @@ import { useAuth } from '../../app/AuthGate.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
 import { DataState, PageHeader } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
+import { Button } from '../../ui/index.js';
 
 const UNSCHEDULED = 'sin-dia';
 
@@ -118,9 +119,9 @@ export function CalendarPage({ teams, navigate }) {
       {isAdmin && <>
         <label className="calendar-field">POR DÍA<input type="number" min="1" max="20" value={perDay} onChange={event => setPerDay(event.target.value)}/></label>
         {confirmAuto
-          ? <span className="calendar-confirm">¿REEMPLAZAR LOS DÍAS ACTUALES?<button className="action-button" onClick={autoSchedule}>SÍ, ARMAR</button><button className="action-button" onClick={() => setConfirmAuto(false)}>NO</button></span>
-          : <button className="action-button" disabled={status.busy || !activeId} onClick={() => (scheduledCount ? setConfirmAuto(true) : autoSchedule())}>ARMAR AUTOMÁTICO</button>}
-        <button className="action-button" onClick={addDay}>+ DÍA</button>
+          ? <span className="calendar-confirm">¿REEMPLAZAR LOS DÍAS ACTUALES?<Button onClick={autoSchedule}>SÍ, ARMAR</Button><Button onClick={() => setConfirmAuto(false)}>NO</Button></span>
+          : <Button disabled={status.busy || !activeId} onClick={() => (scheduledCount ? setConfirmAuto(true) : autoSchedule())}>ARMAR AUTOMÁTICO</Button>}
+        <Button onClick={addDay}>+ DÍA</Button>
       </>}
     </div>
     {isAdmin && <p className="calendar-help">ARRASTRA UN PARTIDO A OTRO DÍA, O TÓCALO Y LUEGO TOCA «MOVER AQUÍ». EL AUTOMÁTICO RESPETA EL ORDEN DEL FIXTURE: CADA DÍA, CADA EQUIPO JUEGA SUS {perDay} SIGUIENTES.</p>}

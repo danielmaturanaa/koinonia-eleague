@@ -16,7 +16,7 @@ import { AuctionHistory } from './market/AuctionHistory.jsx';
 import { SealedAuctionsSection } from './market/SealedAuctionsSection.jsx';
 import { gpLabel } from '../../utils/money.js';
 import { GpInput } from '../../components/GpInput.jsx';
-import { Icon } from '../../ui/index.js';
+import { Button, Icon } from '../../ui/index.js';
 
 const asList = value => Array.isArray(value) ? value : [];
 
@@ -49,7 +49,7 @@ function TransferForm({ teams, players, onChanged }) {
     <label>JUGADOR<select name="playerId" required value={form.playerId} onChange={change}><PlayerOptions players={players} teamId={form.fromTeamId}/></select></label>
     <label>EQUIPO DE DESTINO<select name="toTeamId" required value={form.toTeamId} onChange={change}><TeamOptions teams={teams.filter(team => team.id !== form.fromTeamId)}/></select></label>
     <label>MONTO GP<GpInput name="gpAmount" required value={form.gpAmount} onChange={change}/></label>
-    <button className="action-button" disabled={mutation.loading || !form.fromTeamId || !form.playerId || !form.toTeamId || form.gpAmount === ''}>REGISTRAR TRANSFERENCIA</button>
+    <Button type="submit" disabled={mutation.loading || !form.fromTeamId || !form.playerId || !form.toTeamId || form.gpAmount === ''}>REGISTRAR TRANSFERENCIA</Button>
     <FormFeedback mutation={mutation}/>
   </form>;
 }
@@ -70,7 +70,7 @@ function TradeForm({ teams, players, onChanged }) {
     <label>JUGADOR B<select name="toPlayerId" required value={form.toPlayerId} onChange={change}><PlayerOptions players={players} teamId={form.toTeamId}/></select></label>
     <label>GP ADICIONAL DE A<GpInput name="gpFrom" value={form.gpFrom} onChange={change}/></label>
     <label>GP ADICIONAL DE B<GpInput name="gpTo" value={form.gpTo} onChange={change}/></label>
-    <button className="action-button" disabled={mutation.loading || !form.fromTeamId || !form.toTeamId || !form.fromPlayerId || !form.toPlayerId}>REGISTRAR TRUEQUE</button>
+    <Button type="submit" disabled={mutation.loading || !form.fromTeamId || !form.toTeamId || !form.fromPlayerId || !form.toPlayerId}>REGISTRAR TRUEQUE</Button>
     <FormFeedback mutation={mutation}/>
   </form>;
 }
@@ -92,7 +92,7 @@ function SigningForm({ player, teams, onDone }) {
   return <div className="signing-form">
     <select value={teamId} onChange={event => setTeamId(event.target.value)} aria-label="Equipo que ficha"><option value="">¿QUÉ EQUIPO LO FICHA?</option>{teams.map(item => <option key={item.id} value={item.id}>{item.name}{teamBalance(item) !== null ? ` · saldo ${gp(teamBalance(item))}` : ''}</option>)}</select>
     <div className="button-row">
-      <button type="button" className="action-button positive" disabled={!teamId || short || buy.loading} onClick={() => { if (window.confirm(`¿${team.name} COMPRA A ${player.name} POR ${gp(player.price)}?`)) buy.execute(teamId); }}>COMPRAR · {gp(player.price)}</button>
+      <Button variant="positive" disabled={!teamId || short || buy.loading} onClick={() => { if (window.confirm(`¿${team.name} COMPRA A ${player.name} POR ${gp(player.price)}?`)) buy.execute(teamId); }}>COMPRAR · {gp(player.price)}</Button>
     </div>
     {short && <small className="signing-warning">SALDO INSUFICIENTE PARA COMPRARLO.</small>}
     <FormFeedback mutation={buy}/>
@@ -106,7 +106,7 @@ function PollForm({ player, myTeamId, figures, marketOpen, onDone }) {
   return <div className="signing-form">
     <p className="poll-hint">SE ABRE UNA ENCUESTA POR {gp(player.price)}. SI NADIE PIDE SUBASTA Y LLEGA AL MÍNIMO DE VOTOS, CONFIRMAS LA COMPRA.</p>
     <div className="button-row">
-      <button type="button" className="action-button positive" disabled={Boolean(blocker) || open.loading} onClick={() => open.execute({ playerId: player.playerId, teamId: myTeamId })}>ABRIR ENCUESTA · {gp(player.price)}</button>
+      <Button variant="positive" disabled={Boolean(blocker) || open.loading} onClick={() => open.execute({ playerId: player.playerId, teamId: myTeamId })}>ABRIR ENCUESTA · {gp(player.price)}</Button>
     </div>
     {blocker && <small className="signing-warning">{blocker}</small>}
     {!blocker && signingNotes(figures, player.price).map(note => <small key={note} className="signing-note">{note}</small>)}

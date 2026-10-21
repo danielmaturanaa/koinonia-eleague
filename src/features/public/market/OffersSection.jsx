@@ -8,7 +8,7 @@ import { useApiQuery } from '../useApiQuery.js';
 import { useAutoRefresh } from './PollsSection.jsx';
 import { GpInput } from '../../../components/GpInput.jsx';
 import { ConsentPanel } from './ConsentPanel.jsx';
-import { HowItWorks } from '../../../ui/index.js';
+import { Button, HowItWorks } from '../../../ui/index.js';
 
 const RELEASE_SHARE = 0.2;
 // La misma banda que valida el servidor: todo precio queda entre 0,7× y 1,25× el valor del jugador.
@@ -209,7 +209,7 @@ function Summary({ children, problem }) {
 function Sent({ text, onAgain }) {
   return <div className="offer-sent" role="status">
     <p>✅ {text}</p>
-    <button type="button" className="action-button" onClick={onAgain}>HACER OTRA OFERTA</button>
+    <Button onClick={onAgain}>HACER OTRA OFERTA</Button>
   </div>;
 }
 
@@ -265,7 +265,7 @@ function TransferProposal({ myTeamId, rivals, onDone, prefill = null }) {
     {player && other && Number.isFinite(price) && <Summary problem={problem}>
       {buying ? `${upper(other.name)} TE VENDE A ${upper(player.name)} POR ${gp(price)}.` : `LE VENDES ${upper(player.name)} A ${upper(other.name)} POR ${gp(price)}.`} TIENE QUE ACEPTARLO SU PRESI (EN LA WEB O EN DISCORD).
     </Summary>}
-    <button className="action-button positive" disabled={mutation.loading || !ready}>{mutation.loading ? 'ENVIANDO…' : 'ENVIAR OFERTA'}</button>
+    <Button variant="positive" type="submit" disabled={mutation.loading || !ready}>{mutation.loading ? 'ENVIANDO…' : 'ENVIAR OFERTA'}</Button>
     {mutation.error && <p className="form-feedback error" role="alert">{mutation.error.message}</p>}
   </form>;
 }
@@ -323,7 +323,7 @@ function TradeProposal({ myTeamId, rivals, onDone }) {
     {offered && requested && <Summary problem={problem}>
       ENTREGAS A {upper(offered.name)}{gpFrom ? ` + ${gp(gpFrom)}` : ''} Y RECIBES A {upper(requested.name)}{gpTo ? ` + ${gp(gpTo)}` : ''}. TIENE QUE ACEPTARLO EL PRESI DE {upper(other?.name)}.
     </Summary>}
-    <button className="action-button positive" disabled={mutation.loading || !ready}>{mutation.loading ? 'ENVIANDO…' : 'ENVIAR TRUEQUE'}</button>
+    <Button variant="positive" type="submit" disabled={mutation.loading || !ready}>{mutation.loading ? 'ENVIANDO…' : 'ENVIAR TRUEQUE'}</Button>
     {mutation.error && <p className="form-feedback error" role="alert">{mutation.error.message}</p>}
   </form>;
 }
@@ -347,7 +347,7 @@ function ReleaseForm({ myTeamId, onDone }) {
           <button type="button" className="ghost" disabled={mutation.loading} onClick={() => setConfirming(false)}>VOLVER</button>
         </div>
       </div>
-      : <button className="action-button danger" disabled={!playerId}>LIBERAR JUGADOR</button>}
+      : <Button variant="danger" type="submit" disabled={!playerId}>LIBERAR JUGADOR</Button>}
     {mutation.error && <p className="form-feedback error" role="alert">{mutation.error.message}</p>}
   </form>;
 }

@@ -77,7 +77,7 @@
 .inbox-body h4 { margin: 0; color: #062764; font: 600 16px/1.2 'Oswald', sans-serif; }
 .inbox-body p { margin: 0; font: 500 14px/1.45 'Roboto Condensed', sans-serif; }
 .inbox-mood { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
-.inbox-body .action-button { justify-self: start; }
+.inbox-body .ui-btn { justify-self: start; }
 
 .sheet-terms { margin: 0; color: #062764; font: 500 14px/1.4 'Roboto Condensed', sans-serif; }
 
@@ -154,10 +154,10 @@
 .sim-controls { display: flex; flex-wrap: wrap; align-items: end; gap: 10px 18px; padding: 10px 12px; background: #fff; border: 2px dashed #3a5bbd; }
 .sim-controls label { display: grid; gap: 4px; color: #2c4496; font: 600 12px/1.2 'Oswald', sans-serif; }
 .sim-controls select { min-height: 34px; }
-.sim-check { grid-auto-flow: column; align-items: center; gap: 6px !important; }
+.sim-check, .sim-controls .sim-check { grid-auto-flow: column; align-items: center; gap: 6px; }
 .sim-warn { border-color: #a90020; background: #fbe9e7; color: #7a1a14; }
 .sim-card.over, .ptable tr.over td { background: #fbe9e7; }
-.sim-card.over { border-color: #a90020 !important; }
+.payroll-grid .sim-card.over { border-color: #a90020; }
 .share-bar { display: grid; gap: 3px; min-width: 110px; }
 .share-track { display: block; height: 7px; border: 1px solid #062764; background: #fff; }
 .share-track i { display: block; height: 100%; background: #167a45; }

@@ -11,7 +11,7 @@ import { useApiQuery } from '../public/useApiQuery.js';
 import { HORIZON, PLAYOFF_PRIZES, leaguePrize, maxSalaryFor, roundStep, simulate } from '../../utils/payrollSim.js';
 import { BalanceLine, PayrollBars } from './PayrollCharts.jsx';
 import { SigningSheet } from './SigningSheet.jsx';
-import { HowItWorks } from '../../ui/index.js';
+import { Button, HowItWorks } from '../../ui/index.js';
 
 const SEASONS = [2, 3, 4, 5, 6];
 const upper = text => String(text ?? '').toUpperCase();
@@ -179,7 +179,7 @@ function RenewAll({ team, expiredCount, onDone, marketOpen }) {
     {expiredCount > 0 && marketOpen && <div className="renew-all-form">
       <span className="chips">{SEASONS.map(n => <button type="button" key={n} className={seasons === n ? 'on' : ''} onClick={() => setSeasons(n)}>{n} TORNEOS</button>)}</span>
       <span className="sheet-slider"><input type="range" min="1" max="100" value={raise} onChange={event => setRaise(Number(event.target.value))} aria-label="Aumento de sueldo en porcentaje"/><b>+{raise}%</b></span>
-      <button type="button" className="action-button positive" disabled={send.loading} onClick={() => send.execute({ seasons, raisePercent: raise })}>{send.loading ? 'ENVIANDO…' : 'ENVIAR A TODOS'}</button>
+      <Button variant="positive" disabled={send.loading} onClick={() => send.execute({ seasons, raisePercent: raise })}>{send.loading ? 'ENVIANDO…' : 'ENVIAR A TODOS'}</Button>
     </div>}
     <FormFeedback mutation={send}/>
     {results && <ul className="renew-all-results">{results.map(item => { const [icon, label] = OUTCOME_LABEL[item.outcome] ?? ['•', item.outcome]; return <li key={item.playerId} className={item.outcome}><b>{icon} {item.name}</b> <small>{label}</small> <span>{item.reply}</span></li>; })}</ul>}

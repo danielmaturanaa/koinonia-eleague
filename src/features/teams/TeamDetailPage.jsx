@@ -212,7 +212,7 @@ function ReviewEditor({ team, onChanged, onSaved }) {
   const submit = event => { event.preventDefault(); mutation.execute({ review }); };
   return <form className="club-review-editor" onSubmit={submit}>
     <label>RESEÑA HISTÓRICA<textarea value={review} onChange={event => setReview(event.target.value)} placeholder="Describe la fundación, identidad, hitos y evolución histórica del club."/></label>
-    <button className="action-button" disabled={mutation.loading}>GUARDAR RESEÑA</button>
+    <Button type="submit" disabled={mutation.loading}>GUARDAR RESEÑA</Button>
     <FormFeedback mutation={mutation}/>
   </form>;
 }
@@ -249,7 +249,7 @@ function AnthemEditor({ team, onChanged, onSaved }) {
       <FormFeedback mutation={upload}/>
     </div>
     <label>LETRA DEL HIMNO<textarea value={anthemLyrics} onChange={event => setAnthemLyrics(event.target.value)} placeholder="Escribe aquí la letra completa del himno."/></label>
-    <button className="action-button" disabled={mutation.loading || upload.loading}>GUARDAR HIMNO Y LETRA</button>
+    <Button type="submit" disabled={mutation.loading || upload.loading}>GUARDAR HIMNO Y LETRA</Button>
     <FormFeedback mutation={mutation}/>
   </form>;
 }
@@ -843,7 +843,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
   const colors = team?.colors ?? {};
   const heroStyle = { '--club-primary': colors.primary ?? '#062764', '--club-secondary': colors.secondary ?? '#0b3f8d', '--club-tertiary': colors.tertiary ?? '#ffd42a' };
 
-  return <main className="newspaper club-page"><section className="club-paper"><div className="club-actions">{!ownerMode && <button className="back-button" onClick={onBack}>← VOLVER A EQUIPOS</button>}{onProjection && team && <button type="button" className="action-button club-projection-button" onClick={onProjection}>CALCULADORA PARA CLASIFICAR</button>}</div>
+  return <main className="newspaper club-page"><section className="club-paper"><div className="club-actions">{!ownerMode && <button className="back-button" onClick={onBack}>← VOLVER A EQUIPOS</button>}{onProjection && team && <Button className="club-projection-button" onClick={onProjection}>CALCULADORA PARA CLASIFICAR</Button>}</div>
     {loading || !team ? <div className="arcade-state">CARGANDO FICHA...</div> : <>
       <header className="club-hero" style={heroStyle}>
         <div className="club-crest-wrap"><TeamMark team={team} className="club-crest"/>{canEdit && <button type="button" className="club-crest-edit" onClick={() => setCrestEditorOpen(true)} aria-label="Editar escudo y nombre del club" title="Editar escudo y nombre">✎</button>}</div>

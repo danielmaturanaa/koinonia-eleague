@@ -86,8 +86,8 @@ Web: `features/teams/ClubLife.jsx` (Estadio y taquilla, Eventos, Derechos de TV)
 
 ## 6. Deuda conocida
 
-- Las pantallas antiguas siguen con sus clases propias (`.action-button`, tablas propias…): solo las nuevas usan `src/ui`.
-- Quedan 11 `!important` heredados.
+- Todos los botones usan `<Button>` de `src/ui` (el viejo `.action-button` ya no existe; los enlaces con forma de botón usan las clases `ui-btn`).
+- Quedan 2 `!important`, a propósito: el foco de una ficha en la cancha (su z-index viene en línea) y `prefers-reduced-motion`.
 - No hay componente de tabla compartido.
 - Los roles y el ánimo aparecen en Plantel y en la Bandeja (la Bandeja deja cambiar el rol del jugador que escribe).
 - Mensajes públicos de Discord: tarjeta de oferta, "HERE WE GO" y noticia siguen publicándose por separado.

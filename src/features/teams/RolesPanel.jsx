@@ -6,7 +6,7 @@ import { useApiMutation } from '../admin/useApiMutation.js';
 import { DataState } from '../public/DataStates.jsx';
 import { useApiQuery } from '../public/useApiQuery.js';
 import { MoodMeter, ROLES, roleLabel } from './SigningSheet.jsx';
-import { HowItWorks } from '../../ui/index.js';
+import { Button, HowItWorks } from '../../ui/index.js';
 
 const TRAIT_LABEL = { ganador: 'GANADOR', titular: 'TITULAR', sociable: 'SOCIABLE', mercenario: 'MERCENARIO', ego: 'EGO', leal: 'LEAL' };
 
@@ -22,7 +22,7 @@ export function RoleSelect({ team, row, onDone, locked = false, showWanted = fal
   const wanted = row.expectedRole && row.expectedRole !== row.role ? row.expectedRole : null;
   return <span className="role-select"><select aria-label={`Rol de ${row.name}`} value={row.role} disabled={change.loading || locked} title={locked ? 'Con el mercado abierto los roles están bloqueados' : undefined} onChange={event => change.execute({ role: event.target.value })}>
     {ROLES.map(([key, label]) => <option key={key} value={key}>{label}</option>)}
-  </select>{showWanted && wanted && <button type="button" className="action-button positive" disabled={change.loading || locked} onClick={() => change.execute({ role: wanted })}>CAMBIAR A {roleLabel(wanted)}</button>}<FormFeedback mutation={change}/></span>;
+  </select>{showWanted && wanted && <Button variant="positive" disabled={change.loading || locked} onClick={() => change.execute({ role: wanted })}>CAMBIAR A {roleLabel(wanted)}</Button>}<FormFeedback mutation={change}/></span>;
 }
 
 /** El presi asigna el rol de cada jugador (él es quien juega); el ánimo de cada uno depende de eso y de lo que cree merecer. */

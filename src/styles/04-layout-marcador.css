@@ -40,9 +40,9 @@
   /* En pantallas estrechas, convertir cada fila en una cuadrícula estable para
      que Equipo conserve espacio y nunca se superponga con PJ o PTS. */
   .person-modal .person-editor-form { grid-template-columns: 1fr; }
-  .person-modal .media-image-field, .person-modal .person-editor-form > .action-button, .person-modal .person-editor-form > .form-feedback { grid-column: auto; }
+  .person-modal .media-image-field, .person-modal .person-editor-form > .ui-btn, .person-modal .person-editor-form > .form-feedback { grid-column: auto; }
   .club-anthem-editor { grid-template-columns: 1fr; }
-  .club-anthem-editor > .action-button { grid-column: auto; }
+  .club-anthem-editor > .ui-btn { grid-column: auto; }
   .person-modal .club-anthem-editor { grid-template-rows: auto minmax(280px, 1fr) auto auto; height: calc(100vh - 120px); }
   .person-modal .club-anthem-audio { align-self: start; }
   .person-modal .club-anthem-editor > label { min-height: 280px; }
@@ -71,7 +71,7 @@
   .fixture-grid { grid-template-columns: 1fr; }
   .data-page-header h1 { font-size: 38px; }
   .admin-form, .national-form, .tournament-create-form, .compact-form, .match-result-form, .match-event-form, .match-winner-form { grid-template-columns: 1fr; }
-  .match-result-form > .action-button, .match-event-form > .action-button { grid-column: auto; }
+  .match-result-form > .ui-btn, .match-event-form > .ui-btn { grid-column: auto; }
   .page-action { position: static; margin-top: 8px; }
   .draw-team-list, .division-team-list, .admin-action-grid { grid-template-columns: 1fr; }
   .admin-drawer { position: fixed; inset: 8px; }

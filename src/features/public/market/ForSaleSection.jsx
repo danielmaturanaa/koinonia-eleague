@@ -5,6 +5,7 @@ import { PlayerFace } from '../../../components/PlayerFace.jsx';
 import { useApiMutation } from '../../admin/useApiMutation.js';
 import { DataState, gp } from '../DataStates.jsx';
 import { useApiQuery } from '../useApiQuery.js';
+import { Button } from '../../../ui/index.js';
 
 const asList = value => Array.isArray(value) ? value : [];
 
@@ -19,7 +20,7 @@ function PublishForm({ teamId, listedIds, onDone }) {
       <option value="">ELEGIR JUGADOR DE TU PLANTEL</option>
       {options.map(player => <option key={player.id} value={player.id}>{player.name} · {player.position} · {gp(player.gpValue)}</option>)}
     </select></label>
-    <button className="action-button positive" disabled={!playerId || publish.loading}>🏷️ PUBLICAR</button>
+    <Button variant="positive" type="submit" disabled={!playerId || publish.loading}>🏷️ PUBLICAR</Button>
     {publish.error && <p className="form-feedback error" role="alert">{publish.error.message}</p>}
   </form>;
 }

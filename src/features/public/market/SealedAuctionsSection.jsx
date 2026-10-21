@@ -13,7 +13,7 @@ import { PlayerPicker } from './PlayerPicker.jsx';
 import { ReadyControl } from './ReadyControl.jsx';
 import { useAutoRefresh } from './PollsSection.jsx';
 import { GpInput } from '../../../components/GpInput.jsx';
-import { HowItWorks } from '../../../ui/index.js';
+import { Button, HowItWorks } from '../../../ui/index.js';
 
 const STATUS_LABEL = { open: 'ABIERTA', resolved: 'FIRMADO', no_sale: 'SIN VENTA', cancelled: 'CANCELADA' };
 
@@ -257,7 +257,7 @@ function AuctionCard({ auction, now, onChanged, teams = [] }) {
       {revealing && <div className="stage-clock closing" role="timer">
         <small>{now < Date.parse(auction.revealAt) ? 'LA DECISIÓN EN VIVO EN' : 'DECIDIENDO AHORA'}</small>
         <b>{now < Date.parse(auction.revealAt) ? countdown(auction.revealAt, now) : '🔴'}</b>
-        <button type="button" className="action-button positive" onClick={() => { revealStore.dismissed.delete(auction.id); setReveal({ auction, startAt: Date.parse(auction.revealAt) }); }}>VER EN VIVO</button>
+        <Button variant="positive" onClick={() => { revealStore.dismissed.delete(auction.id); setReveal({ auction, startAt: Date.parse(auction.revealAt) }); }}>VER EN VIVO</Button>
       </div>}
       {open && <div className={`stage-clock ${closing ? 'closing' : ''}`} role="timer" aria-label={`CIERRA EN ${countdown(auction.closesAt, now)}`}>
         <small>{closing ? '⏱ ÚLTIMOS MINUTOS' : 'CIERRA EN'}</small>
@@ -318,7 +318,7 @@ function OpenAuctionForm({ onChanged }) {
     <p className="poll-hint sealed-bounds"><b>OFERTA MÍNIMA 0,7× Y MÁXIMA 1,25× EL VALOR DEL JUGADOR.</b></p>
     <label>CIERRE (OPCIONAL)<input type="datetime-local" value={closesAt} onChange={event => setClosesAt(event.target.value)}/></label>
     <HowItWorks title="¿Quién cierra la subasta?"><p>Solo el moderador puede cerrarla antes de la hora. También puede ofertar; si lo hace, solo cierra cuando todos estén listos. Sin cierre dura 24 horas (nunca más que el mercado).</p></HowItWorks>
-    <button className="action-button positive" disabled={open.loading || !playerId || !moderatorId}>ABRIR SUBASTA</button>
+    <Button variant="positive" type="submit" disabled={open.loading || !playerId || !moderatorId}>ABRIR SUBASTA</Button>
     <FormFeedback mutation={open}/>
   </form>;
 }

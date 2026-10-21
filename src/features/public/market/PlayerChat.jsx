@@ -7,6 +7,7 @@ import { useAuth } from '../../../app/AuthGate.jsx';
 import { PlayerFace } from '../../../components/PlayerFace.jsx';
 import { useApiMutation } from '../../admin/useApiMutation.js';
 import { gpLabel } from '../../../utils/money.js';
+import { Button } from '../../../ui/index.js';
 
 const LEVEL = { frio: [1, '🧊 FRÍO'], tibio: [2, '🌤️ TIBIO'], caliente: [3, '🔥 CALIENTE'] };
 const KIND_TAG = { dato: 'DATO', promesa: 'PROMESA · QUEDA REGISTRADA', argumento: 'ARGUMENTO · NO OBLIGA', negativa: 'HONESTA', pedido_si: 'ACEPTAR', pedido_no: 'RECHAZAR' };
@@ -298,10 +299,10 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
 
   if (!shown) {
     return <div className="pc-closed">
-      <button type="button" className="action-button pc-open" onClick={() => setShown(true)}>
+      <Button className="pc-open" onClick={() => setShown(true)}>
         <PlayerFace src={player.faceUrl} name={player.name}/>
         <span>💬 HABLAR CON {player.name.toUpperCase()}</span>
-      </button>
+      </Button>
     </div>;
   }
 
@@ -369,7 +370,7 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
             <small>{pending.request ? 'SI ACEPTAS, QUEDA COMO PROMESA (Y SI LO ROMPES, BAJA TU REPUTACIÓN).'
               : picks.length ? `${picks.length} ELEGIDA${picks.length > 1 ? 'S' : ''} · PUEDES COMBINAR HASTA ${MAX_PICKS} QUE CALCEN ENTRE SÍ.`
                 : 'ELIGE UNA O COMBINA HASTA 3 QUE CALCEN. LAS QUE SE CONTRADICEN SE BLOQUEAN SOLAS.'}</small>
-            <button type="button" className="action-button positive" disabled={thinking || !picks.length} onClick={() => send(picks)}>ENVIAR{picks.length > 1 ? ` (${picks.length})` : ''}</button>
+            <Button variant="positive" disabled={thinking || !picks.length} onClick={() => send(picks)}>ENVIAR{picks.length > 1 ? ` (${picks.length})` : ''}</Button>
           </div>}
           {answer.error && <p className="form-feedback error" role="alert">{answer.error.message}</p>}
         </div> : chat.finished && <p className="pc-finished" role="status">✅ LE RESPONDISTE TODO · PUEDES CAMBIAR UNA RESPUESTA O TU OFERTA. SI YA ESTÁS, MARCA «ESTOY LISTO».</p>}

@@ -75,7 +75,7 @@ export function InboxTab({ team, onTab, onRead, highlightId = null }) {
           <p>{message.body}</p>
           {stale && <p className="request-note">↻ ESTE MENSAJE ES DE CUANDO ERA {roleLabel(message.meta.role)}. DESDE ENTONCES LO PASASTE A {roleLabel(nowRow.role)}.</p>}
           {!stale && message.meta?.moodLabel && message.kind !== 'renewal' && <div className="inbox-mood"><MoodMeter mood={message.meta.mood} label={message.meta.moodLabel}/>{message.meta.role && <small>ROL: {roleLabel(message.meta.role)}</small>}</div>}
-          {['expired', 'expiring'].includes(message.kind) && <button type="button" className="action-button" onClick={() => onTab?.('nomina')}>{message.kind === 'expired' ? 'IR A LA HOJA DE FIRMA' : 'VER CONTRATO'}</button>}
+          {['expired', 'expiring'].includes(message.kind) && <Button onClick={() => onTab?.('nomina')}>{message.kind === 'expired' ? 'IR A LA HOJA DE FIRMA' : 'VER CONTRATO'}</Button>}
           {message.request && <RequestActions team={team} request={message.request} locked={marketOpen} onDone={() => { query.retry(); rolesQuery.retry(); }}/>}
           {message.kind === 'unhappy' && roleOf.get(message.playerId) && <div className="inbox-role">
             <span>ROL AHORA:</span><RoleSelect team={team} row={roleOf.get(message.playerId)} locked={marketOpen} showWanted onDone={() => { rolesQuery.retry(); }}/>

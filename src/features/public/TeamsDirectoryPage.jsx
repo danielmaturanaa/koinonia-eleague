@@ -8,6 +8,7 @@ import { useApiMutation } from '../admin/useApiMutation.js';
 import { teamBalance, teamCoachName } from '../../utils/teamPresentation.js';
 import { DataState, PageHeader, gp } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
+import { Button } from '../../ui/index.js';
 
 function NationalTeamCard({ team, clubs, onChanged }) {
   const { isAdmin } = useAuth();
@@ -21,7 +22,7 @@ function NationalTeamForm({ clubs, onChanged }) {
   const [form, setForm] = useState({ name: '', clubId: '', imageUrl: '' });
   const mutation = useApiMutation((body, signal) => endpoints.createNationalTeam(body, signal), { onSuccess: onChanged });
   const change = event => setForm(current => ({ ...current, [event.target.name]: event.target.value }));
-  return <form className="admin-form national-form" onSubmit={event => { event.preventDefault(); mutation.execute(Object.fromEntries(Object.entries(form).filter(([, value]) => value))); }}><label>NOMBRE<input required name="name" value={form.name} onChange={change}/></label><label>CLUB RESPONSABLE<select required name="clubId" value={form.clubId} onChange={change}><option value="">SELECCIONAR</option>{clubs.map(club => <option value={club.id} key={club.id}>{club.name}</option>)}</select></label><label>EMBLEMA URL<input type="url" name="imageUrl" value={form.imageUrl} onChange={change}/></label><button className="action-button" disabled={mutation.loading}>CREAR SELECCIÓN</button><FormFeedback mutation={mutation}/></form>;
+  return <form className="admin-form national-form" onSubmit={event => { event.preventDefault(); mutation.execute(Object.fromEntries(Object.entries(form).filter(([, value]) => value))); }}><label>NOMBRE<input required name="name" value={form.name} onChange={change}/></label><label>CLUB RESPONSABLE<select required name="clubId" value={form.clubId} onChange={change}><option value="">SELECCIONAR</option>{clubs.map(club => <option value={club.id} key={club.id}>{club.name}</option>)}</select></label><label>EMBLEMA URL<input type="url" name="imageUrl" value={form.imageUrl} onChange={change}/></label><Button type="submit" disabled={mutation.loading}>CREAR SELECCIÓN</Button><FormFeedback mutation={mutation}/></form>;
 }
 
 export function TeamsDirectoryPage({ mode, teams, onChoose }) {

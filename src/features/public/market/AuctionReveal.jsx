@@ -6,6 +6,7 @@ import { effectsOff, getAudioSettings } from '../../../audio/settings.js';
 import { playTones } from '../../../audio/synth.js';
 import { serverNow } from './serverClock.js';
 import { Stars } from './stars.jsx';
+import { Button } from '../../../ui/index.js';
 
 // Mismas duraciones que el servidor (REVEAL en core/auctions.js): así todos ven el mismo momento a la misma hora.
 export const REVEAL = { introMs: 6000, perClubMs: 7500, fakeoutMs: 7000, finalMs: 8000 };
@@ -283,7 +284,7 @@ export function AuctionReveal({ auction, startAt, onClose, onSkip = null, teams 
           <p className="reveal-stamp muted">🤷 SIGUE LIBRE</p>
           <p className="reveal-headline">NINGÚN CLUB CONVENCIÓ A <b>{player.name.toUpperCase()}</b></p>
         </div>)}
-      {done && <button type="button" className="action-button positive reveal-ok" onClick={onClose}>CERRAR</button>}
+      {done && <Button variant="positive" className="reveal-ok" onClick={onClose}>CERRAR</Button>}
       {!done && onSkip && <button type="button" className="link-button reveal-skip" onClick={onSkip}>SALTAR ›</button>}
     </div>
   </div>, document.body);

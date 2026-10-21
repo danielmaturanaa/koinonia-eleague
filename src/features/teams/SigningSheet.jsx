@@ -4,6 +4,7 @@ import { PlayerFace } from '../../components/PlayerFace.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { gpLabel } from '../../utils/money.js';
+import { Button } from '../../ui/index.js';
 
 export const ROLES = [['crucial', 'CRUCIAL'], ['importante', 'IMPORTANTE'], ['rotacion', 'ROTACIÓN'], ['esporadico', 'ESPORÁDICO']];
 export const roleLabel = role => ROLES.find(([key]) => key === role)?.[1] ?? '—';
@@ -116,8 +117,8 @@ export function SigningSheet({ team, contract, args = [], maxRounds = 3, marketO
       <div className="sheet-row"><span>ARGUMENTO</span><div className="chips"><button type="button" className={!argument ? 'on' : ''} onClick={() => setArgument('')}>NINGUNO</button>{args.map(item => <button type="button" key={item.key} className={argument === item.key ? 'on' : ''} onClick={() => setArgument(item.key)}>{item.label.toUpperCase()}</button>)}</div></div>
       {interest && <InterestMeter level={interest.level} label={interest.label} overCap={interest.overCap} cap={interest.salaryCap}/>}
       <div className="sheet-actions">
-        <button type="button" className="action-button positive" disabled={negotiate.loading} onClick={() => send()}>{negotiate.loading ? 'ENVIANDO…' : `ENVIAR PROPUESTA (${round + 1}/${maxRounds})`}</button>
-        {last?.outcome === 'counter' && <button type="button" className="action-button" disabled={negotiate.loading} onClick={() => { setRaise(last.counter.raisePercent); send({ raisePercent: last.counter.raisePercent }); }}>ACEPTAR SU CONTRAOFERTA ({gpLabel(last.counter.salary)})</button>}
+        <Button variant="positive" disabled={negotiate.loading} onClick={() => send()}>{negotiate.loading ? 'ENVIANDO…' : `ENVIAR PROPUESTA (${round + 1}/${maxRounds})`}</Button>
+        {last?.outcome === 'counter' && <Button disabled={negotiate.loading} onClick={() => { setRaise(last.counter.raisePercent); send({ raisePercent: last.counter.raisePercent }); }}>ACEPTAR SU CONTRAOFERTA ({gpLabel(last.counter.salary)})</Button>}
       </div>
       <FormFeedback mutation={negotiate}/>
     </div>}

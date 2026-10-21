@@ -10,6 +10,7 @@ import { DataState, OverallBadge, gp } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
 import { addToComparison, comparisonCandidate, readComparison, writeComparison } from '../../utils/playerComparison.js';
 import { GpInput } from '../../components/GpInput.jsx';
+import { Button } from '../../ui/index.js';
 
 // Medias agrupadas como en eFootballDB, con los nombres en español del juego.
 export const STAT_GROUPS = [
@@ -64,7 +65,7 @@ function RegisterCard({ card, onRegistered }) {
     event.preventDefault();
     register.execute({ name: card.name, position: card.position, gpValue: Number(value || 0), efootballPesId: card.pesId, efootballVariation: card.variation, faceUrl: card.faceUrl, nationality: card.nationality });
   };
-  return <form className="card-register" onSubmit={submit}><p>NADIE LO TIENE Y AÚN NO ESTÁ INSCRITO EN LA LIGA.</p><label>VALOR GP EN LA LIGA<GpInput value={value} onChange={event => setValue(event.target.value)}/></label><button className="action-button positive" disabled={register.loading}>INSCRIBIR EN LA LIGA</button><FormFeedback mutation={register}/></form>;
+  return <form className="card-register" onSubmit={submit}><p>NADIE LO TIENE Y AÚN NO ESTÁ INSCRITO EN LA LIGA.</p><label>VALOR GP EN LA LIGA<GpInput value={value} onChange={event => setValue(event.target.value)}/></label><Button variant="positive" type="submit" disabled={register.loading}>INSCRIBIR EN LA LIGA</Button><FormFeedback mutation={register}/></form>;
 }
 
 export function EfootballCardPage({ pesId, variation = 0, navigate, onBack, backLabel = '← VOLVER A JUGADORES' }) {
@@ -72,7 +73,7 @@ export function EfootballCardPage({ pesId, variation = 0, navigate, onBack, back
   const card = useApiQuery(signal => endpoints.efootballCard(pesId, variation, signal), [pesId, variation]);
   const data = card.data;
   return <main className="newspaper data-page"><section className="data-paper">
-    <div className="player-profile-actions"><button className="back-button" onClick={onBack}>{backLabel}</button>{data && <button type="button" className="action-button" onClick={() => { writeComparison(addToComparison(readComparison(), comparisonCandidate({ pesId: data.pesId ?? pesId, variation: data.variation ?? variation, name: data.name, faceUrl: data.faceUrl }))); window.location.hash = '/equipos/jugadores?tab=comparador'; }}>⇄ COMPARAR</button>}</div><DataState query={card}/>
+    <div className="player-profile-actions"><button className="back-button" onClick={onBack}>{backLabel}</button>{data && <Button onClick={() => { writeComparison(addToComparison(readComparison(), comparisonCandidate({ pesId: data.pesId ?? pesId, variation: data.variation ?? variation, name: data.name, faceUrl: data.faceUrl }))); window.location.hash = '/equipos/jugadores?tab=comparador'; }}>⇄ COMPARAR</Button>}</div><DataState query={card}/>
     {data && <article className="efootball-card-page">
       <header className="card-hero">
         <PlayerFace src={data.faceUrl} name={data.name} className="card-hero-face"/>

@@ -8,6 +8,6 @@ export function SectionPage({ path }) {
     <h1>{title}</h1>
     <div className="section-divider"><span>◆</span></div>
     <p>{description}</p>
-    {known ? <aside><b>PRÓXIMAMENTE</b><span>Esta sección todavía no tiene datos publicados.</span></aside> : <a className="action-button" href="#/">← VOLVER AL INICIO</a>}
+    {known ? <aside><b>PRÓXIMAMENTE</b><span>Esta sección todavía no tiene datos publicados.</span></aside> : <a className="ui-btn ui-btn--primary ui-btn--md" href="#/">← VOLVER AL INICIO</a>}
   </section></main>;
 }

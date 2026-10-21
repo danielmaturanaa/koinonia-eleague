@@ -1,5 +1,6 @@
 import { endpoints } from '../../../api/endpoints.js';
 import { useApiMutation } from '../../admin/useApiMutation.js';
+import { Button } from '../../../ui/index.js';
 
 /**
  * "ESTOY LISTO": el club avisa que ya terminó (oferta hecha y preguntas respondidas). Si cambia algo después
@@ -18,9 +19,9 @@ export function ReadyControl({ auction, teamId, onChanged }) {
     </div>;
   }
   return <div className="sealed-ready">
-    <button type="button" className="action-button positive sealed-ready-btn" disabled={mutation.loading} onClick={() => mutation.execute({ teamId, ready: true })}>
+    <Button variant="positive" className="sealed-ready-btn" disabled={mutation.loading} onClick={() => mutation.execute({ teamId, ready: true })}>
       {mutation.loading ? 'MARCANDO…' : '🏁 ESTOY LISTO'}
-    </button>
+    </Button>
     <small>CUANDO YA OFERTASTE Y RESPONDISTE TODO, AVÍSALES A LOS DEMÁS.</small>
     {mutation.error && <p className="form-feedback error" role="alert">{mutation.error.message}</p>}
   </div>;

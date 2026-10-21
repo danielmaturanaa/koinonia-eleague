@@ -30,8 +30,8 @@
 .mini-actions button.ghost { background: #fff; color: #062764; border-color: #062764; }
 .offer-tabs { margin-bottom: 8px; }
 .offer-form { display: grid; gap: 10px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); align-items: end; }
-.offer-form > .offer-toggle, .offer-form > .offer-summary, .offer-form > .offer-confirm, .offer-form > .poll-hint, .offer-form > .form-feedback, .offer-form > .action-button { grid-column: 1 / -1; }
-.offer-form > .action-button { min-height: 46px; }
+.offer-form > .offer-toggle, .offer-form > .offer-summary, .offer-form > .offer-confirm, .offer-form > .poll-hint, .offer-form > .form-feedback, .offer-form > .ui-btn { grid-column: 1 / -1; }
+.offer-form > .ui-btn { min-height: 46px; }
 .offer-toggle { display: grid; grid-template-columns: 1fr 1fr; border: 2px solid #062764; }
 .offer-toggle button { min-height: 42px; border: 0; background: #fff; color: #062764; font: 600 15px/1 'Oswald', sans-serif; cursor: pointer; }
 .offer-toggle button.on { background: #062764; color: #fff9e8; }
@@ -74,7 +74,7 @@
 /* ===== Jugadores a la venta ===== */
 .for-sale-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: end; margin-bottom: 10px; }
 .for-sale-form label { display: grid; gap: 3px; color: #062764; font: 600 12px/1.2 'Oswald', sans-serif; }
-.for-sale-form select, .for-sale-form .action-button { min-height: 42px; }
+.for-sale-form select, .for-sale-form .ui-btn { min-height: 42px; }
 .for-sale-form .form-feedback { grid-column: 1 / -1; }
 .for-sale-list { display: grid; gap: 6px; }
 .for-sale-row { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto; gap: 10px; align-items: center; padding: 8px 10px; border: 1px solid #c9bd9f; background: #fff; }

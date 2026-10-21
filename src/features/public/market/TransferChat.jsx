@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { endpoints } from '../../../api/endpoints.js';
 import { PlayerFace } from '../../../components/PlayerFace.jsx';
-import { Icon } from '../../../ui/index.js';
+import { Button, Icon } from '../../../ui/index.js';
 import { useApiMutation } from '../../admin/useApiMutation.js';
 import { playIncoming } from './chatSound.js';
 
@@ -118,7 +118,7 @@ export function TransferChat({ player, teamId, onChanged, onPromiseRole, onClose
           {pending.roleHint && onPromiseRole && <p className="tc-role-hint"><Icon name="contract" size={12}/> ¿QUIERES ASEGURARLE MINUTOS? PROMÉTESELO EN LA OFERTA Y QUEDA EN SU CONTRATO. <button type="button" onClick={() => onPromiseRole('importante')}>PROMETERLE SER IMPORTANTE</button></p>}
           <div className="pc-send-row">
             <small>{picks.length ? (KIND_HINT[options.find(option => option.code === picks[0])?.kind] ?? '') : 'LOS DATOS SON REALES: SALEN DE TU CLUB.'}</small>
-            <button type="button" className="action-button positive" disabled={answer.loading || !picks.length} onClick={() => answer.execute({ topic: pending.topic, optionCodes: picks })}>RESPONDER</button>
+            <Button variant="positive" disabled={answer.loading || !picks.length} onClick={() => answer.execute({ topic: pending.topic, optionCodes: picks })}>RESPONDER</Button>
           </div>
         </>}
         {chat.finished && !typing && <p className="tc-done"><Icon name="check" size={14}/> CONVERSACIÓN TERMINADA. AHORA ARMA LA OFERTA: LA PRIMA Y EL ROL HACEN EL RESTO.</p>}
