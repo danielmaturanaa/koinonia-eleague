@@ -257,3 +257,11 @@ a.tile:focus-visible, button.tile:focus-visible { outline: 3px solid var(--c-yel
 @media (max-width: 900px) { .screen-crest .club-crest { width: 64px; height: 64px; } }
 .role-pills button.wanted i { position: absolute; top: -9px; right: -5px; margin: 0; padding: 0 3px; border: 1px solid #c79a12; background: #fff; font-size: 11px; line-height: 14px; }
 .role-pills button.on.wanted i { background: var(--c-navy-900); }
+/* Ánimo (jugadores e hinchada): barra de 0 a 100, un solo color según el tramo. */
+.mood-meter-bar { display: block; width: 90px; height: 10px; border: 1px solid var(--c-navy-800); background: #fff; }
+.mood-meter-bar i { display: block; height: 100%; background: var(--c-green-bright); }
+.mood-meter.mid .mood-meter-bar i, .mood-meter-bar.mid i { background: #e0a800; }
+.mood-meter.bad .mood-meter-bar i, .mood-meter-bar.bad i { background: var(--c-red); }
+.mood-meter b small { color: var(--c-ink-muted); font-weight: 500; }
+.role-mood .mood-meter-bar { flex: 1 1 auto; width: auto; }
+.club-life-stats .mood-meter-bar { width: 100%; margin-top: 6px; }

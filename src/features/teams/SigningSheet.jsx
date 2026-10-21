@@ -13,12 +13,15 @@ const SALARY_STEP = 10_000;
 const roundStep = amount => Math.max(SALARY_STEP, Math.round(amount / SALARY_STEP) * SALARY_STEP);
 const MOOD_FACE = { feliz: '😄', contento: '🙂', dudoso: '😐', molesto: '😠', furioso: '🤬' };
 
+export const moodTone = mood => (mood >= 80 ? 'good' : mood >= 50 ? 'mid' : 'bad');
+
 export function MoodMeter({ mood, label }) {
-  const tone = mood >= 58 ? 'good' : mood >= 42 ? 'mid' : 'bad';
+  // Barra de 0 a 100 de un solo color: verde desde 80, amarillo de 50 a 79, rojo bajo 50.
+  const tone = moodTone(mood);
   return <span className={`mood-meter ${tone}`} title={`Ánimo ${mood}/100`}>
     <span className="mood-face" aria-hidden="true">{MOOD_FACE[label] ?? '🙂'}</span>
-    <span className="mood-bar"><i style={{ width: `${mood}%` }}/></span>
-    <b>{String(label ?? '').toUpperCase()}</b>
+    <span className="mood-meter-bar"><i style={{ width: `${Math.max(0, Math.min(100, mood))}%` }}/></span>
+    <b>{String(label ?? '').toUpperCase()} <small>{mood}</small></b>
   </span>;
 }
 

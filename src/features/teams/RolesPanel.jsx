@@ -5,7 +5,7 @@ import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { DataState } from '../public/DataStates.jsx';
 import { useApiQuery } from '../public/useApiQuery.js';
-import { MoodMeter, ROLES, roleLabel } from './SigningSheet.jsx';
+import { MoodMeter, ROLES, moodTone, roleLabel } from './SigningSheet.jsx';
 import { Button, HowItWorks } from '../../ui/index.js';
 
 const TRAIT_LABEL = { ganador: 'GANADOR', titular: 'TITULAR', sociable: 'SOCIABLE', mercenario: 'MERCENARIO', ego: 'EGO', leal: 'LEAL' };
@@ -33,7 +33,7 @@ const signedReason = reason => `${reason.delta > 0 ? '+' : '−'}${Math.abs(reas
 function RoleCard({ team, row, canEdit, locked, onDone }) {
   const change = useApiMutation((body, signal) => endpoints.setPlayerRole(team.id, row.playerId, body, signal), { onSuccess: onDone });
   const under = rank(row.role) > rank(row.expectedRole);
-  const tone = row.mood >= 58 ? 'good' : row.mood >= 42 ? 'mid' : 'bad';
+  const tone = moodTone(row.mood);
   const top = [...(row.reasons ?? [])].sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))[0];
   return <article className={`role-card mood-${tone} ${under ? 'is-under' : ''}`} title={(row.reasons ?? []).map(signedReason).join('\n')}>
     <header>
@@ -63,7 +63,7 @@ export function RolesPanel({ team }) {
   const rows = Array.isArray(query.data) ? query.data : [];
   // Primero los que están por debajo de lo que creen merecer o con el ánimo bajo: son los que piden atención.
   const sorted = [...rows].sort((a, b) => (rank(b.role) > rank(b.expectedRole)) - (rank(a.role) > rank(a.expectedRole)) || a.mood - b.mood);
-  const unhappy = rows.filter(row => row.mood < 42 || rank(row.role) > rank(row.expectedRole)).length;
+  const unhappy = rows.filter(row => row.mood < 50 || rank(row.role) > rank(row.expectedRole)).length;
   return <section className="roles-panel">
     <header><h3>ROLES Y ÁNIMO</h3><p>{rows.length ? (unhappy ? `${unhappy} jugador${unhappy === 1 ? '' : 'es'} necesita${unhappy === 1 ? '' : 'n'} atención; van primero.` : 'Todos contentos con su rol.') : ''} El rol lo eliges tú: la ★ marca el que cada uno cree merecer.</p>
       <HowItWorks><p>Cada jugador cree merecer un rol según lo que vale en la liga. Su ánimo sale de eso, del rendimiento del equipo, su sueldo y su personalidad. Si lo tienes por debajo de lo que cree merecer, pide más (o se niega) al renovar. Pasa el mouse por una tarjeta para ver todo lo que le mueve el ánimo.</p></HowItWorks></header>
