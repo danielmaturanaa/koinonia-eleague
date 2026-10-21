@@ -58,31 +58,62 @@ export function InboxTab({ team, onTab, onRead, highlightId = null }) {
     document.getElementById(`msg-${highlightId}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
     if (messages.some(message => String(message.id) === String(highlightId) && !isRead(message))) markRead([highlightId]);
   }, [highlightId, query.data]);
+  // Solo lo último de cada jugador puede pedir algo; lo demás (y todo lo ya respondido) es historial, sin botones.
+  const latest = new Map();
+  for (const message of messages) {
+    const current = latest.get(message.playerId);
+    if (!current || String(message.createdAt) > String(current.createdAt)) latest.set(message.playerId, message);
+  }
+  const staleOf = message => {
+    const nowRow = roleOf.get(message.playerId);
+    return message.kind === 'unhappy' && nowRow && message.meta?.role && nowRow.role !== message.meta.role;
+  };
+  const needsYou = message => {
+    if (message.request) return message.request.status === 'open';
+    if (latest.get(message.playerId)?.id !== message.id) return false;
+    if (message.kind === 'unhappy') return !staleOf(message);
+    return ['expired', 'expiring'].includes(message.kind);
+  };
+  const pending = messages.filter(needsYou);
+  const history = messages.filter(message => !needsYou(message));
+  const outcome = message => {
+    if (message.request?.status === 'closed') return 'Ya no está en tu club.';
+    if (message.request?.kind === 'leave') return 'Pidió salir.';
+    if (message.request) return message.request.resolution === 'escalated' ? 'No le respondiste a tiempo: pidió salir.' : 'Respondida.';
+    if (staleOf(message)) return `Le cambiaste el rol a ${roleLabel(roleOf.get(message.playerId).role).toLowerCase()}.`;
+    return 'Leída.';
+  };
+  const open = message => { if (!isRead(message)) markRead([message.id]); };
   return <section className="inbox-tab">
-    <header><h2>BANDEJA DE ENTRADA</h2>{unread > 0 && <Button variant="ghost" size="sm" onClick={() => markRead(null)}>MARCAR TODO COMO LEÍDO ({unread})</Button>}<p>Tus jugadores te escriben por contratos, renovaciones y su rol.</p></header>
+    <header><h2>MENSAJES DE TUS JUGADORES</h2>{unread > 0 && <Button variant="ghost" size="sm" onClick={() => markRead(null)}>MARCAR TODO COMO LEÍDO ({unread})</Button>}<p>Lo que te piden tus jugadores. Lo que ya respondiste queda abajo, en el historial.</p></header>
     <DataState query={query} empty={null}/>
     {query.data && messages.length === 0 && <p className="empty-copy data-empty">Todavía no te han escrito. Los mensajes aparecen cuando el sistema de contratos está activo.</p>}
-    <ul className="inbox-list">{messages.map(message => {
+    {query.data && messages.length > 0 && pending.length === 0 && <p className="inbox-clear">✅ No tienes nada por responder.</p>}
+    <ul className="inbox-list">{pending.map(message => {
       const [icon, label] = KIND[message.kind] ?? ['✉️', 'MENSAJE'];
-      // El mensaje es una foto del momento en que se escribió: si desde entonces le cambiaste el rol, se avisa y no se muestra el ánimo viejo.
       const nowRow = roleOf.get(message.playerId);
-      const stale = message.kind === 'unhappy' && nowRow && message.meta?.role && nowRow.role !== message.meta.role;
-      return <li key={message.id} id={`msg-${message.id}`} className={`inbox-item ${isRead(message) ? '' : 'unread'} ${String(message.id) === String(highlightId) ? 'is-highlighted' : ''}`} onClick={() => { if (!isRead(message)) markRead([message.id]); }}>
+      return <li key={message.id} id={`msg-${message.id}`} className={`inbox-item ${isRead(message) ? '' : 'unread'} ${String(message.id) === String(highlightId) ? 'is-highlighted' : ''}`} onClick={() => open(message)}>
         <PlayerFace src={message.faceUrl} name={message.playerName}/>
         <div className="inbox-body">
           <div className="inbox-meta"><b>{message.playerName}</b><small>{icon} {label} · {formatDate(message.createdAt)}</small></div>
           <h4>{message.subject}</h4>
           <p>{message.body}</p>
-          {stale && <p className="request-note">↻ ESTE MENSAJE ES DE CUANDO ERA {roleLabel(message.meta.role)}. DESDE ENTONCES LO PASASTE A {roleLabel(nowRow.role)}.</p>}
-          {!stale && message.meta?.moodLabel && message.kind !== 'renewal' && <div className="inbox-mood"><MoodMeter mood={message.meta.mood} label={message.meta.moodLabel}/>{message.meta.role && <small>ROL: {roleLabel(message.meta.role)}</small>}</div>}
-          {['expired', 'expiring'].includes(message.kind) && <Button onClick={() => onTab?.('nomina')}>{message.kind === 'expired' ? 'IR A LA HOJA DE FIRMA' : 'VER CONTRATO'}</Button>}
+          {message.meta?.moodLabel && message.kind !== 'renewal' && <div className="inbox-mood"><MoodMeter mood={message.meta.mood} label={message.meta.moodLabel}/>{message.meta.role && <small>ROL: {roleLabel(message.meta.role)}</small>}</div>}
+          {['expired', 'expiring'].includes(message.kind) && <Button onClick={() => onTab?.('nomina')}>{message.kind === 'expired' ? 'Ir a la hoja de firma' : 'Ver contrato'}</Button>}
           {message.request && <RequestActions team={team} request={message.request} locked={marketOpen} onDone={() => { query.retry(); rolesQuery.retry(); }}/>}
-          {message.kind === 'unhappy' && roleOf.get(message.playerId) && <div className="inbox-role">
-            <span>ROL AHORA:</span><RoleSelect team={team} row={roleOf.get(message.playerId)} locked={marketOpen} showWanted onDone={() => { rolesQuery.retry(); }}/>
-            <small>{marketOpen ? '🔒 Mercado abierto: los roles están bloqueados.' : `ÁNIMO HOY: ${String(roleOf.get(message.playerId).moodLabel).toUpperCase()} (${roleOf.get(message.playerId).mood}/100)`}</small>
+          {message.kind === 'unhappy' && nowRow && <div className="inbox-role">
+            <span>ROL AHORA:</span><RoleSelect team={team} row={nowRow} locked={marketOpen} showWanted onDone={() => { rolesQuery.retry(); }}/>
+            <small>{marketOpen ? '🔒 Mercado abierto: los roles están bloqueados.' : `ÁNIMO HOY: ${String(nowRow.moodLabel).toUpperCase()} (${nowRow.mood}/100)`}</small>
           </div>}
         </div>
       </li>;
     })}</ul>
+    {history.length > 0 && <details className="inbox-history" open={history.some(message => String(message.id) === String(highlightId))}>
+      <summary>Historial · {history.length} mensaje{history.length === 1 ? '' : 's'}</summary>
+      <ul>{history.map(message => <li key={message.id} id={`msg-${message.id}`} className={`${isRead(message) ? '' : 'unread'} ${String(message.id) === String(highlightId) ? 'is-highlighted' : ''}`} onClick={() => open(message)}>
+        <PlayerFace src={message.faceUrl} name={message.playerName}/>
+        <span><b>{message.playerName}</b> · {message.subject}<small>{formatDate(message.createdAt)} · {outcome(message)}</small></span>
+      </li>)}</ul>
+    </details>}
   </section>;
 }

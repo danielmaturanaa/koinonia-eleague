@@ -1,25 +1,25 @@
-// Menú principal "modo carrera": cuatro áreas (más Admin). Todo lo demás cuelga de una de ellas.
-//  Inicio = la central de tu club · Liga = tabla, partidos, clubes, estadios y más · Mercado = buscar y fichar · Mi club.
-export function navigationFor({ teamId = null, isAdmin = false } = {}) {
+// Menú principal: Inicio (la central de tu club) · Partidos · Torneos · Equipos (tu club también vive aquí) · Mercado, más Admin.
+export function navigationFor({ isAdmin = false } = {}) {
   return [
     { label: 'Inicio', path: '/', icon: 'home' },
-    { label: 'Liga', path: '/liga', icon: 'trophy' },
+    { label: 'Partidos', path: '/partidos', icon: 'ball' },
+    { label: 'Torneos', path: '/torneos', icon: 'trophy' },
+    { label: 'Equipos', path: '/equipos', icon: 'shirt' },
     { label: 'Mercado', path: '/transferencias', icon: 'handshake' },
-    ...(teamId ? [{ label: 'Mi club', path: `/equipos/${teamId}`, icon: 'shirt' }] : []),
     ...(isAdmin ? [{ label: 'Admin', path: '/admin', icon: 'cog' }] : []),
   ];
 }
 
-// Rutas que viven dentro de Liga (las viejas siguen andando y se muestran como una pestaña de Liga).
-export const LEAGUE_PATHS = new Set(['/liga', '/torneos', '/calculadora', '/clasificacion', '/partidos', '/partidos/jugados', '/partidos/pendientes', '/partidos/calendario', '/sanciones',
-  '/equipos', '/equipos/rankings', '/equipos/plantillas', '/equipos/presupuestos', '/equipos/presidentes', '/equipos/directores-tecnicos', '/equipos/emblemas', '/equipos/selecciones', '/equipos/estadios']);
+const MATCH_PATHS = new Set(['/partidos', '/partidos/jugados', '/partidos/pendientes', '/partidos/calendario', '/sanciones']);
+const TOURNAMENT_PATHS = new Set(['/torneos', '/calculadora', '/clasificacion', '/equipos/rankings']);
 
 /** A qué ítem del menú pertenece la pantalla actual (null si no cuelga de ninguno, como Reglas o Notificaciones). */
-export function activeNavigationPath(route, teamId = null) {
-  if (route.name === 'home' || route.name === 'newsArticle' || route.path === '/noticias') return '/';
+export function activeNavigationPath(route) {
+  if (route.name === 'home' || route.name === 'newsArticle') return '/';
   if (route.name === 'player' || route.name === 'card' || route.path.startsWith('/equipos/jugadores') || route.path === '/transferencias') return '/transferencias';
-  if (route.name === 'team') return teamId && route.teamId === teamId ? `/equipos/${teamId}` : '/liga';
-  if (route.name === 'match' || LEAGUE_PATHS.has(route.path)) return '/liga';
+  if (route.name === 'match' || MATCH_PATHS.has(route.path) || (route.path === '/liga' && route.query?.tab === 'partidos')) return '/partidos';
+  if (TOURNAMENT_PATHS.has(route.path) || (route.path === '/liga' && !['partidos', 'clubes', 'estadios'].includes(route.query?.tab))) return '/torneos';
+  if (route.name === 'team' || route.name === 'teams' || route.path.startsWith('/equipos') || route.path === '/liga') return '/equipos';
   if (route.path === '/admin' || route.path === '/personas') return '/admin';
   return null;
 }

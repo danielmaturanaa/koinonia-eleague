@@ -57,7 +57,7 @@ function MiniTable({ standings = [], teamId, teams }) {
   if (!standings.length) return null;
   const index = standings.findIndex(row => row.team_id === teamId);
   const byId = new Map(teams.map(team => [team.id, team]));
-  return <Card title="Tabla" aside={<a className="card-link" href="#/liga?tab=tabla">Ver completa ›</a>}>
+  return <Card title="Tabla" aside={<a className="card-link" href="#/torneos">Ver completa ›</a>}>
     <ol className="mini-table">{standings.map((row, position) => <li key={row.team_id} className={`${row.team_id === teamId ? 'mine' : ''} ${Math.abs(position - index) > 2 && position > 2 ? 'far' : ''}`}>
       <b>{position + 1}</b><TeamMark team={{ ...row, ...(byId.get(row.team_id) ?? {}) }}/><span>{row.name}</span><strong>{row.points}</strong>
     </li>)}</ol>
@@ -69,7 +69,7 @@ function LatestNews({ teams }) {
   const [open, setOpen] = useState(null);
   const items = news.slice(0, 3);
   if (!items.length) return null;
-  return <Card title="Últimas noticias" aside={<a className="card-link" href="#/liga?tab=mas&ver=noticias">Todas ›</a>}>
+  return <Card title="Últimas noticias" aside={<a className="card-link" href="#/noticias">Todas ›</a>}>
     <div className="hub-news">{items.map(item => <button type="button" key={item.id} onClick={() => setOpen(item)}><NewsArtwork item={item} teams={teams}/><span><small>{item.label}</small><b>{item.headline}</b></span></button>)}</div>
     {open && <NewsModal item={open} teams={teams} onClose={() => setOpen(null)}/>}
   </Card>;
@@ -96,14 +96,11 @@ export function CareerHub({ teamId, teams = [], standings = [], navigate }) {
   const position = standings.findIndex(row => row.team_id === teamId) + 1;
   const balance = teamBalance(club);
   const unread = inbox.data?.unread ?? 0;
-  const greeting = club?.president?.name ? `Hola, ${club.president.name.split(' ')[0]}.` : 'Hola, presi.';
-  const colors = club?.colors ?? {};
-  const hero = club && <div className="hub-crest" style={{ '--club-primary': colors.primary ?? '#062764' }}><TeamMark team={club} className="hub-crest-mark"/></div>;
-  return <Screen className="career-hub" kicker={club ? `${club.name}${position ? ` · ${position}.º en la liga` : ''}` : 'Tu club'} title="Inicio" hero={hero}
-    intro={`${greeting} ${todo.length ? `Tienes ${todo.length} ${todo.length === 1 ? 'cosa' : 'cosas'} esperando tu decisión.` : 'Todo al día: no hay nada esperando tu decisión.'}`}>
+  // Sin franja de título: Inicio parte con las noticias (la tabla va al costado) y debajo la central de tu club.
+  return <Screen bare className="career-hub" title="Inicio">
     <NewsHighlights teams={teams} navigate={navigate}/>
     <div className="tile-grid">
-      <Tile size="lg" tone={derby ? 'red' : 'navy'} href={next ? `#/partidos/${next.id}` : '#/liga?tab=partidos'} icon={<Icon name={derby ? 'fire' : 'ball'} size={18}/>}
+      <Tile size="lg" tone={derby ? 'red' : 'navy'} href={next ? `#/partidos/${next.id}` : '#/partidos'} icon={<Icon name={derby ? 'fire' : 'ball'} size={18}/>}
         title={next?.status === 'live' ? 'Jugando ahora' : derby ? 'Próximo partido · ¡Clásico!' : 'Próximo partido'}
         value={nextRival ? `vs ${nextRival.name}` : 'Sin partidos'}
         detail={next ? `${matchRoundLabel(next)} · ${sideOf(next, teamId) === 'home' ? 'de local' : 'de visita'}` : 'No tienes partidos por jugar.'}/>
@@ -119,7 +116,7 @@ export function CareerHub({ teamId, teams = [], standings = [], navigate }) {
         detail={fans.data?.followers ? `${compactFans(fans.data.followers)} de hinchas · conciertos, TV y La Velada.` : 'Hinchas, conciertos, TV y La Velada.'}/>
     </div>
 
-    <Card title="Esperando tu decisión">
+    <Card title={todo.length ? `Esperando tu decisión (${todo.length})` : 'Esperando tu decisión'}>
       {todo.length
         ? <ul className="hub-todo">{todo.map(item => <li key={item.text}><a href={item.href}><Icon name={item.icon} size={20}/><span>{item.text}</span><i aria-hidden="true">›</i></a></li>)}</ul>
         : <p className="screen-lead">Nada pendiente. Buen momento para mirar el mercado o hablar con un jugador.</p>}
@@ -127,7 +124,7 @@ export function CareerHub({ teamId, teams = [], standings = [], navigate }) {
 
     <div className="hub-columns hub-columns--single">
       <div className="hub-column">
-        {played.length > 0 && <Card title="Últimos partidos" aside={<a className="card-link" href="#/liga?tab=partidos">Todos ›</a>}>
+        {played.length > 0 && <Card title="Últimos partidos" aside={<a className="card-link" href="#/partidos">Todos ›</a>}>
           <ul className="hub-results">{played.map(match => {
             const result = resultOf(match, teamId);
             const other = rivalOf(match, teamId);

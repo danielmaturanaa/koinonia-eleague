@@ -87,13 +87,13 @@ export function ControlRoomPage({ teams = [], initialTab = 'personas', tournamen
     {tab === 'atajos' && <div className="control-section">
       <Card title="ATAJOS">
         <ShortcutCards items={[
-          ['#/liga?tab=partidos', 'ball', 'CENTRO DE PARTIDOS', 'CREAR, INICIAR, ANOTAR Y CORREGIR'],
-          ['#/liga?tab=mas&ver=calendario', 'clock', 'CALENDARIO', 'Arrastra partidos a otro día'],
-          ['#/liga?tab=mas&ver=sanciones', 'warning', 'SANCIONES', 'EXPULSIONES Y SUSPENSIONES'],
+          ['#/partidos', 'ball', 'CENTRO DE PARTIDOS', 'CREAR, INICIAR, ANOTAR Y CORREGIR'],
+          ['#/partidos/calendario', 'clock', 'CALENDARIO', 'Arrastra partidos a otro día'],
+          ['#/sanciones', 'warning', 'SANCIONES', 'EXPULSIONES Y SUSPENSIONES'],
           ['#/equipos/jugadores/importar', 'search', 'AGREGAR JUGADORES', 'Desde eFootballDB o a mano'],
           ['#/transferencias?tab=buscar', 'shield', 'DIRECTORIO DE JUGADORES', 'Editar o eliminar desde su ficha'],
-          ['#/liga?tab=estadios', 'stadium', 'ESTADIOS', 'SUBIR FOTOS DEL CATÁLOGO'],
-          ['#/liga?tab=mas&ver=noticias', 'mail', 'PERIÓDICO DE LA LIGA', 'Plantillas e imágenes genéricas'],
+          ['#/equipos/estadios', 'stadium', 'ESTADIOS', 'SUBIR FOTOS DEL CATÁLOGO'],
+          ['#/noticias', 'mail', 'PERIÓDICO DE LA LIGA', 'Plantillas e imágenes genéricas'],
         ]}/>
       </Card>
       <Card title="CREAR CLUB O SELECCIÓN"><CreateTeamForm/>

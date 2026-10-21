@@ -57,7 +57,7 @@ export function NewsHighlights({ teams = [], navigate }) {
   const closeSelected = useCallback(() => setSelected(null), []);
   return <section className="home-news hub-highlights">
     {stories.length ? <NewsStories items={stories} teams={teams} onOpen={setSelected}/> : <div className="arcade-state">{loading ? 'Cargando noticias…' : 'Aún no hay noticias publicadas.'}</div>}
-    {news.length > 0 && <button type="button" className="home-news-all" onClick={() => navigate('/liga?tab=mas&ver=noticias')}>VER TODAS LAS NOTICIAS →</button>}
+    {news.length > 0 && <button type="button" className="home-news-all" onClick={() => navigate('/noticias')}>VER TODAS LAS NOTICIAS →</button>}
     {selected && <NewsModal item={selected} teams={teams} onClose={closeSelected}/>}
   </section>;
 }

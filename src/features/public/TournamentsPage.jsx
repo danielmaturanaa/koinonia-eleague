@@ -146,14 +146,14 @@ function TournamentWorkspace({ tournamentId, teams, onChanged, onDeleted, initia
   </>}</section>;
 }
 
-// Torneo y vista quedan en el enlace (#/liga?tab=tabla|goleadores|playoffs&torneo=…) para compartirlo o volver al mismo lugar.
+// Torneo y vista quedan en el enlace (#/torneos?vista=goleadores|playoffs&torneo=…) para compartirlo o volver al mismo lugar.
 const VIEW_PARAM = { standings: 'tabla', scorers: 'goleadores', playoffs: 'playoffs' };
 const VIEW_FROM_PARAM = Object.fromEntries(Object.entries(VIEW_PARAM).map(([key, value]) => [value, key]));
 const writeUrl = (id, view) => {
   const params = new URLSearchParams();
-  params.set('tab', VIEW_PARAM[view] ?? 'tabla');
+  if (view && view !== 'standings') params.set('vista', VIEW_PARAM[view]);
   if (id) params.set('torneo', id);
-  try { window.history.replaceState(null, '', `#/liga?${params}`); } catch { /* sin historial: no pasa nada */ }
+  try { window.history.replaceState(null, '', `#/torneos${params.size ? `?${params}` : ''}`); } catch { /* sin historial: no pasa nada */ }
 };
 
 export function TournamentsPage({ teams = [], initialId = null, initialView = null }) {

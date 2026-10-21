@@ -122,6 +122,17 @@ function LeaderCard({ photo, name, age, country, customFields = [], role, onEdit
   return <div className="club-person-entry"><h3 className="club-person-role">{role}{onEdit && <button type="button" className="club-inline-edit club-leader-edit" onClick={onEdit} aria-label={`Editar ${role.toLowerCase()}`} title={`Editar ${role.toLowerCase()}`}>✎</button>}</h3><article className="club-person-card" tabIndex={hover ? 0 : undefined} aria-label={hover}><PersonPhoto photo={photo} name={name}/><div className="club-person-overlay"><h3>{name}</h3>{details.length > 0 && <p>{details.join(' · ')}</p>}</div></article>{manager && <div className="manager-popover" role="tooltip"><ManagerSummary manager={manager}/></div>}{!manager && reputation && <div className="manager-popover" role="tooltip"><ReputationSummary reputation={reputation} clubCount={reputation.clubCount}/></div>}{reputation && <button type="button" className="reputation-chip" aria-label={`Reputación ${reputation.score}: ver cómo se calcula y el ranking`} onClick={onReputation} title="Ver cómo se calcula y el ranking de presidentes">REP <b>{reputation.score}</b> <span aria-hidden="true">ⓘ</span></button>}</div>;
 }
 
+/** Presidente o DT en chico, para el encabezado del club: foto, cargo, nombre y (si hay) reputación. Se edita con el lápiz. */
+function LeaderChip({ photo, name, role, onEdit, manager, reputation, onReputation }) {
+  return <div className="leader-chip" tabIndex={manager ? 0 : undefined}>
+    <span className="leader-chip-photo">{photo ? <img src={photo} alt=""/> : <b>{name.split(/\s+/).map(part => part[0]).join('').slice(0, 2).toUpperCase() || '—'}</b>}</span>
+    <span className="leader-chip-copy"><small>{role}</small><b>{name}</b></span>
+    {reputation && <button type="button" className="reputation-chip" aria-label={`Reputación ${reputation.score}: ver cómo se calcula y el ranking`} onClick={onReputation} title="Ver cómo se calcula y el ranking de presidentes">REP <b>{reputation.score}</b></button>}
+    {onEdit && <button type="button" className="leader-chip-edit" onClick={onEdit} aria-label={`Editar ${role.toLowerCase()}`} title={`Editar ${role.toLowerCase()}`}>✎</button>}
+    {manager && <div className="manager-popover" role="tooltip"><ManagerSummary manager={manager}/></div>}
+  </div>;
+}
+
 function ClubPeople({ president: { key: presidentKey, ...president }, coach: { key: coachKey, ...coach }, onEditPresident, onEditCoach }) {
   return <section className="club-card club-people"><div className="club-people-grid"><LeaderCard key={presidentKey} {...president} onEdit={onEditPresident}/><LeaderCard key={coachKey} {...coach} onEdit={onEditCoach}/></div></section>;
 }
@@ -670,7 +681,7 @@ const VISITOR_TABS = [
 ];
 // Enlaces viejos (avisos, marcadores): a qué pestaña (y a qué parte de ella) caen ahora.
 const OWNER_MOVED = { resumen: ['plantel'], bandeja: ['mensajes'], nomina: ['finanzas', 'nomina'], movimientos: ['finanzas', 'caja'], eventos: ['estadio', 'eventos'], tv: ['estadio', 'tv'], auspicio: ['estadio', 'tv'], catalogo: ['estadio'], fichajes: ['historia'] };
-const OWNER_ELSEWHERE = { central: '/', directiva: '/', seguimiento: '/transferencias?tab=seguidos', partidos: '/liga?tab=partidos', tabla: '/liga?tab=tabla' };
+const OWNER_ELSEWHERE = { central: '/', directiva: '/', seguimiento: '/transferencias?tab=seguidos', partidos: '/partidos', tabla: '/torneos' };
 const VISITOR_MOVED = { resumen: ['plantel'], tabla: ['partidos'], finanzas: ['nomina'], movimientos: ['nomina'], eventos: ['estadio'], tv: ['estadio'], auspicio: ['estadio'], catalogo: ['estadio'], fichajes: ['historia'] };
 
 /** Simulador de finanzas: un solo lugar con dos modos (fichajes y salidas del plantel, o contratos y nómina). */
@@ -864,6 +875,8 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
   return <Screen className="club-screen" kicker={isMine ? 'Mi club' : team.kind === 'national_team' ? 'Selección' : 'Club'} title={team.name} hero={hero}
     intro={rank > 0 ? `${rank}.º en la liga${standing ? ` con ${standing.points} puntos` : ''}.` : null}
     actions={<div className="club-strip">
+      <LeaderChip key={`president-${personRevision}`} photo={photo} name={presidentName} role="Presidente" reputation={team.president?.reputation ?? null} onReputation={() => setPersonEditor('reputation')} onEdit={canEdit ? () => setPersonEditor('president') : undefined}/>
+      <LeaderChip key={`coach-${personRevision}`} photo={managerPhoto} name={coachName} role="DT" manager={team.coach?.manager} onEdit={canEdit ? () => setPersonEditor('coach') : undefined}/>
       <div><small>Valor del plantel</small><b>{gp(team.squadValue)}</b></div>
       {ownerMode && <div><small>En caja</small><b>{balance === null ? '—' : gp(balance)}</b></div>}
       <FormPills matches={recentMatches} teamId={team.id}/>
@@ -880,7 +893,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
       <section id="ver-caja"><LedgerTab team={team} balance={balance}/></section>
     </div>}
     {activeTab === 'nomina' && <PayrollTab team={team} balance={balance} onChanged={onChanged} onTab={onTab} forcedView="actual" currentPosition={position}/>}
-    {activeTab === 'partidos' && <div className="club-matches-page"><ClubStandingSnippet standings={displayStandings} teamId={team.id} teams={teams} onMore={() => navigate?.('/liga?tab=tabla')}/><ClubMatches matches={matches} teams={teams} teamId={team.id}/></div>}
+    {activeTab === 'partidos' && <div className="club-matches-page"><ClubStandingSnippet standings={displayStandings} teamId={team.id} teams={teams} onMore={() => navigate?.('/torneos')}/><ClubMatches matches={matches} teams={teams} teamId={team.id}/></div>}
     {activeTab === 'estadio' && <div className="stadium-page">
       <section id="ver-estadio"><VenueTab team={team}/></section>
       {ownerMode && <section id="ver-eventos"><EventsTab team={team} onChanged={onChanged}/></section>}
@@ -888,12 +901,6 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
     </div>}
     {activeTab === 'clasico' && <RivalryTab team={team} teams={teams}/>}
     {activeTab === 'historia' && <div className="club-history-tab-content">
-      <ClubPeople
-        president={{ key: `president-${personRevision}`, photo, name: presidentName, age: presidentProfile.age, country: presidentProfile.country, customFields: team.president?.customFields, role: 'PRESIDENTE', reputation: team.president?.reputation ?? null, onReputation: () => setPersonEditor('reputation') }}
-        coach={{ key: `coach-${personRevision}`, photo: managerPhoto, name: coachName, age: coachProfile.age, country: coachProfile.country, customFields: team.coach?.customFields, role: 'DT', manager: team.coach?.manager }}
-        onEditPresident={canEdit ? () => setPersonEditor('president') : undefined}
-        onEditCoach={canEdit ? () => setPersonEditor('coach') : undefined}
-      />
       {canEdit && <div className="screen-toolbar"><Button size="sm" variant="ghost" icon="camera" onClick={() => setCoversOpen(true)}>Portadas del club</Button></div>}
       <HonoursList honours={honours} historyError={historyError}/>
       <ClubHistory team={team} onEdit={canEdit ? setHistoryEditor : undefined}/>

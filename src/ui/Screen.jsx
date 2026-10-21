@@ -10,7 +10,7 @@ export const useEmbedded = () => useContext(EmbeddedContext);
  * hace aquí y, como mucho, una fila de pestañas. Todo lo de adentro va en tarjetas.
  * tabs: [{ id, label, badge }] · actions: botones a la derecha del título.
  */
-export function Screen({ kicker, title, intro, tabs = null, active = null, onTab, actions = null, hero = null, className = '', children }) {
+export function Screen({ kicker, title, intro, tabs = null, active = null, onTab, actions = null, hero = null, bare = false, className = '', children }) {
   const root = useRef(null);
   // Al cambiar de pestaña, si ya bajaste, la pantalla vuelve a mostrar las pestañas arriba.
   const changeTab = id => {
@@ -19,7 +19,8 @@ export function Screen({ kicker, title, intro, tabs = null, active = null, onTab
     if (top < 0) root.current.scrollIntoView({ block: 'start' });
   };
   return <main className={`screen ${className}`} ref={root}>
-    <header className="screen-head">
+    {/* bare: sin franja de título (Inicio parte directo con su contenido). */}
+    {!bare && <header className="screen-head">
       {hero}
       <div className="screen-head-copy">
         {kicker && <p className="screen-kicker">{kicker}</p>}
@@ -27,7 +28,7 @@ export function Screen({ kicker, title, intro, tabs = null, active = null, onTab
         {intro && <p className="screen-intro">{intro}</p>}
       </div>
       {actions && <div className="screen-actions">{actions}</div>}
-    </header>
+    </header>}
     {tabs && tabs.length > 1 && <Tabs className="screen-tabs" tabs={tabs} value={active} onChange={changeTab} label={`Secciones de ${String(title).toLowerCase()}`}/>}
     <div className="screen-body"><EmbeddedContext.Provider value={true}>{children}</EmbeddedContext.Provider></div>
   </main>;

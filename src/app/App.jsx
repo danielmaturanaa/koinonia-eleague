@@ -15,7 +15,7 @@ import { EfootballCardPage } from '../features/public/EfootballCard.jsx';
 import { projectionLink } from '../features/public/ProjectionPanel.jsx';
 import { MatchScoreboardPage } from '../features/public/MatchScoreboardPage.jsx';
 import { MatchCenterPage } from '../features/public/MatchCenterPage.jsx';
-import { LeaguePage } from '../features/league/LeaguePage.jsx';
+import { ClubsScreen, MatchesScreen, NewsScreen, RulesScreen, TournamentsScreen } from '../features/league/LeaguePage.jsx';
 import { CareerHub } from '../features/home/CareerHub.jsx';
 import { useAuth } from './AuthGate.jsx';
 import { useRoute } from './useRoute.js';
@@ -53,36 +53,52 @@ export function App() {
   const { teamId: myTeamId } = useAuth();
   // Una pantalla nueva parte arriba (salvo que el enlace pida una parte: &ver=…).
   useEffect(() => { if (!route.query.ver) window.scrollTo(0, 0); }, [route.path]);
-  // Las rutas viejas de Partidos, Torneos y Equipos caen como pestañas de Liga (los enlaces guardados siguen andando).
-  const leagueRoute = (() => {
+  // Cada ruta de Partidos, Torneos y Equipos es una pestaña de su pantalla. Los enlaces de la versión anterior
+  // (#/liga?tab=…, que guardaron algunos avisos) se traducen aquí.
+  const areaRoute = (() => {
     const path = route.path;
-    const directory = { '/equipos/rankings': 'rankings', '/equipos/plantillas': 'plantillas', '/equipos/presupuestos': 'presupuestos', '/equipos/presidentes': 'presidentes',
-      '/equipos/directores-tecnicos': 'directores-tecnicos', '/equipos/emblemas': 'emblemas', '/equipos/selecciones': 'selecciones', '/partidos/calendario': 'calendario',
-      '/calculadora': 'calculadora', '/sanciones': 'sanciones', '/noticias': 'noticias', '/reglas': 'reglamento' };
-    if (path === '/liga') return { tab: route.query.tab, ver: route.query.ver ?? null };
-    if (path === '/torneos' || path === '/clasificacion') return { tab: { goleadores: 'goleadores', playoffs: 'playoffs' }[route.query.vista] ?? 'tabla', ver: null };
-    if (['/partidos', '/partidos/jugados', '/partidos/pendientes'].includes(path)) return { tab: 'partidos', ver: null, matchesMode: path.endsWith('jugados') ? 'played' : path.endsWith('pendientes') ? 'pending' : 'all' };
-    if (route.name === 'teams') return { tab: 'clubes', ver: null };
-    if (path === '/equipos/estadios') return { tab: 'estadios', ver: null };
-    if (directory[path]) return { tab: 'mas', ver: directory[path] };
+    if (path === '/liga') {
+      const tab = route.query.tab ?? 'tabla';
+      if (tab === 'partidos') return { area: 'matches', tab: 'todos' };
+      if (tab === 'clubes' || tab === 'estadios') return { area: 'clubs', tab };
+      if (tab === 'mas') {
+        const ver = route.query.ver;
+        if (['calendario', 'sanciones'].includes(ver)) return { area: 'matches', tab: ver };
+        if (['calculadora', 'rankings'].includes(ver)) return { area: 'tournaments', tab: ver };
+        if (ver === 'noticias') return { area: 'news' };
+        if (ver === 'reglamento') return { area: 'rules' };
+        return { area: 'clubs', tab: ver };
+      }
+      return { area: 'tournaments', tab };
+    }
+    if (['/partidos', '/partidos/jugados', '/partidos/pendientes'].includes(path)) return { area: 'matches', tab: 'todos', matchesMode: path.endsWith('jugados') ? 'played' : path.endsWith('pendientes') ? 'pending' : 'all' };
+    if (path === '/partidos/calendario') return { area: 'matches', tab: 'calendario' };
+    if (path === '/sanciones') return { area: 'matches', tab: 'sanciones' };
+    if (path === '/torneos' || path === '/clasificacion') return { area: 'tournaments', tab: route.query.vista ?? 'tabla' };
+    if (path === '/calculadora') return { area: 'tournaments', tab: 'calculadora' };
+    if (path === '/equipos/rankings') return { area: 'tournaments', tab: 'rankings' };
+    if (route.name === 'teams') return { area: 'clubs', tab: 'clubes' };
+    if (path.startsWith('/equipos/') && route.name !== 'team' && !path.startsWith('/equipos/jugadores')) return { area: 'clubs', tab: path.split('/')[2] };
+    if (path === '/noticias') return { area: 'news' };
+    if (path === '/reglas') return { area: 'rules' };
     return null;
   })();
 
-  if (route.name === 'scoreboard') {
-    return <MatchScoreboardPage matchId={route.matchId} onBack={() => navigate(`/partidos/${encodeURIComponent(route.matchId)}`)}/>;
-  }
-
   let page;
-  if (leagueRoute) {
+  if (areaRoute) {
     const calculatorTournament = activeTournaments.find(item => String(item.id) === String(route.query.torneo)) ?? tournament;
-    page = <LeaguePage tab={leagueRoute.tab} ver={leagueRoute.ver} query={route.query} teams={league.teams} navigate={navigate} tournament={calculatorTournament} matchesMode={leagueRoute.matchesMode}/>;
+    if (areaRoute.area === 'matches') page = <MatchesScreen tab={areaRoute.tab} teams={league.teams} navigate={navigate} matchesMode={areaRoute.matchesMode}/>;
+    else if (areaRoute.area === 'tournaments') page = <TournamentsScreen tab={areaRoute.tab} teams={league.teams} navigate={navigate} query={route.query} tournament={calculatorTournament}/>;
+    else if (areaRoute.area === 'news') page = <NewsScreen teams={league.teams}/>;
+    else if (areaRoute.area === 'rules') page = <RulesScreen/>;
+    else page = <ClubsScreen tab={areaRoute.tab} teams={league.teams} navigate={navigate}/>;
   } else if (route.name === 'home') {
     // Todos son presis: el inicio es la central de tu club. Sin sesión (o sin club), las noticias de la liga.
     page = myTeamId ? <CareerHub teamId={myTeamId} teams={league.teams} navigate={navigate} tournament={tournament} standings={league.standings}/> : <HomePage teams={league.teams} navigate={navigate}/>;
   } else if (route.name === 'team') {
     // La liga activa que juega este club (para "¿qué necesita?").
     const projectionTournament = activeTournaments.find(item => item.format === 'league' && (league.standingsByTournament?.[item.id] ?? []).some(row => row.team_id === route.teamId));
-    page = <TeamDetailPage key={route.teamId} team={teamDetail} teams={league.teams} tournaments={activeTournaments} squad={squad} standings={league.standings} standingsTournamentId={projectionTournament?.id ?? tournament?.id ?? null} matches={teamMatches} recentMatches={teamRecent} history={teamHistory} historyError={teamHistoryError} loading={state.loadingTeam} tab={route.query.tab} msg={route.query.msg} ver={route.query.ver ?? null} navigate={navigate} onTab={tab => navigate(`/equipos/${encodeURIComponent(route.teamId)}${tab ? `?tab=${tab}` : ''}`)} onBack={() => navigate('/liga?tab=clubes')} onChanged={refresh}
+    page = <TeamDetailPage key={route.teamId} team={teamDetail} teams={league.teams} tournaments={activeTournaments} squad={squad} standings={league.standings} standingsTournamentId={projectionTournament?.id ?? tournament?.id ?? null} matches={teamMatches} recentMatches={teamRecent} history={teamHistory} historyError={teamHistoryError} loading={state.loadingTeam} tab={route.query.tab} msg={route.query.msg} ver={route.query.ver ?? null} navigate={navigate} onTab={tab => navigate(`/equipos/${encodeURIComponent(route.teamId)}${tab ? `?tab=${tab}` : ''}`)} onBack={() => navigate('/equipos')} onChanged={refresh}
       onProjection={projectionTournament ? () => navigate(projectionLink(projectionTournament.id, route.teamId)) : null}/>;
   } else if (route.name === 'player') {
     page = <PlayerProfilePage playerId={route.playerId} teams={league.teams} backLabel="← Volver al mercado" onBack={() => navigate(route.query.from === 'jugadores' ? `/transferencias?tab=buscar&${playerDirectoryBackPath(route.query).split('?')[1] ?? ''}` : '/transferencias')}/>;

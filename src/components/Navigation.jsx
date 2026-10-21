@@ -5,9 +5,9 @@ import { Icon } from '../ui/index.js';
 
 /** Menú principal: arriba en el computador y como barra inferior (estilo app) en el celular. */
 export function Navigation({ route, navigate }) {
-  const { teamId, isAdmin } = useAuth();
-  const items = navigationFor({ teamId, isAdmin });
-  const activePath = activeNavigationPath(route, teamId);
+  const { isAdmin } = useAuth();
+  const items = navigationFor({ isAdmin });
+  const activePath = activeNavigationPath(route);
   const go = path => {
     document.activeElement?.blur?.();
     navigate(path);
