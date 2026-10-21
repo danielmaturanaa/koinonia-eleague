@@ -82,7 +82,7 @@ function PitchCard({ player, selected, swappable, editing, style, onPointerDown,
 // Con bare se omiten cabecera, ayuda y banca.
 // Con simulation los cambios no van a la API: se delegan en sus callbacks (onSwap, onMove,
 // onReorder, onPrice, onResetPrice, onRemove) y cada carta muestra su precio editable.
-export function PitchBoard({ team, starters, substitutes = [], onChanged, readOnly = false, bare = false, simulation = null, className = '' }) {
+export function PitchBoard({ team, starters, substitutes = [], onChanged, readOnly = false, bare = false, simulation = null, className = '', aside = null }) {
   const editing = !readOnly;
   const [selectedId, setSelectedId] = useState(null);
   const [localPositions, setLocalPositions] = useState({});
@@ -203,7 +203,7 @@ export function PitchBoard({ team, starters, substitutes = [], onChanged, readOn
 
   if (bare) return <div className="pitch-board pitch-board-bare" style={cardColors}>{field}</div>;
   return <section className={`club-card pitch-board is-editing ${className}`} style={cardColors}>
-    <header><h3>ALINEACIÓN <small>{starters.length} TITULARES · {substitutes.length} SUPLENTES</small></h3></header>
+    <header><h3>ALINEACIÓN <small>{starters.length} TITULARES · {substitutes.length} SUPLENTES</small></h3>{aside}</header>
     {(busy || hint) && <p className="pitch-board-hint" role="status">{busy ? 'GUARDANDO…' : hint}</p>}
     {formationPicker}
     {field}

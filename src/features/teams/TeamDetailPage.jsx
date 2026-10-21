@@ -778,6 +778,16 @@ function averagesOf(players) {
   return { count: rated.length, base: mean(rated.map(player => player.overall)), withCoach: mean(rated.map(player => player.overallWithCoach ?? player.overall)) };
 }
 
+/** La media en chico, para la esquina de la cancha: XI, banca y todos (con DT, si suma). */
+function SquadAveragesBadge({ starters, substitutes }) {
+  const groups = [['XI', starters], ['Banca', substitutes], ['Todos', [...starters, ...substitutes]]].map(([label, players]) => ({ label, ...averagesOf(players) }));
+  const coachHelps = [...starters, ...substitutes].some(hasCoachBoost);
+  return <dl className="ovr-badge" title={coachHelps ? 'Media eFootball (entre paréntesis, con los potenciadores del DT)' : 'Media eFootball'}>
+    <dt>OVR</dt>
+    {groups.map(group => <div key={group.label}><dt>{group.label}</dt><dd>{ovrAverage(group.base)}{coachHelps && group.withCoach !== null && <small> ({ovrAverage(group.withCoach)})</small>}</dd></div>)}
+  </dl>;
+}
+
 // Media de la plantilla separando el 11 inicial: dos clubes con el mismo promedio total pueden tener titulares muy distintos.
 function SquadAverages({ starters, substitutes }) {
   const groups = [['XI INICIAL', starters], ['BANCA', substitutes], ['PLANTILLA COMPLETA', [...starters, ...substitutes]]].map(([label, players]) => ({ label, ...averagesOf(players) }));
@@ -794,15 +804,18 @@ function SquadAverages({ starters, substitutes }) {
 }
 
 /** Plantel: la cancha con el once, la media y la lista. El presi además ve roles y ánimo, y edita el plantel en una ventana. */
-function SquadTab({ team, squad, starters, substitutes, onChanged, ownerMode, tournaments }) {
+function SquadTab({ team, squad, starters, substitutes, onChanged, ownerMode, tournaments, president, coach }) {
   const { canEditTeam } = useAuth();
   const canEdit = canEditTeam(team.id);
   const [editing, setEditing] = useState(false);
   return <div className="club-squad-tab">
     {canEdit && <div className="screen-toolbar"><Button icon="shirt" onClick={() => setEditing(true)}>Editar plantel y alineación</Button></div>}
     <div className="squad-top">
-      <PitchBoard team={team} starters={starters} substitutes={substitutes} onChanged={onChanged} readOnly={!canEdit}/>
-      <div className="squad-side"><SquadAverages starters={starters} substitutes={substitutes}/><ClubScorers teamId={team.id} limit={5} tournaments={tournaments}/></div>
+      <PitchBoard team={team} starters={starters} substitutes={substitutes} onChanged={onChanged} readOnly={!canEdit} aside={<SquadAveragesBadge starters={starters} substitutes={substitutes}/>}/>
+      <div className="squad-side">
+        <div className="squad-leaders"><LeaderCard {...president}/><LeaderCard {...coach}/></div>
+        <ClubScorers teamId={team.id} limit={5} tournaments={tournaments}/>
+      </div>
     </div>
     {ownerMode ? <RolesPanel team={team}/> : <div className="roster-panel club-roster"><h3>TITULARES <small>{starters.length} / 11</small></h3><div className="roster-table-scroll"><RosterHeader/><div className="roster-list">{starters.length ? starters.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay titulares definidos.</p>}</div></div><h3>SUPLENTES <small>{substitutes.length}</small></h3><div className="roster-table-scroll"><RosterHeader/><div className="roster-list substitutes">{substitutes.length ? substitutes.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay suplentes registrados.</p>}</div></div></div>}
     {editing && <PersonEditorModal title="EDITAR PLANTEL" onClose={() => setEditing(false)}><div className="club-squad-editor"><SquadEditor team={team} squad={squad} onChanged={onChanged}/></div></PersonEditorModal>}
@@ -875,8 +888,6 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
   return <Screen className="club-screen" kicker={isMine ? 'Mi club' : team.kind === 'national_team' ? 'Selección' : 'Club'} title={team.name} hero={hero}
     intro={rank > 0 ? `${rank}.º en la liga${standing ? ` con ${standing.points} puntos` : ''}.` : null}
     actions={<div className="club-strip">
-      <LeaderChip key={`president-${personRevision}`} photo={photo} name={presidentName} role="Presidente" reputation={team.president?.reputation ?? null} onReputation={() => setPersonEditor('reputation')} onEdit={canEdit ? () => setPersonEditor('president') : undefined}/>
-      <LeaderChip key={`coach-${personRevision}`} photo={managerPhoto} name={coachName} role="DT" manager={team.coach?.manager} onEdit={canEdit ? () => setPersonEditor('coach') : undefined}/>
       <div><small>Valor del plantel</small><b>{gp(team.squadValue)}</b></div>
       {ownerMode && <div><small>En caja</small><b>{balance === null ? '—' : gp(balance)}</b></div>}
       <FormPills matches={recentMatches} teamId={team.id}/>
@@ -885,7 +896,9 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
     tabs={tabs} active={activeTab} onTab={id => onTab?.(id)}>
     {isAdmin && !isMine && <p className="club-actas-banner" role="status">Modo admin: ves todo de {team.name} y puedes actuar por su presidente. Lo que hagas queda registrado a tu nombre.</p>}
 
-    {activeTab === 'plantel' && <SquadTab team={team} squad={squad} starters={starters} substitutes={substitutes} onChanged={onChanged} ownerMode={ownerMode} tournaments={tournaments}/>}
+    {activeTab === 'plantel' && <SquadTab team={team} squad={squad} starters={starters} substitutes={substitutes} onChanged={onChanged} ownerMode={ownerMode} tournaments={tournaments}
+      president={{ key: `president-${personRevision}`, photo, name: presidentName, age: presidentProfile.age, country: presidentProfile.country, customFields: team.president?.customFields, role: 'PRESIDENTE', reputation: team.president?.reputation ?? null, onReputation: () => setPersonEditor('reputation'), onEdit: canEdit ? () => setPersonEditor('president') : undefined }}
+      coach={{ key: `coach-${personRevision}`, photo: managerPhoto, name: coachName, age: coachProfile.age, country: coachProfile.country, customFields: team.coach?.customFields, role: 'DT', manager: team.coach?.manager, onEdit: canEdit ? () => setPersonEditor('coach') : undefined }}/>}
     {activeTab === 'mensajes' && <MessagesTab team={team} onTab={onTab} onRead={inbox.retry} highlightId={msg}/>}
     {activeTab === 'finanzas' && <div className="finance-page">
       <div className="screen-toolbar"><Button icon="table" onClick={() => setSimulatorOpen(true)}>Simular fichajes y contratos</Button></div>
