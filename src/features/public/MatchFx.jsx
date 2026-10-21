@@ -100,7 +100,7 @@ function soundsFor(kind, { stadium }, side) {
   return [['notify', 0]];
 }
 
-/** Evento en curso (las hinchadas reaccionan unos segundos) y cómo dispararlo con sus sonidos. `derby`: es clásico. */
+/** Evento en curso (con un gol, las hinchadas reaccionan 15 s; con lo demás, unos segundos) y cómo dispararlo con sus sonidos. `derby`: es clásico. */
 export function useMatchFx({ derby = false, stadium = true } = {}) {
   const [fx, setFx] = useState(null);
   const timer = useRef(null);
@@ -112,7 +112,7 @@ export function useMatchFx({ derby = false, stadium = true } = {}) {
     }
     window.clearTimeout(timer.current);
     setFx({ id: Date.now(), ...event });
-    timer.current = window.setTimeout(() => setFx(null), event.kind === 'goal' ? 4200 : 2800);
+    timer.current = window.setTimeout(() => setFx(null), event.kind === 'goal' ? 15000 : 2800);
   }, []);
   useEffect(() => () => window.clearTimeout(timer.current), []);
   return [fx, fire];
