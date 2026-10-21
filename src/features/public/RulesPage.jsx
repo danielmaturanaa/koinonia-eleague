@@ -172,6 +172,15 @@ const ClubSystems = () => <>
       <li><strong>Derechos de TV:</strong> cada temporada tres canales (TNT Sports, ESPN, DSports, DAZN, Prime Video y otros) ofrecen transmitir los partidos del club: fija, mixta o arriesgada. Cada canal paga según su tamaño y los hinchas del club en todo el mundo; los gigantes (Prime Video, DAZN, ESPN) pagan más pero solo llaman a clubes con mucha hinchada, y la TV abierta paga menos y le transmite a cualquiera. Se cobran al cerrar cada torneo de liga, con bonos por playoffs y por título según la oferta. No van en la camiseta, porque en el juego se usan camisetas reales con su propia marca.</li>
     </ul>
   </section>
+  <section className="rules-section">
+    <h2>16. Quiebra</h2>
+    <ul>
+      <li>Al arrancar cada torneo de liga (con los premios del anterior ya pagados) se revisa la caja de cada club.</li>
+      <li><strong>En rojo:</strong> la directiva avisa. Con la caja negativa no se puede comprar (fichajes, pujas ni estadio) y la quiebra baja la reputación del presidente igual que una promesa rota.</li>
+      <li><strong>Dos arranques seguidos en rojo:</strong> intervención. La directiva vende a los jugadores más caros del club (al 75% de su valor, quedan como agentes libres) hasta que la caja vuelva a positivo.</li>
+      <li>Solo se puede tener un contrato de TV a la vez: el siguiente se firma cuando termina el vigente.</li>
+    </ul>
+  </section>
 </>;
 
 export function RulesPage() {
