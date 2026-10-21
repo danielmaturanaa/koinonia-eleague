@@ -1,9 +1,10 @@
-// Menú principal: seis áreas (siete para quien tiene club o es admin). Las demás pantallas cuelgan de una de ellas.
+// Menú principal: siete áreas (ocho con club o como admin). Las demás pantallas cuelgan de una de ellas.
 export function navigationFor({ teamId = null, isAdmin = false } = {}) {
   return [
     { label: 'Inicio', path: '/' },
     { label: 'Partidos', path: '/partidos' },
     { label: 'Torneos', path: '/torneos' },
+    { label: 'Equipos', path: '/equipos' },
     { label: 'Jugadores', path: '/equipos/jugadores' },
     { label: 'Mercado', path: '/transferencias' },
     ...(teamId ? [{ label: 'Mi club', path: `/equipos/${teamId}` }] : []),
@@ -11,13 +12,14 @@ export function navigationFor({ teamId = null, isAdmin = false } = {}) {
   ];
 }
 
-const LEAGUE_VIEWS = new Set(['/torneos', '/calculadora', '/clasificacion', '/equipos', '/equipos/rankings', '/equipos/plantillas', '/equipos/presupuestos', '/equipos/presidentes', '/equipos/directores-tecnicos', '/equipos/emblemas', '/equipos/selecciones']);
+const LEAGUE_VIEWS = new Set(['/torneos', '/calculadora', '/clasificacion', '/equipos/rankings', '/equipos/plantillas', '/equipos/presupuestos', '/equipos/presidentes', '/equipos/directores-tecnicos', '/equipos/emblemas', '/equipos/selecciones']);
 
 /** A qué ítem del menú pertenece la pantalla actual (null si no cuelga de ninguno, como Reglas o Notificaciones). */
 export function activeNavigationPath(route, teamId = null) {
   if (route.name === 'home' || route.name === 'newsArticle' || route.path === '/noticias') return '/';
   if (route.name === 'player' || route.name === 'card' || route.path.startsWith('/equipos/jugadores')) return '/equipos/jugadores';
-  if (route.name === 'team') return teamId && route.teamId === teamId ? `/equipos/${teamId}` : '/torneos';
+  if (route.name === 'team') return teamId && route.teamId === teamId ? `/equipos/${teamId}` : '/equipos';
+  if (route.path === '/equipos') return '/equipos';
   if (route.path === '/partidos' || route.path.startsWith('/partidos/') || route.name === 'match' || route.path === '/sanciones') return '/partidos';
   if (LEAGUE_VIEWS.has(route.path)) return '/torneos';
   if (route.path === '/transferencias') return '/transferencias';

@@ -1,6 +1,6 @@
 // Barra de secciones hermanas de una misma área del sitio (enlaces, no pestañas de contenido): así ninguna ruta queda sin entrada de menú.
 const LEAGUE_TABS = [
-  ['/torneos', 'TORNEOS'], ['/calculadora', 'CALCULADORA'], ['/equipos', 'CLUBES'], ['/equipos/rankings', 'RANKINGS'], ['/equipos/plantillas', 'PLANTILLAS'],
+  ['/torneos', 'TORNEOS'], ['/calculadora', 'CALCULADORA'], ['/equipos', 'EQUIPOS'], ['/equipos/rankings', 'RANKINGS'], ['/equipos/plantillas', 'PLANTILLAS'],
   ['/equipos/presupuestos', 'PRESUPUESTOS'], ['/equipos/presidentes', 'PRESIDENTES'], ['/equipos/directores-tecnicos', 'DTs'], ['/equipos/emblemas', 'EMBLEMAS'],
 ];
 

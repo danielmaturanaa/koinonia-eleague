@@ -105,6 +105,7 @@ export const endpoints = {
   stadiums: signal => get('/stadiums', null, signal),
   buyStadium: (teamId, stadiumId, signal) => apiClient.post(`/teams/${teamId}/stadium`, { stadiumId }, { actor: 'web', signal }),
   sellStadium: (teamId, signal) => apiClient.delete(`/teams/${teamId}/stadium`, undefined, { actor: 'web', signal }),
+  teamLedger: (teamId, query, signal) => get(`/teams/${teamId}/ledger`, query, signal),
   teamObjectives: (teamId, signal) => get(`/teams/${teamId}/objectives`, null, signal),
   teamWatchlist: (teamId, signal) => get(`/teams/${teamId}/watchlist`, null, signal),
   watchPlayer: (teamId, playerId, signal) => apiClient.put(`/teams/${teamId}/watchlist/${playerId}`, {}, { actor: 'web', signal }),

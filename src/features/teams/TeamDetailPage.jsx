@@ -23,6 +23,7 @@ import { ClubCentral } from './ClubCentral.jsx';
 import { InboxTab } from './InboxTab.jsx';
 import { WatchlistTab } from './WatchlistTab.jsx';
 import { StadiumTab } from './StadiumTab.jsx';
+import { LedgerTab } from './LedgerTab.jsx';
 import { PayrollTab } from './PayrollTab.jsx';
 import { RolesPanel } from './RolesPanel.jsx';
 import { gpNumber } from '../../utils/money.js';
@@ -654,12 +655,12 @@ function SquadValueSimulator({ team, squad, balance }) {
 
 // Dos fichas distintas: la del presidente (Mi club: Central y sus herramientas) y la pública de cualquier otro club. Cada sección agrupa pantallas ("hojas").
 const OWNER_SECTIONS = [
+  { id: 'club', label: 'EQUIPO', leaves: [['resumen', 'RESUMEN'], ['partidos', 'PARTIDOS'], ['tabla', 'TABLA'], ['historia', 'HISTORIA'], ['estadio', 'ESTADIO']] },
   { id: 'central', label: 'CENTRAL', leaves: [['central', 'CENTRAL']] },
   { id: 'plantel', label: 'PLANTEL', leaves: [['plantel', 'PLANTEL']] },
-  { id: 'finanzas', label: 'FINANZAS', leaves: [['nomina', 'CONTRATOS Y NÓMINA'], ['finanzas', 'SIMULADOR']] },
+  { id: 'finanzas', label: 'FINANZAS', leaves: [['nomina', 'CONTRATOS Y NÓMINA'], ['movimientos', 'MOVIMIENTOS'], ['finanzas', 'SIMULADOR']] },
   { id: 'mercado', label: 'MERCADO', leaves: [['seguimiento', 'SEGUIMIENTO'], ['fichajes', 'FICHAJES']] },
   { id: 'bandeja', label: 'BANDEJA', leaves: [['bandeja', 'BANDEJA']] },
-  { id: 'club', label: 'CLUB', leaves: [['resumen', 'RESUMEN'], ['partidos', 'PARTIDOS'], ['tabla', 'TABLA'], ['historia', 'HISTORIA'], ['estadio', 'ESTADIO']] },
 ];
 const VISITOR_SECTIONS = ['resumen', 'plantel', 'partidos', 'tabla', 'historia', 'nomina', 'estadio']
   .map(id => ({ id, label: { resumen: 'RESUMEN', plantel: 'PLANTEL', partidos: 'PARTIDOS', tabla: 'TABLA', historia: 'HISTORIA', nomina: 'NÓMINA', estadio: 'ESTADIO' }[id], leaves: [[id, id]] }));
@@ -833,7 +834,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
   const colors = team?.colors ?? {};
   const heroStyle = { '--club-primary': colors.primary ?? '#062764', '--club-secondary': colors.secondary ?? '#0b3f8d', '--club-tertiary': colors.tertiary ?? '#ffd42a' };
 
-  return <main className="newspaper club-page"><section className="club-paper"><div className="club-actions"><button className="back-button" onClick={onBack}>← VOLVER A CLUBES</button>{canEdit && <button className="action-button club-covers-button" onClick={() => setCoversOpen(true)}>▣ PORTADAS</button>}{onProjection && team && <button type="button" className="action-button club-projection-button" onClick={onProjection}>CALCULADORA PARA CLASIFICAR</button>}</div>
+  return <main className="newspaper club-page"><section className="club-paper"><div className="club-actions"><button className="back-button" onClick={onBack}>← VOLVER A EQUIPOS</button>{canEdit && <button className="action-button club-covers-button" onClick={() => setCoversOpen(true)}>▣ PORTADAS</button>}{onProjection && team && <button type="button" className="action-button club-projection-button" onClick={onProjection}>CALCULADORA PARA CLASIFICAR</button>}</div>
     {loading || !team ? <div className="arcade-state">CARGANDO FICHA...</div> : <>
       <header className="club-hero" style={heroStyle}>
         <div className="club-crest-wrap"><TeamMark team={team} className="club-crest"/>{canEdit && <button type="button" className="club-crest-edit" onClick={() => setCrestEditorOpen(true)} aria-label="Editar escudo y nombre del club" title="Editar escudo y nombre">✎</button>}</div>
@@ -873,6 +874,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
         {activeTab === 'tabla' && <ClubTable standings={displayStandings} teamId={team.id} teams={teams}/>}
         {activeTab === 'fichajes' && <ClubTransfers teamId={team.id}/>}
         {activeTab === 'historia' && <div className="club-history-tab-content"><HonoursList honours={honours} historyError={historyError}/><ClubHistory team={team} onEdit={canEdit ? setHistoryEditor : undefined}/>{!ownerMode && <ClubTransfers teamId={team.id}/>}</div>}
+        {activeTab === 'movimientos' && <LedgerTab team={team} balance={balance}/>}
         {activeTab === 'estadio' && <StadiumTab team={team} balance={balance} onChanged={onChanged}/>}
         {activeTab === 'seguimiento' && <WatchlistTab team={team}/>}
         {activeTab === 'bandeja' && <InboxTab team={team} onTab={onTab} onRead={inbox.retry} highlightId={msg}/>}
