@@ -314,34 +314,36 @@ a.tile:focus-visible, button.tile:focus-visible { outline: 3px solid var(--c-yel
 .finance-sim-page .squad-sim-meters { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
 .finance-sim-page .squad-sim-meters > :first-child { grid-column: auto; }
 
-/* Hinchas en 8 bits (ficha del partido) */
-.pixel-crowd { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; margin-bottom: var(--sp-3); padding: 8px 8px 0; border: var(--border); background: linear-gradient(#0b1a3d, #13275a); overflow: hidden; }
-.pixel-crowd-side { display: grid; gap: 2px; }
-.pixel-crowd-row { display: flex; justify-content: space-between; gap: 2px; }
-.pixel-crowd-row:nth-child(even) { padding-left: 6px; }
-.pixel-crowd i { display: grid; justify-items: center; width: 10px; animation: crowd-bob 1.4s steps(2) infinite; animation-delay: var(--delay); }
-.pixel-crowd i b { display: block; width: 6px; height: 6px; background: var(--skin); }
-.pixel-crowd i s { display: block; width: 10px; height: 8px; background: var(--shirt); text-decoration: none; }
-.pixel-crowd-side.is-excited i { animation: crowd-jump .32s steps(2) infinite; animation-delay: calc(var(--delay) / 4); }
+/* El estadio en 8 bits (ficha del partido) */
+.pixel-arena { position: relative; margin-bottom: var(--sp-3); border: var(--border); overflow: hidden; background: #0a1430; box-shadow: var(--shadow-pixel); }
+.arena-sky { position: relative; height: 26px; background: linear-gradient(#050b1f, #0f1d45); }
+.arena-light { position: absolute; top: 4px; width: 38px; height: 14px; background: repeating-linear-gradient(90deg, #fff7c2 0 6px, #2a2f45 6px 8px); box-shadow: 0 0 18px 6px rgba(255, 245, 190, .35); }
+.arena-light.left { left: 18px; } .arena-light.right { right: 18px; }
+.arena-light::after { content: ''; position: absolute; left: 50%; top: 14px; width: 4px; height: 40px; background: #3a4058; transform: translateX(-50%); }
+.pixel-arena.is-goal .arena-light { animation: arena-flash .25s steps(2) 8; }
+.arena-roof { height: 8px; background: repeating-linear-gradient(90deg, #c9ced8 0 18px, #9ea5b5 18px 20px); border-bottom: 2px solid #000; }
+.arena-stands { display: grid; grid-template-columns: 1fr 1fr; gap: 0; padding: 4px 6px 0; background: linear-gradient(#2a3044, #3a4158); }
+.arena-side { display: grid; align-content: end; gap: 1px; padding: 0 4px; }
+.arena-side + .arena-side { border-left: 3px solid #1a1f2e; }
+.arena-row { display: flex; justify-content: center; overflow-x: clip; gap: 2px; padding: 1px 0; border-bottom: 2px solid rgba(0, 0, 0, .25); }
+.arena-row i { position: relative; flex: none; display: grid; justify-items: center; width: calc(var(--size) + 4px); animation: crowd-bob 1.4s steps(2) infinite; animation-delay: var(--delay); }
+.arena-row i b { display: block; width: var(--size); height: var(--size); background: var(--skin); }
+.arena-row i s { display: block; width: calc(var(--size) + 4px); height: calc(var(--size) + 2px); background: var(--shirt); text-decoration: none; }
+.arena-row i.has-flag::before { content: ''; position: absolute; bottom: 100%; left: 60%; width: calc(var(--size) * 1.8); height: var(--size); background: var(--flag); border-left: 2px solid #ddd; opacity: 0; }
+.arena-side.is-excited .arena-row i { animation: crowd-jump .32s steps(2) infinite; animation-delay: calc(var(--delay) / 4); }
+.arena-side.is-excited .arena-row i.has-flag::before { opacity: 1; animation: flag-wave .3s steps(2) infinite; }
+.arena-board { overflow: hidden; height: 18px; border-top: 2px solid #000; border-bottom: 2px solid #000; background: #111; white-space: nowrap; }
+.arena-board span { display: inline-block; padding-left: 100%; color: #ffd42a; font: 600 12px/18px var(--font-ui); letter-spacing: 1px; text-transform: uppercase; text-shadow: 0 0 4px rgba(255, 212, 42, .6); animation: board-scroll 30s linear infinite; }
+.pixel-arena.is-goal .arena-board span { color: #fff; }
+.arena-grass { height: 12px; background: repeating-linear-gradient(90deg, #2f8f3c 0 40px, #36a145 40px 80px); }
 @keyframes crowd-bob { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-1px); } }
-@keyframes crowd-jump { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+@keyframes crowd-jump { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-5px); } }
+@keyframes flag-wave { 0%, 100% { transform: skewY(0); } 50% { transform: skewY(-12deg); } }
+@keyframes arena-flash { 50% { background: #fff; box-shadow: 0 0 40px 18px rgba(255, 255, 255, .7); } }
+@keyframes board-scroll { to { transform: translateX(-50%); } }
+@media (max-width: 560px) { .arena-row i { width: calc(var(--size) + 1px); } .arena-row i b { width: calc(var(--size) - 2px); height: calc(var(--size) - 2px); } .arena-row i s { width: calc(var(--size) + 1px); } }
+@media (prefers-reduced-motion: reduce) { .arena-row i, .arena-board span, .arena-light { animation: none !important; } }
 
-/* Carteles del partido: gol, roja, pitazos */
-.match-fx { position: fixed; inset: 0; z-index: 90; display: grid; place-items: center; pointer-events: none; background: rgba(0, 10, 40, .35); animation: fx-fade 3.4s steps(8) forwards; }
-.match-fx--red, .match-fx--kickoff, .match-fx--halftime, .match-fx--fulltime { animation-duration: 2.4s; }
-.match-fx-card { display: grid; justify-items: center; gap: 8px; padding: 22px 40px; border: 4px solid var(--c-yellow); color: #fff; background: var(--c-navy-900); box-shadow: 8px 8px 0 rgba(0, 0, 0, .4);
-  animation: fx-pop .5s steps(4) both; }
-.match-fx--red .match-fx-card { border-color: #fff; background: var(--c-red); }
-.match-fx-card strong { font: italic 400 clamp(54px, 10vw, 120px)/.9 var(--font-display); letter-spacing: 2px; text-shadow: 5px 5px 0 rgba(0, 0, 0, .4); }
-.match-fx-card small { font: 600 var(--fs-lg)/1.2 var(--font-ui); letter-spacing: 1px; text-transform: uppercase; }
-.match-fx-crest { width: 84px; height: 84px; font-size: 56px; }
-.match-fx-confetti { position: absolute; inset: 0; overflow: hidden; }
-.match-fx-confetti i { position: absolute; top: -12px; width: 10px; height: 10px; animation: fx-confetti 2.6s steps(12) forwards; }
-@keyframes fx-pop { 0% { transform: scale(.3) rotate(-6deg); } 70% { transform: scale(1.12) rotate(2deg); } 100% { transform: scale(1) rotate(0); } }
-@keyframes fx-fade { 0%, 85% { opacity: 1; } 100% { opacity: 0; } }
-@keyframes fx-confetti { to { transform: translateY(110vh) rotate(540deg); } }
-@media (max-width: 560px) { .pixel-crowd i { width: 6px; } .pixel-crowd i b { width: 4px; height: 4px; } .pixel-crowd i s { width: 6px; height: 6px; } }
-@media (prefers-reduced-motion: reduce) { .pixel-crowd i, .match-fx, .match-fx-card, .match-fx-confetti i { animation: none !important; } .match-fx { opacity: 1; } }
 
 /* Estadio de Mi club, visto desde arriba */
 .pixel-stadium { position: relative; display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "n n n" "w pitch e" "s s s"; gap: 4px; width: min(100%, 460px); padding: 8px;
@@ -359,3 +361,10 @@ a.tile:focus-visible, button.tile:focus-visible { outline: 3px solid var(--c-yel
   font: 600 var(--fs-sm)/1.2 var(--font-ui); letter-spacing: .4px; white-space: nowrap; text-transform: uppercase; }
 .stadium-label b { color: var(--c-yellow); font: 400 22px/1 var(--font-display); }
 .venue-hero .pixel-stadium { justify-self: end; }
+/* Estadio con perspectiva: se inclina hacia atrás (la tribuna del fondo se achica) y queda más ancho que largo. */
+.pixel-stadium { display: block; padding: 10px 10px 14px; perspective: 520px; perspective-origin: 50% 0%; background: linear-gradient(#141a2b, #2b2f3a); }
+.stadium-bowl { display: grid; grid-template-columns: auto 1fr auto; grid-template-areas: "n n n" "w pitch e" "s s s"; gap: 3px; transform: rotateX(38deg); transform-origin: 50% 100%;
+  padding: 6px; border-radius: 28px 28px 10px 10px; background: #3a4050; box-shadow: 0 10px 0 #1a1e29; }
+.stadium-bowl .stand-n { border-radius: 22px 22px 0 0; }
+.stadium-bowl .stadium-pitch { min-height: 96px; }
+.stadium-label { bottom: 38%; }

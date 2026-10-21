@@ -1,50 +1,44 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { playSound } from '../../audio/synth.js';
-import { TeamMark } from '../../components/TeamMark.jsx';
 
-// Efectos del partido en 8 bits: hinchas de cada club que se mueven (y saltan con un gol) y carteles grandes con sonido
-// para goles, rojas, el pitazo inicial, el entretiempo y el final. Solo suenan los eventos que pasan mientras miras.
+// Efectos del partido en 8 bits: el estadio con las hinchadas de cada club (saltan y agitan banderas con un gol) y el
+// sonido de goles, rojas, el pitazo inicial, el entretiempo y el final. Solo suena lo que pasa mientras miras.
 
 const colorsOf = team => ({ primary: team?.colors?.primary ?? '#062764', secondary: team?.colors?.secondary ?? '#ffffff' });
 // Pseudoazar estable por posición (sin Math.random: cada render dibuja lo mismo).
 const hash = (a, b) => ((a * 73856093) ^ (b * 19349663)) >>> 0;
 const SKIN = ['#f1c27d', '#e0ac69', '#c68642', '#8d5524', '#ffdbac'];
 
-/** Una tribuna en pixel art: mitad hinchas del local y mitad del visita, con sus colores. `excite`: 'home' | 'away' | null. */
-export function PixelCrowd({ home, away, excite = null, rows = 4, perSide = 22 }) {
+/**
+ * El estadio en pixel art: cielo de noche con torres de luz, techo, tribunas en gradas (más chicas hacia arriba, mitad
+ * hinchada local y mitad visita, con sus colores), un cartel LED que corre y el borde del pasto.
+ * `excite`: 'home' | 'away' | null (esa hinchada salta y agita banderas; las luces destellan).
+ */
+export function PixelCrowd({ home, away, excite = null, rows = 6, perSide = 64 }) {
   const sides = [['home', colorsOf(home)], ['away', colorsOf(away)]];
-  return <div className="pixel-crowd" aria-hidden="true">
-    {sides.map(([side, colors]) => <div key={side} className={`pixel-crowd-side ${excite === side ? 'is-excited' : ''}`}>
-      {Array.from({ length: rows }, (_, row) => <div key={row} className="pixel-crowd-row">
-        {Array.from({ length: perSide }, (_, seat) => {
-          const roll = hash(row + (side === 'away' ? 50 : 0), seat);
-          const shirt = roll % 5 === 0 ? colors.secondary : colors.primary;
-          return <i key={seat} style={{ '--shirt': shirt, '--skin': SKIN[roll % SKIN.length], '--delay': `${(roll % 900) / 1000}s` }}><b/><s/></i>;
-        })}
+  const board = `KOINONIA E-LEAGUE · ${home?.name ?? 'LOCAL'} VS ${away?.name ?? 'VISITA'} · FÚTBOL VIRTUAL, PASIÓN REAL · `;
+  return <div className={`pixel-arena ${excite ? 'is-goal' : ''}`} aria-hidden="true">
+    <div className="arena-sky"><i className="arena-light left"/><i className="arena-light right"/></div>
+    <div className="arena-roof"/>
+    <div className="arena-stands">
+      {sides.map(([side, colors]) => <div key={side} className={`arena-side ${excite === side ? 'is-excited' : ''}`}>
+        {Array.from({ length: rows }, (_, row) => <div key={row} className="arena-row" style={{ '--size': `${5 + row}px` }}>
+          {Array.from({ length: perSide - (rows - 1 - row) * 2 }, (_, seat) => {
+            const roll = hash(row + (side === 'away' ? 50 : 0), seat);
+            const shirt = roll % 5 === 0 ? colors.secondary : colors.primary;
+            return <i key={seat} className={roll % 9 === 0 ? 'has-flag' : ''} style={{ '--shirt': shirt, '--flag': roll % 2 ? colors.primary : colors.secondary, '--skin': SKIN[roll % SKIN.length], '--delay': `${(roll % 900) / 1000}s` }}><b/><s/></i>;
+          })}
+        </div>)}
       </div>)}
-    </div>)}
-  </div>;
-}
-
-/** Cartel grande del evento (gol, roja, pitazo) con papel picado en los colores del club. */
-export function FxOverlay({ fx }) {
-  if (!fx) return null;
-  const colors = colorsOf(fx.team);
-  return <div className={`match-fx match-fx--${fx.kind}`} role="status" aria-live="assertive" key={fx.id}>
-    {fx.kind === 'goal' && <div className="match-fx-confetti" aria-hidden="true">{Array.from({ length: 36 }, (_, index) => <i key={index}
-      style={{ left: `${(hash(index, 7) % 100)}%`, background: index % 3 ? colors.primary : colors.secondary, animationDelay: `${(hash(index, 3) % 600) / 1000}s` }}/>)}</div>}
-    <div className="match-fx-card">
-      {fx.team && <TeamMark team={fx.team} className="match-fx-crest"/>}
-      <strong>{fx.title}</strong>
-      {fx.detail && <small>{fx.detail}</small>}
     </div>
+    <div className="arena-board"><span>{board.repeat(4)}</span></div>
+    <div className="arena-grass"/>
   </div>;
 }
 
 const SOUND = { goal: 'goal', red: 'whistle', kickoff: 'whistle', halftime: 'whistle', fulltime: 'whistle' };
-const TITLE = { goal: '¡GOOOL!', red: '¡ROJA!', kickoff: '¡ARRANCA!', halftime: 'ENTRETIEMPO', fulltime: 'FINAL' };
 
-/** Estado del efecto en curso y cómo dispararlo (suena y se muestra unos segundos). */
+/** Evento en curso (la hinchada que festeja salta unos segundos) y cómo dispararlo con su sonido. */
 export function useMatchFx() {
   const [fx, setFx] = useState(null);
   const timer = useRef(null);
@@ -52,7 +46,7 @@ export function useMatchFx() {
     playSound(SOUND[event.kind] ?? 'notify');
     if (event.kind === 'fulltime') window.setTimeout(() => playSound('whistle'), 450);
     window.clearTimeout(timer.current);
-    setFx({ id: Date.now(), title: TITLE[event.kind], ...event });
+    setFx({ id: Date.now(), ...event });
     timer.current = window.setTimeout(() => setFx(null), event.kind === 'goal' ? 3600 : 2600);
   }, []);
   useEffect(() => () => window.clearTimeout(timer.current), []);

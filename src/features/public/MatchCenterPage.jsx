@@ -13,7 +13,7 @@ import { useApiQuery } from './useApiQuery.js';
 import { PitchBoard } from '../teams/PitchBoard.jsx';
 import { useAuth } from '../../app/AuthGate.jsx';
 import { MatchdayPanel } from './MatchdayPanel.jsx';
-import { FxOverlay, PixelCrowd, useLiveMatchFx, useMatchFx } from './MatchFx.jsx';
+import { PixelCrowd, useLiveMatchFx, useMatchFx } from './MatchFx.jsx';
 
 // Goles agrupados por jugador; los minutos solo aparecen si el acta los registró.
 function groupedGoals(goals, teamId) {
@@ -94,7 +94,7 @@ export function MatchCenterPage({ matchId, teams = [], navigate }) {
   const replaying = Boolean(simulation && (sharedReplay || localReplay));
   // Mientras llega la simulación no se muestra el marcador final: sería spoiler de la transmisión.
   const loadingSimulation = Boolean(match?.simulated && !simulationQuery.data && simulationQuery.loading);
-  // Efectos en 8 bits: hinchas que saltan, carteles y sonido para lo que pasa mientras miras (en vivo o en la transmisión simulada).
+  // Efectos en 8 bits: la hinchada que salta y el sonido de lo que pasa mientras miras (en vivo o en la transmisión simulada).
   const [fx, fire] = useMatchFx();
   useLiveMatchFx(replaying ? null : match, resolveTeam, fire);
   // En vivo, las incidencias se refrescan al mismo ritmo que el marcador (goles cargados desde Discord).
@@ -109,7 +109,6 @@ export function MatchCenterPage({ matchId, teams = [], navigate }) {
     {/* Marcador + incidencias a la izquierda y cara a cara a la derecha, con el mismo alto:
         el historial se desplaza dentro de su columna en vez de estirar la página. */}
     {match && <PixelCrowd home={resolveTeam(match.homeTeam)} away={resolveTeam(match.awayTeam)} excite={fx?.kind === 'goal' ? fx.side : null}/>}
-    <FxOverlay fx={fx}/>
     <div className="match-center-top">
       <div className="match-center-main">{loadingSimulation
         ? <div className="match-center-score"><article className="scoreboard scoreboard-full scoreboard-loading"><p>SINTONIZANDO LA TRANSMISIÓN…</p></article></div>

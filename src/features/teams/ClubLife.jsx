@@ -44,12 +44,15 @@ function Stand({ rows, seats, offset, filled, colors, side }) {
 function Stadium({ occupancy = 0, matches = 0, colors }) {
   const filled = Math.round(Math.max(0, Math.min(100, occupancy)) * 10);
   const palette = { primary: colors?.primary ?? '#d10020', secondary: colors?.secondary ?? '#ffffff' };
+  // Con perspectiva (como mirando desde la tribuna): las tribunas de los lados más gruesas y la del fondo más alta.
   return <div className="pixel-stadium" role="img" aria-label={matches ? `Ocupación promedio ${occupancy}%` : 'Todavía sin partidos de local'}>
-    <Stand side="n" rows={3} seats={30} offset={0} filled={filled} colors={palette}/>
-    <Stand side="w" rows={9} seats={3} offset={200} filled={filled} colors={palette}/>
-    <div className="stadium-pitch" aria-hidden="true"><i className="pitch-half"/><i className="pitch-circle"/><i className="pitch-box left"/><i className="pitch-box right"/></div>
-    <Stand side="e" rows={9} seats={3} offset={400} filled={filled} colors={palette}/>
-    <Stand side="s" rows={3} seats={30} offset={600} filled={filled} colors={palette}/>
+    <div className="stadium-bowl">
+      <Stand side="n" rows={5} seats={26} offset={0} filled={filled} colors={palette}/>
+      <Stand side="w" rows={7} seats={5} offset={200} filled={filled} colors={palette}/>
+      <div className="stadium-pitch" aria-hidden="true"><i className="pitch-half"/><i className="pitch-circle"/><i className="pitch-box left"/><i className="pitch-box right"/></div>
+      <Stand side="e" rows={7} seats={5} offset={400} filled={filled} colors={palette}/>
+      <Stand side="s" rows={3} seats={26} offset={600} filled={filled} colors={palette}/>
+    </div>
     <p className="stadium-label">{matches ? <><b>{occupancy}%</b> lleno en promedio · {matches} partido{matches === 1 ? '' : 's'} de local</> : 'Todavía no juegas de local'}</p>
   </div>;
 }
