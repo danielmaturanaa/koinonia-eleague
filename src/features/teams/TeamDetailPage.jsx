@@ -790,9 +790,8 @@ function SquadTab({ team, squad, starters, substitutes, onChanged }) {
 export function TeamDetailPage({ team, teams = [], tournaments = [], squad, standings, standingsTournamentId = null, matches = [], recentMatches = [], history = [], historyError, loading, tab = null, msg = null, onTab, onBack, onChanged, onProjection = null }) {
   const { canEditTeam, isPresidentOf, isAdmin } = useAuth();
   const canEdit = canEditTeam(team?.id);
-  // Un admin entra a un club ajeno como visitante; con "actuar como presi" ve y usa las herramientas del club.
-  const [actAs, setActAs] = useState(false);
-  const ownerMode = isPresidentOf(team?.id) || (isAdmin && actAs);
+  // Un admin ve en cada club lo mismo que su presidente (bandeja, nómina, seguimiento…) para poder ayudarlo.
+  const ownerMode = isPresidentOf(team?.id) || isAdmin;
   const [historyEditor, setHistoryEditor] = useState('');
   const [personEditor, setPersonEditor] = useState('');
   const [personRevision, setPersonRevision] = useState(0);
@@ -808,8 +807,6 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
   // Enlaces viejos a hojas que ahora viven en otro lugar: los visitantes caen donde corresponde.
   const requested = ownerMode ? tab : ({ fichajes: 'historia', finanzas: 'nomina' }[tab] ?? tab);
   const activeTab = sections.some(section => section.leaves.some(([id]) => id === requested)) ? requested : sections[0].leaves[0][0];
-  // Un admin que llega por un enlace a las herramientas del presidente (aviso, Discord) debe decidir si actúa como él.
-  const needsActAs = isAdmin && !isPresidentOf(team?.id) && !actAs && ['central', 'finanzas', 'seguimiento', 'bandeja', 'fichajes'].includes(tab);
   const activeSection = sections.find(section => section.leaves.some(([id]) => id === activeTab));
   const sectionLabel = section => (section.id === 'bandeja' && unread > 0 ? `${section.label} (${unread})` : section.label);
   const liveStandings = useLiveStandings(standingsTournamentId);
@@ -836,7 +833,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
   const colors = team?.colors ?? {};
   const heroStyle = { '--club-primary': colors.primary ?? '#062764', '--club-secondary': colors.secondary ?? '#0b3f8d', '--club-tertiary': colors.tertiary ?? '#ffd42a' };
 
-  return <main className="newspaper club-page"><section className="club-paper"><div className="club-actions"><button className="back-button" onClick={onBack}>← VOLVER A CLUBES</button>{canEdit && <button className="action-button club-covers-button" onClick={() => setCoversOpen(true)}>▣ PORTADAS</button>}{isAdmin && !isPresidentOf(team?.id) && team && <button type="button" className={`action-button club-actas-button ${actAs ? 'positive' : ''}`} aria-pressed={actAs} onClick={() => setActAs(value => !value)}>{actAs ? '✔ ACTUANDO COMO PRESI' : 'ACTUAR COMO PRESI'}</button>}{onProjection && team && <button type="button" className="action-button club-projection-button" onClick={onProjection}>CALCULADORA PARA CLASIFICAR</button>}</div>
+  return <main className="newspaper club-page"><section className="club-paper"><div className="club-actions"><button className="back-button" onClick={onBack}>← VOLVER A CLUBES</button>{canEdit && <button className="action-button club-covers-button" onClick={() => setCoversOpen(true)}>▣ PORTADAS</button>}{onProjection && team && <button type="button" className="action-button club-projection-button" onClick={onProjection}>CALCULADORA PARA CLASIFICAR</button>}</div>
     {loading || !team ? <div className="arcade-state">CARGANDO FICHA...</div> : <>
       <header className="club-hero" style={heroStyle}>
         <div className="club-crest-wrap"><TeamMark team={team} className="club-crest"/>{canEdit && <button type="button" className="club-crest-edit" onClick={() => setCrestEditorOpen(true)} aria-label="Editar escudo y nombre del club" title="Editar escudo y nombre">✎</button>}</div>
@@ -845,8 +842,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
       </header>
       <nav className="club-tabs" ref={tabsRef} role="tablist" aria-label="Secciones del club">{sections.map(section => <button type="button" role="tab" key={section.id} aria-selected={activeSection.id === section.id} className={activeSection.id === section.id ? 'active' : ''} onClick={() => { if (activeSection.id !== section.id) onTab?.(section.leaves[0][0]); }}>{sectionLabel(section)}</button>)}</nav>
       {activeSection.leaves.length > 1 && <nav className="club-subtabs" role="tablist" aria-label={`Vistas de ${activeSection.label.toLowerCase()}`}>{activeSection.leaves.map(([id, label]) => <button type="button" role="tab" key={id} aria-selected={activeTab === id} className={activeTab === id ? 'on' : ''} onClick={() => onTab?.(id)}>{label}</button>)}</nav>}
-      {needsActAs && <p className="club-actas-banner" role="status">ESTE ENLACE LLEVA A LAS HERRAMIENTAS DEL PRESIDENTE. <button type="button" className="link-button" onClick={() => setActAs(true)}>ACTUAR COMO PRESI PARA VERLO</button></p>}
-      {isAdmin && actAs && !isPresidentOf(team.id) && <p className="club-actas-banner" role="status">MODO ADMIN: ESTÁS ACTUANDO COMO EL PRESIDENTE DE {team.name.toUpperCase()}. TODO LO QUE HAGAS QUEDA REGISTRADO A TU NOMBRE.</p>}
+      {isAdmin && !isPresidentOf(team.id) && <p className="club-actas-banner" role="status">MODO ADMIN: VES TODO DE {team.name.toUpperCase()} Y PUEDES ACTUAR POR SU PRESIDENTE. LO QUE HAGAS QUEDA REGISTRADO A TU NOMBRE.</p>}
 
       <section className="club-tab-content" role="tabpanel">
         {activeTab === 'central' && <ClubCentral team={team} balance={balance} matches={matches} onTab={onTab}

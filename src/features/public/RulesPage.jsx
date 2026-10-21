@@ -119,7 +119,7 @@ const ClubSystems = () => <>
   <section className="rules-section">
     <h2>9. Directiva y Objetivos</h2>
     <ul>
-      <li>Al comenzar cada torneo de liga la directiva le fija a cada club tres objetivos según lo que vale su plantel: terminar en el puesto que le corresponde por valor (<strong>15 M GP</strong>), clasificar a playoffs (<strong>10 M GP</strong>) y no pasar el tope de nómina (<strong>5 M GP</strong>).</li>
+      <li>Al comenzar cada torneo de liga la directiva le fija a cada club tres objetivos según lo que vale su plantel: terminar en el puesto que le corresponde por valor (<strong>de 5 a 30 M GP</strong>: cuanto más alta la meta, más paga; pedirle el 1.º vale 30 M y terminar último, 5 M), clasificar a playoffs (<strong>de 5 a 15 M GP</strong>, más cuanto más abajo está el club en valor) y no pasar el tope de nómina (<strong>5 M GP</strong>).</li>
       <li>Se evalúan al terminar el torneo. Cada objetivo cumplido da su premio en GP y sube el ánimo de la plantilla (+5); uno fallado baja el ánimo (−5), sin multa.</li>
     </ul>
   </section>
