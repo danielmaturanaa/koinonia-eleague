@@ -84,6 +84,11 @@ export function App() {
     return null;
   })();
 
+  // Pantalla completa del marcador: sin el sitio alrededor.
+  if (route.name === 'scoreboard') {
+    return <MatchScoreboardPage matchId={route.matchId} onBack={() => navigate(`/partidos/${encodeURIComponent(route.matchId)}`)}/>;
+  }
+
   let page;
   if (areaRoute) {
     const calculatorTournament = activeTournaments.find(item => String(item.id) === String(route.query.torneo)) ?? tournament;

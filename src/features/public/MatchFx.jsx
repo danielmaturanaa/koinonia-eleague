@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { playSound } from '../../audio/synth.js';
 
 // Efectos del partido en 8 bits: el estadio en 360 con las hinchadas de cada club (saltan y agitan banderas con un gol,
-// pifian al rival y en el clásico tiran vasos y se agarran) y el sonido de goles, rojas, pitazos y la hinchada.
+// pifian al rival y en el clásico tiran vasos y se agarran) y el sonido de goles, rojas, pitazos y la hinchada (grabaciones reales).
 // Solo suena lo que pasa mientras miras.
 
 const colorsOf = team => ({ primary: team?.colors?.primary ?? '#062764', secondary: team?.colors?.secondary ?? '#ffffff' });
@@ -39,23 +39,20 @@ function SideStand({ sides, rows, perSide, back = false, sizeOf }) {
   </div>);
 }
 
-/** Cabecera: la barra de cada club detrás de su arco. La de la visita es chica: el resto de esa cabecera es del local. */
-function EndRows({ count, colors, offset }) {
-  return Array.from({ length: count }, (_, row) => <div key={row} className="arena-row">
-    {Array.from({ length: 3 }, (_, seat) => <Fan key={seat} colors={colors} roll={hash(row + offset, seat)}/>)}
-  </div>);
-}
-function EndStand({ side, colors, mood, local }) {
-  const away = side === 'away';
-  return <div className={`stadium360-end ${away ? 'east' : 'west'}`}>
-    {away && <div className={`arena-side ${local.mood}`}><EndRows count={20} colors={local.colors} offset={500}/></div>}
-    <div className={`arena-side ${away ? 'is-visitors' : ''} ${mood}`}><EndRows count={away ? 14 : 34} colors={colors} offset={away ? 400 : 300}/>{mood.includes('is-fighting') && <Fight/>}</div>
+/** Cabecera (detrás de cada arco): ambas son del local; la visita tiene un solo sector, en la tribuna del fondo. */
+function EndStand({ side, local }) {
+  return <div className={`stadium360-end ${side === 'away' ? 'east' : 'west'}`}>
+    <div className={`arena-side ${local.mood}`}>
+      {Array.from({ length: 34 }, (_, row) => <div key={row} className="arena-row">
+        {Array.from({ length: 3 }, (_, seat) => <Fan key={seat} colors={local.colors} roll={hash(row + (side === 'away' ? 400 : 300), seat)}/>)}
+      </div>)}
+    </div>
   </div>;
 }
 
 /**
- * El estadio en 360: la tribuna del fondo de frente (casi dos tercios del local, el resto de la visita), las cabeceras de cada barra a los lados y
- * la tribuna de abajo de espaldas, con la cancha al medio y lo que se le pase (el marcador) encima del pasto.
+ * El estadio en 360: la tribuna del fondo de frente (con el único sector de la visita a la derecha), las cabeceras de cada barra a los lados y
+ * la tribuna de abajo de espaldas (todo local), con la cancha al medio y lo que se le pase (el marcador) encima del pasto.
  * `fx`: el evento en curso. `derby`: en el clásico la hinchada que recibe el gol tira vasos y se agarra.
  */
 export function PixelStadium({ home, away, fx = null, derby = false, children }) {
@@ -68,27 +65,33 @@ export function PixelStadium({ home, away, fx = null, derby = false, children })
     <div className="arena-stands" aria-hidden="true"><SideStand sides={sides} rows={4} perSide={76} sizeOf={row => 4 + row}/></div>
     <div className="arena-board" aria-hidden="true"><span>{board.repeat(4)}</span></div>
     <div className="stadium360-middle">
-      <EndStand {...sides[0]} local={sides[0]}/>
+      <EndStand side="home" local={sides[0]}/>
       <div className="stadium360-pitch">
         <div className="stadium360-lines" aria-hidden="true"><i className="pitch-half"/><i className="pitch-circle"/><i className="pitch-box left"/><i className="pitch-box right"/></div>
         {throwing && <div key={fx.id} className={`arena-cups from-${throwing}`} aria-hidden="true">{Array.from({ length: 9 }, (_, index) => <i key={index} style={{ '--x': `${4 + ((index * 37) % 42)}%`, '--delay': `${(index % 5) * 0.18}s`, '--spin': index % 2 ? '1' : '-1' }}/>)}</div>}
         <div className="stadium360-center">{children}</div>
       </div>
-      <EndStand {...sides[1]} local={sides[0]}/>
+      <EndStand side="away" local={sides[0]}/>
     </div>
     <div className="arena-board south" aria-hidden="true"><span>{board.repeat(4)}</span></div>
-    <div className="arena-stands south" aria-hidden="true"><SideStand sides={sides} rows={2} perSide={56} back sizeOf={row => 7 + row * 2}/></div>
+    <div className="arena-stands south" aria-hidden="true"><SideStand sides={[sides[0]]} rows={2} perSide={110} back sizeOf={row => 7 + row * 2}/></div>
   </div>;
 }
 
-// Lo que suena con cada evento: [sonido, a los cuántos ms]. En modo estadio se suma la hinchada (rugido y vasos).
-function soundsFor(kind, { derby, stadium }) {
-  const crowd = sounds => (stadium ? sounds : []);
-  if (kind === 'goal') return [['goal', 0], ...crowd(derby ? [['cups', 1400]] : [])];
-  if (kind === 'red') return [['whistle', 0]];
-  if (kind === 'kickoff') return [['whistle', 0]];
-  if (kind === 'fulltime') return [['whistle', 0], ['whistle', 450]];
-  if (kind === 'halftime') return [['whistle', 0]];
+// Lo que suena con cada evento: [sonido, a los cuántos ms]. En modo estadio son grabaciones reales (silbato, rugido, festejo,
+// canto, aplausos); en la vista clásica, los sonidos en 8 bits de siempre.
+let roarTurn = 0;
+function soundsFor(kind, { stadium }) {
+  if (!stadium) {
+    if (kind === 'goal') return [['goal', 0]];
+    if (kind === 'fulltime') return [['whistle', 0], ['whistle', 450]];
+    return [[kind === 'notify' ? 'notify' : 'whistle', 0]];
+  }
+  if (kind === 'goal') { roarTurn += 1; return [[roarTurn % 2 ? 'roar' : 'roar2', 0], ['celebration', 1800]]; }
+  if (kind === 'red') return [['referee', 0]];
+  if (kind === 'kickoff') return [['referee', 0], ['chant', 900]];
+  if (kind === 'halftime') return [['referee', 0], ['referee', 500]];
+  if (kind === 'fulltime') return [['referee', 0], ['referee', 500], ['referee', 1000], ['applause', 1600]];
   return [['notify', 0]];
 }
 

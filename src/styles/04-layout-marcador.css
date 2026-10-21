@@ -123,7 +123,7 @@
 .scoreboard-btn-goal:hover { background: #164aa8; }
 .scoreboard-btn-card { border-top-color: #7a1424; background: #5c0e1c; }
 .scoreboard-btn-card:hover { background: #7a1424; }
-.scoreboard-btn-finish { border-top-color: #8a6a06; color: #111; background: var(--yellow); }
+.scoreboard-btn-finish { width: 100%; border-top-color: #8a6a06; color: #111; background: var(--yellow); }
 .scoreboard-btn-finish:hover { background: #ffe066; }
 .scoreboard-btn-start { grid-column: 1 / -1; padding: 16px; color: #111; background: #64e329; font: 700 15px/1 'Oswald', sans-serif; }
 .scoreboard-controls-pending, .scoreboard-controls-closed { display: grid; gap: 6px; padding: 10px; }

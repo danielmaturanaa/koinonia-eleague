@@ -13,6 +13,7 @@ import { useApiQuery } from './useApiQuery.js';
 import { PitchBoard } from '../teams/PitchBoard.jsx';
 import { useAuth } from '../../app/AuthGate.jsx';
 import { MatchdayPanel } from './MatchdayPanel.jsx';
+import { startStadiumAmbience } from '../../audio/synth.js';
 import { PixelStadium, useLiveMatchFx, useMatchFx } from './MatchFx.jsx';
 
 // Goles agrupados por jugador; los minutos solo aparecen si el acta los registró.
@@ -118,6 +119,9 @@ export function MatchCenterPage({ matchId, teams = [], navigate }) {
   const stadium = view === 'estadio';
   const [fx, fire] = useMatchFx({ derby: Boolean(match?.derby), stadium });
   useLiveMatchFx(replaying ? null : match, resolveTeam, fire);
+  // En modo estadio, el murmullo de la hinchada de fondo mientras el partido está en vivo o en la transmisión.
+  const ambience = stadium && (match?.status === 'live' || replaying);
+  useEffect(() => (ambience ? startStadiumAmbience() : undefined), [ambience]);
   // En vivo, las incidencias se refrescan al mismo ritmo que el marcador (goles cargados desde Discord).
   useEffect(() => {
     if (match?.status !== 'live') return undefined;

@@ -183,6 +183,20 @@ const ClubSystems = () => <>
   </section>
 </>;
 
+// Grabaciones de estadio usadas en la ficha de partido (recortadas y normalizadas; las CC BY-SA quedan bajo la misma licencia).
+const SOUND_CREDITS = [
+  ['Rugidos y ambiente', 'WWS Football Austria vs. Sweden', 'Work With Sounds / Torsten Nilsson', 'CC BY 4.0', 'File:WWS_FootballAustriavs.Sweden.ogg'],
+  ['Festejo de gol', 'Score Strasbourg-PSG (Racing 2 - Paris 0)', 'X22c23a', 'CC BY-SA 4.0', 'File:Score_Strasbourg-PSG_(RCSA-Paris_Saint_Germain)_Racing_2_-_Paris_0_MERCI_-_DE_RIEN.ogg'],
+  ['Canto', "Lève-toi si t'es Strasbourgeois", 'Xaviyeah', 'CC BY-SA 4.0', "File:Lève-toi_si_t'es_Strasbourgeois_-_Chant_des_supporters_du_RC_Strasbourg.ogg"],
+  ['Silbato', 'Referee whistle blow (gymnasium)', 'SpliceSound', 'CC0', 'File:218318_splicesound_referee-whistle-blow-gymnasium.wav'],
+  ['Aplausos', 'Applause I', 'thore', 'Dominio público', 'File:Applause_i.ogg'],
+];
+
+const SoundCredits = () => <section className="rules-section">
+  <h2>Créditos de sonido</h2>
+  <ul>{SOUND_CREDITS.map(([use, title, author, license, file]) => <li key={file}><strong>{use}:</strong> <a href={`https://commons.wikimedia.org/wiki/${encodeURIComponent(file)}`} target="_blank" rel="noreferrer">{title}</a>, de {author} ({license}), vía Wikimedia Commons.</li>)}</ul>
+</section>;
+
 export function RulesPage() {
   const rules = useApiQuery(signal => endpoints.leagueRules(signal), []);
   const squadValueLimit = Number(rules.data?.squadValueLimit) > 0 ? Number(rules.data.squadValueLimit) : null;
@@ -191,6 +205,6 @@ export function RulesPage() {
   return <main className="newspaper"><article className="data-paper rules-paper">
     <header className="rules-header"><p>KOINONIA e-LEAGUE · DOCUMENTO OFICIAL</p><h1>Reglamento Oficial de la Liga eFootball</h1></header>
     <p className="rules-intro">Este documento establece la normativa oficial para el desarrollo de la liga, incluyendo reglas de jugabilidad, sanciones, sistema de divisiones, mercado de fichajes y sistema de premiación. Todos los presidentes y participantes están obligados a cumplir estas normativas.</p>
-    <MatchRules/><Sanctions/><Divisions/><Transfers squadValueLimit={squadValueLimit} payrollCap={payrollCap} contractsEnabled={contractsEnabled}/><Prizes/><Contracts payrollCap={payrollCap}/>{contractsEnabled && <ClubSystems/>}
+    <MatchRules/><Sanctions/><Divisions/><Transfers squadValueLimit={squadValueLimit} payrollCap={payrollCap} contractsEnabled={contractsEnabled}/><Prizes/><Contracts payrollCap={payrollCap}/>{contractsEnabled && <ClubSystems/>}<SoundCredits/>
   </article></main>;
 }
