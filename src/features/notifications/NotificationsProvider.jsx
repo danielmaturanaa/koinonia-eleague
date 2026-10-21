@@ -24,6 +24,7 @@ export function NotificationsProvider({ children }) {
   const [version, setVersion] = useState(0);
   const known = useRef(null); // ids ya conocidos; null hasta la primera carga (lo que había al entrar no se anuncia)
   const previous = useRef({ unread: -1, latestId: null });
+  const busy = useRef(false);
   const toastRef = useRef(toast);
   toastRef.current = toast;
 
@@ -31,7 +32,7 @@ export function NotificationsProvider({ children }) {
     const items = (await endpoints.notifications({ unread: 1, limit: 10 }))?.data ?? [];
     const fresh = items.filter(item => !known.current.has(item.id));
     items.forEach(item => known.current.add(item.id));
-    fresh.slice(0, MAX_TOASTS).reverse().forEach(item => toastRef.current({ tone: 'info', icon: categoryIcon(item.category), title: item.title, body: item.body.split('\n')[0], href: item.deeplink, timeout: 8000, sound: false }));
+    fresh.slice(0, MAX_TOASTS).reverse().forEach(item => toastRef.current({ tone: 'info', icon: categoryIcon(item.category), title: item.title, body: (item.body ?? '').split('\n')[0], href: item.deeplink?.startsWith('#') ? item.deeplink : `#${item.deeplink ?? '/notificaciones'}`, timeout: 8000, sound: false }));
     if (fresh.length > MAX_TOASTS) toastRef.current({ tone: 'info', title: `${fresh.length - MAX_TOASTS} AVISOS MÁS`, href: '#/notificaciones', timeout: 6000, sound: false });
     // Un solo sonido por tanda (el del aviso más urgente), solo si sus preferencias lo permiten.
     if (fresh.length) {
@@ -43,18 +44,23 @@ export function NotificationsProvider({ children }) {
   }, []);
 
   const refresh = useCallback(async () => {
+    // Una sola consulta a la vez: el latido, el regreso a la pestaña y "marcar leído" no se pisan ni repiten avisos.
+    if (busy.current) return;
+    busy.current = true;
     try {
       const next = (await endpoints.notificationSummary())?.data ?? EMPTY;
+      const before = previous.current;
+      previous.current = { unread: next.unread, latestId: next.latest?.id ?? null };
       if (known.current === null) {
-        const items = (await endpoints.notifications({ unread: 1, limit: 50 }))?.data ?? [];
+        const items = (await endpoints.notifications({ unread: 1, limit: 100 }))?.data ?? [];
         known.current = new Set(items.map(item => item.id));
-      } else if (next.unread > previous.current.unread || (next.latest?.id && next.latest.id !== previous.current.latestId)) {
+      } else if (next.unread > before.unread || (next.latest?.id && next.latest.id !== before.latestId)) {
         await announce();
       }
-      if (next.unread !== previous.current.unread || next.latest?.id !== previous.current.latestId) setVersion(value => value + 1);
-      previous.current = { unread: next.unread, latestId: next.latest?.id ?? null };
+      if (next.unread !== before.unread || next.latest?.id !== before.latestId) setVersion(value => value + 1);
       setSummary(next);
     } catch { /* sin red o sesión vencida: el próximo latido lo reintenta */ }
+    finally { busy.current = false; }
   }, [announce]);
 
   useEffect(() => {

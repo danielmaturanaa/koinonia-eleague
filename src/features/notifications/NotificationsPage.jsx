@@ -101,6 +101,7 @@ function Preferences() {
 /** Todos tus avisos y cómo quieres recibirlos. */
 export function NotificationsPage({ navigate, initialTab = 'avisos' }) {
   const [tab, setTab] = useState(TABS.some(item => item.id === initialTab) ? initialTab : 'avisos');
+  useEffect(() => { if (TABS.some(item => item.id === initialTab)) setTab(initialTab); }, [initialTab]);
   return <main className="newspaper data-page"><section className="data-paper notifications-page">
     <PageHeader kicker="CENTRAL DE AVISOS" title="NOTIFICACIONES"/>
     <Tabs tabs={TABS} value={tab} onChange={setTab} label="Secciones de notificaciones"/>

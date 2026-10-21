@@ -71,14 +71,14 @@ function MarketSection({ teams }) {
 export function ControlRoomPage({ teams = [], initialTab = 'personas', tournamentId = null }) {
   const { isAdmin } = useAuth();
   const [tab, setTab] = useState(SECTIONS.some(item => item.id === initialTab) ? initialTab : 'personas');
-  useEffect(() => { if (SECTIONS.some(item => item.id === initialTab)) setTab(initialTab); }, [initialTab]);
+  useEffect(() => { if (SECTIONS.some(item => item.id === initialTab)) setTab(initialTab); }, [initialTab, tournamentId]);
   if (!isAdmin) {
     return <main className="newspaper data-page"><section className="data-paper"><PageHeader kicker="ADMINISTRACIÓN" title="SALA DE CONTROL"/>
       <EmptyState icon="lock" title="SOLO PARA ADMINISTRADORES">SI NECESITAS ALGO DE AQUÍ, PÍDELO A UN ADMIN DE LA LIGA.</EmptyState></section></main>;
   }
   return <main className="newspaper data-page"><section className="data-paper control-room">
     <PageHeader kicker="ADMINISTRACIÓN" title="SALA DE CONTROL"/>
-    <Tabs tabs={SECTIONS} value={tab} onChange={id => { setTab(id); window.history.replaceState(null, '', `#/admin?tab=${id}`); }} label="Secciones de administración"/>
+    <Tabs tabs={SECTIONS} value={tab} onChange={id => { window.location.hash = `/admin?tab=${id}`; }} label="Secciones de administración"/>
     {tab === 'personas' && <PeoplePage teams={teams} embedded/>}
     {tab === 'torneos' && <TournamentsSection teams={teams} initialId={tournamentId}/>}
     {tab === 'mercado' && <MarketSection teams={teams}/>}

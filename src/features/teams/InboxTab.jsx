@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { PlayerFace } from '../../components/PlayerFace.jsx';
 import { formatDate } from '../public/DataStates.jsx';
@@ -40,17 +40,23 @@ export function InboxTab({ team, onTab, onRead, highlightId = null }) {
   const roleOf = new Map((Array.isArray(rolesQuery.data) ? rolesQuery.data : []).map(row => [row.playerId, row]));
   const marketOpen = useMarketOpen();
   const { refresh: refreshNotifications } = useNotifications();
+  const [readNow, setReadNow] = useState(() => new Set());
+  const scrolledTo = useRef(null);
   // Cada carta se marca leída al tocarla (o al llegar por un aviso); ya no se marcan todas solo por abrir la bandeja.
   const markRead = async ids => {
+    // Se ve leída al instante; el servidor la confirma en segundo plano.
+    setReadNow(current => new Set([...current, ...(ids ?? messages.filter(message => !message.read).map(message => message.id))]));
     await endpoints.markInboxRead(team.id, ids).catch(() => {});
     onRead?.();
     refreshNotifications();
   };
-  const unread = messages.filter(message => !message.read).length;
+  const isRead = message => message.read || readNow.has(message.id);
+  const unread = messages.filter(message => !isRead(message)).length;
   useEffect(() => {
-    if (!highlightId || !query.data) return;
+    if (!highlightId || !query.data || scrolledTo.current === highlightId) return;
+    scrolledTo.current = highlightId;
     document.getElementById(`msg-${highlightId}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    if (messages.some(message => message.id === highlightId && !message.read)) markRead([highlightId]);
+    if (messages.some(message => String(message.id) === String(highlightId) && !isRead(message))) markRead([highlightId]);
   }, [highlightId, query.data]);
   return <section className="inbox-tab">
     <header><h2>BANDEJA DE ENTRADA</h2>{unread > 0 && <Button variant="ghost" size="sm" onClick={() => markRead(null)}>MARCAR TODO COMO LEÍDO ({unread})</Button>}<p>AQUÍ TE ESCRIBEN TUS JUGADORES: CUANDO SU CONTRATO ESTÁ POR VENCER, CUANDO QUIEREN RENOVAR Y CUANDO NO ESTÁN CONFORMES CON SU ROL.</p></header>
@@ -61,7 +67,7 @@ export function InboxTab({ team, onTab, onRead, highlightId = null }) {
       // El mensaje es una foto del momento en que se escribió: si desde entonces le cambiaste el rol, se avisa y no se muestra el ánimo viejo.
       const nowRow = roleOf.get(message.playerId);
       const stale = message.kind === 'unhappy' && nowRow && message.meta?.role && nowRow.role !== message.meta.role;
-      return <li key={message.id} id={`msg-${message.id}`} className={`inbox-item ${message.read ? '' : 'unread'} ${message.id === highlightId ? 'is-highlighted' : ''}`} onClick={() => { if (!message.read) markRead([message.id]); }}>
+      return <li key={message.id} id={`msg-${message.id}`} className={`inbox-item ${isRead(message) ? '' : 'unread'} ${String(message.id) === String(highlightId) ? 'is-highlighted' : ''}`} onClick={() => { if (!isRead(message)) markRead([message.id]); }}>
         <PlayerFace src={message.faceUrl} name={message.playerName}/>
         <div className="inbox-body">
           <div className="inbox-meta"><b>{message.playerName}</b><small>{icon} {label} · {formatDate(message.createdAt)}</small></div>

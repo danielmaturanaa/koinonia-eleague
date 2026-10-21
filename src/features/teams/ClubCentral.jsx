@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { endpoints } from '../../api/endpoints.js';
+import { useAuth } from '../../app/AuthGate.jsx';
 import { matchRoundLabel } from '../../utils/matchPresentation.js';
 import { Card, EmptyState, Icon, Stat } from '../../ui/index.js';
 import { gp } from '../public/DataStates.jsx';
@@ -31,6 +32,9 @@ export function ClubCentral({ team, balance, matches = [], onTab, standing = nul
   const offers = useApiQuery(signal => endpoints.marketOffers(signal).catch(() => ({ data: [] })), []);
   const watch = useApiQuery(signal => endpoints.teamWatchlist(team.id, signal).catch(() => ({ data: [] })), [team.id]);
   const { summary, version } = useNotifications();
+  // Ofertas, peticiones y avisos son de quien preside el club: un admin actuando como presi no ve los suyos como si fueran del club.
+  const { isPresidentOf } = useAuth();
+  const mine = isPresidentOf(team.id);
   // Los avisos nuevos refrescan lo que está esperando respuesta.
   const firstVersion = useRef(version);
   useEffect(() => { if (version !== firstVersion.current) { offers.retry(); watch.retry(); contracts.retry(); } }, [version]);
@@ -40,9 +44,9 @@ export function ClubCentral({ team, balance, matches = [], onTab, standing = nul
   const payroll = live.reduce((total, row) => total + (row.salary ?? 0), 0);
   const cap = contracts.data?.projection?.cap ?? null;
   const expiring = rows.filter(row => row.status === 'expired' || (row.status === 'active' && (row.endsWith || row.seasonsLeft === 1))).length;
-  const incoming = (Array.isArray(offers.data) ? offers.data : []).filter(offer => offer.direction === 'incoming').length;
+  const incoming = mine ? (Array.isArray(offers.data) ? offers.data : []).filter(offer => offer.direction === 'incoming').length : 0;
   const alerts = (Array.isArray(watch.data) ? watch.data : []).filter(row => row.alerts?.length).length;
-  const requests = summary.byCategory.requests ?? 0;
+  const requests = mine ? (summary.byCategory.requests ?? 0) : 0;
   const next = nextMatchOf(matches, team.id);
   const rival = next ? (next.homeTeam?.id === team.id ? next.awayTeam : next.homeTeam) : null;
 
@@ -65,7 +69,8 @@ export function ClubCentral({ team, balance, matches = [], onTab, standing = nul
       {todo.length === 0
         ? <EmptyState icon="check" title="TODO AL DÍA">NO HAY OFERTAS, PETICIONES NI CONTRATOS ESPERANDO TU RESPUESTA.</EmptyState>
         : <ul className="central-todo">{todo.map(([icon, text, href]) => <li key={text}><a href={href}><Icon name={icon} size={22}/><b>{text}</b><span aria-hidden="true">→</span></a></li>)}</ul>}
-      {summary.unread > 0 && <p className="central-note">TIENES {summary.unread} AVISO{summary.unread === 1 ? '' : 'S'} SIN LEER EN LA <a href="#/notificaciones">CAMPANA</a>.</p>}
+      {!mine && <p className="central-note">ESTÁS VIENDO ESTA CENTRAL COMO ADMIN: LAS OFERTAS Y PETICIONES SON DEL PRESIDENTE DEL CLUB Y NO SE MUESTRAN AQUÍ.</p>}
+      {mine && summary.unread > 0 && <p className="central-note">TIENES {summary.unread} AVISO{summary.unread === 1 ? '' : 'S'} SIN LEER EN LA <a href="#/notificaciones">CAMPANA</a>.</p>}
     </Card>
 
     <BoardPanel team={team}/>

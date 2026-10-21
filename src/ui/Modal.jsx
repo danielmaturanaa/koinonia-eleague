@@ -7,11 +7,13 @@ const FOCUSABLE = 'a[href], button:not([disabled]), input:not([disabled]), selec
 /** Ventana modal: Escape o clic fuera cierran, el foco queda dentro y vuelve a quien la abrió. */
 export function Modal({ title, onClose, children, wide = false }) {
   const box = useRef(null);
+  const closeRef = useRef(onClose);
+  closeRef.current = onClose;
   useEffect(() => {
     const opener = document.activeElement;
     box.current?.querySelector(FOCUSABLE)?.focus();
     const onKey = event => {
-      if (event.key === 'Escape') { event.stopPropagation(); onClose(); return; }
+      if (event.key === 'Escape') { event.stopPropagation(); closeRef.current(); return; }
       if (event.key !== 'Tab' || !box.current) return;
       const items = [...box.current.querySelectorAll(FOCUSABLE)];
       if (!items.length) return;
@@ -22,7 +24,7 @@ export function Modal({ title, onClose, children, wide = false }) {
     };
     document.addEventListener('keydown', onKey);
     return () => { document.removeEventListener('keydown', onKey); opener?.focus?.(); };
-  }, [onClose]);
+  }, []);
   return createPortal(<div className="ui-modal-backdrop" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
     <div className={`ui-modal ${wide ? 'ui-modal--wide' : ''}`} role="dialog" aria-modal="true" aria-label={title} ref={box}>
       <header><h2>{title}</h2><Button variant="ghost" size="sm" aria-label="Cerrar" onClick={onClose}>✕</Button></header>

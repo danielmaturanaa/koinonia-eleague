@@ -207,7 +207,7 @@ export function MarketPage({ teams, initialTab = null, highlightId = null }) {
   const myTeam = teams.find(team => team.id === myTeamId);
   const interest = useInterest(revision);
   const [tab, setTabState] = useState(() => initialTab || readTab());
-  useEffect(() => { if (initialTab) setTabState(initialTab); }, [initialTab]);
+  useEffect(() => { if (initialTab) setTabState(initialTab); }, [initialTab, highlightId]);
   const setTab = value => { setTabState(value); try { window.sessionStorage.setItem(TAB_KEY, value); } catch { /* sin almacenamiento */ } };
   const live = useApiQuery(signal => endpoints.sealedAuctions({ active: 1 }, signal).catch(() => ({ data: [] })), [revision]);
   const liveCount = (Array.isArray(live.data) ? live.data : []).filter(row => row.status === 'open').length;

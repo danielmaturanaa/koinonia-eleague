@@ -152,7 +152,7 @@ export function OffersInbox({ revision, onChanged, highlightId = null }) {
     {!offers.error && !offers.loading && !rows.length && <p className="empty-copy">NO HAY OFERTAS PENDIENTES.</p>}
     {groups.map(([title, items]) => <div className="offer-group" key={title}>
       <h3 className="market-subtitle">{title}</h3>
-      <div className="offer-list">{items.map(offer => <OfferCard key={`${offer.kind}-${offer.id}`} offer={offer} onChanged={refresh} highlighted={Boolean(highlightId) && offer.id === highlightId}/>)}</div>
+      <div className="offer-list">{items.map(offer => <OfferCard key={`${offer.kind}-${offer.id}`} offer={offer} onChanged={refresh} highlighted={Boolean(highlightId) && String(offer.id) === String(highlightId)}/>)}</div>
     </div>)}
   </section>;
 }

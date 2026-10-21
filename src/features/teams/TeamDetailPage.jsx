@@ -805,7 +805,11 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
   useEffect(() => { if (notificationsVersion !== firstVersion.current) inbox.retry(); }, [notificationsVersion]);
   const unread = inbox.data?.unread ?? 0;
   const sections = ownerMode ? OWNER_SECTIONS : VISITOR_SECTIONS;
-  const activeTab = sections.some(section => section.leaves.some(([id]) => id === tab)) ? tab : sections[0].leaves[0][0];
+  // Enlaces viejos a hojas que ahora viven en otro lugar: los visitantes caen donde corresponde.
+  const requested = ownerMode ? tab : ({ fichajes: 'historia', finanzas: 'nomina' }[tab] ?? tab);
+  const activeTab = sections.some(section => section.leaves.some(([id]) => id === requested)) ? requested : sections[0].leaves[0][0];
+  // Un admin que llega por un enlace a las herramientas del presidente (aviso, Discord) debe decidir si actúa como él.
+  const needsActAs = isAdmin && !isPresidentOf(team?.id) && !actAs && ['central', 'finanzas', 'seguimiento', 'bandeja', 'fichajes'].includes(tab);
   const activeSection = sections.find(section => section.leaves.some(([id]) => id === activeTab));
   const sectionLabel = section => (section.id === 'bandeja' && unread > 0 ? `${section.label} (${unread})` : section.label);
   const liveStandings = useLiveStandings(standingsTournamentId);
@@ -841,6 +845,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
       </header>
       <nav className="club-tabs" ref={tabsRef} role="tablist" aria-label="Secciones del club">{sections.map(section => <button type="button" role="tab" key={section.id} aria-selected={activeSection.id === section.id} className={activeSection.id === section.id ? 'active' : ''} onClick={() => { if (activeSection.id !== section.id) onTab?.(section.leaves[0][0]); }}>{sectionLabel(section)}</button>)}</nav>
       {activeSection.leaves.length > 1 && <nav className="club-subtabs" role="tablist" aria-label={`Vistas de ${activeSection.label.toLowerCase()}`}>{activeSection.leaves.map(([id, label]) => <button type="button" role="tab" key={id} aria-selected={activeTab === id} className={activeTab === id ? 'on' : ''} onClick={() => onTab?.(id)}>{label}</button>)}</nav>}
+      {needsActAs && <p className="club-actas-banner" role="status">ESTE ENLACE LLEVA A LAS HERRAMIENTAS DEL PRESIDENTE. <button type="button" className="link-button" onClick={() => setActAs(true)}>ACTUAR COMO PRESI PARA VERLO</button></p>}
       {isAdmin && actAs && !isPresidentOf(team.id) && <p className="club-actas-banner" role="status">MODO ADMIN: ESTÁS ACTUANDO COMO EL PRESIDENTE DE {team.name.toUpperCase()}. TODO LO QUE HAGAS QUEDA REGISTRADO A TU NOMBRE.</p>}
 
       <section className="club-tab-content" role="tabpanel">

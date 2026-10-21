@@ -386,7 +386,8 @@ export function PayrollTab({ team, balance, onChanged, onTab = null, currentPosi
   const refresh = () => { query.retry(); onChanged?.(); };
   const projection = query.data?.projection;
   // Con `forcedView` quien la usa decide la vista (Finanzas: contratos / simulador); sin ella, el presi alterna y el visitante solo ve lo real.
-  const current = forcedView ?? (canEdit ? view : 'actual') ?? (projection?.enabled ? 'actual' : 'proyeccion');
+  const noContracts = projection && !projection.enabled; // antes del v11 solo hay simulación
+  const current = (forcedView === 'actual' && noContracts ? 'proyeccion' : forcedView) ?? (canEdit ? view : 'actual') ?? (projection?.enabled ? 'actual' : 'proyeccion');
 
   return <section className={`payroll-tab ${current === 'proyeccion' ? 'is-sim' : 'is-real'}`}>
     <header className="payroll-head">

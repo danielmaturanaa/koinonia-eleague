@@ -27,7 +27,8 @@ export function installAudioUnlock() {
 export function playTones(notes, { type = 'triangle', gap = 0.12, last = 0.6, volume = 0.12, scale = 1 } = {}) {
   try {
     const audio = audioContext();
-    if (!audio) return;
+    // Sin gesto previo el navegador lo tiene congelado: mejor no sonar que acumular notas y soltarlas juntas.
+    if (!audio || audio.state !== 'running') return;
     const peak = Math.max(0.0002, volume * scale);
     notes.forEach((frequency, index) => {
       const oscillator = audio.createOscillator();
@@ -50,7 +51,7 @@ export function playTones(notes, { type = 'triangle', gap = 0.12, last = 0.6, vo
 function whistle(scale) {
   try {
     const audio = audioContext();
-    if (!audio) return;
+    if (!audio || audio.state !== 'running') return;
     const at = audio.currentTime;
     const oscillator = audio.createOscillator();
     const vibrato = audio.createOscillator();
