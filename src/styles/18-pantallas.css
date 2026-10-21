@@ -491,3 +491,7 @@ a.tile:focus-visible, button.tile:focus-visible { outline: 3px solid var(--c-yel
 @keyframes crowd-chant { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
 @keyframes crowd-chant-hot { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
 @keyframes crowd-explode { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+/* Mensajes: los tuyos a la izquierda y las charlas con jugadores de otros clubes a la derecha. */
+.messages-split { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; }
+.messages-split > * { min-width: 0; margin: 0; }
+@media (max-width: 900px) { .messages-split { grid-template-columns: 1fr; } }

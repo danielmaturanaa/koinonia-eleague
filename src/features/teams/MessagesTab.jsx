@@ -15,7 +15,7 @@ const ago = value => {
   return `hace ${Math.round(minutes / 1440)} d`;
 };
 
-/** Mensajes: como WhatsApp. Arriba, las charlas con jugadores que quieres fichar; abajo, lo que te escriben los tuyos. */
+/** Mensajes: como WhatsApp. A la izquierda, lo que te escriben los tuyos; a la derecha, las charlas con jugadores de otros clubes. */
 export function MessagesTab({ team, onTab, onRead, highlightId }) {
   const chats = useApiQuery(signal => endpoints.teamChats(team.id, signal).catch(() => ({ data: [] })), [team.id]);
   const [talking, setTalking] = useState(null);
@@ -26,11 +26,12 @@ export function MessagesTab({ team, onTab, onRead, highlightId }) {
   // El buscador entrega filas del directorio (`playerId`); a los tuyos les hablas por la bandeja, no aquí.
   const pick = row => {
     if (!row) return;
-    if (row.team?.id === team.id) { setPickError(`${row.name} ya es tuyo: sus mensajes llegan a la bandeja de abajo.`); return; }
+    if (row.team?.id === team.id) { setPickError(`${row.name} ya es tuyo: sus mensajes llegan a la bandeja de la izquierda.`); return; }
     setPickError(null);
     open({ id: row.playerId, name: row.name, faceUrl: row.faceUrl, position: row.position });
   };
-  return <div className="messages-tab">
+  return <div className="messages-tab messages-split">
+    <InboxTab team={team} onTab={onTab} onRead={onRead} highlightId={highlightId}/>
     <Card title="Charlas con jugadores que quieres fichar" aside={<Button size="sm" icon="chat" onClick={() => setPicking(value => !value)}>Hablar con un jugador</Button>}>
       {picking && <div className="messages-picker"><PlayerPicker status="registered" label="¿Con quién quieres hablar?" value={null} onChange={pick}/>{pickError && <p className="form-feedback error" role="alert">{pickError}</p>}</div>}
       {rows.length
@@ -48,7 +49,6 @@ export function MessagesTab({ team, onTab, onRead, highlightId }) {
         </li>)}</ul>
         : <p className="screen-lead">Todavía no hablas con nadie. Busca a un jugador (de otro club o libre) y convéncelo antes de hacerle una oferta. Se puede aunque el mercado esté cerrado.</p>}
     </Card>
-    <InboxTab team={team} onTab={onTab} onRead={onRead} highlightId={highlightId}/>
     {talking && <TalkModal player={talking} teamId={team.id} onClose={() => { setTalking(null); chats.retry(); }} onChanged={() => chats.retry()}/>}
   </div>;
 }
