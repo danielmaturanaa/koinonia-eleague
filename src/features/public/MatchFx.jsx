@@ -80,14 +80,14 @@ export function PixelStadium({ home, away, fx = null, derby = false, children })
 
 // Lo que suena con cada evento: [sonido, a los cuántos ms]. En modo estadio son grabaciones reales (silbato, rugido, festejo,
 // canto, aplausos); en la vista clásica, los sonidos en 8 bits de siempre.
-let roarTurn = 0;
-function soundsFor(kind, { stadium }) {
+function soundsFor(kind, { stadium }, side) {
   if (!stadium) {
     if (kind === 'goal') return [['goal', 0]];
     if (kind === 'fulltime') return [['whistle', 0], ['whistle', 450]];
     return [[kind === 'notify' ? 'notify' : 'whistle', 0]];
   }
-  if (kind === 'goal') { roarTurn += 1; return [[roarTurn % 2 ? 'roar' : 'roar2', 0], ['celebration', 1800]]; }
+  // Gol del local: explota el estadio. Gol de la visita: la mayoría (local) pifia y se escucha bajito el sector visitante.
+  if (kind === 'goal') return side === 'away' ? [['boo', 0], ['awayCheer', 300]] : [['celebration', 0]];
   if (kind === 'red') return [['referee', 0]];
   if (kind === 'kickoff') return [['referee', 0], ['chant', 900]];
   if (kind === 'halftime') return [['referee', 0], ['referee', 500]];
@@ -102,7 +102,7 @@ export function useMatchFx({ derby = false, stadium = true } = {}) {
   const options = useRef({ derby, stadium });
   options.current = { derby, stadium };
   const fire = useCallback(event => {
-    for (const [sound, delay] of soundsFor(event.kind, options.current)) {
+    for (const [sound, delay] of soundsFor(event.kind, options.current, event.side)) {
       if (delay) window.setTimeout(() => playSound(sound), delay); else playSound(sound);
     }
     window.clearTimeout(timer.current);

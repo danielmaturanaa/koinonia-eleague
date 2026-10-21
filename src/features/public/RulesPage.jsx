@@ -185,7 +185,7 @@ const ClubSystems = () => <>
 
 // Grabaciones de estadio usadas en la ficha de partido (recortadas y normalizadas; las CC BY-SA quedan bajo la misma licencia).
 const SOUND_CREDITS = [
-  ['Rugidos y ambiente', 'WWS Football Austria vs. Sweden', 'Work With Sounds / Torsten Nilsson', 'CC BY 4.0', 'File:WWS_FootballAustriavs.Sweden.ogg'],
+  ['Pifias y ambiente', 'WWS Football Austria vs. Sweden', 'Work With Sounds / Torsten Nilsson', 'CC BY 4.0', 'File:WWS_FootballAustriavs.Sweden.ogg'],
   ['Festejo de gol', 'Score Strasbourg-PSG (Racing 2 - Paris 0)', 'X22c23a', 'CC BY-SA 4.0', 'File:Score_Strasbourg-PSG_(RCSA-Paris_Saint_Germain)_Racing_2_-_Paris_0_MERCI_-_DE_RIEN.ogg'],
   ['Canto', "Lève-toi si t'es Strasbourgeois", 'Xaviyeah', 'CC BY-SA 4.0', "File:Lève-toi_si_t'es_Strasbourgeois_-_Chant_des_supporters_du_RC_Strasbourg.ogg"],
   ['Silbato', 'Referee whistle blow (gymnasium)', 'SpliceSound', 'CC0', 'File:218318_splicesound_referee-whistle-blow-gymnasium.wav'],
