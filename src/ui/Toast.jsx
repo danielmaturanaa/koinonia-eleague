@@ -1,8 +1,10 @@
 import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
+import { playSound } from '../audio/synth.js';
 import { Icon } from './Icon.jsx';
 
 const ToastContext = createContext(() => {});
 const MAX_VISIBLE = 4;
+const TONE_SOUND = { success: 'confirm', error: 'error', money: 'cash' };
 const TONE_ICON = { success: 'check', error: 'warning', info: 'bell', money: 'coin' };
 
 /** Avisos efímeros arriba a la derecha. Uso: `const toast = useToast(); toast({ tone, title, body })`. */
@@ -10,7 +12,8 @@ export function ToastProvider({ children }) {
   const [items, setItems] = useState([]);
   const nextId = useRef(1);
   const dismiss = useCallback(id => setItems(list => list.filter(item => item.id !== id)), []);
-  const push = useCallback(({ tone = 'info', title, body, icon, href, timeout = 5000 }) => {
+  const push = useCallback(({ tone = 'info', title, body, icon, href, timeout = 5000, sound = true }) => {
+    if (sound && TONE_SOUND[tone]) playSound(TONE_SOUND[tone]);
     const id = nextId.current++;
     setItems(list => [...list.slice(-(MAX_VISIBLE - 1)), { id, tone, title, body, href, icon: icon ?? TONE_ICON[tone] ?? 'bell' }]);
     if (timeout) window.setTimeout(() => dismiss(id), timeout);

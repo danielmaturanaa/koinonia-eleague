@@ -1,7 +1,9 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { useAuth } from '../../app/AuthGate.jsx';
+import { playSound } from '../../audio/synth.js';
 import { useToast } from '../../ui/index.js';
+import { soundAllowed, soundFor } from './notificationSound.js';
 import { categoryIcon } from './categories.js';
 
 const EMPTY = { unread: 0, byCategory: {}, byTeam: [], latest: null };
@@ -29,8 +31,15 @@ export function NotificationsProvider({ children }) {
     const items = (await endpoints.notifications({ unread: 1, limit: 10 }))?.data ?? [];
     const fresh = items.filter(item => !known.current.has(item.id));
     items.forEach(item => known.current.add(item.id));
-    fresh.slice(0, MAX_TOASTS).reverse().forEach(item => toastRef.current({ tone: 'info', icon: categoryIcon(item.category), title: item.title, body: item.body.split('\n')[0], href: item.deeplink, timeout: 8000 }));
-    if (fresh.length > MAX_TOASTS) toastRef.current({ tone: 'info', title: `${fresh.length - MAX_TOASTS} AVISOS MÁS`, href: '#/notificaciones', timeout: 6000 });
+    fresh.slice(0, MAX_TOASTS).reverse().forEach(item => toastRef.current({ tone: 'info', icon: categoryIcon(item.category), title: item.title, body: item.body.split('\n')[0], href: item.deeplink, timeout: 8000, sound: false }));
+    if (fresh.length > MAX_TOASTS) toastRef.current({ tone: 'info', title: `${fresh.length - MAX_TOASTS} AVISOS MÁS`, href: '#/notificaciones', timeout: 6000, sound: false });
+    // Un solo sonido por tanda (el del aviso más urgente), solo si sus preferencias lo permiten.
+    if (fresh.length) {
+      const prefs = (await endpoints.notificationPreferences().catch(() => null))?.data ?? null;
+      const audible = fresh.filter(item => soundAllowed(prefs, item.category));
+      const top = audible.find(item => item.priority === 'high') ?? audible[0];
+      if (top) playSound(soundFor(top));
+    }
   }, []);
 
   const refresh = useCallback(async () => {

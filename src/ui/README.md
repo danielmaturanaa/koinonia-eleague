@@ -18,3 +18,7 @@ Importa siempre desde `../../ui/index.js`.
 
 Breakpoints oficiales (las media queries no admiten variables): 560 · 900 · 1180.
 Pantallas migradas hasta ahora: Seguimiento, Estadio y Notificaciones (campana, página y preferencias en `src/features/notifications`).
+
+## Audio (`src/audio`)
+Un solo sistema: `settings.js` (silencio total, efectos, volúmenes; se recuerda en el navegador), `synth.js` (efectos chiptune con WebAudio: clic, confirmar, error, aviso, oferta, fichaje, caja, gol, mensaje, silbato) y `AudioControls.jsx` (el panel, dentro de la radio y en Notificaciones > Preferencias).
+Uso: `playSound('confirm')`. Los botones `Button` y las `Tabs` hacen clic; los toasts `success`/`error`/`money` suenan solos (`sound: false` lo evita); cada aviso nuevo suena según su tipo y las preferencias del servidor (`notificationSound.js`).

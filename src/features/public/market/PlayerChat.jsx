@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { isMuted, playIncoming, setMuted } from './chatSound.js';
+import { useAudioSettings } from '../../../audio/settings.js';
+import { playIncoming, setMuted } from './chatSound.js';
 import { endpoints } from '../../../api/endpoints.js';
 import { useAuth } from '../../../app/AuthGate.jsx';
 import { PlayerFace } from '../../../components/PlayerFace.jsx';
@@ -230,8 +231,9 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
     seenCount.current = playerCount;
   }, [playerCount]);
 
-  const [muted, setMutedState] = useState(isMuted);
-  const toggleMuted = () => { const next = !muted; setMuted(next); setMutedState(next); };
+  const audioSettings = useAudioSettings();
+  const muted = audioSettings.muted || !audioSettings.effects;
+  const toggleMuted = () => setMuted(!muted);
 
 
   const thinking = answer.loading || rewind.loading;

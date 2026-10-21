@@ -2,7 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { PlayerFace } from '../../../components/PlayerFace.jsx';
 import { gp } from '../DataStates.jsx';
-import { isMuted } from './chatSound.js';
+import { effectsOff, getAudioSettings } from '../../../audio/settings.js';
+import { playTones } from '../../../audio/synth.js';
 import { serverNow } from './serverClock.js';
 import { Stars } from './stars.jsx';
 
@@ -132,27 +133,11 @@ function Confetti() {
   return <canvas className="reveal-confetti" ref={canvas} aria-hidden="true"/>;
 }
 
-function tone(notes, { type = 'triangle', gap = 0.12, last = 0.6, volume = 0.12 } = {}) {
-  if (isMuted() || typeof window === 'undefined') return;
-  try {
-    const Context = window.AudioContext || window.webkitAudioContext;
-    if (!Context) return;
-    const audio = new Context();
-    notes.forEach((frequency, index) => {
-      const oscillator = audio.createOscillator();
-      const gain = audio.createGain();
-      oscillator.type = type;
-      oscillator.frequency.value = frequency;
-      const at = audio.currentTime + index * gap;
-      gain.gain.setValueAtTime(0.0001, at);
-      gain.gain.exponentialRampToValueAtTime(volume, at + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, at + (index === notes.length - 1 ? last : 0.16));
-      oscillator.connect(gain).connect(audio.destination);
-      oscillator.start(at);
-      oscillator.stop(at + last + 0.1);
-    });
-    window.setTimeout(() => audio.close?.(), (notes.length * gap + last + 0.5) * 1000);
-  } catch { /* sin audio: no pasa nada */ }
+// Los tonos de la revelación respetan el audio unificado: silencio total, efectos y volumen del usuario.
+function tone(notes, options = {}) {
+  const settings = getAudioSettings();
+  if (effectsOff(settings)) return;
+  playTones(notes, { ...options, scale: settings.effectsVolume });
 }
 const fanfare = () => tone([523.25, 659.25, 783.99, 1046.5]);
 const tick = () => tone([880], { type: 'sine', last: 0.08, volume: 0.05 });

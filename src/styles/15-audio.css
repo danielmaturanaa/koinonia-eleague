@@ -1,0 +1,16 @@
+/* Panel de audio: dentro de la radio (compacto) y en las preferencias. */
+.audio-controls { display: grid; gap: var(--sp-2); font: 500 var(--fs-sm)/1.2 var(--font-ui); letter-spacing: .4px; }
+.audio-check { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; }
+.audio-check input { width: 18px; height: 18px; accent-color: var(--c-navy-900); }
+.audio-slider { display: grid; gap: 4px; }
+.audio-slider output { float: right; color: var(--c-ink-muted); }
+.audio-preview { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.audio-preview span { margin-right: 4px; color: var(--c-ink-muted); }
+.audio-preview button { min-height: 32px; padding: 0 10px; border: 2px solid var(--c-navy-800); color: var(--c-navy-900); background: transparent; font: 500 12px/1 var(--font-ui); letter-spacing: .4px; cursor: pointer; }
+.audio-preview button:hover { color: var(--c-white); background: var(--c-navy-900); }
+.audio-controls.compact { padding-top: var(--sp-2); border-top: 1px solid #72b4e366; color: #cfe0f7; }
+.audio-controls.compact .audio-check input { accent-color: var(--c-yellow); }
+.notif-audio { display: grid; gap: var(--sp-2); padding: var(--sp-3); border: var(--border); background: var(--c-cream); }
+.notif-audio h3 { font: 400 var(--fs-xl)/1 var(--font-display); color: var(--c-navy-900); }
+.notif-audio p { font: 600 var(--fs-xs)/1.3 var(--font-body); color: var(--c-ink-muted); }
+.audio-controls.compact .audio-slider output { color: #9db8e8; }

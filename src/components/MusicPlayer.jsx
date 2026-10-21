@@ -1,4 +1,6 @@
 import { useEffect, useId, useRef, useState } from 'react';
+import { AudioControls } from '../audio/AudioControls.jsx';
+import { useAudioSettings, setAudioSettings } from '../audio/settings.js';
 
 export function MusicPlayer({ tracks = [] }) {
   const audioRef = useRef(null);
@@ -7,7 +9,9 @@ export function MusicPlayer({ tracks = [] }) {
   const [trackIndex, setTrackIndex] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [open, setOpen] = useState(false);
-  const [volume, setVolume] = useState(0.35);
+  const audioSettings = useAudioSettings();
+  const volume = audioSettings.musicVolume;
+  const setVolume = value => setAudioSettings({ musicVolume: value });
   const volumeId = useId();
   const panelId = useId();
   const track = tracks[trackIndex];
@@ -29,8 +33,8 @@ export function MusicPlayer({ tracks = [] }) {
   }, [track]);
 
   useEffect(() => {
-    if (audioRef.current) audioRef.current.volume = volume;
-  }, [volume]);
+    if (audioRef.current) { audioRef.current.volume = volume; audioRef.current.muted = audioSettings.muted; }
+  }, [volume, audioSettings.muted]);
 
   useEffect(() => {
     if (!open) return undefined;
@@ -70,6 +74,7 @@ export function MusicPlayer({ tracks = [] }) {
       <label className="radio-volume" htmlFor={volumeId}>VOLUMEN <output>{Math.round(volume * 100)}%</output>
         <input id={volumeId} type="range" min="0" max="1" step="0.05" value={volume} onChange={event => setVolume(Number(event.target.value))}/>
       </label>
+      <AudioControls compact/>
       <div className="radio-playlist" role="listbox" aria-label="Seleccionar canción">
         {tracks.length ? tracks.map((item, index) => <button type="button" role="option" aria-selected={trackIndex === index} className={trackIndex === index ? 'active' : ''} key={`${item.src}-${index}`} onClick={() => setTrackIndex(index)}><span>{String(index + 1).padStart(2, '0')}</span><b>{item.title}</b><small>{item.artist}</small></button>) : <p>PLAYLIST PENDIENTE.</p>}
       </div>

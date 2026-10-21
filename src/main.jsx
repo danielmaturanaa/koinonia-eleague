@@ -4,6 +4,8 @@ import { App } from './app/App.jsx';
 import { AuthGate } from './app/AuthGate.jsx';
 import { AppErrorBoundary } from './components/AppErrorBoundary.jsx';
 import { NotificationsProvider } from './features/notifications/NotificationsProvider.jsx';
+import { installAudioUnlock } from './audio/synth.js';
 import { ToastProvider } from './ui/Toast.jsx';
 import './styles/index.css';
+installAudioUnlock();
 createRoot(document.getElementById('root')).render(<AppErrorBoundary><ToastProvider><AuthGate><NotificationsProvider><App/></NotificationsProvider></AuthGate></ToastProvider></AppErrorBoundary>);
