@@ -14,6 +14,12 @@ const PARTS = [
 ];
 
 const signed = value => value > 0 ? `+${value.toLocaleString('es-CL')}` : value < 0 ? `−${Math.abs(value).toLocaleString('es-CL')}` : '0';
+const plural = (count, one, many) => `${count} ${count === 1 ? one : many}`;
+// Lo que pasó en toda la historia de la liga, aunque el puntaje haya partido de cero en la fecha de corte.
+const historyNote = history => history && (history.releases || history.contractBreaks || history.promisesKept || history.promisesBroken)
+  ? `${plural(history.releases, 'liberado', 'liberados')} · ${plural(history.contractBreaks, 'rescisión', 'rescisiones')} · ${history.promisesKept} promesas cumplidas · ${history.promisesBroken} rotas`
+  : null;
+const sinceLabel = value => { const date = value ? new Date(String(value).replace(' ', 'T')) : null; return date && !Number.isNaN(date.getTime()) ? date.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' }) : null; };
 const tone = score => score >= 70 ? 'high' : score >= 50 ? 'mid' : 'low';
 
 function partNote(key, stats) {
@@ -30,6 +36,7 @@ export function ReputationSummary({ reputation, clubCount }) {
   return <div className="reputation-summary">
     <p className="reputation-summary-title"><span><b>REPUTACIÓN</b><small>#{reputation.rank}{clubCount ? ` DE ${clubCount}` : ''} DE LA LIGA</small></span><strong className={`reputation-score ${tone(reputation.score)}`}>{reputation.score}</strong></p>
     <ul className="reputation-parts">{PARTS.map(([key, label]) => <li key={key}><span>{label}<small>{partNote(key, reputation.stats)}</small></span><em className={reputation.parts[key] < 0 ? 'negative' : reputation.parts[key] > 0 ? 'positive' : ''}>{signed(reputation.parts[key])}</em></li>)}</ul>
+    {historyNote(reputation.history) && <p className="reputation-summary-hint">HISTORIA COMPLETA: {historyNote(reputation.history).toUpperCase()}</p>}
     <p className="reputation-summary-hint">BASE 50 · ENTRE 5 Y 95</p>
   </div>;
 }
@@ -47,7 +54,7 @@ export function ReputationModal({ teamId, onClose }) {
   return <div className="person-modal-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
     <section className="person-modal reputation-modal" role="dialog" aria-modal="true" aria-label="Reputación de los presidentes">
       <header><h2>REPUTACIÓN DE LOS PRESIDENTES</h2><button type="button" onClick={onClose} aria-label="Cerrar">×</button></header>
-      <p className="reputation-intro">Es lo que piensan los agentes libres de cada presi cuando eligen club en una subasta. Pesa poco al lado de la oferta y el proyecto deportivo, pero puede desempatar. Todo se cuenta en <b>torneos</b>, no en días.</p>
+      <p className="reputation-intro">Es lo que piensan los agentes libres de cada presi cuando eligen club en una subasta. Pesa poco al lado de la oferta y el proyecto deportivo, pero puede desempatar. Todo se cuenta en <b>torneos</b>, no en días.{sinceLabel(rows[0]?.since) && <> El puntaje partió de cero el <b>{sinceLabel(rows[0].since)}</b> con el nuevo sistema de contratos, pero lo que pasó antes no se borra: aparece como <b>historia</b> bajo cada club.</>}</p>
       <ul className="reputation-rules">
         <li><b>Base 50</b>, y el resultado queda entre 5 y 95.</li>
         <li><b>Duración:</b> +{rules?.perStayTournament ?? 6} por cada torneo que duran en promedio sus jugadores en el club (contando también a los que ya se fueron), hasta {rules?.stayCap ?? 6} torneos.</li>
@@ -60,7 +67,7 @@ export function ReputationModal({ teamId, onClose }) {
         <thead><tr><th>#</th><th>CLUB · PRESI</th>{PARTS.map(([key, label]) => <th key={key} title={label}>{label.split(' ')[0].toUpperCase()}</th>)}<th>TOTAL</th></tr></thead>
         <tbody>{rows.map(row => <tr key={row.team.id} className={row.team.id === teamId ? 'current-team' : ''}>
           <td>{row.rank}</td>
-          <td><EntityLink to="team" id={row.team.id} className="table-team-link" onClick={onClose}><TeamMark team={row.team}/><span>{row.team.name}<small>{row.president ?? 'SIN PRESI'}</small></span></EntityLink></td>
+          <td><EntityLink to="team" id={row.team.id} className="table-team-link" onClick={onClose}><TeamMark team={row.team}/><span>{row.team.name}<small>{row.president ?? 'SIN PRESI'}</small>{historyNote(row.history) && <small className="reputation-history">HISTORIA: {historyNote(row.history).toUpperCase()}</small>}</span></EntityLink></td>
           {PARTS.map(([key]) => <td key={key} className={row.parts[key] < 0 ? 'negative' : ''} title={partNote(key, row.stats)}>{signed(row.parts[key])}{key === 'releases' && <small className="reputation-count">{row.stats.releases} {row.stats.releases === 1 ? 'LIBERADO' : 'LIBERADOS'}{row.stats.countedReleases != null ? ` · ${row.stats.countedReleases} CUENTAN` : ''}{row.stats.recentReleases ? ` · ${row.stats.recentReleases} RECIENTES` : ''}</small>}</td>)}
           <td><strong className={`reputation-score ${tone(row.score)}`}>{row.score}</strong></td>
         </tr>)}</tbody>

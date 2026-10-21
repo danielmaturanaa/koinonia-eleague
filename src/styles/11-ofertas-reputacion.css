@@ -153,3 +153,4 @@
    (touch-action: none, pensado para arrastrar titulares en la cancha, impedía desplazarse empezando sobre una carta). */
 .pitch-card.bench { touch-action: pan-x pan-y; }
 .pitch-board-bench > div { overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; }
+.reputation-table small.reputation-history { display: block; margin-top: 2px; color: var(--c-red-dark); font-size: 12px; font-weight: 600; letter-spacing: .3px; }
