@@ -323,7 +323,7 @@ a.tile:focus-visible, button.tile:focus-visible { outline: 3px solid var(--c-yel
 .pixel-arena.is-goal .arena-light { animation: arena-flash .25s steps(2) 8; }
 .arena-roof { height: 8px; background: repeating-linear-gradient(90deg, #c9ced8 0 18px, #9ea5b5 18px 20px); border-bottom: 2px solid #000; }
 .arena-stands { display: grid; grid-template-columns: 1fr 1fr; gap: 0; padding: 4px 6px 0; background: linear-gradient(#2a3044, #3a4158); }
-.arena-side { display: grid; align-content: end; gap: 1px; padding: 0 4px; }
+.arena-side { display: grid; grid-template-columns: minmax(0, 1fr); min-width: 0; overflow-x: clip; align-content: end; gap: 1px; padding: 0 4px; }
 .arena-side + .arena-side { border-left: 3px solid #1a1f2e; }
 .arena-row { display: flex; justify-content: center; overflow-x: clip; gap: 2px; padding: 1px 0; border-bottom: 2px solid rgba(0, 0, 0, .25); }
 .arena-row i { position: relative; flex: none; display: grid; justify-items: center; width: calc(var(--size) + 4px); animation: crowd-bob 1.4s steps(2) infinite; animation-delay: var(--delay); }
