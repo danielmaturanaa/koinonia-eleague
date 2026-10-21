@@ -1,5 +1,5 @@
-// Menú principal: Inicio (la central de tu club) · Partidos · Torneos · Equipos (tu club también vive aquí) · Jugadores · Mercado, más Admin.
-export function navigationFor({ isAdmin = false } = {}) {
+// Menú principal: Inicio (la central de tu club) · Partidos · Torneos · Equipos (tu club también vive aquí) · Jugadores · Mercado. La Sala de control (admin) está en el menú de la cuenta.
+export function navigationFor() {
   return [
     { label: 'Inicio', path: '/', icon: 'home' },
     { label: 'Partidos', path: '/partidos', icon: 'ball' },
@@ -7,7 +7,6 @@ export function navigationFor({ isAdmin = false } = {}) {
     { label: 'Equipos', path: '/equipos', icon: 'shirt' },
     { label: 'Jugadores', path: '/equipos/jugadores', icon: 'people' },
     { label: 'Mercado', path: '/transferencias', icon: 'handshake' },
-    ...(isAdmin ? [{ label: 'Admin', path: '/admin', icon: 'cog' }] : []),
   ];
 }
 

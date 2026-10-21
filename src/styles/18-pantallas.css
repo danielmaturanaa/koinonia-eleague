@@ -298,3 +298,9 @@ a.tile:focus-visible, button.tile:focus-visible { outline: 3px solid var(--c-yel
 .pitch-board-tools { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2); margin-bottom: var(--sp-2); }
 .pitch-board-tools .pitch-board-formation { margin: 0; }
 .pitch-board-tools .ui-btn { margin-left: auto; }
+/* Celular: pestañas en una sola fila que se desliza; barra inferior con letra más chica para que quepan las seis. */
+.screen-tabs { flex-wrap: nowrap; overflow-x: auto; }
+@media (max-width: 900px) {
+  .screen-tabs button { min-height: 46px; padding: 0 var(--sp-3); font-size: var(--fs-md); }
+  .bottom-nav button { padding: 8px 0; font-size: 10px; letter-spacing: 0; }
+}

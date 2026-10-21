@@ -1,12 +1,10 @@
 import { createPortal } from 'react-dom';
-import { useAuth } from '../app/AuthGate.jsx';
 import { activeNavigationPath, navigationFor } from '../app/navigation.js';
 import { Icon } from '../ui/index.js';
 
 /** Menú principal: arriba en el computador y como barra inferior (estilo app) en el celular. */
 export function Navigation({ route, navigate }) {
-  const { isAdmin } = useAuth();
-  const items = navigationFor({ isAdmin });
+  const items = navigationFor();
   const activePath = activeNavigationPath(route);
   const go = path => {
     document.activeElement?.blur?.();
