@@ -68,7 +68,9 @@ export function InboxTab({ team, onTab, onRead, highlightId = null }) {
     const nowRow = roleOf.get(message.playerId);
     return message.kind === 'unhappy' && nowRow && message.meta?.role && nowRow.role !== message.meta.role;
   };
+  // El servidor dice qué carta todavía pide algo (`needsAnswer`); lo de abajo queda para respuestas viejas sin ese dato.
   const needsYou = message => {
+    if (typeof message.needsAnswer === 'boolean') return message.needsAnswer;
     if (message.request) return message.request.status === 'open';
     if (latest.get(message.playerId)?.id !== message.id) return false;
     if (message.kind === 'unhappy') return !staleOf(message);
@@ -79,8 +81,12 @@ export function InboxTab({ team, onTab, onRead, highlightId = null }) {
   const outcome = message => {
     if (message.request?.status === 'closed') return 'Ya no está en tu club.';
     if (message.request?.kind === 'leave') return 'Pidió salir.';
+    if (message.request?.resolution === 'role_given') return 'Le diste el rol que pedía.';
+    if (message.request?.resolution === 'raised') return 'Le subiste el sueldo.';
     if (message.request) return message.request.resolution === 'escalated' ? 'No le respondiste a tiempo: pidió salir.' : 'Respondida.';
     if (staleOf(message)) return `Le cambiaste el rol a ${roleLabel(roleOf.get(message.playerId).role).toLowerCase()}.`;
+    if (message.kind === 'unhappy') return 'Ya está más tranquilo.';
+    if (message.kind === 'expiring' || message.kind === 'expired') return 'Contrato resuelto.';
     return 'Leída.';
   };
   const open = message => { if (!isRead(message)) markRead([message.id]); };

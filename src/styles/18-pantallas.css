@@ -504,3 +504,9 @@ a.tile:focus-visible, button.tile:focus-visible { outline: 3px solid var(--c-yel
 .ledger-summary-table td.up { color: var(--c-green); } .ledger-summary-table td.down { color: var(--c-red); }
 .ledger-summary-table td button { padding: 0; border: 0; background: none; color: var(--c-navy-800); font: 600 13px/1 var(--font-ui); cursor: pointer; text-decoration: underline dotted; }
 .ledger-recent-title { margin: var(--sp-2) 0 0; font: 600 var(--fs-lg)/1 var(--font-ui); color: var(--c-navy-800); }
+/* Roles y ánimo: ordenar y marca de petición abierta */
+.roles-sort { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: var(--sp-2) 0; font: 600 12px/1 var(--font-ui); letter-spacing: .5px; color: var(--c-navy-800); }
+.roles-sort button { padding: 5px 10px; border: 2px solid var(--c-navy-800); background: #fff; color: var(--c-navy-800); font: 600 12px/1 var(--font-ui); letter-spacing: .5px; text-transform: uppercase; cursor: pointer; }
+.roles-sort button.on { background: var(--c-navy-800); color: #fff; }
+.role-request { display: inline-block; margin-top: 3px; padding: 2px 6px; background: #ffd42a; color: #000; font: 700 10px/1.2 var(--font-ui); font-style: normal; letter-spacing: .5px; }
+.role-request.leave { background: var(--c-red); color: #fff; }

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { useAuth } from '../../app/AuthGate.jsx';
 import { PlayerFace } from '../../components/PlayerFace.jsx';
@@ -35,7 +36,8 @@ function RoleRow({ team, row, canEdit, locked, onDone }) {
   const under = rank(row.role) > rank(row.expectedRole);
   const top = [...(row.reasons ?? [])].sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))[0];
   return <tr className={`mood-${moodTone(row.mood)} ${under ? 'is-under' : ''}`} title={(row.reasons ?? []).map(signedReason).join('\n')}>
-    <td><span className="roles-player"><PlayerFace src={row.faceUrl} name={row.name}/><span><b>{row.name}</b><small>{row.position}</small></span></span></td>
+    <td><span className="roles-player"><PlayerFace src={row.faceUrl} name={row.name}/><span><b>{row.name}</b><small>{row.position}</small>
+      {row.request && <em className={`role-request ${row.request.kind === 'leave' ? 'leave' : ''}`}>{row.request.kind === 'leave' ? 'PIDIÓ SALIR' : `PIDE ${row.request.kind === 'raise' ? 'SUELDO' : 'ROL'}${row.request.escalateAt ? ` · ${daysLeft(row.request.escalateAt)} D` : ''}`}</em>}</span></span></td>
     <td><MoodMeter mood={row.mood} label={row.moodLabel}/>{top && <small className="role-reason">{signedReason(top)}</small>}</td>
     <td>{canEdit
       ? <div className="role-pills" role="radiogroup" aria-label={`Rol de ${row.name}`}>{ROLES.map(([key, label]) => <button type="button" key={key} role="radio" aria-checked={row.role === key}
@@ -49,6 +51,18 @@ function RoleRow({ team, row, canEdit, locked, onDone }) {
   </tr>;
 }
 
+// Urgencia: primero quien pidió salir, luego las peticiones abiertas por plazo (la que vence antes primero), después los que
+// juegan por debajo de lo que creen merecer y, al final, por ánimo (el más bajo primero).
+const deadline = row => (row.request?.kind === 'leave' ? -1 : row.request?.escalateAt ? Date.parse(row.request.escalateAt) : Infinity);
+const SORTS = {
+  urgencia: (a, b) => deadline(a) - deadline(b) || (rank(b.role) > rank(b.expectedRole)) - (rank(a.role) > rank(a.expectedRole)) || a.mood - b.mood,
+  animo: (a, b) => a.mood - b.mood,
+  valor: (a, b) => (b.value ?? 0) - (a.value ?? 0),
+  nombre: (a, b) => String(a.name).localeCompare(String(b.name), 'es'),
+};
+const SORT_LABELS = [['urgencia', 'Urgencia'], ['animo', 'Ánimo'], ['valor', 'Valor'], ['nombre', 'Nombre']];
+const daysLeft = value => Math.max(0, Math.ceil((Date.parse(value) - Date.now()) / 86_400_000));
+
 /** El presi asigna el rol de cada jugador (él es quien juega); el ánimo de cada uno depende de eso y de lo que cree merecer. */
 export function RolesPanel({ team }) {
   const { canEditTeam } = useAuth();
@@ -56,14 +70,15 @@ export function RolesPanel({ team }) {
   const query = useApiQuery(signal => endpoints.teamRoles(team.id, signal), [team.id]);
   const marketOpen = useMarketOpen();
   const rows = Array.isArray(query.data) ? query.data : [];
-  // Primero los que están por debajo de lo que creen merecer o con el ánimo bajo: son los que piden atención.
-  const sorted = [...rows].sort((a, b) => (rank(b.role) > rank(b.expectedRole)) - (rank(a.role) > rank(a.expectedRole)) || a.mood - b.mood);
+  const [order, setOrder] = useState('urgencia');
+  const sorted = [...rows].sort(SORTS[order]);
   const unhappy = rows.filter(row => row.mood < 50 || rank(row.role) > rank(row.expectedRole)).length;
   return <section className="roles-panel">
     <header><h3>ROLES Y ÁNIMO</h3><p>{rows.length ? (unhappy ? `${unhappy} jugador${unhappy === 1 ? '' : 'es'} necesita${unhappy === 1 ? '' : 'n'} atención; van primero.` : 'Todos contentos con su rol.') : ''} El rol lo eliges tú: la ★ marca el que cada uno cree merecer.</p>
       <HowItWorks><p>Cada jugador cree merecer un rol según lo que vale en la liga. Su ánimo sale de eso, del rendimiento del equipo, su sueldo y su personalidad. Si lo tienes por debajo de lo que cree merecer, pide más (o se niega) al renovar. Pasa el mouse por una fila para ver todo lo que le mueve el ánimo.</p></HowItWorks></header>
     {canEdit && marketOpen && <p className="payroll-empty">🔒 Mercado abierto: los roles están bloqueados para no manipular los fichajes. Se pueden cambiar mientras se juega el torneo.</p>}
     <DataState query={query}/>
+    {rows.length > 0 && <div className="roles-sort" role="group" aria-label="Ordenar jugadores">ORDENAR POR {SORT_LABELS.map(([key, label]) => <button type="button" key={key} aria-pressed={order === key} className={order === key ? 'on' : ''} onClick={() => setOrder(key)}>{label}</button>)}</div>}
     {rows.length > 0 && <div className="roles-table-wrap"><table className="roles-table-new">
       <thead><tr><th>Jugador</th><th>Ánimo</th><th>Rol</th><th>Cree merecer</th><th>Personalidad</th></tr></thead>
       <tbody>{sorted.map(row => <RoleRow key={row.playerId} team={team} row={row} canEdit={canEdit} locked={marketOpen} onDone={query.retry}/>)}</tbody>
