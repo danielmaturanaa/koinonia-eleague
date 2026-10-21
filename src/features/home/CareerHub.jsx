@@ -19,9 +19,9 @@ const when = value => {
   return date && !Number.isNaN(date.getTime()) ? date.toLocaleString('es-CL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'America/Santiago' }) : null;
 };
 
-const compactFans = value => (value >= 1_000_000 ? `${Math.round(value / 1_000_000).toLocaleString('es-CL')} M` : `${Math.round(value / 1000).toLocaleString('es-CL')} mil`);
 const sideOf = (match, teamId) => (match.homeTeam?.id === teamId ? 'home' : 'away');
 const rivalOf = (match, teamId) => (sideOf(match, teamId) === 'home' ? match.awayTeam : match.homeTeam);
+const scoreFor = (match, teamId) => (sideOf(match, teamId) === 'home' ? `${match.homeScore}-${match.awayScore}` : `${match.awayScore}-${match.homeScore}`);
 function resultOf(match, teamId) {
   const mine = sideOf(match, teamId) === 'home' ? match.homeScore : match.awayScore;
   const theirs = sideOf(match, teamId) === 'home' ? match.awayScore : match.homeScore;
@@ -83,44 +83,44 @@ export function CareerHub({ teamId, teams = [], standings = [], navigate }) {
   const market = useApiQuery(signal => endpoints.marketStatus(signal).catch(() => ({ data: { open: false } })), []);
   const business = useApiQuery(signal => endpoints.teamBusiness(teamId, signal).catch(() => ({ data: null })), [teamId]);
   const inbox = useApiQuery(signal => endpoints.teamInbox(teamId, signal).catch(() => ({ data: null })), [teamId]);
-  const fans = useApiQuery(signal => endpoints.teamFans(teamId, signal).catch(() => ({ data: null })), [teamId]);
   const todo = useTodo(teamId, business.data);
   const club = team.data ? { ...team.data, ...(teams.find(item => item.id === teamId) ?? {}) } : teams.find(item => item.id === teamId);
   const all = list(matches.data);
   const next = all.filter(match => ['live', 'pending'].includes(match.status)).sort((a, b) => (a.status === 'live' ? -1 : 0) - (b.status === 'live' ? -1 : 0) || (a.roundNumber ?? 999) - (b.roundNumber ?? 999))[0] ?? null;
-  const played = all.filter(match => match.status === 'finished').sort((a, b) => String(b.finishedAt ?? '').localeCompare(String(a.finishedAt ?? ''))).slice(0, 5);
+  const finished = all.filter(match => match.status === 'finished').sort((a, b) => String(b.finishedAt ?? '').localeCompare(String(a.finishedAt ?? '')));
+  // Sin partido por jugar, el último va en la tarjeta grande y la lista sigue desde el anterior (no se repite).
+  const last = next ? null : finished[0] ?? null;
+  const played = finished.slice(last ? 1 : 0, last ? 6 : 5);
   const rival = rivalry.data?.rival ?? null;
   const nextRival = next ? rivalOf(next, teamId) : null;
   const derby = Boolean(next?.derby || (nextRival && rival && nextRival.id === rival.id));
-  const h2h = rivalry.data?.headToHead;
   const position = standings.findIndex(row => row.team_id === teamId) + 1;
   const balance = teamBalance(club);
   const unread = inbox.data?.unread ?? 0;
   // Sin franja de título: Inicio parte con las noticias (la tabla va al costado) y debajo la central de tu club.
   return <Screen bare className="career-hub" title="Inicio">
     <NewsHighlights teams={teams} navigate={navigate}/>
-    <div className="tile-grid">
-      <Tile size="lg" tone={derby ? 'red' : 'navy'} href={next ? `#/partidos/${next.id}` : '#/partidos'} icon={<Icon name={derby ? 'fire' : 'ball'} size={18}/>}
-        title={next?.status === 'live' ? 'Jugando ahora' : derby ? 'Próximo partido · ¡Clásico!' : 'Próximo partido'}
-        value={nextRival ? `vs ${nextRival.name}` : 'Sin partidos'}
-        detail={next ? `${matchRoundLabel(next)} · ${sideOf(next, teamId) === 'home' ? 'de local' : 'de visita'}` : 'No tienes partidos por jugar.'}/>
-      <Tile href={`#/equipos/${teamId}?tab=mensajes`} icon={<Icon name="chat" size={18}/>} title="Mensajes" badge={unread}
-        value={unread ? `${unread} sin leer` : 'Al día'} detail="Tus jugadores y los que quieres fichar."/>
-      <Tile href={`#/equipos/${teamId}?tab=finanzas`} icon={<Icon name="coin" size={18}/>} title="Caja" value={balance === null ? '—' : gp(balance)} detail="Sueldos, ingresos y gastos."/>
-      <Tile tone={market.data?.open ? 'gold' : 'paper'} href="#/transferencias" icon={<Icon name="handshake" size={18}/>} title="Mercado"
-        value={market.data?.open ? 'Abierto' : 'Cerrado'} detail={market.data?.open ? `Cierra el ${when(market.data.closesAt) ?? 'pronto'}.` : 'Igual puedes buscar jugadores y hablarles.'}/>
-      <Tile href={`#/equipos/${teamId}?tab=clasico`} icon={<Icon name="fire" size={18}/>} title="Tu clásico" value={rival ? `vs ${rival.name}` : 'Sin rival'}
-        detail={h2h?.played ? `${h2h.wins} ganados · ${h2h.draws} empates · ${h2h.losses} perdidos` : 'Toca para elegir tu rival.'}/>
-      <Tile href={`#/equipos/${teamId}?tab=plantel`} icon={<Icon name="shirt" size={18}/>} title="Plantel" value={club?.playerCount ? `${club.playerCount} jugadores` : 'Tu plantel'} detail="Alineación, roles y ánimo."/>
-      <Tile href={`#/equipos/${teamId}?tab=estadio`} icon={<Icon name="stadium" size={18}/>} title="Estadio" value={fans.data?.venue?.name ?? 'Tu estadio'}
-        detail={fans.data?.followers ? `${compactFans(fans.data.followers)} de hinchas · conciertos, TV y La Velada.` : 'Hinchas, conciertos, TV y La Velada.'}/>
-    </div>
-
     <Card title={todo.length ? `Esperando tu decisión (${todo.length})` : 'Esperando tu decisión'}>
       {todo.length
         ? <ul className="hub-todo">{todo.map(item => <li key={item.text}><a href={item.href}><Icon name={item.icon} size={20}/><span>{item.text}</span><i aria-hidden="true">›</i></a></li>)}</ul>
         : <p className="screen-lead">Nada pendiente. Buen momento para mirar el mercado o hablar con un jugador.</p>}
     </Card>
+
+    {/* Solo lo que cambia: el partido (el próximo, o el último si no hay), la plata, el mercado y la entrada a tu club. */}
+    <div className="tile-grid">
+      {next
+        ? <Tile tone={derby ? 'red' : 'navy'} href={`#/partidos/${next.id}`} icon={<Icon name={derby ? 'fire' : 'ball'} size={18}/>}
+          title={next.status === 'live' ? 'Jugando ahora' : derby ? 'Próximo partido · ¡Clásico!' : 'Próximo partido'}
+          value={`vs ${nextRival?.name ?? '—'}`} detail={`${matchRoundLabel(next)} · ${sideOf(next, teamId) === 'home' ? 'de local' : 'de visita'}`}/>
+        : last && <Tile tone="navy" href={`#/partidos/${last.id}`} icon={<Icon name="ball" size={18}/>} title="Último partido"
+          value={`${{ G: 'Ganaste', E: 'Empataste', P: 'Perdiste' }[resultOf(last, teamId)]} ${scoreFor(last, teamId)}`}
+          detail={`${sideOf(last, teamId) === 'home' ? 'Contra' : 'En casa de'} ${rivalOf(last, teamId)?.name ?? '—'}. No tienes partidos por jugar.`}/>}
+      <Tile href={`#/equipos/${teamId}?tab=finanzas`} icon={<Icon name="coin" size={18}/>} title="Caja" value={balance === null ? '—' : gp(balance)} detail="Sueldos, ingresos y gastos."/>
+      <Tile tone={market.data?.open ? 'gold' : 'paper'} href="#/transferencias" icon={<Icon name="handshake" size={18}/>} title="Mercado"
+        value={market.data?.open ? 'Abierto' : 'Cerrado'} detail={market.data?.open ? `Cierra el ${when(market.data.closesAt) ?? 'pronto'}.` : 'Igual puedes buscar jugadores y hablarles.'}/>
+      <Tile href={`#/equipos/${teamId}`} icon={<Icon name="shirt" size={18}/>} title="Mi club" badge={unread} value={club?.name ?? 'Tu club'}
+        detail={unread ? `${unread} mensaje${unread === 1 ? '' : 's'} sin leer · plantel, finanzas y estadio.` : 'Plantel, mensajes, finanzas y estadio.'}/>
+    </div>
 
     <div className="hub-columns hub-columns--single">
       <div className="hub-column">
@@ -129,7 +129,7 @@ export function CareerHub({ teamId, teams = [], standings = [], navigate }) {
             const result = resultOf(match, teamId);
             const other = rivalOf(match, teamId);
             return <li key={match.id}><a href={`#/partidos/${match.id}`}><em className={`form-${result}`}>{result}</em><span>{sideOf(match, teamId) === 'home' ? 'vs' : 'en casa de'} {other?.name}</span>
-              <b>{match.homeScore}-{match.awayScore}</b>{rival && other?.id === rival.id && <Icon name="fire" size={14}/>}</a></li>;
+              <b>{scoreFor(match, teamId)}</b>{(match.derby || (rival && other?.id === rival.id)) && <Icon name="fire" size={14}/>}</a></li>;
           })}</ul>
         </Card>}
         <BoardPanel team={{ id: teamId }}/>
