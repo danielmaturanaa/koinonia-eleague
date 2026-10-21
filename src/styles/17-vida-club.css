@@ -276,13 +276,47 @@
 .venue-hero.has-photo .venue-stands { background: rgba(3, 20, 55, .55); backdrop-filter: blur(1px); }
 .venue-hero-copy .ui-btn { text-decoration: none; }
 .fan-log-more > summary { cursor: pointer; padding: 6px 8px; font: 600 var(--fs-xs)/1 var(--font-ui); letter-spacing: .6px; color: var(--c-navy-700); }
-.fan-origin-sum { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-3); }
-.fan-origin-sum span { display: grid; gap: 2px; }
-.fan-origin-sum small { font: 600 var(--fs-xs)/1 var(--font-ui); letter-spacing: .6px; color: var(--c-ink-muted); }
-.fan-origin-sum b { font: 400 26px/1 var(--font-display); color: var(--c-navy-900); }
-.fan-origin-sum b.up { color: var(--c-green); }
-.fan-origin-sum b.down { color: var(--c-red, #b3261e); }
-.fan-origin-sum i { font: 700 20px/1 var(--font-ui); font-style: normal; color: var(--c-ink-muted); }
+/* Mapa de hinchas: puntos de tierra sobre azul noche; se encienden (hielo → amarillo → blanco) donde hay más hinchas. */
+.fan-map { position: relative; padding: var(--sp-2); border: var(--border); background: #061a46; box-shadow: var(--shadow-pixel); }
+.fan-map svg { display: block; width: 100%; max-width: 960px; height: auto; margin: 0 auto; }
+.fan-map rect { fill: rgba(255, 255, 255, .13); }
+.fan-map rect.l1 { fill: #3f6db8; }
+.fan-map rect.l2 { fill: var(--c-ice); }
+.fan-map rect.l3 { fill: var(--c-yellow); }
+.fan-map rect.l4 { fill: #fff; }
+.fan-pin rect { fill: var(--c-red); stroke: #fff; stroke-width: .3; transition: transform .15s steps(2); transform-box: fill-box; transform-origin: center; }
+.fan-pin text { font: 700 1.5px/1 var(--font-ui); fill: #fff; text-anchor: middle; dominant-baseline: middle; pointer-events: none; }
+.fan-pin.is-home rect { fill: var(--c-navy-900); stroke: var(--c-yellow); }
+.fan-pin.is-focus rect { transform: scale(1.5); }
+.fan-map-legend { position: absolute; left: var(--sp-3); bottom: var(--sp-2); display: flex; align-items: center; gap: 3px; font: 600 10px/1 var(--font-ui); letter-spacing: .5px; color: rgba(255, 255, 255, .7); }
+.fan-map-legend i { width: 8px; height: 8px; }
+.fan-map-legend i.l1 { background: #3f6db8; } .fan-map-legend i.l2 { background: var(--c-ice); } .fan-map-legend i.l3 { background: var(--c-yellow); } .fan-map-legend i.l4 { background: #fff; }
+.fan-map-legend span { margin: 0 3px; }
+.fan-split { display: flex; gap: 4px; margin-top: var(--sp-3); }
+.fan-split > span { display: grid; gap: 4px; min-width: 0; padding: var(--sp-2) var(--sp-3); border: var(--border); }
+.fan-split small { font: 600 var(--fs-xs)/1.1 var(--font-ui); letter-spacing: .5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.fan-split b { font: 400 24px/1 var(--font-display); }
+.fan-split-home { color: #fff; background: var(--c-navy-900); }
+.fan-split-abroad { color: var(--c-navy-900); background: var(--c-cream); }
+.fan-countries { display: grid; gap: 2px; margin: var(--sp-3) 0 0; padding: 0; list-style: none; }
+.fan-countries li { display: grid; grid-template-columns: 22px minmax(120px, 1.2fr) minmax(60px, 2fr) auto; align-items: center; gap: var(--sp-2); padding: 6px 8px; font: 600 var(--fs-sm)/1.2 var(--font-body); border-bottom: 1px dashed var(--c-paper-line); outline: none; }
+.fan-countries li:hover, .fan-countries li.is-focus { background: var(--c-gold-bg); }
+.fan-countries li > i { display: grid; place-items: center; width: 20px; height: 20px; font: 700 var(--fs-xs)/1 var(--font-ui); font-style: normal; color: #fff; background: var(--c-red); }
+.fan-countries em { margin-left: 6px; padding: 1px 4px; font: 700 10px/1.2 var(--font-ui); font-style: normal; letter-spacing: .5px; color: var(--c-navy-900); background: var(--c-yellow); }
+.fan-country-bar { height: 8px; background: var(--c-paper-deep); }
+.fan-country-bar > span { display: block; height: 100%; background: var(--c-navy-700); }
+.fan-countries b { font: 400 var(--fs-lg)/1 var(--font-display); color: var(--c-navy-900); }
+.fan-others { margin: var(--sp-2) 0 0; font: 600 var(--fs-xs)/1.3 var(--font-ui); letter-spacing: .5px; color: var(--c-ink-muted); }
+.fan-country-select { padding: 4px 6px; border: 2px solid var(--c-navy-800); font: 600 var(--fs-xs)/1 var(--font-ui); background: var(--c-white); }
+.fan-ranking li { grid-template-columns: 1fr auto auto auto; align-items: center; }
+@media (max-width: 560px) {
+  .fan-countries li { grid-template-columns: 22px minmax(0, 1fr) auto; }
+  .fan-country-bar { display: none; }
+  .fan-split b { font-size: 20px; }
+  .fan-map-legend { display: none; }
+  .fan-ranking li { grid-template-columns: 1fr auto; }
+}
+@media (prefers-reduced-motion: reduce) { .fan-pin rect { transition: none; } }
 .scene-filter, .stadiums-filter { display: flex; flex-wrap: wrap; gap: 6px; }
 .scene-filter button, .stadiums-filter button { padding: 6px 10px; border: 2px solid var(--c-navy-800); font: 600 var(--fs-xs)/1 var(--font-ui); letter-spacing: .6px; color: var(--c-navy-900); background: var(--c-white); cursor: pointer; }
 .scene-filter button.on, .stadiums-filter button.on { color: var(--c-white); background: var(--c-navy-900); }

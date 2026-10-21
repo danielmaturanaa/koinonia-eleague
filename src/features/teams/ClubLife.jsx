@@ -7,6 +7,7 @@ import { Button, Card, Chip, ConfirmStep, EmptyState, HowItWorks, Icon, Notice, 
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { DataState, gp } from '../public/DataStates.jsx';
 import { useApiQuery } from '../public/useApiQuery.js';
+import { FanMap } from './FanMap.jsx';
 
 const upper = text => String(text ?? '').toUpperCase();
 const people = value => Number(value ?? 0).toLocaleString('es-CL');
@@ -24,7 +25,7 @@ const when = value => {
 };
 
 function OffNotice() {
-  return <EmptyState icon="stadium" title="LA VIDA DE CLUB AÚN NO PARTE">CUANDO LA ADMINISTRACIÓN LA ACTIVE, CADA PARTIDO DE LOCAL COBRARÁ ENTRADAS SEGÚN TU HINCHADA Y PODRÁS HACER CONCIERTOS, VENDER TUS DERECHOS DE TV Y POSTULAR A LA VELADA.</EmptyState>;
+  return <EmptyState icon="stadium" title="LA VIDA DE CLUB AÚN NO PARTE">CUANDO LA ADMINISTRACIÓN LA ACTIVE, CADA PARTIDO DE LOCAL COBRARÁ ENTRADAS SEGÚN TU HINCHADA Y PODRÁS HACER CONCIERTOS, VENDER TUS DERECHOS DE TV Y PELEAR POR LA VELADA DE IBAI.</EmptyState>;
 }
 
 /** Gradas pixel: se llenan según la ocupación (0–100). */
@@ -89,7 +90,7 @@ export function VenueTab({ team, onTab: _onTab }) {
     </Card>
     {!fans.enabled ? <OffNotice/> : <>
       <div className="club-life-stats">
-        <Card><Stat label="HINCHAS EN CHILE" value={compact(fans.followers)} hint={fans.rank ? `${fans.rank}.º DE ${fans.clubs} EN LA LIGA` : undefined}/></Card>
+        <Card><Stat label="HINCHAS EN EL MUNDO" value={compact(fans.followers)} hint={`${compact(fans.homeFans)} EN ${upper(fans.countryName)}${fans.rank ? ` · ${fans.rank}.º DE ${fans.clubs}` : ''}`}/></Card>
         <Card><Stat label="LA HINCHADA ESTÁ" value={upper(fans.moodLabel)} hint={`ÁNIMO ${fans.mood} / 100`} tone={MOOD_TONE(fans.mood)}/><span className="mood-bar" aria-hidden="true"><span style={{ width: `${100 - fans.mood}%` }}/></span></Card>
         <Card><Stat label="TAQUILLA RECIENTE" value={gp(fans.seasonRevenue)} hint={`${fans.gates.length} PARTIDO${fans.gates.length === 1 ? '' : 'S'} DE LOCAL`}/></Card>
         <Card><Stat label="OCUPACIÓN" value={`${average}%`} hint={full ? `${full} ${full === 1 ? 'VEZ' : 'VECES'} CON ESTADIO LLENO` : 'SIN LLENOS TODAVÍA'} tone={average >= 90 ? 'good' : 'default'}/></Card>
@@ -98,9 +99,9 @@ export function VenueTab({ team, onTab: _onTab }) {
       <Card title="PARTIDOS DE LOCAL" aside={<Chip icon="people">ASISTENCIA Y RECAUDACIÓN</Chip>}>
         {fans.gates.length ? <ul className="gate-list">{fans.gates.map(gate => <GateRow key={gate.matchId} gate={gate}/>)}</ul>
           : <EmptyState icon="ticket" title="SIN PARTIDOS DE LOCAL AÚN">CUANDO JUEGUES DE LOCAL VERÁS AQUÍ CUÁNTA GENTE FUE Y CUÁNTO RECAUDASTE.</EmptyState>}
-        <HowItWorks title="¿De qué depende la asistencia?"><p>De tus hinchas, el rival, si es clásico o playoffs, el ánimo de la hinchada y el precio de la entrada. El aforo es el techo. El marcador no cambia: esto solo mueve plata, hinchas y ánimo.</p></HowItWorks>
+        <HowItWorks title="¿De qué depende la asistencia?"><p>De tus hinchas que viven cerca (en tu país y unos pocos de afuera), el rival, si es clásico o playoffs, el ánimo de la hinchada y el precio de la entrada. El aforo es el techo. El marcador no cambia: esto solo mueve plata, hinchas y ánimo.</p></HowItWorks>
       </Card>
-      <FanOrigin fans={fans}/>
+      <FanMap fans={fans}/>
       {fans.log.length > 0 && <Card title="LO QUE MOVIÓ A LA HINCHADA">
         <ul className="fan-log">{fans.log.slice(0, 5).map((row, index) => <FanLogRow key={index} row={row}/>)}</ul>
         {fans.log.length > 5 && <details className="fan-log-more"><summary>VER {fans.log.length - 5} MÁS</summary><ul className="fan-log">{fans.log.slice(5).map((row, index) => <FanLogRow key={index} row={row}/>)}</ul></details>}
@@ -115,31 +116,6 @@ function FanLogRow({ row }) {
           <b className={row.followers >= 0 ? 'up' : 'down'}>{signed(row.followers)} HINCHAS</b>
           <small className={row.mood >= 0 ? 'up' : 'down'}>{row.mood > 0 ? '▲' : row.mood < 0 ? '▼' : '·'} ÁNIMO {signed(row.mood)}</small>
         </li>;
-}
-
-/** De dónde salen los hinchas: el punto de partida (base + historial + plantel) y lo que se ganó o perdió jugando. */
-function FanOrigin({ fans }) {
-  const origin = fans.origin;
-  if (!origin) return null;
-  const { formula } = origin;
-  return <Card title="¿DE DÓNDE SALEN TUS HINCHAS?" className="fan-origin">
-    <div className="fan-origin-sum">
-      <span><small>PARTISTE CON</small><b>{compact(origin.start)}</b></span>
-      <i aria-hidden="true">{origin.change >= 0 ? '+' : '−'}</i>
-      <span><small>{origin.change >= 0 ? 'GANADOS JUGANDO' : 'PERDIDOS JUGANDO'}</small><b className={origin.change >= 0 ? 'up' : 'down'}>{compact(Math.abs(origin.change))}</b></span>
-      <i aria-hidden="true">=</i>
-      <span><small>HOY</small><b>{compact(fans.followers)}</b></span>
-    </div>
-    <HowItWorks title="¿Cómo se calculó el punto de partida?">
-      <p>Son personas en Chile que se declaran hinchas del club (no seguidores de redes). Todos parten con una base y suman por historia y por plantel:</p>
-      <ul>
-        <li><b>{compact(formula.base)}</b> de base, igual para todos.</li>
-        <li><b>{compact(formula.honors)}</b> por historial: {formula.honorPoints} puntos de títulos, finales y playoffs (120 mil por punto).</li>
-        <li><b>{compact(formula.squad)}</b> por plantel: hasta 250 mil para el más caro de la liga, proporcional para el resto.</li>
-      </ul>
-      <p>Después se mueven con cada partido de local, los clásicos, los títulos, la posición final y los conciertos. El 6% de tus hinchas, más o menos, quiere ir a cada partido; el aforo pone el techo.</p>
-    </HowItWorks>
-  </Card>;
 }
 
 function useBusiness(team) {
@@ -183,7 +159,7 @@ function Step({ n, state, title, children }) {
 function VeladaCard({ team, velada, canEdit, onChanged }) {
   const toast = useToast();
   const [amount, setAmount] = useState(velada.myBid ?? '');
-  const bid = useApiMutation((value, signal) => endpoints.bidVelada(team.id, value, signal), { onSuccess: () => { toast({ tone: 'success', title: 'POSTULACIÓN ENVIADA', body: 'IBAI LA VE EN SOBRE CERRADO.' }); onChanged(); } });
+  const bid = useApiMutation((value, signal) => endpoints.bidVelada(team.id, value, signal), { onSuccess: () => { toast({ tone: 'success', title: 'OFERTA ENVIADA', body: 'SOLO IBAI LA VE. SI NO TE ELIGE, NO PAGAS NADA.' }); onChanged(); } });
   const withdraw = useApiMutation((_, signal) => endpoints.withdrawVelada(team.id, signal), { onSuccess: onChanged });
   const round = velada.round;
   const open = round?.status === 'open';
@@ -195,7 +171,7 @@ function VeladaCard({ team, velada, canEdit, onChanged }) {
   const capacityOk = (me?.capacity ?? 0) >= req.minCapacity;
   const fansOk = (me?.followers ?? 0) >= req.minFollowers;
   return <Card tone="gold" className="velada-card" title="LA VELADA DEL AÑO" aside={<Chip tone={open ? 'red' : 'navy'} icon="mic">{open ? timeLeft(round.closesAt) : round?.status === 'resolved' ? 'YA TIENE SEDE' : 'IBAI AÚN NO BUSCA'}</Chip>}>
-    <p className="velada-lead">IBAI ELIGE UN ESTADIO PARA SU EVENTO DE BOXEO. EL CLUB ELEGIDO SE QUEDA CON LAS ENTRADAS A ESTADIO LLENO Y LA TRANSMISIÓN.</p>
+    <p className="velada-lead">IBAI BUSCA UN ESTADIO PARA SU EVENTO DE BOXEO. FUNCIONA COMO UNA SUBASTA: LOS CLUBES LE OFRECEN PLATA PARA QUE LO HAGA EN SU ESTADIO, Y EL ELEGIDO PAGA LO QUE OFRECIÓ PERO SE QUEDA CON TODAS LAS ENTRADAS Y LA TRANSMISIÓN.</p>
     {round?.status === 'resolved' && <div className="velada-result">
       <blockquote>«{round.result?.line}»<cite>— IBAI</cite></blockquote>
       {round.winnerTeamId === team.id && <p className="velada-win">GANASTE {gp(round.result.profit)} NETOS Y TU HINCHADA CRECIÓ 5%.</p>}
@@ -203,7 +179,7 @@ function VeladaCard({ team, velada, canEdit, onChanged }) {
     </div>}
     {round?.status !== 'resolved' && <ol className="velada-steps">
       <Step n={1} state={open ? 'done' : 'now'} title={open ? `IBAI ESTÁ BUSCANDO ESTADIO · CIERRA EL ${upper(closes)}` : 'ESPERA A QUE IBAI ABRA LA BÚSQUEDA'}>
-        <small>{open ? (round.bidders.length ? `POSTULAN: ${round.bidders.map(bidder => upper(bidder.name)).join(' · ')}` : 'TODAVÍA NO POSTULA NADIE.') : 'LA ABRE LA ADMINISTRACIÓN UNA VEZ POR TEMPORADA. TE LLEGA UN AVISO.'}</small>
+        <small>{open ? (round.bidders.length ? `YA LE OFRECIERON: ${round.bidders.map(bidder => upper(bidder.name)).join(' · ')}` : 'TODAVÍA NADIE LE OFRECE SU ESTADIO.') : 'LA ABRE LA ADMINISTRACIÓN UNA VEZ POR TEMPORADA. TE LLEGA UN AVISO.'}</small>
       </Step>
       <Step n={2} state={eligible ? 'done' : 'blocked'} title={eligible ? 'TU CLUB CUMPLE LOS REQUISITOS' : 'TU CLUB TODAVÍA NO CUMPLE LOS REQUISITOS'}>
         <ul className="velada-reqs">
@@ -212,11 +188,11 @@ function VeladaCard({ team, velada, canEdit, onChanged }) {
         </ul>
         {!capacityOk && <a className="velada-link" href="#/equipos/estadios">VER ESTADIOS DE 50.000 O MÁS →</a>}
       </Step>
-      <Step n={3} state={!open || !eligible ? 'wait' : velada.myBid !== null ? 'done' : 'now'} title={velada.myBid !== null ? `POSTULASTE CON ${gp(velada.myBid)} · NADIE MÁS VE TU OFERTA` : 'MANDA TU OFERTA EN SOBRE CERRADO'}>
-        <small>IBAI ELIGE MIRANDO LA OFERTA (50%), EL AFORO (30%) Y LA HINCHADA (20%) DE CADA POSTULANTE. OFERTAR MÁS TE DA MÁS CHANCE, PERO TE QUEDA MENOS: SOLO PAGAS SI GANAS.</small>
+      <Step n={3} state={!open || !eligible ? 'wait' : velada.myBid !== null ? 'done' : 'now'} title={velada.myBid !== null ? `LE OFRECISTE ${gp(velada.myBid)} · NADIE MÁS LO VE` : 'OFRÉCELE PLATA A IBAI PARA QUE LA HAGA EN TU ESTADIO'}>
+        <small>AL CIERRE IBAI ELIGE UNO SOLO, MIRANDO LA PLATA QUE LE OFRECEN (50%), EL TAMAÑO DEL ESTADIO (30%) Y LOS HINCHAS (20%). OFRECER MÁS TE DA MÁS CHANCE, PERO TE QUEDA MENOS. SI NO TE ELIGE, NO PAGAS NADA.</small>
         {open && eligible && canEdit && <div className="velada-bid">
-          <label>TU OFERTA<GpInput value={amount} onChange={event => setAmount(event.target.value)} placeholder="0" aria-label="Oferta para La Velada"/></label>
-          <Button icon="gavel" disabled={bid.loading || amount === ''} onClick={() => bid.execute(offer)}>{velada.myBid !== null ? 'CAMBIAR OFERTA' : 'POSTULAR'}</Button>
+          <label>CUÁNTO LE OFRECES<GpInput value={amount} onChange={event => setAmount(event.target.value)} placeholder="0" aria-label="Oferta para La Velada"/></label>
+          <Button icon="gavel" disabled={bid.loading || amount === ''} onClick={() => bid.execute(offer)}>{velada.myBid !== null ? 'CAMBIAR OFERTA' : 'OFRECER'}</Button>
           {velada.myBid !== null && <Button variant="ghost" size="sm" disabled={withdraw.loading} onClick={() => withdraw.execute()}>RETIRARME</Button>}
         </div>}
         {eligible && me?.prize > 0 && <dl className="velada-math">

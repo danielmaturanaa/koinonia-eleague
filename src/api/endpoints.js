@@ -212,4 +212,6 @@ export const endpoints = {
   resolveVelada: signal => apiClient.post('/admin/velada/resolve', {}, { actor: 'web', signal }),
   cancelVelada: signal => apiClient.post('/admin/velada/cancel', {}, { actor: 'web', signal }),
   startClubLife: signal => apiClient.post('/admin/club-life/start', {}, { actor: 'web', signal }),
+  clubCountries: signal => get('/club-countries', null, signal),
+  setClubCountry: (teamId, country, signal) => apiClient.put(`/admin/teams/${teamId}/country`, { country }, { actor: 'web', signal }),
 };
