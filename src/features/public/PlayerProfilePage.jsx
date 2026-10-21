@@ -61,7 +61,7 @@ export function PlayerProfilePage({ playerId, teams = [], onBack, backLabel = '�
   // Suma al jugador a la selección del comparador y abre la pestaña Comparador.
   const compare = current => {
     writeComparison(addToComparison(readComparison(), comparisonCandidate({ playerId: current.id, pesId: current.efootballPesId, variation: current.efootballVariation, name: current.name, faceUrl: current.faceUrl })));
-    window.location.hash = '/transferencias?tab=buscar&vista=comparador';
+    window.location.hash = '/equipos/jugadores?tab=comparador';
   };
   const cardStyle = { '--club-primary': colors.primary ?? '#062764', '--club-secondary': colors.secondary ?? '#10285b', '--club-tertiary': colors.tertiary ?? '#ffd42a' };
   const { teamId: myTeamId } = useAuth();

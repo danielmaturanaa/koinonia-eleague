@@ -8,6 +8,7 @@ import { ActivityPage } from '../public/ActivityPage.jsx';
 import { NewsPage } from '../public/NewsPage.jsx';
 import { RulesPage } from '../public/RulesPage.jsx';
 import { StadiumsPage } from '../teams/StadiumsPage.jsx';
+import { PlayersPage } from '../public/PlayersPage.jsx';
 import { ClubsGrid } from './ClubsGrid.jsx';
 
 // Tres áreas del menú, cada una con una sola fila de pestañas: Partidos, Torneos y Equipos.
@@ -95,4 +96,11 @@ export function NewsScreen({ teams = [] }) {
 }
 export function RulesScreen() {
   return <Screen kicker="Koinonia e-League" title="Reglamento" intro="Las reglas de la liga."><RulesPage/></Screen>;
+}
+
+/** Jugadores: el buscador de toda la liga y de eFootball, con el comparador. En la ficha de cada uno: oferta, hablarle y seguir. */
+export function PlayersScreen({ teams = [], query = {} }) {
+  return <Screen kicker="Koinonia e-League" title="Jugadores" intro="Busca cualquier jugador de la liga o de eFootball. Toca uno para hacerle una oferta, hablarle o seguirlo.">
+    <PlayersPage key={JSON.stringify(query)} teams={teams} initialQuery={query}/>
+  </Screen>;
 }

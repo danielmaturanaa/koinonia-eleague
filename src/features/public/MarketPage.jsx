@@ -17,7 +17,6 @@ import { SealedAuctionsSection } from './market/SealedAuctionsSection.jsx';
 import { gpLabel } from '../../utils/money.js';
 import { GpInput } from '../../components/GpInput.jsx';
 import { Button, Icon, Screen } from '../../ui/index.js';
-import { PlayersPage } from './PlayersPage.jsx';
 import { WatchlistTab } from '../teams/WatchlistTab.jsx';
 
 const asList = value => Array.isArray(value) ? value : [];
@@ -182,7 +181,7 @@ function PollSearch({ teams, club, interest, onChanged }) {
 }
 
 const TAB_KEY = 'mercado-pestana';
-const readTab = () => { try { return window.sessionStorage.getItem(TAB_KEY) ?? 'buscar'; } catch { return 'buscar'; } };
+const readTab = () => { try { return window.sessionStorage.getItem(TAB_KEY) ?? 'subastas'; } catch { return 'subastas'; } };
 
 /** Promesas de tu club: cuántas cumpliste y rompiste (pesa en tu reputación ante los jugadores libres). */
 function PromiseRecord({ teamId, revision }) {
@@ -200,7 +199,6 @@ function PromiseRecord({ teamId, revision }) {
 }
 
 const INTRO = {
-  buscar: 'Busca cualquier jugador de la liga o de eFootball. En su ficha le haces una oferta, le hablas o lo sigues.',
   subastas: 'Los agentes libres más pedidos se subastan en sobre cerrado: nadie ve lo que ofrecen los demás.',
   libres: 'Para fichar a un agente libre se abre una encuesta y los demás presis la confirman.',
   ofertas: 'Las ofertas que te hicieron y las que hiciste. Aquí aceptas, rechazas o contraofertas.',
@@ -240,22 +238,18 @@ export function MarketPage({ teams, initialTab = null, highlightId = null, prefi
   const offers = useApiQuery(signal => (myTeamId ? endpoints.marketOffers(signal).catch(() => ({ data: [] })) : Promise.resolve({ data: [] })), [myTeamId, revision]);
   const incoming = (Array.isArray(offers.data) ? offers.data : []).filter(offer => offer.direction === 'incoming').length;
   const tabs = [
-    { id: 'buscar', label: 'Buscar' },
     { id: 'subastas', label: 'Subastas', badge: liveCount },
     ...(operates ? [{ id: 'libres', label: 'Fichar libres' }, { id: 'ofertas', label: 'Ofertas', badge: incoming }, { id: 'venta', label: 'A la venta' }] : []),
     ...(myTeam ? [{ id: 'seguidos', label: 'Seguidos' }] : []),
     { id: 'historial', label: 'Historial' },
   ];
-  const current = tabs.some(item => item.id === tab) ? tab : 'buscar';
+  const current = tabs.some(item => item.id === tab) ? tab : 'subastas';
   const kicker = status.data ? (status.data.open ? `Mercado abierto${when(status.data.closesAt) ? ` · cierra el ${when(status.data.closesAt)}` : ''}` : 'Mercado cerrado · igual puedes buscar jugadores y hablarles') : 'Mercado';
-  // El buscador recibe sus filtros; el comparador llega como vista=comparador (tab ya es la pestaña del mercado).
-  const directoryQuery = Object.fromEntries(Object.entries({ ...query, tab: query.vista === 'comparador' || query.tab === 'comparador' ? 'comparador' : undefined }).filter(([key, value]) => value !== undefined && !['id', 'jugador', 'club', 'vista'].includes(key)));
   return <Screen kicker={kicker} title="Mercado" intro={INTRO[current]} tabs={tabs} active={current} onTab={setTab}
     actions={isAdmin ? <a className="ui-btn ui-btn--ghost ui-btn--sm screen-admin-link" href="#/admin?tab=mercado">Administrar mercado</a> : null}>
-    {operates && current !== 'buscar' && <MyClubPanel team={myTeam} figures={figures} profileQuery={myTeamId ? profile : null} status={status.data} statusQuery={status}>
+    {operates && <MyClubPanel team={myTeam} figures={figures} profileQuery={myTeamId ? profile : null} status={status.data} statusQuery={status}>
       {myTeamId && <PromiseRecord teamId={myTeamId} revision={revision}/>}
     </MyClubPanel>}
-    {current === 'buscar' && <PlayersPage key={JSON.stringify(directoryQuery)} teams={teams} initialQuery={directoryQuery}/>}
     {current === 'subastas' && <SealedAuctionsSection revision={revision} onChanged={refresh} teams={teams}/>}
     {current === 'libres' && <PollsSection teams={teams} revision={revision} onChanged={refresh}>
       <PollSearch teams={teams} club={club} interest={interest} onChanged={refresh}/>

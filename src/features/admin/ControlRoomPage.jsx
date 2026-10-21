@@ -91,7 +91,7 @@ export function ControlRoomPage({ teams = [], initialTab = 'personas', tournamen
           ['#/partidos/calendario', 'clock', 'CALENDARIO', 'Arrastra partidos a otro día'],
           ['#/sanciones', 'warning', 'SANCIONES', 'EXPULSIONES Y SUSPENSIONES'],
           ['#/equipos/jugadores/importar', 'search', 'AGREGAR JUGADORES', 'Desde eFootballDB o a mano'],
-          ['#/transferencias?tab=buscar', 'shield', 'DIRECTORIO DE JUGADORES', 'Editar o eliminar desde su ficha'],
+          ['#/equipos/jugadores', 'shield', 'DIRECTORIO DE JUGADORES', 'Editar o eliminar desde su ficha'],
           ['#/equipos/estadios', 'stadium', 'ESTADIOS', 'SUBIR FOTOS DEL CATÁLOGO'],
           ['#/noticias', 'mail', 'PERIÓDICO DE LA LIGA', 'Plantillas e imágenes genéricas'],
         ]}/>

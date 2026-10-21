@@ -15,7 +15,7 @@ import { EfootballCardPage } from '../features/public/EfootballCard.jsx';
 import { projectionLink } from '../features/public/ProjectionPanel.jsx';
 import { MatchScoreboardPage } from '../features/public/MatchScoreboardPage.jsx';
 import { MatchCenterPage } from '../features/public/MatchCenterPage.jsx';
-import { ClubsScreen, MatchesScreen, NewsScreen, RulesScreen, TournamentsScreen } from '../features/league/LeaguePage.jsx';
+import { ClubsScreen, MatchesScreen, NewsScreen, PlayersScreen, RulesScreen, TournamentsScreen } from '../features/league/LeaguePage.jsx';
 import { CareerHub } from '../features/home/CareerHub.jsx';
 import { useAuth } from './AuthGate.jsx';
 import { useRoute } from './useRoute.js';
@@ -101,13 +101,15 @@ export function App() {
     page = <TeamDetailPage key={route.teamId} team={teamDetail} teams={league.teams} tournaments={activeTournaments} squad={squad} standings={league.standings} standingsTournamentId={projectionTournament?.id ?? tournament?.id ?? null} matches={teamMatches} recentMatches={teamRecent} history={teamHistory} historyError={teamHistoryError} loading={state.loadingTeam} tab={route.query.tab} msg={route.query.msg} ver={route.query.ver ?? null} navigate={navigate} onTab={tab => navigate(`/equipos/${encodeURIComponent(route.teamId)}${tab ? `?tab=${tab}` : ''}`)} onBack={() => navigate('/equipos')} onChanged={refresh}
       onProjection={projectionTournament ? () => navigate(projectionLink(projectionTournament.id, route.teamId)) : null}/>;
   } else if (route.name === 'player') {
-    page = <PlayerProfilePage playerId={route.playerId} teams={league.teams} backLabel="← Volver al mercado" onBack={() => navigate(route.query.from === 'jugadores' ? `/transferencias?tab=buscar&${playerDirectoryBackPath(route.query).split('?')[1] ?? ''}` : '/transferencias')}/>;
+    page = <PlayerProfilePage playerId={route.playerId} teams={league.teams} backLabel={route.query.from === 'mercado' ? '← Volver al mercado' : '← Volver a jugadores'} onBack={() => navigate(route.query.from === 'mercado' ? '/transferencias' : playerDirectoryBackPath(route.query))}/>;
   } else if (route.name === 'match') {
     page = <MatchCenterPage key={route.matchId} matchId={route.matchId} teams={league.teams} navigate={navigate}/>;
   } else if (route.name === 'card') {
-    page = <EfootballCardPage pesId={route.pesId} variation={Number(route.query.v ?? 0)} navigate={navigate} backLabel="← Volver al mercado" onBack={() => navigate('/transferencias?tab=buscar')}/>;
-  } else if (route.path === '/equipos/jugadores' || route.path === '/equipos/jugadores/importar' || route.path === '/transferencias') {
-    const tab = route.path === '/transferencias' ? route.query.tab : 'buscar';
+    page = <EfootballCardPage pesId={route.pesId} variation={Number(route.query.v ?? 0)} navigate={navigate} backLabel="← Volver a jugadores" onBack={() => navigate('/equipos/jugadores')}/>;
+  } else if (route.path === '/equipos/jugadores' || route.path === '/equipos/jugadores/importar' || (route.path === '/transferencias' && ['buscar'].includes(route.query.tab))) {
+    page = <PlayersScreen teams={league.teams} query={Object.fromEntries(Object.entries({ ...route.query, tab: route.query.vista === 'comparador' || route.query.tab === 'comparador' ? 'comparador' : undefined }).filter(([key, value]) => value !== undefined && key !== 'vista'))}/>;
+  } else if (route.path === '/transferencias') {
+    const tab = route.query.tab;
     page = <MarketPage key={`${route.query.jugador ?? ''}`} teams={league.teams} initialTab={tab} highlightId={route.query.id} query={route.query} importing={route.path.endsWith('/importar')} navigate={navigate} prefill={route.query.jugador ? { playerId: route.query.jugador, teamId: route.query.club ?? '' } : null}/>;
   } else if (route.name === 'newsArticle') {
     page = <HomePage teams={league.teams} navigate={navigate} openNewsId={route.newsId} onCloseNews={() => navigate('/')}/>;
