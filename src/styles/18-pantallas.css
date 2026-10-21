@@ -176,3 +176,8 @@ a.tile:focus-visible, button.tile:focus-visible { outline: 3px solid var(--c-yel
 .club-strip .club-form { display: flex; flex-direction: row; gap: 4px; }
 .screen { scroll-margin-top: calc(var(--site-header-height) + 8px); }
 .screen-actions .ui-btn--ghost { color: #fff; border-color: #fff; }
+.hub-columns--single { grid-template-columns: minmax(0, 1fr); }
+.hub-highlights { margin: 0; padding: 0; border: 0; background: none; box-shadow: none; }
+.with-sidebar .career-hub .tile-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+@media (min-width: 1500px) { .with-sidebar .career-hub .tile-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .with-sidebar .career-hub .tile-grid { grid-template-columns: 1fr; } }

@@ -48,6 +48,20 @@ function NewsStories({ items, teams, onOpen }) {
   </section>;
 }
 
+/** Las noticias destacadas del inicio (carrusel grande + "ver todas"), para usarlas dentro de otra pantalla. */
+export function NewsHighlights({ teams = [], navigate }) {
+  const { news, loading } = useAutomaticNews();
+  const [selected, setSelected] = useState(null);
+  useEffect(() => { rememberNews(news); }, [news]);
+  const stories = news.slice(0, STORY_LIMIT);
+  const closeSelected = useCallback(() => setSelected(null), []);
+  return <section className="home-news hub-highlights">
+    {stories.length ? <NewsStories items={stories} teams={teams} onOpen={setSelected}/> : <div className="arcade-state">{loading ? 'Cargando noticias…' : 'Aún no hay noticias publicadas.'}</div>}
+    {news.length > 0 && <button type="button" className="home-news-all" onClick={() => navigate('/liga?tab=mas&ver=noticias')}>VER TODAS LAS NOTICIAS →</button>}
+    {selected && <NewsModal item={selected} teams={teams} onClose={closeSelected}/>}
+  </section>;
+}
+
 // openNewsId llega desde un enlace directo (#/noticias/:id): se abre el modal sobre el inicio.
 export function HomePage({ teams = [], navigate, openNewsId, onCloseNews }) {
   const { news, loading } = useAutomaticNews();

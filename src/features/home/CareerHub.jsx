@@ -11,6 +11,7 @@ import { BoardPanel } from '../teams/BoardPanel.jsx';
 import { NewsArtwork } from '../../components/NewsArtwork.jsx';
 import { NewsModal } from '../news/NewsModal.jsx';
 import { useAutomaticNews } from '../news/useAutomaticNews.js';
+import { NewsHighlights } from './HomePage.jsx';
 
 const list = value => (Array.isArray(value) ? value : []);
 const when = value => {
@@ -75,7 +76,7 @@ function LatestNews({ teams }) {
 }
 
 /** Inicio = la central de tu club, como el menú del modo carrera: lo próximo, lo pendiente y los atajos. */
-export function CareerHub({ teamId, teams = [], standings = [] }) {
+export function CareerHub({ teamId, teams = [], standings = [], navigate }) {
   const team = useApiQuery(signal => endpoints.team(teamId, signal), [teamId]);
   const matches = useApiQuery(signal => endpoints.teamMatches(teamId, signal), [teamId]);
   const rivalry = useApiQuery(signal => endpoints.teamRivalry(teamId, signal).catch(() => ({ data: null })), [teamId]);
@@ -100,6 +101,7 @@ export function CareerHub({ teamId, teams = [], standings = [] }) {
   const hero = club && <div className="hub-crest" style={{ '--club-primary': colors.primary ?? '#062764' }}><TeamMark team={club} className="hub-crest-mark"/></div>;
   return <Screen className="career-hub" kicker={club ? `${club.name}${position ? ` · ${position}.º en la liga` : ''}` : 'Tu club'} title="Inicio" hero={hero}
     intro={`${greeting} ${todo.length ? `Tienes ${todo.length} ${todo.length === 1 ? 'cosa' : 'cosas'} esperando tu decisión.` : 'Todo al día: no hay nada esperando tu decisión.'}`}>
+    <NewsHighlights teams={teams} navigate={navigate}/>
     <div className="tile-grid">
       <Tile size="lg" tone={derby ? 'red' : 'navy'} href={next ? `#/partidos/${next.id}` : '#/liga?tab=partidos'} icon={<Icon name={derby ? 'fire' : 'ball'} size={18}/>}
         title={next?.status === 'live' ? 'Jugando ahora' : derby ? 'Próximo partido · ¡Clásico!' : 'Próximo partido'}
@@ -123,7 +125,7 @@ export function CareerHub({ teamId, teams = [], standings = [] }) {
         : <p className="screen-lead">Nada pendiente. Buen momento para mirar el mercado o hablar con un jugador.</p>}
     </Card>
 
-    <div className="hub-columns">
+    <div className="hub-columns hub-columns--single">
       <div className="hub-column">
         {played.length > 0 && <Card title="Últimos partidos" aside={<a className="card-link" href="#/liga?tab=partidos">Todos ›</a>}>
           <ul className="hub-results">{played.map(match => {
@@ -134,10 +136,6 @@ export function CareerHub({ teamId, teams = [], standings = [] }) {
           })}</ul>
         </Card>}
         <BoardPanel team={{ id: teamId }}/>
-      </div>
-      <div className="hub-column">
-        <MiniTable standings={standings} teamId={teamId} teams={teams}/>
-        <LatestNews teams={teams}/>
       </div>
     </div>
   </Screen>;
