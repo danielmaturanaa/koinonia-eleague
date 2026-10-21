@@ -103,7 +103,7 @@ const ClubSystems = () => <>
     <h2>7. Roles, Ánimo y Peticiones de Jugadores</h2>
     <ul>
       <li>El Presidente asigna a cada jugador un rol: <strong>crucial, importante, rotación o esporádico</strong>. Los roles solo se cambian con el <strong>mercado cerrado</strong>.</li>
-      <li>El ánimo del jugador (de 5 a 95) sale de su rol comparado con el que cree merecer, su sueldo frente a su valor, la forma del equipo, la reputación del club, los títulos, las promesas cumplidas y su personalidad. Un jugador muy molesto no se sienta a negociar su renovación.</li>
+      <li>El ánimo del jugador (de 5 a 95) sale de su rol comparado con el que cree merecer, su sueldo frente a su valor, la forma del equipo, la reputación del club, los títulos, las promesas cumplidas y su personalidad. Con el ánimo bajo 25 no se sienta a negociar su renovación ni acepta irse a otro club. Si te pide algo y no le respondes en 3 días, pide salir: ya no se le puede renovar, solo vender o canjear.</li>
       <li>Cuando un jugador no está conforme (con su rol o con su sueldo) le escribe al Presidente y abre una <strong>petición</strong>. Se responde desde la Bandeja (o por Discord) con una promesa, un regalo de confianza (cuesta el 25% de su sueldo), paciencia o ignorándolo, y cada respuesta tiene consecuencias en su ánimo. Solo se puede responder con el <strong>mercado cerrado</strong>.</li>
       <li>Si la petición se ignora o no se responde a tiempo, el jugador <strong>pide salir</strong>: ya no se le puede renovar y solo queda venderlo o canjearlo.</li>
     </ul>
