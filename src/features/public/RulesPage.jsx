@@ -128,7 +128,7 @@ const ClubSystems = () => <>
     <ul>
       <li>La liga tiene un catálogo de estadios, reales y ficticios, ordenados en categorías <strong>S, A, B, C y D</strong> (de mayor a menor), cada uno con su capacidad y su precio en GP.</li>
       <li>Cada estadio tiene un solo dueño y cada club puede tener uno. Comprarlo descuenta su precio del saldo; cambiar a otro reembolsa el actual a su precio de catálogo y se paga solo la diferencia; venderlo devuelve su precio de catálogo.</li>
-      <li>Por ahora el estadio es solo estético: da el nombre al estadio del club.</li>
+      <li>El aforo es el techo de la taquilla: un club sin estadio del catálogo juega en su cancha propia, de <strong>12.000 personas</strong>. Un estadio más grande deja entrar a más gente en cada partido de local, recibe conciertos más grandes y es requisito para La Velada.</li>
     </ul>
   </section>
   <section className="rules-section">
@@ -137,6 +137,39 @@ const ClubSystems = () => <>
       <li>Con el mercado <strong>abierto</strong>: contratos, renovaciones, negociaciones, contraofertas y primas.</li>
       <li>Con el mercado <strong>cerrado</strong>: roles y respuestas a las peticiones de los jugadores, para que nadie los use para manipular las transacciones.</li>
       <li>Rescindir un contrato se puede en cualquier momento. Los contratos vencidos pasan a la agencia libre al cierre del mercado, nunca mientras haya un torneo de liga en curso.</li>
+    </ul>
+  </section>
+  <section className="rules-section">
+    <h2>12. Visto Bueno del Jugador</h2>
+    <ul>
+      <li>En un traspaso o un trueque con contrato vigente deciden <strong>tres partes</strong>: el club que vende acepta el precio, el que compra paga y el <strong>jugador da (o no) su visto bueno</strong>. Su representante habla por él.</li>
+      <li>El jugador compara el club al que lo mandan con el suyo: minutos, compañeros, DT, historia, proyecto y fama del Presidente, más su ánimo, el rol que tendría, si es leal, si lo mandan al <strong>clásico rival</strong> y si lo cambiaron hace poco (no quiere ser una ficha de cambio).</li>
+      <li>Puede aceptar, <strong>pedir condiciones</strong> (una prima de fichaje y, a veces, un rol prometido) o negarse. La prima la paga el club que lo recibe, va directo al jugador y no puede pasar el <strong>15% de su valor</strong>. El rol prometido queda en su contrato: si no se cumple, se molesta.</li>
+      <li>Si el jugador pidió salir, acepta casi cualquier destino. Con el contrato vencido se negocia el sueldo como siempre (sección 6).</li>
+    </ul>
+  </section>
+  <section className="rules-section">
+    <h2>13. Clásicos</h2>
+    <ul>
+      <li>Cada club tiene un clásico. El <strong>natural</strong> sale del historial: partidos, eliminatorias, finales, goleadas y traspasos entre ambos (vale más si la rivalidad es pareja). El Presidente puede <strong>elegir otro una vez por temporada</strong>.</li>
+      <li>Si los dos clubes se eligen, es <strong>clásico oficial</strong>. En un clásico la demanda de entradas sube 60% (90% si es oficial) y ganar o perder mueve el doble de hinchas y ánimo.</li>
+    </ul>
+  </section>
+  <section className="rules-section">
+    <h2>14. Hinchada y Taquilla</h2>
+    <ul>
+      <li>Cada club tiene <strong>hinchas</strong> (crecen con resultados, clásicos, títulos y eventos) y un <strong>ánimo de la hinchada</strong> que cambia partido a partido.</li>
+      <li>Al terminar cada partido de clubes, el local cobra las entradas: la asistencia depende de sus hinchas, el rival, si es clásico o playoffs, el ánimo de la gente y el precio que fijó el Presidente (popular 35 €, normal 60 €, premium 95 €). El aforo es el techo. La final a partido único se juega en el estadio más grande de los dos y la taquilla se reparte mitad y mitad.</li>
+      <li>Un castigo (W.O.) se juega a puertas cerradas: no hay taquilla. Si un partido se reabre o se anula, la taquilla y los hinchas se devuelven.</li>
+      <li><strong>El marcador no cambia</strong>: la hinchada y el estadio mueven plata, hinchas y ánimo, nunca el resultado del partido.</li>
+    </ul>
+  </section>
+  <section className="rules-section">
+    <h2>15. Conciertos, La Velada y Auspicios</h2>
+    <ul>
+      <li><strong>Conciertos:</strong> el Presidente contrata a un artista de la cartelera, paga su caché y el show se hace en su próxima fecha de local. Al club le quedan 60 € por persona. Cada artista pide un aforo mínimo. La convocatoria tiene azar: un estadio lleno deja ganancia e hinchas y un show flojo puede dar pérdida. Máximo dos por temporada; cancelar devuelve la mitad del caché.</li>
+      <li><strong>La Velada del Año:</strong> una vez por temporada Ibai busca estadio. Postulan los clubes con un estadio de 50.000 personas o más y 300.000 hinchas, con una oferta en sobre cerrado. Ibai mira la oferta (50%), el aforo (30%) y la hinchada (20%). El ganador paga su oferta y se queda con las entradas a estadio lleno y la transmisión.</li>
+      <li><strong>Auspicios:</strong> cada temporada llegan tres ofertas de camiseta (fija, mixta o arriesgada), según los hinchas. Se cobran al cerrar cada torneo de liga, con bonos por playoffs y por título según la oferta. Sin casas de apuestas ni alcohol.</li>
     </ul>
   </section>
 </>;

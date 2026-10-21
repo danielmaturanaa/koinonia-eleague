@@ -31,6 +31,8 @@ export function ClubCentral({ team, balance, matches = [], onTab, standing = nul
   const market = useApiQuery(signal => endpoints.marketStatus(signal).catch(() => ({ data: { open: false } })), []);
   const offers = useApiQuery(signal => endpoints.marketOffers(signal).catch(() => ({ data: [] })), []);
   const watch = useApiQuery(signal => endpoints.teamWatchlist(team.id, signal).catch(() => ({ data: [] })), [team.id]);
+  const business = useApiQuery(signal => endpoints.teamBusiness(team.id, signal).catch(() => ({ data: null })), [team.id]);
+  const rivalry = useApiQuery(signal => endpoints.teamRivalry(team.id, signal).catch(() => ({ data: null })), [team.id]);
   const { summary, version } = useNotifications();
   // Ofertas, peticiones y avisos son de quien preside el club: un admin actuando como presi no ve los suyos como si fueran del club.
   const { isPresidentOf } = useAuth();
@@ -49,12 +51,18 @@ export function ClubCentral({ team, balance, matches = [], onTab, standing = nul
   const requests = mine ? (summary.byCategory.requests ?? 0) : 0;
   const next = nextMatchOf(matches, team.id);
   const rival = next ? (next.homeTeam?.id === team.id ? next.awayTeam : next.homeTeam) : null;
+  const derby = Boolean(rival && rivalry.data?.rival?.id === rival.id);
+  const life = business.data?.enabled ? business.data : null;
+  const velada = life?.velada;
+  const veladaPending = velada?.round?.status === 'open' && velada.eligibility?.eligible && velada.myBid === null;
 
   const todo = [
     incoming > 0 && ['gavel', `${incoming} OFERTA${incoming === 1 ? '' : 'S'} POR RESPONDER`, `#/transferencias?tab=ofertas`],
     requests > 0 && ['mail', `${requests} PETICIÓN${requests === 1 ? '' : 'ES'} DE JUGADORES`, `#/equipos/${team.id}?tab=bandeja`],
     expiring > 0 && ['contract', `${expiring} CONTRATO${expiring === 1 ? '' : 'S'} POR VENCER O VENCIDO${expiring === 1 ? '' : 'S'}`, `#/equipos/${team.id}?tab=nomina`],
     alerts > 0 && ['star', `${alerts} JUGADOR${alerts === 1 ? '' : 'ES'} QUE SIGUES CON NOVEDADES`, `#/equipos/${team.id}?tab=seguimiento`],
+    veladaPending && ['mic', 'IBAI BUSCA ESTADIO PARA LA VELADA: PUEDES POSTULAR', `#/equipos/${team.id}?tab=eventos`],
+    life && !life.sponsor && ['handshake', 'TIENES 3 OFERTAS DE AUSPICIO SIN RESPONDER', `#/equipos/${team.id}?tab=auspicio`],
   ].filter(Boolean);
 
   return <div className="club-central">
@@ -62,7 +70,7 @@ export function ClubCentral({ team, balance, matches = [], onTab, standing = nul
       <Card tone="paper"><Stat label="SALDO" value={balance === null ? '—' : gp(balance)} hint="GP PARA FICHAJES"/></Card>
       <Card tone="paper"><Stat label="NÓMINA ANUAL" value={gp(payroll)} hint={cap === null ? 'SIN TOPE DEFINIDO' : payroll > cap ? `TE PASAS DEL TOPE POR ${gp(payroll - cap)}` : `TOPE ${gp(cap)}`} tone={cap !== null && payroll > cap ? 'bad' : 'default'}/></Card>
       <Card tone={market.data?.open ? 'gold' : 'paper'}><Stat label="MERCADO" value={market.data?.open ? 'ABIERTO' : 'CERRADO'} hint={marketHint(market.data)} tone={market.data?.open ? 'good' : 'default'}/></Card>
-      <Card tone="paper"><Stat label="PRÓXIMO PARTIDO" value={rival ? `VS ${upper(rival.name).slice(0, 18)}` : '—'} hint={rival ? (next.status === 'live' ? 'EN VIVO AHORA' : upper(matchRoundLabel(next))) : 'SIN PARTIDOS PENDIENTES'}/></Card>
+      <Card tone={derby ? 'alert' : 'paper'}><Stat label={derby ? 'PRÓXIMO PARTIDO · CLÁSICO' : 'PRÓXIMO PARTIDO'} value={rival ? `VS ${upper(rival.name).slice(0, 18)}` : '—'} hint={rival ? (next.status === 'live' ? 'EN VIVO AHORA' : `${upper(matchRoundLabel(next))}${next.homeTeam?.id === team.id ? ' · DE LOCAL' : ' · DE VISITA'}`) : 'SIN PARTIDOS PENDIENTES'}/></Card>
     </div>
 
     <Card title="ESPERANDO TU DECISIÓN">

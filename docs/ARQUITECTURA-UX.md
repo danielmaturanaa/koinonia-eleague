@@ -21,11 +21,11 @@ Menú principal (`src/app/navigation.js`): **Inicio · Partidos · Torneos · Ju
 
 `TeamDetailPage` muestra una u otra según quién mira (`ownerMode`):
 
-- **Presidente de ese club → Mi club**: CENTRAL · PLANTEL · FINANZAS (Contratos y nómina | Simulador con dos modos) · MERCADO (Seguimiento | Fichajes) · BANDEJA · CLUB (Resumen | Partidos | Tabla | Historia | Estadio).
-- **Cualquier otra persona → ficha pública**: Resumen · Plantel · Partidos · Tabla · Historia (con los fichajes) · Nómina (solo lectura) · Estadio.
+- **Presidente de ese club → Mi club**: EQUIPO (Resumen | Partidos | Tabla | Clásico | Historia) · CENTRAL · PLANTEL · FINANZAS (Contratos y nómina | Movimientos | Simulador) · ESTADIO (Estadio y taquilla | Eventos | Auspicio | Comprar estadio) · MERCADO (Seguimiento | Fichajes) · BANDEJA.
+- **Cualquier otra persona → ficha pública**: Resumen · Plantel · Partidos · Tabla · Clásico · Historia (con los fichajes) · Nómina (solo lectura) · Estadio (hinchada y taquilla, sin el negocio).
 - **Admin en un club ajeno** entra como visitante; con "Actuar como presi" ve las herramientas del club (banner visible y todo queda registrado a su nombre). Un enlace a una herramienta privada le ofrece activarlo.
 
-El id de la pestaña en la URL es siempre la "hoja" (`central`, `nomina`, `finanzas`, `seguimiento`, `fichajes`, `bandeja`, `resumen`, `partidos`, `tabla`, `historia`, `estadio`, `plantel`); la sección se deduce de ella, así los enlaces viejos siguen funcionando.
+El id de la pestaña en la URL es siempre la "hoja" (`central`, `nomina`, `finanzas`, `seguimiento`, `fichajes`, `bandeja`, `resumen`, `partidos`, `tabla`, `historia`, `estadio`, `eventos`, `auspicio`, `catalogo`, `clasico`, `plantel`); la sección se deduce de ella, así los enlaces viejos siguen funcionando.
 
 ## 3. Qué vivía dónde → dónde vive ahora
 
@@ -58,10 +58,18 @@ Todo pasa por `notify()` (backend `src/core/notifications.js`): una fila en `not
 | Sueldos y primas por gol al cerrar la temporada | finance | Cada club | `#/equipos/:id?tab=nomina` | caja |
 | Resultado de los objetivos de la directiva | board | Cada club | `#/equipos/:id?tab=central` | confirmar |
 | Prima por playoffs / por título pagada | finance | Club | `?tab=nomina` | caja |
+| Concierto realizado (asistencia, ganancia o pérdida) | finance | Club | `#/equipos/:id?tab=eventos` | aviso |
+| Ibai abre la postulación a La Velada / elige sede | league | Todos los clubes | `#/equipos/:id?tab=eventos` | aviso |
 
 Pendientes de conectar (no notifican todavía): alertas del seguimiento, compra de estadio, sanciones al presi, torneo creado o cerrado, promesas por vencer.
 
 Entrega por Discord (`syncNotificationDMs`): DM agrupado (hasta 10 tarjetas + botón a la web), respeta categoría, silencio total y horario de no molestar; DM cerrado se anota y la web lo explica; los errores pasajeros se reintentan.
+
+## 4b. Vida de club
+
+Backend: `core/consent.js` (visto bueno del jugador en traspasos y trueques con contrato vigente, prima de fichaje y rol prometido; representantes en `negotiation/agents.js`), `core/rivalries.js` (clásico natural por historial o elegido, cara a cara), `core/fans.js` (hinchas, ánimo de la hinchada, taquilla al terminar cada partido de clubes y su reversión), `core/events.js` (conciertos, La Velada, auspicios). Se activa una vez con `POST /v1/admin/club-life/start` (Sala de control > Vida de club); antes de eso nada cobra.
+
+Web: `features/teams/ClubLife.jsx` (Estadio y taquilla, Eventos, Auspicio), `features/teams/RivalryTab.jsx`, `features/public/market/ConsentPanel.jsx` (dentro del formulario de ofertas), `features/public/MatchdayPanel.jsx` (centro del partido), `features/admin/ClubLifeAdmin.jsx`. Estilos en `styles/17-vida-club.css`.
 
 ## 5. Sistema de diseño
 

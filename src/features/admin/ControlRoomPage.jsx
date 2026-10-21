@@ -8,6 +8,7 @@ import { AuctionSimulator } from '../public/market/AuctionSimulator.jsx';
 import { CreateTournamentForm } from '../public/TournamentsPage.jsx';
 import { useApiQuery } from '../public/useApiQuery.js';
 import { CreateTeamForm } from './CreateTeamForm.jsx';
+import { ClubLifeAdmin } from './ClubLifeAdmin.jsx';
 import { PeoplePage } from './PeoplePage.jsx';
 import { TournamentAdminPanel, TournamentAwardsPanel } from './TournamentAdminPanel.jsx';
 
@@ -15,6 +16,7 @@ const SECTIONS = [
   { id: 'personas', label: 'PERSONAS Y PERMISOS' },
   { id: 'torneos', label: 'TORNEOS' },
   { id: 'mercado', label: 'MERCADO' },
+  { id: 'vida', label: 'VIDA DE CLUB' },
   { id: 'equipos', label: 'EQUIPOS' },
   { id: 'jugadores', label: 'JUGADORES' },
   { id: 'partidos', label: 'PARTIDOS' },
@@ -82,6 +84,7 @@ export function ControlRoomPage({ teams = [], initialTab = 'personas', tournamen
     {tab === 'personas' && <PeoplePage teams={teams} embedded/>}
     {tab === 'torneos' && <TournamentsSection teams={teams} initialId={tournamentId}/>}
     {tab === 'mercado' && <MarketSection teams={teams}/>}
+    {tab === 'vida' && <ClubLifeAdmin/>}
     {tab === 'equipos' && <div className="control-section"><Card title="CREAR CLUB O SELECCIÓN"><CreateTeamForm/></Card>
       <p className="control-note">PARA EDITAR UN CLUB (ESCUDO, PRESIDENTE, DT, HIMNO) ENTRA A SU FICHA: EL ADMIN PUEDE EDITARLO IGUAL QUE SU PRESIDENTE.</p></div>}
     {tab === 'jugadores' && <div className="control-section">

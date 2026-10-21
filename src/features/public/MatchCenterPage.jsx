@@ -12,6 +12,7 @@ import { DataState, formatDate } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
 import { PitchBoard } from '../teams/PitchBoard.jsx';
 import { useAuth } from '../../app/AuthGate.jsx';
+import { MatchdayPanel } from './MatchdayPanel.jsx';
 
 // Goles agrupados por jugador; los minutos solo aparecen si el acta los registró.
 function groupedGoals(goals, teamId) {
@@ -115,6 +116,7 @@ export function MatchCenterPage({ matchId, teams = [], navigate }) {
       {match && <div className="match-center-h2h"><HeadToHead match={match} resolveTeam={resolveTeam}/></div>}
     </div>
     {match && <>
+      {!replaying && !loadingSimulation && <MatchdayPanel match={match} revision={revision}/>}
       <section className="match-card-panel"><h2>ALINEACIONES <small>TITULARES ACTUALES DE CADA CLUB</small></h2><div className="match-lineups"><Lineup team={resolveTeam(match.homeTeam)}/><Lineup team={resolveTeam(match.awayTeam)}/></div></section>
       {canOperateMatches && <details className="match-corrections"><summary>SANCIONES Y CORRECCIONES</summary><div><SanctionPanel key={`${match.id}-${revision}`} match={match} onChanged={bump}/></div></details>}
     </>}

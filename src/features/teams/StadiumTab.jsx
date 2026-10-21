@@ -24,7 +24,7 @@ export function StadiumTab({ team, balance, onChanged }) {
   const run = (operation, text) => { message.current = text; act.execute(operation); };
   const netCost = stadium => stadium.price - (mine?.price ?? 0);
   return <section className="stadium-tab">
-    <header><h2>ESTADIO</h2><p>CADA ESTADIO TIENE UN SOLO DUEÑO Y CADA CLUB PUEDE TENER UNO. COMPRARLO DESCUENTA SU PRECIO DEL SALDO; SI YA TENÍAS UNO, SE TE REEMBOLSA A SU PRECIO Y SOLO PAGAS LA DIFERENCIA. POR AHORA ES SOLO ESTÉTICO: DA EL NOMBRE A TU ESTADIO.</p></header>
+    <header><h2>COMPRAR ESTADIO</h2><p>CADA ESTADIO TIENE UN SOLO DUEÑO Y CADA CLUB PUEDE TENER UNO. COMPRARLO DESCUENTA SU PRECIO DEL SALDO; SI YA TENÍAS UNO, SE TE REEMBOLSA A SU PRECIO Y SOLO PAGAS LA DIFERENCIA. EL AFORO ES EL TECHO DE TU TAQUILLA: MÁS GRANDE, MÁS GENTE EN CADA PARTIDO DE LOCAL Y CONCIERTOS MÁS GRANDES. LA VELADA PIDE 50.000 PERSONAS. SI LO VENDES, RECUPERAS SU PRECIO.</p></header>
     <DataState query={query}/>
     {mine && <Card tone="gold" className="stadium-mine">
       <span><Icon name="stadium" size={20}/> TU ESTADIO: <b>{upper(mine.name)}</b> <Chip tone="navy">CATEGORÍA {mine.category}</Chip> {gpLabel(mine.price)}</span>

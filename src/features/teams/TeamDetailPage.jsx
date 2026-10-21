@@ -23,6 +23,8 @@ import { ClubCentral } from './ClubCentral.jsx';
 import { InboxTab } from './InboxTab.jsx';
 import { WatchlistTab } from './WatchlistTab.jsx';
 import { StadiumTab } from './StadiumTab.jsx';
+import { EventsTab, SponsorTab, VenueTab } from './ClubLife.jsx';
+import { RivalryTab } from './RivalryTab.jsx';
 import { LedgerTab } from './LedgerTab.jsx';
 import { PayrollTab } from './PayrollTab.jsx';
 import { RolesPanel } from './RolesPanel.jsx';
@@ -655,15 +657,16 @@ function SquadValueSimulator({ team, squad, balance }) {
 
 // Dos fichas distintas: la del presidente (Mi club: Central y sus herramientas) y la pública de cualquier otro club. Cada sección agrupa pantallas ("hojas").
 const OWNER_SECTIONS = [
-  { id: 'club', label: 'EQUIPO', leaves: [['resumen', 'RESUMEN'], ['partidos', 'PARTIDOS'], ['tabla', 'TABLA'], ['historia', 'HISTORIA'], ['estadio', 'ESTADIO']] },
+  { id: 'club', label: 'EQUIPO', leaves: [['resumen', 'RESUMEN'], ['partidos', 'PARTIDOS'], ['tabla', 'TABLA'], ['clasico', 'CLÁSICO'], ['historia', 'HISTORIA']] },
   { id: 'central', label: 'CENTRAL', leaves: [['central', 'CENTRAL']] },
   { id: 'plantel', label: 'PLANTEL', leaves: [['plantel', 'PLANTEL']] },
   { id: 'finanzas', label: 'FINANZAS', leaves: [['nomina', 'CONTRATOS Y NÓMINA'], ['movimientos', 'MOVIMIENTOS'], ['finanzas', 'SIMULADOR']] },
+  { id: 'estadio', label: 'ESTADIO', leaves: [['estadio', 'ESTADIO Y TAQUILLA'], ['eventos', 'EVENTOS'], ['auspicio', 'AUSPICIO'], ['catalogo', 'COMPRAR ESTADIO']] },
   { id: 'mercado', label: 'MERCADO', leaves: [['seguimiento', 'SEGUIMIENTO'], ['fichajes', 'FICHAJES']] },
   { id: 'bandeja', label: 'BANDEJA', leaves: [['bandeja', 'BANDEJA']] },
 ];
-const VISITOR_SECTIONS = ['resumen', 'plantel', 'partidos', 'tabla', 'historia', 'nomina', 'estadio']
-  .map(id => ({ id, label: { resumen: 'RESUMEN', plantel: 'PLANTEL', partidos: 'PARTIDOS', tabla: 'TABLA', historia: 'HISTORIA', nomina: 'NÓMINA', estadio: 'ESTADIO' }[id], leaves: [[id, id]] }));
+const VISITOR_SECTIONS = ['resumen', 'plantel', 'partidos', 'tabla', 'clasico', 'historia', 'nomina', 'estadio']
+  .map(id => ({ id, label: { resumen: 'RESUMEN', plantel: 'PLANTEL', partidos: 'PARTIDOS', tabla: 'TABLA', clasico: 'CLÁSICO', historia: 'HISTORIA', nomina: 'NÓMINA', estadio: 'ESTADIO' }[id], leaves: [[id, id]] }));
 
 /** Simulador de finanzas: un solo lugar con dos modos (fichajes y salidas del plantel, o contratos y nómina). */
 function FinanceSimulator({ team, squad, balance, onChanged, onTab, currentPosition }) {
@@ -875,7 +878,11 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
         {activeTab === 'fichajes' && <ClubTransfers teamId={team.id}/>}
         {activeTab === 'historia' && <div className="club-history-tab-content"><HonoursList honours={honours} historyError={historyError}/><ClubHistory team={team} onEdit={canEdit ? setHistoryEditor : undefined}/>{!ownerMode && <ClubTransfers teamId={team.id}/>}</div>}
         {activeTab === 'movimientos' && <LedgerTab team={team} balance={balance}/>}
-        {activeTab === 'estadio' && <StadiumTab team={team} balance={balance} onChanged={onChanged}/>}
+        {activeTab === 'estadio' && <VenueTab team={team} onTab={ownerMode ? onTab : null}/>}
+        {activeTab === 'eventos' && <EventsTab team={team} onChanged={onChanged}/>}
+        {activeTab === 'auspicio' && <SponsorTab team={team} onChanged={onChanged}/>}
+        {activeTab === 'catalogo' && <StadiumTab team={team} balance={balance} onChanged={onChanged}/>}
+        {activeTab === 'clasico' && <RivalryTab team={team} teams={teams}/>}
         {activeTab === 'seguimiento' && <WatchlistTab team={team}/>}
         {activeTab === 'bandeja' && <InboxTab team={team} onTab={onTab} onRead={inbox.retry} highlightId={msg}/>}
         {activeTab === 'nomina' && <PayrollTab team={team} balance={balance} onChanged={onChanged} onTab={onTab} forcedView="actual" currentPosition={(displayStandings ?? []).findIndex(row => (row.team_id ?? row.teamId) === team.id) + 1 || null}/>}
