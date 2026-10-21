@@ -21,7 +21,7 @@ export function WatchlistTab({ team }) {
   const found = (Array.isArray(results.data) ? results.data : []).filter(player => player.team?.id !== team.id);
   const alerting = rows.filter(row => row.alerts.length);
   return <section className="watchlist-tab">
-    <header><h2>SEGUIMIENTO <Chip tone="navy">{rows.length}</Chip></h2><p>MARCA JUGADORES (DE OTROS CLUBES O LIBRES) Y AQUÍ TE AVISAMOS CUANDO ALGO CAMBIE: QUEDA LIBRE, CAMBIA DE CLUB, SE PONE EN VENTA, CAMBIA DE VALOR O LE QUEDA UN SOLO TORNEO.</p></header>
+    <header><h2>SEGUIMIENTO <Chip tone="navy">{rows.length}</Chip></h2><p>TE AVISAMOS SI QUEDA LIBRE, CAMBIA DE CLUB, SE PONE EN VENTA, CAMBIA DE VALOR O LE QUEDA UN TORNEO.</p></header>
     <div className="watchlist-search">
       <input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="BUSCAR JUGADOR PARA SEGUIR" aria-label="Buscar jugador para seguir"/>
       {found.length > 0 && <ul className="watch-results">{found.map(player => <li key={player.id} className="watch-row">

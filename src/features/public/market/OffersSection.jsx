@@ -8,6 +8,7 @@ import { useApiQuery } from '../useApiQuery.js';
 import { useAutoRefresh } from './PollsSection.jsx';
 import { GpInput } from '../../../components/GpInput.jsx';
 import { ConsentPanel } from './ConsentPanel.jsx';
+import { HowItWorks } from '../../../ui/index.js';
 
 const RELEASE_SHARE = 0.2;
 // La misma banda que valida el servidor: todo precio queda entre 0,7× y 1,25× el valor del jugador.
@@ -212,9 +213,9 @@ function Sent({ text, onAgain }) {
   </div>;
 }
 
-function TransferProposal({ myTeamId, rivals, onDone }) {
+function TransferProposal({ myTeamId, rivals, onDone, prefill = null }) {
   const empty = { side: 'buy', otherTeamId: '', playerId: '', gpAmount: '' };
-  const [form, setForm] = useState(empty);
+  const [form, setForm] = useState(() => (prefill?.teamId ? { ...empty, otherTeamId: prefill.teamId, playerId: prefill.playerId } : empty));
   const [sent, setSent] = useState('');
   const buying = form.side === 'buy';
   const mySquad = useSquad(myTeamId);
@@ -232,6 +233,8 @@ function TransferProposal({ myTeamId, rivals, onDone }) {
   const [consentTerms, setConsentTerms] = useState(NO_CONSENT_TERMS);
   const [verdict, setVerdict] = useState(null);
   const buyer = buying ? { id: myTeamId, name: 'tu club' } : other;
+  // Jugador elegido desde su ficha: cuando llega el plantel se propone su valor como precio.
+  useEffect(() => { if (player && form.gpAmount === '') setForm(current => ({ ...current, gpAmount: String(player.gpValue ?? '') })); }, [player?.id]);
   useEffect(() => { setConsentTerms(NO_CONSENT_TERMS); setVerdict(null); }, [form.playerId, form.otherTeamId, form.side]);
   const mutation = useApiMutation((body, signal) => endpoints.createTransfer(body, signal), {
     onSuccess: () => { setSent(`OFERTA ENVIADA A ${upper(other?.name)}: LE LLEGA A SU BANDEJA Y A DISCORD. SE CONCRETA CUANDO LA ACEPTE.`); setForm(empty); setConsentTerms(NO_CONSENT_TERMS); onDone?.(); },
@@ -334,7 +337,8 @@ function ReleaseForm({ myTeamId, onDone }) {
   const refund = player ? Math.round((player.gpValue ?? 0) * RELEASE_SHARE) : null;
   return <form className="admin-form market-form offer-form" onSubmit={event => { event.preventDefault(); if (player) setConfirming(true); }}>
     <label>JUGADOR A LIBERAR<select value={playerId} required onChange={event => { setPlayerId(event.target.value); setConfirming(false); }}>{playerOptions(mySquad.squad)}</select></label>
-    <p className="poll-hint">AL LIBERAR RECIBES SOLO EL 20% DEL VALOR DEL JUGADOR{refund !== null ? `: ${gp(refund)}` : ''}. EL JUGADOR QUEDA COMO AGENTE LIBRE PARA TODA LA LIGA. LOS AGENTES LIBRES SE ACUERDAN: CADA LIBERACIÓN BAJA TU REPUTACIÓN EN LAS SUBASTAS. SI TIENE CONTRATO VIGENTE ES UNA RESCISIÓN: PAGAS EL 50% DE LAS TEMPORADAS QUE FALTAN Y NO RECIBES NADA (MÁS DETALLE EN LA PESTAÑA NÓMINA DEL CLUB).</p>
+    <p className="poll-hint">RECIBES EL 20% DE SU VALOR{refund !== null ? `: ${gp(refund)}` : ''} Y QUEDA COMO AGENTE LIBRE.</p>
+    <HowItWorks><p>Los agentes libres se acuerdan: cada liberación baja tu reputación en las subastas.</p><p>Si tiene contrato vigente es una rescisión: pagas el 50% de las temporadas que faltan y no recibes nada (más detalle en Contratos y nómina).</p></HowItWorks>
     {confirming
       ? <div className="offer-confirm" role="group" aria-label="CONFIRMAR">
         <span>¿LIBERAR A {upper(player?.name)}? RECIBES {gp(refund)} Y NO SE PUEDE DESHACER.</span>
@@ -348,7 +352,7 @@ function ReleaseForm({ myTeamId, onDone }) {
   </form>;
 }
 
-export function ProposeOffers({ teams, marketOpen, onChanged }) {
+export function ProposeOffers({ teams, marketOpen, onChanged, prefill = null }) {
   const { teamId: myTeamId } = useAuth();
   const [tab, setTab] = useState('transfer');
   if (!myTeamId) return null;
@@ -356,14 +360,14 @@ export function ProposeOffers({ teams, marketOpen, onChanged }) {
   // Traspasos y trueques solo con el mercado abierto; liberar se puede siempre.
   const closed = marketOpen === false && tab !== 'release';
   return <section className="market-section market-propose">
-    <header><h2>PROPONER UNA OPERACIÓN</h2><p>LA OTRA PARTE LA RECIBE EN SU BANDEJA Y EN DISCORD, Y SE CONCRETA SOLO CUANDO LA ACEPTA. EL PRECIO DE CADA JUGADOR VA ENTRE 0,7× Y 1,25× SU VALOR.</p></header>
+    <header><h2>PROPONER UNA OPERACIÓN</h2><p>SE CONCRETA CUANDO LA OTRA PARTE LA ACEPTA. PRECIO ENTRE 0,7× Y 1,25× EL VALOR.</p></header>
     <nav className="market-tabs offer-tabs" aria-label="TIPO DE OPERACIÓN">
-      <button type="button" className={tab === 'transfer' ? 'active' : ''} onClick={() => setTab('transfer')}>🤝 TRASPASO</button>
-      <button type="button" className={tab === 'trade' ? 'active' : ''} onClick={() => setTab('trade')}>🔁 TRUEQUE</button>
-      <button type="button" className={tab === 'release' ? 'active' : ''} onClick={() => setTab('release')}>🚪 LIBERAR</button>
+      <button type="button" className={tab === 'transfer' ? 'active' : ''} onClick={() => setTab('transfer')}>TRASPASO</button>
+      <button type="button" className={tab === 'trade' ? 'active' : ''} onClick={() => setTab('trade')}>TRUEQUE</button>
+      <button type="button" className={tab === 'release' ? 'active' : ''} onClick={() => setTab('release')}>LIBERAR</button>
     </nav>
     {closed && <p className="empty-copy">EL MERCADO ESTÁ CERRADO: LOS TRASPASOS Y TRUEQUES SE PROPONEN CUANDO SE ABRA.</p>}
-    {!closed && tab === 'transfer' && <TransferProposal myTeamId={myTeamId} rivals={rivals} onDone={onChanged}/>}
+    {!closed && tab === 'transfer' && <TransferProposal myTeamId={myTeamId} rivals={rivals} onDone={onChanged} prefill={prefill}/>}
     {!closed && tab === 'trade' && <TradeProposal myTeamId={myTeamId} rivals={rivals} onDone={onChanged}/>}
     {tab === 'release' && <ReleaseForm myTeamId={myTeamId} onDone={onChanged}/>}
   </section>;

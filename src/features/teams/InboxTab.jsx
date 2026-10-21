@@ -59,7 +59,7 @@ export function InboxTab({ team, onTab, onRead, highlightId = null }) {
     if (messages.some(message => String(message.id) === String(highlightId) && !isRead(message))) markRead([highlightId]);
   }, [highlightId, query.data]);
   return <section className="inbox-tab">
-    <header><h2>BANDEJA DE ENTRADA</h2>{unread > 0 && <Button variant="ghost" size="sm" onClick={() => markRead(null)}>MARCAR TODO COMO LEÍDO ({unread})</Button>}<p>AQUÍ TE ESCRIBEN TUS JUGADORES: CUANDO SU CONTRATO ESTÁ POR VENCER, CUANDO QUIEREN RENOVAR Y CUANDO NO ESTÁN CONFORMES CON SU ROL.</p></header>
+    <header><h2>BANDEJA DE ENTRADA</h2>{unread > 0 && <Button variant="ghost" size="sm" onClick={() => markRead(null)}>MARCAR TODO COMO LEÍDO ({unread})</Button>}<p>TUS JUGADORES TE ESCRIBEN POR CONTRATOS, RENOVACIONES Y SU ROL.</p></header>
     <DataState query={query}/>
     {query.data && messages.length === 0 && <p className="empty-copy data-empty">TODAVÍA NO TE HAN ESCRITO. LOS MENSAJES APARECEN CUANDO EL SISTEMA DE CONTRATOS ESTÁ ACTIVO.</p>}
     <ul className="inbox-list">{messages.map(message => {

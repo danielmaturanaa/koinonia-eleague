@@ -23,7 +23,7 @@ function matchRoute(path) {
   const playerMatch = path.match(/^\/jugadores\/([^/]+)$/);
   if (playerMatch) return { name: 'player', path, playerId: decodeURIComponent(playerMatch[1]) };
   const teamMatch = path.match(/^\/equipos\/([^/]+)$/);
-  const reservedTeamSections = new Set(['plantillas', 'presupuestos', 'presidentes', 'directores-tecnicos', 'emblemas', 'selecciones', 'jugadores', 'rankings']);
+  const reservedTeamSections = new Set(['plantillas', 'presupuestos', 'presidentes', 'directores-tecnicos', 'emblemas', 'selecciones', 'jugadores', 'rankings', 'estadios']);
   if (teamMatch && !reservedTeamSections.has(teamMatch[1])) {
     return { name: 'team', path, teamId: decodeURIComponent(teamMatch[1]) };
   }

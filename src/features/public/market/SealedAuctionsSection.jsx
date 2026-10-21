@@ -13,6 +13,7 @@ import { PlayerPicker } from './PlayerPicker.jsx';
 import { ReadyControl } from './ReadyControl.jsx';
 import { useAutoRefresh } from './PollsSection.jsx';
 import { GpInput } from '../../../components/GpInput.jsx';
+import { HowItWorks } from '../../../ui/index.js';
 
 const STATUS_LABEL = { open: 'ABIERTA', resolved: 'FIRMADO', no_sale: 'SIN VENTA', cancelled: 'CANCELADA' };
 
@@ -316,7 +317,7 @@ function OpenAuctionForm({ onChanged }) {
     </label>
     <p className="poll-hint sealed-bounds"><b>OFERTA MÍNIMA 0,7× Y MÁXIMA 1,25× EL VALOR DEL JUGADOR.</b></p>
     <label>CIERRE (OPCIONAL)<input type="datetime-local" value={closesAt} onChange={event => setClosesAt(event.target.value)}/></label>
-    <p className="poll-hint">EL MODERADOR ES EL ÚNICO QUE PUEDE CERRAR LA SUBASTA ANTES DE LA HORA. TAMBIÉN PUEDE OFERTAR; SI LO HACE, SOLO CIERRA CUANDO TODOS ESTÉN LISTOS. SIN CIERRE, DURA 24 HORAS (NUNCA MÁS QUE EL MERCADO).</p>
+    <HowItWorks title="¿Quién cierra la subasta?"><p>Solo el moderador puede cerrarla antes de la hora. También puede ofertar; si lo hace, solo cierra cuando todos estén listos. Sin cierre dura 24 horas (nunca más que el mercado).</p></HowItWorks>
     <button className="action-button positive" disabled={open.loading || !playerId || !moderatorId}>ABRIR SUBASTA</button>
     <FormFeedback mutation={open}/>
   </form>;

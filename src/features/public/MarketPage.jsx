@@ -16,6 +16,7 @@ import { AuctionHistory } from './market/AuctionHistory.jsx';
 import { SealedAuctionsSection } from './market/SealedAuctionsSection.jsx';
 import { gpLabel } from '../../utils/money.js';
 import { GpInput } from '../../components/GpInput.jsx';
+import { Icon } from '../../ui/index.js';
 
 const asList = value => Array.isArray(value) ? value : [];
 
@@ -194,7 +195,7 @@ function PromiseRecord({ teamId, revision }) {
   </details>;
 }
 
-export function MarketPage({ teams, initialTab = null, highlightId = null }) {
+export function MarketPage({ teams, initialTab = null, highlightId = null, prefill = null }) {
   const { isAdmin, teamId: myTeamId } = useAuth();
   const [revision, setRevision] = useState(0);
   const status = useApiQuery(signal => endpoints.marketStatus(signal), [revision]);
@@ -211,10 +212,12 @@ export function MarketPage({ teams, initialTab = null, highlightId = null }) {
   const setTab = value => { setTabState(value); try { window.sessionStorage.setItem(TAB_KEY, value); } catch { /* sin almacenamiento */ } };
   const live = useApiQuery(signal => endpoints.sealedAuctions({ active: 1 }, signal).catch(() => ({ data: [] })), [revision]);
   const liveCount = (Array.isArray(live.data) ? live.data : []).filter(row => row.status === 'open').length;
+  const offers = useApiQuery(signal => (myTeamId ? endpoints.marketOffers(signal).catch(() => ({ data: [] })) : Promise.resolve({ data: [] })), [myTeamId, revision]);
+  const incoming = (Array.isArray(offers.data) ? offers.data : []).filter(offer => offer.direction === 'incoming').length;
   const tabs = [
-    ['subastas', '🔨 SUBASTAS', liveCount],
-    ...(operates ? [['encuestas', '🗳️ ENCUESTAS', null], ['ofertas', '🤝 OFERTAS', null], ['venta', '🏷️ A LA VENTA', null]] : []),
-    ['historial', '📜 HISTORIAL', null],
+    ['subastas', 'gavel', 'SUBASTAS', liveCount],
+    ...(operates ? [['encuestas', 'people', 'ENCUESTAS', null], ['ofertas', 'handshake', 'OFERTAS', incoming], ['venta', 'coin', 'A LA VENTA', null]] : []),
+    ['historial', 'clock', 'HISTORIAL', null],
   ];
   const current = tabs.some(([key]) => key === tab) ? tab : 'subastas';
   return <main className="newspaper data-page"><section className="data-paper">
@@ -222,8 +225,8 @@ export function MarketPage({ teams, initialTab = null, highlightId = null }) {
     {operates && <MyClubPanel team={myTeam} figures={figures} profileQuery={myTeamId ? profile : null} status={status.data} statusQuery={status}/>}
     {myTeamId && <PromiseRecord teamId={myTeamId} revision={revision}/>}
     <nav className="market-tabs" role="tablist" aria-label="SECCIONES DEL MERCADO">
-      {tabs.map(([key, label, badge]) => <button key={key} type="button" role="tab" aria-selected={current === key} className={current === key ? 'active' : ''} onClick={() => setTab(key)}>
-        {label}{badge ? <span className="market-tab-badge">{badge}</span> : null}
+      {tabs.map(([key, icon, label, badge]) => <button key={key} type="button" role="tab" aria-selected={current === key} className={current === key ? 'active' : ''} onClick={() => setTab(key)}>
+        <Icon name={icon} size={14}/> {label}{badge ? <span className="market-tab-badge">{badge}</span> : null}
       </button>)}
     </nav>
     <div className="market-tab-panel" role="tabpanel">
@@ -232,8 +235,10 @@ export function MarketPage({ teams, initialTab = null, highlightId = null }) {
         <PollSearch teams={teams} club={club} interest={interest} onChanged={refresh}/>
       </PollsSection>}
       {current === 'ofertas' && <>
+        {/* Si llegas desde la ficha de un jugador, el formulario va primero y con él ya elegido. */}
+        {operates && myTeamId && prefill && <ProposeOffers teams={teams} marketOpen={marketOpen} onChanged={refresh} prefill={prefill}/>}
         {operates && <OffersInbox revision={revision} onChanged={refresh} highlightId={highlightId}/>}
-        {operates && myTeamId && <ProposeOffers teams={teams} marketOpen={marketOpen} onChanged={refresh}/>}
+        {operates && myTeamId && !prefill && <ProposeOffers teams={teams} marketOpen={marketOpen} onChanged={refresh}/>}
       </>}
       {current === 'venta' && <ForSaleSection teams={teams} revision={revision} onChanged={refresh}/>}
       {current === 'historial' && <AuctionHistory revision={revision} teams={teams}/>}

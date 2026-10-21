@@ -9,6 +9,7 @@ import { leaguePlaylist } from './playlist.js';
 import { SectionPage } from '../features/shared/SectionPage.jsx';
 import { TeamDetailPage } from '../features/teams/TeamDetailPage.jsx';
 import { TeamsPage } from '../features/teams/TeamsPage.jsx';
+import { StadiumsPage } from '../features/teams/StadiumsPage.jsx';
 import { ActivityPage } from '../features/public/ActivityPage.jsx';
 import { MarketPage } from '../features/public/MarketPage.jsx';
 import { MatchesPage } from '../features/public/MatchesPage.jsx';
@@ -96,11 +97,13 @@ export function App() {
     page = <EfootballCardPage pesId={route.pesId} variation={Number(route.query.v ?? 0)} navigate={navigate} backLabel={fromMarket ? '← VOLVER A MERCADO' : '← VOLVER A JUGADORES'} onBack={() => navigate(fromMarket ? '/transferencias' : fromPlayers ? playerDirectoryBackPath(route.query) : '/equipos/jugadores')}/>;
   } else if (route.path === '/equipos/jugadores' || route.path === '/equipos/jugadores/importar') {
     page = <PlayersPage key={JSON.stringify(route.query)} teams={league.teams} initialQuery={route.query}/>;
+  } else if (route.path === '/equipos/estadios') {
+    page = <StadiumsPage/>;
   } else if (route.path.startsWith('/equipos/')) {
     const modes = { plantillas: 'squads', presupuestos: 'budgets', presidentes: 'presidents', 'directores-tecnicos': 'coaches', emblemas: 'emblems', selecciones: 'national' };
     page = <TeamsDirectoryPage mode={modes[route.path.split('/').at(-1)]} teams={league.teams} onChoose={id => navigate(`/equipos/${encodeURIComponent(id)}`)}/>;
   } else if (route.path === '/transferencias') {
-    page = <MarketPage teams={league.teams} initialTab={route.query.tab} highlightId={route.query.id}/>;
+    page = <MarketPage key={`${route.query.jugador ?? ''}`} teams={league.teams} initialTab={route.query.tab} highlightId={route.query.id} prefill={route.query.jugador ? { playerId: route.query.jugador, teamId: route.query.club ?? '' } : null}/>;
   } else if (route.path === '/sanciones') {
     page = <ActivityPage sanctionsOnly/>;
   } else if (route.name === 'newsArticle') {

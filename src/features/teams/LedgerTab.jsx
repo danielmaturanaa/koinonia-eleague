@@ -22,7 +22,7 @@ export function LedgerTab({ team, balance }) {
   const categories = data?.categories ?? {};
   const pick = value => { setCategory(value); setLimit(PAGE); };
   return <section className="ledger-tab" aria-busy={query.loading}>
-    <header><h2>MOVIMIENTOS</h2><p>CADA INGRESO Y EGRESO DE TU SALDO, CON SU MOTIVO Y EL SALDO QUE QUEDÓ DESPUÉS. EL SALDO ES LA SUMA DE ESTOS MOVIMIENTOS, ASÍ QUE SIEMPRE CUADRA.</p></header>
+    <header><h2>CAJA</h2><p>CADA INGRESO Y EGRESO DE TU SALDO, CON SU MOTIVO. SIEMPRE CUADRA.</p></header>
     <DataState query={query}/>
     {data && <>
       <Card tone="paper" className="ledger-stats">

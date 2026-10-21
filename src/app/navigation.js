@@ -1,4 +1,4 @@
-// Menú principal: siete áreas (ocho con club o como admin). Las demás pantallas cuelgan de una de ellas.
+// Menú principal: seis áreas (más Mi club y Admin según quién entra). Las demás pantallas cuelgan de una de ellas.
 export function navigationFor({ teamId = null, isAdmin = false } = {}) {
   return [
     { label: 'Inicio', path: '/' },
@@ -12,14 +12,15 @@ export function navigationFor({ teamId = null, isAdmin = false } = {}) {
   ];
 }
 
-const LEAGUE_VIEWS = new Set(['/torneos', '/calculadora', '/clasificacion', '/equipos/rankings', '/equipos/plantillas', '/equipos/presupuestos', '/equipos/presidentes', '/equipos/directores-tecnicos', '/equipos/emblemas', '/equipos/selecciones']);
+const LEAGUE_VIEWS = new Set(['/torneos', '/calculadora', '/clasificacion']);
+const CLUB_VIEWS = new Set(['/equipos/rankings', '/equipos/plantillas', '/equipos/presupuestos', '/equipos/presidentes', '/equipos/directores-tecnicos', '/equipos/emblemas', '/equipos/selecciones', '/equipos/estadios']);
 
 /** A qué ítem del menú pertenece la pantalla actual (null si no cuelga de ninguno, como Reglas o Notificaciones). */
 export function activeNavigationPath(route, teamId = null) {
   if (route.name === 'home' || route.name === 'newsArticle' || route.path === '/noticias') return '/';
   if (route.name === 'player' || route.name === 'card' || route.path.startsWith('/equipos/jugadores')) return '/equipos/jugadores';
   if (route.name === 'team') return teamId && route.teamId === teamId ? `/equipos/${teamId}` : '/equipos';
-  if (route.path === '/equipos') return '/equipos';
+  if (route.path === '/equipos' || CLUB_VIEWS.has(route.path)) return '/equipos';
   if (route.path === '/partidos' || route.path.startsWith('/partidos/') || route.name === 'match' || route.path === '/sanciones') return '/partidos';
   if (LEAGUE_VIEWS.has(route.path)) return '/torneos';
   if (route.path === '/transferencias') return '/transferencias';
@@ -39,6 +40,7 @@ export const sectionContent = {
   '/equipos/presidentes': ['PRESIDENTES', 'Directorio de responsables de los clubes participantes.'],
   '/equipos/directores-tecnicos': ['DIRECTORES TÉCNICOS', 'Cuerpos técnicos registrados en la liga.'],
   '/equipos/emblemas': ['EMBLEMAS', 'Galería oficial de clubes y selecciones.'],
+  '/equipos/estadios': ['ESTADIOS', 'Catálogo de estadios de la liga: fotos, aforo, precio y dueño.'],
   '/equipos/selecciones': ['SELECCIONES', 'Equipos nacionales y clubes responsables.'],
   '/equipos/jugadores': ['JUGADORES', 'Buscador y fichas individuales de futbolistas.'],
   '/equipos/jugadores/importar': ['AGREGAR JUGADORES', 'Importación desde eFootballDB y alta manual.'],

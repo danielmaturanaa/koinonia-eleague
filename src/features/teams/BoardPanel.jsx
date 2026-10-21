@@ -1,6 +1,7 @@
 import { endpoints } from '../../api/endpoints.js';
 import { gpLabel } from '../../utils/money.js';
 import { useApiQuery } from '../public/useApiQuery.js';
+import { HowItWorks } from '../../ui/index.js';
 
 const STATUS = { pending: ['⏳', 'EN CURSO'], met: ['✅', 'CUMPLIDO'], failed: ['❌', 'FALLADO'] };
 const upper = text => String(text ?? '').toUpperCase();
@@ -25,7 +26,7 @@ export function BoardPanel({ team }) {
     })}</ul>
   </div>;
   return <section className="board-panel">
-    <header><h3>🏛️ OBJETIVOS DE LA DIRECTIVA</h3><p>LA DIRECTIVA TE EXIGE ESTO SEGÚN LO QUE VALE TU PLANTEL. SE EVALÚA AL TERMINAR EL TORNEO: SI CUMPLES HAY PREMIO Y LOS JUGADORES SE ANIMAN; SI FALLAS, SE DESANIMAN.</p></header>
+    <header><h3>OBJETIVOS DE LA DIRECTIVA</h3><p>SE EVALÚAN AL TERMINAR EL TORNEO.</p><HowItWorks><p>La directiva te exige esto según lo que vale tu plantel. Si cumples hay premio y los jugadores se animan; si fallas, se desaniman.</p></HowItWorks></header>
     {block(current)}
     {past.length > 0 && <details><summary>TORNEOS ANTERIORES</summary>{past.map(block)}</details>}
   </section>;

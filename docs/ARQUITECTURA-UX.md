@@ -4,13 +4,14 @@ Resultado del rediseño por fases (1 a 8). Las reglas de negocio no cambiaron: s
 
 ## 1. Mapa de navegación
 
-Menú principal (`src/app/navigation.js`): **Inicio · Partidos · Torneos · Jugadores · Mercado**, más **Mi club** (si tienes club) y **Admin** (si eres admin). `activeNavigationPath` decide qué ítem se ilumina en cada ruta.
+Menú principal (`src/app/navigation.js`): **Inicio · Partidos · Torneos · Equipos · Jugadores · Mercado**, más **Mi club** (si tienes club) y **Admin** (si eres admin). `activeNavigationPath` decide qué ítem se ilumina en cada ruta.
 
 | Área | Rutas | Notas |
 |---|---|---|
 | Inicio | `/`, `/noticias`, `/noticias/:id` | Las noticias viven en Inicio; "Noticias" también en el pie y en el menú de cuenta |
 | Partidos | `/partidos[/jugados\|pendientes\|calendario]`, `/partidos/:id`, `/sanciones`, `/marcador/:id` | Sanciones es un botón del Centro de partidos |
-| Torneos | `/torneos`, `/calculadora`, `/equipos`, `/equipos/rankings\|plantillas\|presupuestos\|presidentes\|directores-tecnicos\|emblemas\|selecciones`, fichas de clubes ajenos | La barra `LeagueSectionTabs` enlaza todas estas vistas |
+| Torneos | `/torneos`, `/calculadora` | Barra propia (Torneos · Calculadora) |
+| Equipos | `/equipos`, `/equipos/estadios\|rankings\|plantillas\|presupuestos\|presidentes\|directores-tecnicos\|emblemas\|selecciones`, fichas de clubes ajenos | `LeagueSectionTabs` muestra la barra de Equipos; Estadios es el catálogo global (comprar, cambiar, vender, fotos) |
 | Jugadores | `/equipos/jugadores[/importar]`, `/jugadores/:id`, `/efootball/:id` | |
 | Mercado | `/transferencias?tab=subastas\|encuestas\|ofertas\|venta\|historial&id=` | `tab` e `id` los respeta el enlace de los avisos |
 | Mi club | `/equipos/:miClubId?tab=` | Central y seis secciones (ver §2) |
@@ -21,17 +22,20 @@ Menú principal (`src/app/navigation.js`): **Inicio · Partidos · Torneos · Ju
 
 `TeamDetailPage` muestra una u otra según quién mira (`ownerMode`):
 
-- **Presidente de ese club → Mi club**: EQUIPO (Resumen | Partidos | Tabla | Clásico | Historia) · CENTRAL · PLANTEL · FINANZAS (Contratos y nómina | Movimientos | Simulador) · ESTADIO (Estadio y taquilla | Eventos | Auspicio | Comprar estadio) · MERCADO (Seguimiento | Fichajes) · BANDEJA.
+- **Presidente de ese club → Mi club** (abre en Central): CENTRAL · EQUIPO (Resumen | Partidos | Tabla | Clásico | Historia, con los fichajes) · PLANTEL · FINANZAS (Contratos y nómina | Caja | Simulador) · ESTADIO (Estadio y taquilla | Eventos | Auspicio) · SEGUIMIENTO · BANDEJA. Comprar o cambiar de estadio se hace en Equipos › Estadios.
 - **Cualquier otra persona → ficha pública**: Resumen · Plantel · Partidos · Tabla · Clásico · Historia (con los fichajes) · Nómina (solo lectura) · Estadio (hinchada y taquilla, sin el negocio).
 - **Admin en un club ajeno** entra como visitante; con "Actuar como presi" ve las herramientas del club (banner visible y todo queda registrado a su nombre). Un enlace a una herramienta privada le ofrece activarlo.
 
-El id de la pestaña en la URL es siempre la "hoja" (`central`, `nomina`, `finanzas`, `seguimiento`, `fichajes`, `bandeja`, `resumen`, `partidos`, `tabla`, `historia`, `estadio`, `eventos`, `auspicio`, `catalogo`, `clasico`, `plantel`); la sección se deduce de ella, así los enlaces viejos siguen funcionando.
+El id de la pestaña en la URL es siempre la "hoja" (`central`, `nomina`, `finanzas`, `seguimiento`, `fichajes`, `bandeja`, `resumen`, `partidos`, `tabla`, `historia`, `estadio`, `eventos`, `auspicio`, `clasico`, `plantel`); la sección se deduce de ella. Los enlaces viejos siguen funcionando: `catalogo` cae en `estadio` y `fichajes` en `historia`.
 
 ## 3. Qué vivía dónde → dónde vive ahora
 
 | Antes | Ahora |
 |---|---|
 | Calculadora en el menú | Torneos > Calculadora |
+| Comprar estadio dentro de Mi club | Equipos > Estadios (catálogo global con fotos) |
+| Fichajes en Mi club > Mercado | Equipo > Historia (igual que la ficha pública) |
+| Hacer oferta solo desde Mercado | También desde la ficha del jugador (abre el formulario con él elegido); ahí también se le sigue |
 | Equipos y Jugadores como entradas separadas del menú | Clubes dentro de Torneos; Jugadores sigue en el menú |
 | Noticias y Reglas en el menú | Pie de página y menú de cuenta |
 | Rutas sin menú (plantillas, presupuestos, presidentes, DTs, emblemas, rankings, sanciones) | Barra de Torneos (y botón en Partidos) |
@@ -76,6 +80,7 @@ Web: `features/teams/ClubLife.jsx` (Estadio y taquilla, Eventos, Auspicio), `fea
 - Tokens en `src/styles/00-tokens.css`; el resto de los estilos en `src/styles/NN-*.css` (el orden de `index.css` es el de la cascada).
 - Componentes compartidos en `src/ui` (ver su README): Button, Card, Chip, Stat, PlayerAvatar, EmptyState, Notice, Tabs, Modal, ConfirmStep, Toast, Icon (pixel-art).
 - Audio unificado en `src/audio` (silencio total, efectos, volúmenes; efectos chiptune WebAudio).
+- `HowItWorks` (`src/ui`): explicación plegada «¿Cómo funciona?» en minúscula normal. A la vista queda una frase corta; los párrafos largos van ahí.
 - Breakpoints oficiales: 560 · 900 · 1180. Texto mínimo: 12 px (salvo cartas densas de cancha y cara a cara).
 - Los botones antiguos (`.action-button`, `.mini-actions button`) comparten tokens con `ui-btn`.
 

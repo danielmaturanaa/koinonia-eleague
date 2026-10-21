@@ -104,6 +104,7 @@ export const endpoints = {
   setContractBonuses: (teamId, playerId, body, signal) => apiClient.put(`/teams/${teamId}/contracts/${playerId}/bonuses`, body, { actor: 'web', signal }),
   stadiums: signal => get('/stadiums', null, signal),
   buyStadium: (teamId, stadiumId, signal) => apiClient.post(`/teams/${teamId}/stadium`, { stadiumId }, { actor: 'web', signal }),
+  setStadiumImage: (stadiumId, imageUrl, signal) => apiClient.put(`/stadiums/${stadiumId}/image`, { imageUrl }, { actor: 'web', signal }),
   sellStadium: (teamId, signal) => apiClient.delete(`/teams/${teamId}/stadium`, undefined, { actor: 'web', signal }),
   teamLedger: (teamId, query, signal) => get(`/teams/${teamId}/ledger`, query, signal),
   teamObjectives: (teamId, signal) => get(`/teams/${teamId}/objectives`, null, signal),

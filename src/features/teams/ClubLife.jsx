@@ -3,7 +3,7 @@ import { endpoints } from '../../api/endpoints.js';
 import { useAuth } from '../../app/AuthGate.jsx';
 import { GpInput } from '../../components/GpInput.jsx';
 import { EntityLink } from '../../components/EntityLink.jsx';
-import { Button, Card, Chip, ConfirmStep, EmptyState, Icon, Notice, Stat, useToast } from '../../ui/index.js';
+import { Button, Card, Chip, ConfirmStep, EmptyState, HowItWorks, Icon, Notice, Stat, useToast } from '../../ui/index.js';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { DataState, gp } from '../public/DataStates.jsx';
 import { useApiQuery } from '../public/useApiQuery.js';
@@ -69,7 +69,7 @@ function GateRow({ gate }) {
 }
 
 /** Estadio, hinchada y taquilla: lo ve cualquiera; el presi además elige el precio de la entrada. */
-export function VenueTab({ team, onTab }) {
+export function VenueTab({ team, onTab: _onTab }) {
   const { canEditTeam } = useAuth();
   const canEdit = canEditTeam(team.id);
   const query = useApiQuery(signal => endpoints.teamFans(team.id, signal), [team.id]);
@@ -78,18 +78,18 @@ export function VenueTab({ team, onTab }) {
   const average = fans.gates.length ? Math.round(fans.gates.reduce((sum, gate) => sum + gate.occupancy, 0) / fans.gates.length) : 0;
   const full = fans.gates.filter(gate => gate.occupancy >= 100).length;
   return <section className="club-life venue-tab">
-    <Card tone="navy" className="venue-hero">
+    <Card tone="navy" className={`venue-hero ${fans.venue.imageUrl ? 'has-photo' : ''}`} style={fans.venue.imageUrl ? { '--venue-photo': `url("${fans.venue.imageUrl}")` } : undefined}>
       <div className="venue-hero-copy">
         <small>{fans.venue.owned ? `ESTADIO · CATEGORÍA ${fans.venue.category}` : 'CANCHA PROPIA'}</small>
         <h2>{upper(fans.venue.name)}</h2>
-        <p>{people(fans.venue.capacity)} ESPECTADORES{fans.venue.owned ? '' : ' · COMPRA UN ESTADIO DEL CATÁLOGO PARA RECIBIR A MÁS GENTE'}</p>
-        {canEdit && onTab && <Button size="sm" icon="stadium" onClick={() => onTab('catalogo')}>{fans.venue.owned ? 'CAMBIAR DE ESTADIO' : 'VER ESTADIOS EN VENTA'}</Button>}
+        <p>{people(fans.venue.capacity)} ESPECTADORES</p>
+        <a className="ui-btn ui-btn--primary ui-btn--sm" href="#/equipos/estadios"><Icon name="stadium" size={14}/>{canEdit ? (fans.venue.owned ? 'CAMBIAR DE ESTADIO' : 'COMPRAR ESTADIO') : 'VER TODOS LOS ESTADIOS'}</a>
       </div>
       <Stands occupancy={average} label={`Ocupación promedio ${average}%`}/>
     </Card>
     {!fans.enabled ? <OffNotice/> : <>
       <div className="club-life-stats">
-        <Card><Stat label="HINCHAS" value={compact(fans.followers)} hint={fans.rank ? `${fans.rank}.º DE ${fans.clubs} EN LA LIGA` : undefined}/></Card>
+        <Card><Stat label="HINCHAS EN CHILE" value={compact(fans.followers)} hint={fans.rank ? `${fans.rank}.º DE ${fans.clubs} EN LA LIGA` : undefined}/></Card>
         <Card><Stat label="LA HINCHADA ESTÁ" value={upper(fans.moodLabel)} hint={`ÁNIMO ${fans.mood} / 100`} tone={MOOD_TONE(fans.mood)}/><span className="mood-bar" aria-hidden="true"><span style={{ width: `${100 - fans.mood}%` }}/></span></Card>
         <Card><Stat label="TAQUILLA RECIENTE" value={gp(fans.seasonRevenue)} hint={`${fans.gates.length} PARTIDO${fans.gates.length === 1 ? '' : 'S'} DE LOCAL`}/></Card>
         <Card><Stat label="OCUPACIÓN" value={`${average}%`} hint={full ? `${full} ${full === 1 ? 'VEZ' : 'VECES'} CON ESTADIO LLENO` : 'SIN LLENOS TODAVÍA'} tone={average >= 90 ? 'good' : 'default'}/></Card>
@@ -98,17 +98,48 @@ export function VenueTab({ team, onTab }) {
       <Card title="PARTIDOS DE LOCAL" aside={<Chip icon="people">ASISTENCIA Y RECAUDACIÓN</Chip>}>
         {fans.gates.length ? <ul className="gate-list">{fans.gates.map(gate => <GateRow key={gate.matchId} gate={gate}/>)}</ul>
           : <EmptyState icon="ticket" title="SIN PARTIDOS DE LOCAL AÚN">CUANDO JUEGUES DE LOCAL VERÁS AQUÍ CUÁNTA GENTE FUE Y CUÁNTO RECAUDASTE.</EmptyState>}
-        <p className="club-life-hint">LA GENTE QUE VA DEPENDE DE TUS HINCHAS, EL RIVAL, SI ES CLÁSICO O PLAYOFFS, EL ÁNIMO DE LA HINCHADA Y EL PRECIO. EL AFORO ES EL TECHO. EL MARCADOR NO CAMBIA: ESTO MUEVE PLATA E HINCHAS.</p>
+        <HowItWorks title="¿De qué depende la asistencia?"><p>De tus hinchas, el rival, si es clásico o playoffs, el ánimo de la hinchada y el precio de la entrada. El aforo es el techo. El marcador no cambia: esto solo mueve plata, hinchas y ánimo.</p></HowItWorks>
       </Card>
+      <FanOrigin fans={fans}/>
       {fans.log.length > 0 && <Card title="LO QUE MOVIÓ A LA HINCHADA">
-        <ul className="fan-log">{fans.log.slice(0, 12).map((row, index) => <li key={index}>
-          <span>{upper(row.reason)}</span>
-          <b className={row.followers >= 0 ? 'up' : 'down'}>{signed(row.followers)} HINCHAS</b>
-          <small className={row.mood >= 0 ? 'up' : 'down'}>{row.mood > 0 ? '▲' : row.mood < 0 ? '▼' : '·'} ÁNIMO {signed(row.mood)}</small>
-        </li>)}</ul>
+        <ul className="fan-log">{fans.log.slice(0, 5).map((row, index) => <FanLogRow key={index} row={row}/>)}</ul>
+        {fans.log.length > 5 && <details className="fan-log-more"><summary>VER {fans.log.length - 5} MÁS</summary><ul className="fan-log">{fans.log.slice(5).map((row, index) => <FanLogRow key={index} row={row}/>)}</ul></details>}
       </Card>}
     </>}
   </section>;
+}
+
+function FanLogRow({ row }) {
+  return <li>
+          <span>{upper(row.reason)}</span>
+          <b className={row.followers >= 0 ? 'up' : 'down'}>{signed(row.followers)} HINCHAS</b>
+          <small className={row.mood >= 0 ? 'up' : 'down'}>{row.mood > 0 ? '▲' : row.mood < 0 ? '▼' : '·'} ÁNIMO {signed(row.mood)}</small>
+        </li>;
+}
+
+/** De dónde salen los hinchas: el punto de partida (base + historial + plantel) y lo que se ganó o perdió jugando. */
+function FanOrigin({ fans }) {
+  const origin = fans.origin;
+  if (!origin) return null;
+  const { formula } = origin;
+  return <Card title="¿DE DÓNDE SALEN TUS HINCHAS?" className="fan-origin">
+    <div className="fan-origin-sum">
+      <span><small>PARTISTE CON</small><b>{compact(origin.start)}</b></span>
+      <i aria-hidden="true">{origin.change >= 0 ? '+' : '−'}</i>
+      <span><small>{origin.change >= 0 ? 'GANADOS JUGANDO' : 'PERDIDOS JUGANDO'}</small><b className={origin.change >= 0 ? 'up' : 'down'}>{compact(Math.abs(origin.change))}</b></span>
+      <i aria-hidden="true">=</i>
+      <span><small>HOY</small><b>{compact(fans.followers)}</b></span>
+    </div>
+    <HowItWorks title="¿Cómo se calculó el punto de partida?">
+      <p>Son personas en Chile que se declaran hinchas del club (no seguidores de redes). Todos parten con una base y suman por historia y por plantel:</p>
+      <ul>
+        <li><b>{compact(formula.base)}</b> de base, igual para todos.</li>
+        <li><b>{compact(formula.honors)}</b> por historial: {formula.honorPoints} puntos de títulos, finales y playoffs (120 mil por punto).</li>
+        <li><b>{compact(formula.squad)}</b> por plantel: hasta 250 mil para el más caro de la liga, proporcional para el resto.</li>
+      </ul>
+      <p>Después se mueven con cada partido de local, los clásicos, los títulos, la posición final y los conciertos. El 6% de tus hinchas, más o menos, quiere ir a cada partido; el aforo pone el techo.</p>
+    </HowItWorks>
+  </Card>;
 }
 
 function useBusiness(team) {
@@ -116,10 +147,12 @@ function useBusiness(team) {
   return query;
 }
 
+const SCENES = [['todos', 'TODOS'], ['cristiana', 'MÚSICA CRISTIANA'], ['general', 'POP, URBANO Y ROCK']];
+
 function ArtistCard({ artist, team, busy, onBook }) {
   const blocked = !artist.fits || artist.bookedBy;
   return <Card as="article" className={`artist-card ${blocked ? 'is-locked' : ''}`}>
-    <header><span className="artist-badge" aria-hidden="true"><Icon name="music" size={18}/></span><div><b>{upper(artist.name)}</b><small>{upper(artist.genre)} · MUEVE ~{people(artist.draw)} PERSONAS</small></div></header>
+    <header><span className={`artist-badge ${artist.scene === 'cristiana' ? 'is-christian' : ''}`} aria-hidden="true"><Icon name={artist.scene === 'cristiana' ? 'mic' : 'music'} size={18}/></span><div><b>{upper(artist.name)}</b><small>{upper(artist.genre)} · MUEVE ~{people(artist.draw)} PERSONAS</small></div></header>
     <dl>
       <div><dt>CACHÉ</dt><dd>{gp(artist.fee)}</dd></div>
       <div><dt>SHOW PROMEDIO</dt><dd className={artist.expectedProfit >= 0 ? 'up' : 'down'}>{artist.expectedProfit >= 0 ? '+' : ''}{gp(artist.expectedProfit)}</dd></div>
@@ -146,7 +179,8 @@ function VeladaCard({ team, velada, canEdit, onChanged }) {
       {round.result?.ranking?.length > 0 && <ol className="velada-ranking">{round.result.ranking.map(row => <li key={row.teamId}><b>{upper(row.name)}</b><span>{gp(row.amount)}</span><small>{row.score} PTS</small></li>)}</ol>}
     </div>}
     {round?.status === 'open' && <>
-      <p className="club-life-hint">POSTULACIÓN ABIERTA HASTA EL <b>{upper(closes)}</b>. OFERTAS EN SOBRE CERRADO: IBAI MIRA LA OFERTA (50%), EL AFORO (30%) Y LA HINCHADA (20%). EL GANADOR PAGA SU OFERTA Y SE QUEDA CON LAS ENTRADAS A ESTADIO LLENO Y LA TRANSMISIÓN.</p>
+      <p className="club-life-hint">POSTULACIÓN ABIERTA HASTA EL <b>{upper(closes)}</b>.</p>
+      <HowItWorks><p>Ofertas en sobre cerrado. Ibai mira la oferta (50%), el aforo (30%) y la hinchada (20%). El ganador paga su oferta y se queda con las entradas a estadio lleno y la transmisión.</p></HowItWorks>
       {round.bidders.length > 0 && <p className="velada-bidders"><Icon name="people" size={14}/> POSTULAN: {round.bidders.map(bidder => upper(bidder.name)).join(' · ')}</p>}
       {!eligible ? <Notice tone="error">NO CUMPLES LOS REQUISITOS: {upper(velada.eligibility?.reasons?.join(' '))}</Notice>
         : canEdit && <div className="velada-bid">
@@ -167,6 +201,7 @@ export function EventsTab({ team, onChanged }) {
   const toast = useToast();
   const query = useBusiness(team);
   const [confirm, setConfirm] = useState(null);
+  const [scene, setScene] = useState('todos');
   const label = useRef('');
   const act = useApiMutation((operation, signal) => operation(signal), { onSuccess: () => { setConfirm(null); toast({ tone: 'money', title: label.current }); query.retry(); onChanged?.(); } });
   const data = query.data;
@@ -178,17 +213,18 @@ export function EventsTab({ team, onChanged }) {
   return <section className="club-life events-tab">
     <VeladaCard team={team} velada={data.velada} canEdit={canEdit} onChanged={query.retry}/>
     {scheduled && <Card tone="navy" className="event-scheduled" title={`PRÓXIMO SHOW: ${upper(scheduled.artist?.name)}`} aside={<Chip tone="yellow" icon="clock">EN TU PRÓXIMA FECHA DE LOCAL</Chip>}>
-      <p>YA PAGASTE EL CACHÉ ({gp(scheduled.cost)}). EL SHOW SE HACE CUANDO TERMINE TU PRÓXIMO PARTIDO DE LOCAL. LA CONVOCATORIA TIENE SU AZAR: PUEDE LLENARSE O QUEDAR A MEDIAS.</p>
+      <p>CACHÉ PAGADO ({gp(scheduled.cost)}). SE HACE AL TERMINAR TU PRÓXIMO PARTIDO DE LOCAL.</p>
       {canEdit && (confirm === scheduled.id
         ? <ConfirmStep message={`¿CANCELAR? TE DEVUELVEN ${gp(Math.floor(scheduled.cost / 2))} (LA MITAD DEL CACHÉ).`} confirmLabel="SÍ, CANCELAR" danger busy={act.loading} onConfirm={() => { label.current = 'CONCIERTO CANCELADO'; act.execute(signal => endpoints.cancelConcert(team.id, scheduled.id, signal)); }} onCancel={() => setConfirm(null)}/>
         : <Button variant="ghost" size="sm" onClick={() => setConfirm(scheduled.id)}>CANCELAR SHOW</Button>)}
     </Card>}
     <Card title="CARTELERA DE CONCIERTOS" aside={<Chip icon="music">{catalog.used} / {catalog.limit} ESTA TEMPORADA</Chip>}>
-      <p className="club-life-hint">CONTRATAS AL ARTISTA, PAGAS SU CACHÉ Y EL SHOW SE HACE EN TU PRÓXIMA FECHA DE LOCAL. TE QUEDAN {catalog.sharePerHead} € POR PERSONA. ESTADIO LLENO = GANANCIA Y MÁS HINCHAS; SHOW FLOJO = PUEDES PERDER. MÁXIMO {catalog.limit} POR TEMPORADA (EL PASTO NO AGUANTA MÁS).</p>
+      <nav className="scene-filter" role="tablist" aria-label="Escena">{SCENES.map(([key, text]) => <button key={key} type="button" role="tab" aria-selected={scene === key} className={scene === key ? 'on' : ''} onClick={() => setScene(key)}>{text}</button>)}</nav>
+      <HowItWorks><p>Contratas al artista, pagas su caché y el show se hace en tu próxima fecha de local. Te quedan {catalog.sharePerHead} € por persona: estadio lleno es ganancia y más hinchas; un show flojo puede dejar pérdida. Máximo {catalog.limit} por temporada.</p><p>La escena cristiana cobra menos y cabe en canchas chicas: es la forma de que un club sin estadio grande también haga eventos.</p></HowItWorks>
       {confirm && confirm !== scheduled?.id && <ConfirmStep message={`¿CONTRATAR A ${upper(confirm.name)} POR ${gp(confirm.fee)}? SE DESCUENTA AHORA.`} confirmLabel="SÍ, CONTRATAR" busy={act.loading}
         onConfirm={() => { label.current = `${upper(confirm.name)} TOCARÁ EN TU ESTADIO`; act.execute(signal => endpoints.bookConcert(team.id, confirm.key, signal)); }} onCancel={() => setConfirm(null)}/>}
       {act.error && <Notice tone="error">{act.error.message}</Notice>}
-      <div className="artist-grid">{catalog.artists.map(artist => <ArtistCard key={artist.key} artist={artist} team={team} busy={act.loading || Boolean(scheduled) || catalog.used >= catalog.limit} onBook={canEdit ? setConfirm : null}/>)}</div>
+      <div className="artist-grid">{catalog.artists.filter(artist => scene === 'todos' || artist.scene === scene).sort((left, right) => Number(right.fits && !right.bookedBy) - Number(left.fits && !left.bookedBy) || right.draw - left.draw).map(artist => <ArtistCard key={artist.key} artist={artist} team={team} busy={act.loading || Boolean(scheduled) || catalog.used >= catalog.limit} onBook={canEdit ? setConfirm : null}/>)}</div>
     </Card>
     {past.length > 0 && <Card title="EVENTOS REALIZADOS">
       <ul className="event-history">{past.map(event => <li key={event.id}>
@@ -223,7 +259,7 @@ export function SponsorTab({ team, onChanged }) {
         <dl className="sponsor-terms"><div><dt>FIJO POR TORNEO</dt><dd>{gp(sponsor.fixed)}</dd></div>{sponsor.playoffBonus > 0 && <div><dt>SI LLEGAS A PLAYOFFS</dt><dd>+{gp(sponsor.playoffBonus)}</dd></div>}{sponsor.titleBonus > 0 && <div><dt>SI SALES CAMPEÓN</dt><dd>+{gp(sponsor.titleBonus)}</dd></div>}</dl>
       </div>
     </Card> : <Card title="ELIGE AUSPICIADOR" aside={<Chip icon="handshake">3 OFERTAS ESTA TEMPORADA</Chip>}>
-      <p className="club-life-hint">LAS MARCAS PAGAN SEGÚN TUS HINCHAS. LA FIJA ES PLATA SEGURA; LA ARRIESGADA PAGA POCO FIJO PERO MUCHO SI LLEGAS A PLAYOFFS O SALES CAMPEÓN. SE COBRA AL CERRAR CADA TORNEO DE LIGA. SIN APUESTAS NI ALCOHOL.</p>
+      <HowItWorks><p>Las marcas pagan según tus hinchas. La fija es plata segura; la arriesgada paga poco fijo pero mucho si llegas a playoffs o sales campeón. Se cobra al cerrar cada torneo de liga. Sin apuestas ni alcohol.</p></HowItWorks>
       <div className="sponsor-offers">{data.sponsorOffers.map(offer => <article key={offer.key} className={`sponsor-offer style-${offer.style}`}>
         <div className="sponsor-shirt small" aria-hidden="true"><span>{upper(offer.brand)}</span></div>
         <b>{upper(offer.brand)}</b>

@@ -26,7 +26,7 @@ function marketHint(status) {
  * Central del club (la pantalla de inicio de Mi club): plata, nómina, mercado, próximo partido, lo que está esperando que hagas y la directiva.
  * La tabla y los últimos resultados vienen de la ficha (`standing`, `results`) para no duplicar sus componentes.
  */
-export function ClubCentral({ team, balance, matches = [], onTab, standing = null, results = null }) {
+export function ClubCentral({ team, matches = [], onTab, standing = null, results = null }) {
   const contracts = useApiQuery(signal => endpoints.teamContracts(team.id, signal).catch(() => ({ data: null })), [team.id]);
   const market = useApiQuery(signal => endpoints.marketStatus(signal).catch(() => ({ data: { open: false } })), []);
   const offers = useApiQuery(signal => endpoints.marketOffers(signal).catch(() => ({ data: [] })), []);
@@ -67,7 +67,6 @@ export function ClubCentral({ team, balance, matches = [], onTab, standing = nul
 
   return <div className="club-central">
     <div className="central-stats">
-      <Card tone="paper"><Stat label="SALDO" value={balance === null ? '—' : gp(balance)} hint="GP PARA FICHAJES"/></Card>
       <Card tone="paper"><Stat label="NÓMINA ANUAL" value={gp(payroll)} hint={cap === null ? 'SIN TOPE DEFINIDO' : payroll > cap ? `TE PASAS DEL TOPE POR ${gp(payroll - cap)}` : `TOPE ${gp(cap)}`} tone={cap !== null && payroll > cap ? 'bad' : 'default'}/></Card>
       <Card tone={market.data?.open ? 'gold' : 'paper'}><Stat label="MERCADO" value={market.data?.open ? 'ABIERTO' : 'CERRADO'} hint={marketHint(market.data)} tone={market.data?.open ? 'good' : 'default'}/></Card>
       <Card tone={derby ? 'alert' : 'paper'}><Stat label={derby ? 'PRÓXIMO PARTIDO · CLÁSICO' : 'PRÓXIMO PARTIDO'} value={rival ? `VS ${upper(rival.name).slice(0, 18)}` : '—'} hint={rival ? (next.status === 'live' ? 'EN VIVO AHORA' : `${upper(matchRoundLabel(next))}${next.homeTeam?.id === team.id ? ' · DE LOCAL' : ' · DE VISITA'}`) : 'SIN PARTIDOS PENDIENTES'}/></Card>

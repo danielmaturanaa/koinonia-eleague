@@ -22,7 +22,6 @@ import { useNotifications } from '../notifications/NotificationsProvider.jsx';
 import { ClubCentral } from './ClubCentral.jsx';
 import { InboxTab } from './InboxTab.jsx';
 import { WatchlistTab } from './WatchlistTab.jsx';
-import { StadiumTab } from './StadiumTab.jsx';
 import { EventsTab, SponsorTab, VenueTab } from './ClubLife.jsx';
 import { RivalryTab } from './RivalryTab.jsx';
 import { LedgerTab } from './LedgerTab.jsx';
@@ -657,12 +656,12 @@ function SquadValueSimulator({ team, squad, balance }) {
 
 // Dos fichas distintas: la del presidente (Mi club: Central y sus herramientas) y la pública de cualquier otro club. Cada sección agrupa pantallas ("hojas").
 const OWNER_SECTIONS = [
-  { id: 'club', label: 'EQUIPO', leaves: [['resumen', 'RESUMEN'], ['partidos', 'PARTIDOS'], ['tabla', 'TABLA'], ['clasico', 'CLÁSICO'], ['historia', 'HISTORIA']] },
   { id: 'central', label: 'CENTRAL', leaves: [['central', 'CENTRAL']] },
+  { id: 'club', label: 'EQUIPO', leaves: [['resumen', 'RESUMEN'], ['partidos', 'PARTIDOS'], ['tabla', 'TABLA'], ['clasico', 'CLÁSICO'], ['historia', 'HISTORIA']] },
   { id: 'plantel', label: 'PLANTEL', leaves: [['plantel', 'PLANTEL']] },
-  { id: 'finanzas', label: 'FINANZAS', leaves: [['nomina', 'CONTRATOS Y NÓMINA'], ['movimientos', 'MOVIMIENTOS'], ['finanzas', 'SIMULADOR']] },
-  { id: 'estadio', label: 'ESTADIO', leaves: [['estadio', 'ESTADIO Y TAQUILLA'], ['eventos', 'EVENTOS'], ['auspicio', 'AUSPICIO'], ['catalogo', 'COMPRAR ESTADIO']] },
-  { id: 'mercado', label: 'MERCADO', leaves: [['seguimiento', 'SEGUIMIENTO'], ['fichajes', 'FICHAJES']] },
+  { id: 'finanzas', label: 'FINANZAS', leaves: [['nomina', 'CONTRATOS Y NÓMINA'], ['movimientos', 'CAJA'], ['finanzas', 'SIMULADOR']] },
+  { id: 'estadio', label: 'ESTADIO', leaves: [['estadio', 'ESTADIO Y TAQUILLA'], ['eventos', 'EVENTOS'], ['auspicio', 'AUSPICIO']] },
+  { id: 'mercado', label: 'SEGUIMIENTO', leaves: [['seguimiento', 'SEGUIMIENTO']] },
   { id: 'bandeja', label: 'BANDEJA', leaves: [['bandeja', 'BANDEJA']] },
 ];
 const VISITOR_SECTIONS = ['resumen', 'plantel', 'partidos', 'tabla', 'clasico', 'historia', 'nomina', 'estadio']
@@ -809,7 +808,8 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
   const unread = inbox.data?.unread ?? 0;
   const sections = ownerMode ? OWNER_SECTIONS : VISITOR_SECTIONS;
   // Enlaces viejos a hojas que ahora viven en otro lugar: los visitantes caen donde corresponde.
-  const requested = ownerMode ? tab : ({ fichajes: 'historia', finanzas: 'nomina' }[tab] ?? tab);
+  const moved = { catalogo: 'estadio', fichajes: 'historia' };
+  const requested = ownerMode ? (moved[tab] ?? tab) : ({ finanzas: 'nomina', ...moved }[tab] ?? tab);
   const activeTab = sections.some(section => section.leaves.some(([id]) => id === requested)) ? requested : sections[0].leaves[0][0];
   const activeSection = sections.find(section => section.leaves.some(([id]) => id === activeTab));
   const sectionLabel = section => (section.id === 'bandeja' && unread > 0 ? `${section.label} (${unread})` : section.label);
@@ -837,7 +837,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
   const colors = team?.colors ?? {};
   const heroStyle = { '--club-primary': colors.primary ?? '#062764', '--club-secondary': colors.secondary ?? '#0b3f8d', '--club-tertiary': colors.tertiary ?? '#ffd42a' };
 
-  return <main className="newspaper club-page"><section className="club-paper"><div className="club-actions"><button className="back-button" onClick={onBack}>← VOLVER A EQUIPOS</button>{canEdit && <button className="action-button club-covers-button" onClick={() => setCoversOpen(true)}>▣ PORTADAS</button>}{onProjection && team && <button type="button" className="action-button club-projection-button" onClick={onProjection}>CALCULADORA PARA CLASIFICAR</button>}</div>
+  return <main className="newspaper club-page"><section className="club-paper"><div className="club-actions">{!ownerMode && <button className="back-button" onClick={onBack}>← VOLVER A EQUIPOS</button>}{canEdit && <button className="action-button club-covers-button" onClick={() => setCoversOpen(true)}>▣ PORTADAS</button>}{onProjection && team && <button type="button" className="action-button club-projection-button" onClick={onProjection}>CALCULADORA PARA CLASIFICAR</button>}</div>
     {loading || !team ? <div className="arcade-state">CARGANDO FICHA...</div> : <>
       <header className="club-hero" style={heroStyle}>
         <div className="club-crest-wrap"><TeamMark team={team} className="club-crest"/>{canEdit && <button type="button" className="club-crest-edit" onClick={() => setCrestEditorOpen(true)} aria-label="Editar escudo y nombre del club" title="Editar escudo y nombre">✎</button>}</div>
@@ -861,8 +861,9 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
                 onEditPresident={canEdit ? () => setPersonEditor('president') : undefined}
                 onEditCoach={canEdit ? () => setPersonEditor('coach') : undefined}
               />
-              <ClubStandingSnippet standings={displayStandings} teamId={team.id} teams={teams} onMore={() => onTab?.('tabla')}/>
-              <ClubRecentResults matches={recentMatches} resolveTeam={resolveTeam} teamId={team.id} onMore={() => onTab?.('partidos')}/>
+              {/* El presi ya ve la tabla y los resultados en Central. */}
+              {!ownerMode && <ClubStandingSnippet standings={displayStandings} teamId={team.id} teams={teams} onMore={() => onTab?.('tabla')}/>}
+              {!ownerMode && <ClubRecentResults matches={recentMatches} resolveTeam={resolveTeam} teamId={team.id} onMore={() => onTab?.('partidos')}/>}
               <ClubScorers teamId={team.id} limit={3} tournaments={tournaments}/>
             </div>
             <div className="club-overview-right-column">
@@ -875,13 +876,11 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
         {activeTab === 'plantel' && <SquadTab team={team} squad={squad} starters={starters} substitutes={substitutes} onChanged={onChanged}/>}
         {activeTab === 'partidos' && <ClubMatches matches={matches} teams={teams} teamId={team.id}/>}
         {activeTab === 'tabla' && <ClubTable standings={displayStandings} teamId={team.id} teams={teams}/>}
-        {activeTab === 'fichajes' && <ClubTransfers teamId={team.id}/>}
-        {activeTab === 'historia' && <div className="club-history-tab-content"><HonoursList honours={honours} historyError={historyError}/><ClubHistory team={team} onEdit={canEdit ? setHistoryEditor : undefined}/>{!ownerMode && <ClubTransfers teamId={team.id}/>}</div>}
+        {activeTab === 'historia' && <div className="club-history-tab-content"><HonoursList honours={honours} historyError={historyError}/><ClubHistory team={team} onEdit={canEdit ? setHistoryEditor : undefined}/><ClubTransfers teamId={team.id}/></div>}
         {activeTab === 'movimientos' && <LedgerTab team={team} balance={balance}/>}
         {activeTab === 'estadio' && <VenueTab team={team} onTab={ownerMode ? onTab : null}/>}
         {activeTab === 'eventos' && <EventsTab team={team} onChanged={onChanged}/>}
         {activeTab === 'auspicio' && <SponsorTab team={team} onChanged={onChanged}/>}
-        {activeTab === 'catalogo' && <StadiumTab team={team} balance={balance} onChanged={onChanged}/>}
         {activeTab === 'clasico' && <RivalryTab team={team} teams={teams}/>}
         {activeTab === 'seguimiento' && <WatchlistTab team={team}/>}
         {activeTab === 'bandeja' && <InboxTab team={team} onTab={onTab} onRead={inbox.retry} highlightId={msg}/>}

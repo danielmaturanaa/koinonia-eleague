@@ -6,6 +6,7 @@ import { useApiMutation } from '../admin/useApiMutation.js';
 import { DataState } from '../public/DataStates.jsx';
 import { useApiQuery } from '../public/useApiQuery.js';
 import { MoodMeter, ROLES, roleLabel } from './SigningSheet.jsx';
+import { HowItWorks } from '../../ui/index.js';
 
 const TRAIT_LABEL = { ganador: 'GANADOR', titular: 'TITULAR', sociable: 'SOCIABLE', mercenario: 'MERCENARIO', ego: 'EGO', leal: 'LEAL' };
 
@@ -32,7 +33,7 @@ export function RolesPanel({ team }) {
   const marketOpen = useMarketOpen();
   const rows = Array.isArray(query.data) ? query.data : [];
   return <section className="roles-panel">
-    <header><h3>ROLES Y ÁNIMO</h3><p>EL ROL LO ELIGES TÚ, QUE ERES QUIEN JUEGA. CADA JUGADOR CREE MERECER UN ROL SEGÚN LO QUE VALE EN LA LIGA; SU ÁNIMO SALE DE ESO, DEL RENDIMIENTO DEL EQUIPO, SU SUELDO Y SU PERSONALIDAD. SI LO TIENES POR DEBAJO DE LO QUE CREE MERECER, SE ENOJA Y PIDE MÁS (O SE NIEGA) AL RENOVAR. PASA EL MOUSE POR UNA FILA PARA VER POR QUÉ.</p></header>
+    <header><h3>ROLES Y ÁNIMO</h3><p>EL ROL LO ELIGES TÚ. SI ES MENOR AL QUE CREE MERECER, SE ENOJA.</p><HowItWorks><p>Cada jugador cree merecer un rol según lo que vale en la liga. Su ánimo sale de eso, del rendimiento del equipo, su sueldo y su personalidad. Si lo tienes por debajo de lo que cree merecer, pide más (o se niega) al renovar. Pasa el mouse por una fila para ver por qué.</p></HowItWorks></header>
     {canEdit && marketOpen && <p className="payroll-empty">🔒 MERCADO ABIERTO: LOS ROLES ESTÁN BLOQUEADOS PARA NO MANIPULAR LOS FICHAJES. SE PUEDEN CAMBIAR MIENTRAS SE JUEGA EL TORNEO.</p>}
     <DataState query={query}/>
     {rows.length > 0 && <div className="payroll-table-wrap"><table className="payroll-table roles-table">

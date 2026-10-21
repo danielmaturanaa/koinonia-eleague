@@ -126,7 +126,7 @@ const ClubSystems = () => <>
   <section className="rules-section">
     <h2>10. Estadios</h2>
     <ul>
-      <li>La liga tiene un catálogo de estadios, reales y ficticios, ordenados en categorías <strong>S, A, B, C y D</strong> (de mayor a menor), cada uno con su capacidad y su precio en GP.</li>
+      <li>La liga tiene un catálogo de estadios, reales y ficticios, ordenados en categorías <strong>S, A, B, C y D</strong> (de mayor a menor), cada uno con su capacidad y su precio en GP. Se ven todos en <strong>Equipos › Estadios</strong>, con su foto (la sube el club dueño o la administración).</li>
       <li>Cada estadio tiene un solo dueño y cada club puede tener uno. Comprarlo descuenta su precio del saldo; cambiar a otro reembolsa el actual a su precio de catálogo y se paga solo la diferencia; venderlo devuelve su precio de catálogo.</li>
       <li>El aforo es el techo de la taquilla: un club sin estadio del catálogo juega en su cancha propia, de <strong>12.000 personas</strong>. Un estadio más grande deja entrar a más gente en cada partido de local, recibe conciertos más grandes y es requisito para La Velada.</li>
     </ul>
@@ -158,7 +158,7 @@ const ClubSystems = () => <>
   <section className="rules-section">
     <h2>14. Hinchada y Taquilla</h2>
     <ul>
-      <li>Cada club tiene <strong>hinchas</strong> (crecen con resultados, clásicos, títulos y eventos) y un <strong>ánimo de la hinchada</strong> que cambia partido a partido.</li>
+      <li>Cada club tiene <strong>hinchas</strong>: personas en Chile que se declaran hinchas del club (no seguidores de redes). Todos parten con 150.000, más 120.000 por cada punto de historial (títulos, finales y playoffs) y hasta 250.000 según el valor del plantel. Desde ahí crecen o bajan con resultados, clásicos, títulos y eventos. También hay un <strong>ánimo de la hinchada</strong> que cambia partido a partido.</li>
       <li>Al terminar cada partido de clubes, el local cobra las entradas: la asistencia depende de sus hinchas, el rival, si es clásico o playoffs, el ánimo de la gente y el precio que fijó el Presidente (popular 35 €, normal 60 €, premium 95 €). El aforo es el techo. La final a partido único se juega en el estadio más grande de los dos y la taquilla se reparte mitad y mitad.</li>
       <li>Un castigo (W.O.) se juega a puertas cerradas: no hay taquilla. Si un partido se reabre o se anula, la taquilla y los hinchas se devuelven.</li>
       <li><strong>El marcador no cambia</strong>: la hinchada y el estadio mueven plata, hinchas y ánimo, nunca el resultado del partido.</li>
@@ -167,7 +167,7 @@ const ClubSystems = () => <>
   <section className="rules-section">
     <h2>15. Conciertos, La Velada y Auspicios</h2>
     <ul>
-      <li><strong>Conciertos:</strong> el Presidente contrata a un artista de la cartelera, paga su caché y el show se hace en su próxima fecha de local. Al club le quedan 60 € por persona. Cada artista pide un aforo mínimo. La convocatoria tiene azar: un estadio lleno deja ganancia e hinchas y un show flojo puede dar pérdida. Máximo dos por temporada; cancelar devuelve la mitad del caché.</li>
+      <li><strong>Conciertos:</strong> el Presidente contrata a un artista de la cartelera, paga su caché y el show se hace en su próxima fecha de local. Al club le quedan 60 € por persona. Cada artista pide un aforo mínimo. La convocatoria tiene azar: un estadio lleno deja ganancia e hinchas y un show flojo puede dar pérdida. Máximo dos por temporada; cancelar devuelve la mitad del caché. La cartelera incluye <strong>música cristiana</strong> (Marcos Witt, Jesús Adrián Romero, Miel San Marcos, Marcos Vidal, Juan Carlos Alvarado y otros), con cachés más bajos que caben en canchas de 12.000 personas.</li>
       <li><strong>La Velada del Año:</strong> una vez por temporada Ibai busca estadio. Postulan los clubes con un estadio de 50.000 personas o más y 300.000 hinchas, con una oferta en sobre cerrado. Ibai mira la oferta (50%), el aforo (30%) y la hinchada (20%). El ganador paga su oferta y se queda con las entradas a estadio lleno y la transmisión.</li>
       <li><strong>Auspicios:</strong> cada temporada llegan tres ofertas de camiseta (fija, mixta o arriesgada), según los hinchas. Se cobran al cerrar cada torneo de liga, con bonos por playoffs y por título según la oferta. Sin casas de apuestas ni alcohol.</li>
     </ul>
