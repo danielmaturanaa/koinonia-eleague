@@ -476,3 +476,8 @@ a.tile:focus-visible, button.tile:focus-visible { outline: 3px solid var(--c-yel
 .match-center-arena .match-center-score .scoreboard-full .scoreboard-team b { font-size: 16px; white-space: normal; text-align: center; }
 .stadium360-center .match-incidents > div:last-child h3 { justify-content: flex-end; text-align: right; }
 @media (max-width: 1100px) { .match-center-arena .match-center-h2h { flex: none; } .match-center-arena .match-center-h2h > .match-card-panel { position: static; max-height: 420px; } }
+/* El marcador siempre mide lo mismo: abrir o cerrar botones y listas (anular goles, rojas) se desplaza por dentro. */
+.match-center-arena .match-center-score { flex: none; height: 300px; overflow-y: auto; scrollbar-width: thin; align-content: start; }
+.match-center-arena.is-operator .match-center-score { flex: 1 1 0; height: auto; min-height: 0; }
+.match-center-arena .stadium360-pitch { height: 380px; }
+@media (max-width: 1100px) { .match-center-arena .match-center-score { height: auto; max-height: 480px; } }
