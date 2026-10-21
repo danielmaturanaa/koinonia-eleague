@@ -19,6 +19,7 @@ import { useApiMutation } from '../admin/useApiMutation.js';
 import { useApiQuery } from '../public/useApiQuery.js';
 import { useLiveStandings } from '../public/useLiveStandings.js';
 import { useNotifications } from '../notifications/NotificationsProvider.jsx';
+import { ClubCentral } from './ClubCentral.jsx';
 import { InboxTab } from './InboxTab.jsx';
 import { WatchlistTab } from './WatchlistTab.jsx';
 import { StadiumTab } from './StadiumTab.jsx';
@@ -142,17 +143,6 @@ function ClubRecentResults({ matches, resolveTeam, teamId, onMore }) {
   </section>;
 }
 
-function StadiumEditor({ team, onChanged }) {
-  const [stadium, setStadium] = useState(team.stadium ?? '');
-  useEffect(() => setStadium(team.stadium ?? ''), [team.id, team.stadium]);
-  const mutation = useApiMutation((body, signal) => endpoints.updateTeam(team.id, body, signal), { onSuccess: onChanged });
-  const submit = event => { event.preventDefault(); mutation.execute({ stadium }); };
-  return <form className="club-stadium-editor" onSubmit={submit}>
-    <label><input aria-label="Estadio" value={stadium} maxLength={100} placeholder="ESTADIO" onChange={event => setStadium(event.target.value)}/></label>
-    <button className="action-button" disabled={mutation.loading}>{mutation.loading ? 'GUARDANDO…' : 'GUARDAR ESTADIO'}</button>
-    <FormFeedback mutation={mutation}/>
-  </form>;
-}
 
 function PersonEditorModal({ title, onClose, children }) {
   useEffect(() => {
@@ -662,9 +652,31 @@ function SquadValueSimulator({ team, squad, balance }) {
   </section>;
 }
 
-const BASE_TABS = [['resumen', 'RESUMEN'], ['plantel', 'PLANTEL'], ['partidos', 'PARTIDOS'], ['tabla', 'TABLA'], ['fichajes', 'FICHAJES'], ['historia', 'HISTORIA'], ['estadio', 'ESTADIO'], ['nomina', 'NÓMINA'], ['finanzas', 'SIMULADOR DE PRESUPUESTO']];
-const INBOX_TAB = ['bandeja', 'BANDEJA'];
-const WATCH_TAB = ['seguimiento', 'SEGUIMIENTO'];
+// Dos fichas distintas: la del presidente (Mi club: Central y sus herramientas) y la pública de cualquier otro club. Cada sección agrupa pantallas ("hojas").
+const OWNER_SECTIONS = [
+  { id: 'central', label: 'CENTRAL', leaves: [['central', 'CENTRAL']] },
+  { id: 'plantel', label: 'PLANTEL', leaves: [['plantel', 'PLANTEL']] },
+  { id: 'finanzas', label: 'FINANZAS', leaves: [['nomina', 'CONTRATOS Y NÓMINA'], ['finanzas', 'SIMULADOR']] },
+  { id: 'mercado', label: 'MERCADO', leaves: [['seguimiento', 'SEGUIMIENTO'], ['fichajes', 'FICHAJES']] },
+  { id: 'bandeja', label: 'BANDEJA', leaves: [['bandeja', 'BANDEJA']] },
+  { id: 'club', label: 'CLUB', leaves: [['resumen', 'RESUMEN'], ['partidos', 'PARTIDOS'], ['tabla', 'TABLA'], ['historia', 'HISTORIA'], ['estadio', 'ESTADIO']] },
+];
+const VISITOR_SECTIONS = ['resumen', 'plantel', 'partidos', 'tabla', 'historia', 'nomina', 'estadio']
+  .map(id => ({ id, label: { resumen: 'RESUMEN', plantel: 'PLANTEL', partidos: 'PARTIDOS', tabla: 'TABLA', historia: 'HISTORIA', nomina: 'NÓMINA', estadio: 'ESTADIO' }[id], leaves: [[id, id]] }));
+
+/** Simulador de finanzas: un solo lugar con dos modos (fichajes y salidas del plantel, o contratos y nómina). */
+function FinanceSimulator({ team, squad, balance, onChanged, onTab, currentPosition }) {
+  const [mode, setMode] = useState('plantel');
+  return <section className="finance-sim">
+    <nav className="finance-sim-modes" role="tablist" aria-label="Qué quieres simular">
+      <button type="button" role="tab" aria-selected={mode === 'plantel'} className={mode === 'plantel' ? 'on' : ''} onClick={() => setMode('plantel')}>FICHAJES Y SALIDAS DEL PLANTEL</button>
+      <button type="button" role="tab" aria-selected={mode === 'contratos'} className={mode === 'contratos' ? 'on' : ''} onClick={() => setMode('contratos')}>CONTRATOS, RENOVACIONES Y NÓMINA</button>
+    </nav>
+    {mode === 'plantel'
+      ? <div className="club-budget-tab"><SquadValueSimulator team={team} squad={squad} balance={balance}/></div>
+      : <PayrollTab team={team} balance={balance} onChanged={onChanged} forcedView="proyeccion" currentPosition={currentPosition} onTab={id => (id === 'finanzas' ? setMode('plantel') : onTab?.(id))}/>}
+  </section>;
+}
 
 const finishedMatches = (matches, teamId) => matches
   .filter(match => match.status === 'finished' && (match.homeTeam?.id === teamId || match.awayTeam?.id === teamId))
@@ -775,22 +787,27 @@ function SquadTab({ team, squad, starters, substitutes, onChanged }) {
   </div>;
 }
 
-export function TeamDetailPage({ team, teams = [], tournaments = [], squad, standings, standingsTournamentId = null, matches = [], recentMatches = [], history = [], historyError, loading, tab = 'resumen', msg = null, onTab, onBack, onChanged, onProjection = null }) {
-  const { canEditTeam } = useAuth();
+export function TeamDetailPage({ team, teams = [], tournaments = [], squad, standings, standingsTournamentId = null, matches = [], recentMatches = [], history = [], historyError, loading, tab = null, msg = null, onTab, onBack, onChanged, onProjection = null }) {
+  const { canEditTeam, isPresidentOf, isAdmin } = useAuth();
   const canEdit = canEditTeam(team?.id);
+  // Un admin entra a un club ajeno como visitante; con "actuar como presi" ve y usa las herramientas del club.
+  const [actAs, setActAs] = useState(false);
+  const ownerMode = isPresidentOf(team?.id) || (isAdmin && actAs);
   const [historyEditor, setHistoryEditor] = useState('');
   const [personEditor, setPersonEditor] = useState('');
   const [personRevision, setPersonRevision] = useState(0);
   const [crestEditorOpen, setCrestEditorOpen] = useState(false);
   const [coversOpen, setCoversOpen] = useState(false);
   // Bandeja de entrada: solo la ve el presi (o un admin) y muestra cuántos mensajes sin leer hay.
-  const inbox = useApiQuery(signal => canEdit && team?.id ? endpoints.teamInbox(team.id, signal).catch(() => ({ data: null })) : Promise.resolve({ data: null }), [team?.id, canEdit]);
+  const inbox = useApiQuery(signal => ownerMode && team?.id ? endpoints.teamInbox(team.id, signal).catch(() => ({ data: null })) : Promise.resolve({ data: null }), [team?.id, ownerMode]);
   const { version: notificationsVersion } = useNotifications();
   const firstVersion = useRef(notificationsVersion);
   useEffect(() => { if (notificationsVersion !== firstVersion.current) inbox.retry(); }, [notificationsVersion]);
   const unread = inbox.data?.unread ?? 0;
-  const TABS = canEdit && inbox.data ? [...BASE_TABS.slice(0, 6), [INBOX_TAB[0], `${INBOX_TAB[1]}${unread > 0 ? ` (${unread})` : ''}`], WATCH_TAB, ...BASE_TABS.slice(6)] : BASE_TABS;
-  const activeTab = TABS.some(([id]) => id === tab) ? tab : 'resumen';
+  const sections = ownerMode ? OWNER_SECTIONS : VISITOR_SECTIONS;
+  const activeTab = sections.some(section => section.leaves.some(([id]) => id === tab)) ? tab : sections[0].leaves[0][0];
+  const activeSection = sections.find(section => section.leaves.some(([id]) => id === activeTab));
+  const sectionLabel = section => (section.id === 'bandeja' && unread > 0 ? `${section.label} (${unread})` : section.label);
   const liveStandings = useLiveStandings(standingsTournamentId);
   const displayStandings = Array.isArray(liveStandings.data) && liveStandings.data.length ? liveStandings.data : standings;
   const tabsRef = useRef(null);
@@ -815,16 +832,21 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
   const colors = team?.colors ?? {};
   const heroStyle = { '--club-primary': colors.primary ?? '#062764', '--club-secondary': colors.secondary ?? '#0b3f8d', '--club-tertiary': colors.tertiary ?? '#ffd42a' };
 
-  return <main className="newspaper club-page"><section className="club-paper"><div className="club-actions"><button className="back-button" onClick={onBack}>← VOLVER A CLUBES</button>{canEdit && <button className="action-button club-covers-button" onClick={() => setCoversOpen(true)}>▣ PORTADAS</button>}{onProjection && team && <button type="button" className="action-button club-projection-button" onClick={onProjection}>CALCULADORA PARA CLASIFICAR</button>}</div>
+  return <main className="newspaper club-page"><section className="club-paper"><div className="club-actions"><button className="back-button" onClick={onBack}>← VOLVER A CLUBES</button>{canEdit && <button className="action-button club-covers-button" onClick={() => setCoversOpen(true)}>▣ PORTADAS</button>}{isAdmin && !isPresidentOf(team?.id) && team && <button type="button" className={`action-button club-actas-button ${actAs ? 'positive' : ''}`} aria-pressed={actAs} onClick={() => setActAs(value => !value)}>{actAs ? '✔ ACTUANDO COMO PRESI' : 'ACTUAR COMO PRESI'}</button>}{onProjection && team && <button type="button" className="action-button club-projection-button" onClick={onProjection}>CALCULADORA PARA CLASIFICAR</button>}</div>
     {loading || !team ? <div className="arcade-state">CARGANDO FICHA...</div> : <>
       <header className="club-hero" style={heroStyle}>
         <div className="club-crest-wrap"><TeamMark team={team} className="club-crest"/>{canEdit && <button type="button" className="club-crest-edit" onClick={() => setCrestEditorOpen(true)} aria-label="Editar escudo y nombre del club" title="Editar escudo y nombre">✎</button>}</div>
         <div className="club-hero-copy"><p>{team.kind === 'national_team' ? 'SELECCIÓN' : 'CLUB'}{team.currentDivision ? ` · ${team.currentDivision}` : ''}</p><h1>{team.name}</h1><div className="club-hero-meta">{rank > 0 && <span className="club-hero-rank"><b>{rank}°</b> EN LA LIGA{standing ? ` · ${standing.points} PTS` : ''}</span>}<FormPills matches={recentMatches} teamId={team.id}/></div></div>
         <dl className="club-hero-value"><div><dt>VALOR DEL PLANTEL</dt><dd>{gp(team.squadValue)}</dd><small>GP · {team.playerCount ?? squad.length} JUGADORES</small></div><div><dt>SALDO DISPONIBLE</dt><dd>{balance === null ? '—' : gp(balance)}</dd><small>GP PARA FICHAJES</small></div></dl>
       </header>
-      <nav className="club-tabs" ref={tabsRef} role="tablist" aria-label="Secciones del club">{TABS.map(([id, label]) => <button type="button" role="tab" key={id} aria-selected={activeTab === id} className={activeTab === id ? 'active' : ''} onClick={() => onTab?.(id)}>{label}</button>)}</nav>
+      <nav className="club-tabs" ref={tabsRef} role="tablist" aria-label="Secciones del club">{sections.map(section => <button type="button" role="tab" key={section.id} aria-selected={activeSection.id === section.id} className={activeSection.id === section.id ? 'active' : ''} onClick={() => { if (activeSection.id !== section.id) onTab?.(section.leaves[0][0]); }}>{sectionLabel(section)}</button>)}</nav>
+      {activeSection.leaves.length > 1 && <nav className="club-subtabs" role="tablist" aria-label={`Vistas de ${activeSection.label.toLowerCase()}`}>{activeSection.leaves.map(([id, label]) => <button type="button" role="tab" key={id} aria-selected={activeTab === id} className={activeTab === id ? 'on' : ''} onClick={() => onTab?.(id)}>{label}</button>)}</nav>}
+      {isAdmin && actAs && !isPresidentOf(team.id) && <p className="club-actas-banner" role="status">MODO ADMIN: ESTÁS ACTUANDO COMO EL PRESIDENTE DE {team.name.toUpperCase()}. TODO LO QUE HAGAS QUEDA REGISTRADO A TU NOMBRE.</p>}
 
       <section className="club-tab-content" role="tabpanel">
+        {activeTab === 'central' && <ClubCentral team={team} balance={balance} matches={matches} onTab={onTab}
+          standing={<ClubStandingSnippet standings={displayStandings} teamId={team.id} teams={teams} onMore={() => onTab?.('tabla')}/>}
+          results={<ClubRecentResults matches={recentMatches} resolveTeam={resolveTeam} teamId={team.id} onMore={() => onTab?.('partidos')}/>}/>}
         {activeTab === 'resumen' && <div className="club-overview club-overview-reorganized">
           <div className="club-overview-secondary">
             <div className="club-overview-left-column">
@@ -841,7 +863,6 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
             <div className="club-overview-right-column">
               <SquadAverages starters={starters} substitutes={substitutes}/>
               <PitchBoard team={team} starters={starters} substitutes={substitutes} onChanged={onChanged} readOnly={!canEdit}/>
-              <StadiumEditor team={team} onChanged={onChanged}/>
             </div>
           </div>
         </div>}
@@ -850,12 +871,12 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
         {activeTab === 'partidos' && <ClubMatches matches={matches} teams={teams} teamId={team.id}/>}
         {activeTab === 'tabla' && <ClubTable standings={displayStandings} teamId={team.id} teams={teams}/>}
         {activeTab === 'fichajes' && <ClubTransfers teamId={team.id}/>}
-        {activeTab === 'historia' && <div className="club-history-tab-content"><HonoursList honours={honours} historyError={historyError}/><ClubHistory team={team} onEdit={canEdit ? setHistoryEditor : undefined}/></div>}
+        {activeTab === 'historia' && <div className="club-history-tab-content"><HonoursList honours={honours} historyError={historyError}/><ClubHistory team={team} onEdit={canEdit ? setHistoryEditor : undefined}/>{!ownerMode && <ClubTransfers teamId={team.id}/>}</div>}
         {activeTab === 'estadio' && <StadiumTab team={team} balance={balance} onChanged={onChanged}/>}
         {activeTab === 'seguimiento' && <WatchlistTab team={team}/>}
         {activeTab === 'bandeja' && <InboxTab team={team} onTab={onTab} onRead={inbox.retry} highlightId={msg}/>}
-        {activeTab === 'nomina' && <PayrollTab team={team} balance={balance} onChanged={onChanged} onTab={onTab} currentPosition={(displayStandings ?? []).findIndex(row => (row.team_id ?? row.teamId) === team.id) + 1 || null}/>}
-        {activeTab === 'finanzas' && <div className="club-budget-tab"><SquadValueSimulator team={team} squad={squad} balance={balance}/></div>}
+        {activeTab === 'nomina' && <PayrollTab team={team} balance={balance} onChanged={onChanged} onTab={onTab} forcedView="actual" currentPosition={(displayStandings ?? []).findIndex(row => (row.team_id ?? row.teamId) === team.id) + 1 || null}/>}
+        {activeTab === 'finanzas' && <FinanceSimulator team={team} squad={squad} balance={balance} onChanged={onChanged} onTab={onTab} currentPosition={(displayStandings ?? []).findIndex(row => (row.team_id ?? row.teamId) === team.id) + 1 || null}/>}
       </section>
 
       {personEditor === 'president' && <PersonEditorModal title="EDITAR PRESIDENTE" onClose={() => setPersonEditor('')}><PresidentForm team={team} onChanged={onChanged} onSaved={() => { setPersonRevision(value => value + 1); setPersonEditor(''); }}/></PersonEditorModal>}

@@ -374,7 +374,7 @@ function SimView({ team, projection, balance, canEdit, layout, currentPosition, 
 }
 
 /** Nómina del club: la real (contratos firmados) y la simulación (qué pasaría con otros sueldos, años y premios). */
-export function PayrollTab({ team, balance, onChanged, onTab = null, currentPosition = null }) {
+export function PayrollTab({ team, balance, onChanged, onTab = null, currentPosition = null, forcedView = null }) {
   const { canEditTeam } = useAuth();
   const canEdit = canEditTeam(team.id);
   const query = useApiQuery(signal => endpoints.teamContracts(team.id, signal), [team.id]);
@@ -385,17 +385,18 @@ export function PayrollTab({ team, balance, onChanged, onTab = null, currentPosi
   const [layout, setLayout] = useLayout();
   const refresh = () => { query.retry(); onChanged?.(); };
   const projection = query.data?.projection;
-  const current = view ?? (projection?.enabled ? 'actual' : 'proyeccion');
+  // Con `forcedView` quien la usa decide la vista (Finanzas: contratos / simulador); sin ella, el presi alterna y el visitante solo ve lo real.
+  const current = forcedView ?? (canEdit ? view : 'actual') ?? (projection?.enabled ? 'actual' : 'proyeccion');
 
   return <section className={`payroll-tab ${current === 'proyeccion' ? 'is-sim' : 'is-real'}`}>
     <header className="payroll-head">
-      <h2>NÓMINA</h2>
+      <h2>{forcedView === 'proyeccion' ? 'SIMULADOR DE CONTRATOS' : 'CONTRATOS Y NÓMINA'}</h2>
       <div className="payroll-head-tools">
         <LayoutToggle layout={layout} onChange={setLayout}/>
-        <nav className="payroll-views" role="tablist" aria-label="Vista de la nómina">
+        {!forcedView && canEdit && <nav className="payroll-views" role="tablist" aria-label="Vista de la nómina">
           <button type="button" role="tab" aria-selected={current === 'actual'} className={current === 'actual' ? 'on' : ''} onClick={() => setView('actual')}>📄 NÓMINA ACTUAL</button>
           <button type="button" role="tab" aria-selected={current === 'proyeccion'} className={`sim-tab ${current === 'proyeccion' ? 'on' : ''}`} onClick={() => setView('proyeccion')}>🧪 SIMULACIÓN</button>
-        </nav>
+        </nav>}
       </div>
     </header>
     <DataState query={query}/>

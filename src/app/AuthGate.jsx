@@ -1,7 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { apiClient, apiUrl } from '../api/client.js';
 
-const ANONYMOUS = { user: null, role: 'member', isAdmin: false, isOwner: false, canOperateMatches: false, teamId: null, canEditTeam: () => false, logout: () => {} };
+const ANONYMOUS = { user: null, role: 'member', isAdmin: false, isOwner: false, canOperateMatches: false, teamId: null, canEditTeam: () => false, isPresidentOf: () => false, logout: () => {} };
 const AuthContext = createContext(ANONYMOUS);
 
 export const useAuth = () => useContext(AuthContext);
@@ -59,6 +59,8 @@ export function AuthGate({ children }) {
       user, role: user?.role ?? 'member', isAdmin, isOwner: Boolean(user?.isOwner), canOperateMatches: Boolean(user?.canOperateMatches), teamId: user?.teamId ?? null, logout,
       // Solo comodidad de interfaz: la API vuelve a comprobar cada escritura.
       canEditTeam: teamId => isAdmin || Boolean(teamId && user?.teamIds?.includes(teamId)),
+      // El club es realmente suyo (a diferencia de un admin, que puede editar cualquiera).
+      isPresidentOf: teamId => Boolean(teamId && user?.teamIds?.includes(teamId)),
     };
   }, [user, logout]);
 
