@@ -198,14 +198,6 @@ function PromiseRecord({ teamId, revision }) {
   </details>;
 }
 
-const INTRO = {
-  subastas: 'Los agentes libres más pedidos se subastan en sobre cerrado: nadie ve lo que ofrecen los demás.',
-  libres: 'Para fichar a un agente libre se abre una encuesta y los demás presis la confirman.',
-  ofertas: 'Las ofertas que te hicieron y las que hiciste. Aquí aceptas, rechazas o contraofertas.',
-  venta: 'Jugadores que sus clubes quieren vender. Toca «Hacer oferta» en el que te guste.',
-  seguidos: 'Los jugadores que sigues. Te avisamos si cambian de club, quedan libres o los ponen a la venta.',
-  historial: 'Todos los fichajes y subastas que ya pasaron.',
-};
 
 const when = value => {
   const date = value ? new Date(value) : null;
@@ -244,9 +236,8 @@ export function MarketPage({ teams, initialTab = null, highlightId = null, prefi
     { id: 'historial', label: 'Historial' },
   ];
   const current = tabs.some(item => item.id === tab) ? tab : 'subastas';
-  const kicker = status.data ? (status.data.open ? `Mercado abierto${when(status.data.closesAt) ? ` · cierra el ${when(status.data.closesAt)}` : ''}` : 'Mercado cerrado · igual puedes buscar jugadores y hablarles') : 'Mercado';
-  return <Screen kicker={kicker} title="Mercado" intro={INTRO[current]} tabs={tabs} active={current} onTab={setTab}
-    actions={isAdmin ? <a className="ui-btn ui-btn--ghost ui-btn--sm screen-admin-link" href="#/admin?tab=mercado">Administrar mercado</a> : null}>
+  return <Screen title="Mercado" tabs={tabs} active={current} onTab={setTab}>
+    {isAdmin && <div className="screen-toolbar"><a className="ui-btn ui-btn--ghost ui-btn--sm" href="#/admin?tab=mercado">⚙ Administrar mercado</a></div>}
     {operates && <MyClubPanel team={myTeam} figures={figures} profileQuery={myTeamId ? profile : null} status={status.data} statusQuery={status}>
       {myTeamId && <PromiseRecord teamId={myTeamId} revision={revision}/>}
     </MyClubPanel>}

@@ -6,8 +6,8 @@ const EmbeddedContext = createContext(false);
 export const useEmbedded = () => useContext(EmbeddedContext);
 
 /**
- * Plantilla única de pantalla (estilo menú de FIFA): franja con el nombre del área, título grande, una frase de qué se
- * hace aquí y, como mucho, una fila de pestañas. Todo lo de adentro va en tarjetas.
+ * Plantilla única de pantalla: como mucho una fila de pestañas pegada al contenido. La franja con título (y `actions`)
+ * solo aparece si hay `hero` (escudo del club, cara del jugador), que es donde aporta información.
  * tabs: [{ id, label, badge }] · actions: botones a la derecha del título.
  */
 export function Screen({ kicker, title, intro, tabs = null, active = null, onTab, actions = null, hero = null, bare = false, className = '', children }) {
@@ -19,8 +19,9 @@ export function Screen({ kicker, title, intro, tabs = null, active = null, onTab
     if (top < 0) root.current.scrollIntoView({ block: 'start' });
   };
   return <main className={`screen ${className}`} ref={root}>
-    {/* bare: sin franja de título (Inicio parte directo con su contenido). */}
-    {!bare && <header className="screen-head">
+    {/* La franja de título solo va donde trae información propia (club, jugador: llevan `hero`). Las áreas generales
+        parten directo con sus pestañas: el menú ya dice dónde estás. */}
+    {!bare && hero && <header className="screen-head">
       {hero}
       <div className="screen-head-copy">
         {kicker && <p className="screen-kicker">{kicker}</p>}
