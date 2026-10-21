@@ -119,13 +119,13 @@ function GoalList({ match, onClose, onChanged }) {
 function RedCardList({ match, onClose, onChanged }) {
   const mutation = useApiMutation((redCardId, signal) => endpoints.deleteMatchRedCard(match.id, redCardId, signal), { onSuccess: onChanged });
   const redCards = match.redCards ?? [];
-  const remove = card => { if (window.confirm('¿ANULAR ESTA TARJETA ROJA? SE LEVANTA LA SUSPENSIÓN ASOCIADA.')) mutation.execute(card.id); };
+  const remove = card => { if (window.confirm('¿Anular esta tarjeta roja? Se levanta la suspensión asociada.')) mutation.execute(card.id); };
   return <div className="scoreboard-popover scoreboard-popover-danger scoreboard-goal-list-popover">
-    <p>TARJETAS ROJAS DEL PARTIDO</p>
+    <p>Tarjetas rojas del partido</p>
     {redCards.length ? <div className="scoreboard-goal-list">{redCards.map(card => <div className="scoreboard-goal-row" key={card.id}>
       <span>🟥 {card.playerName} · {card.teamName}</span>
       <button type="button" className="scoreboard-goal-remove" disabled={mutation.loading} onClick={() => remove(card)}>✕ ANULAR</button>
-    </div>)}</div> : <p className="scoreboard-player-empty">SIN TARJETAS ROJAS REGISTRADAS.</p>}
+    </div>)}</div> : <p className="scoreboard-player-empty">Sin tarjetas rojas registradas.</p>}
     <button type="button" className="scoreboard-btn-text" onClick={onClose}>CERRAR</button>
     {mutation.error && <p className="scoreboard-popover-error">{mutation.error.message}</p>}
   </div>;
@@ -135,7 +135,7 @@ function ScoreboardControls({ match, onChanged, compact }) {
   const [popover, setPopover] = useState(null);
   const status = useApiMutation((operation, signal) => endpoints[`${operation}Match`](match.id, signal), { onSuccess: onChanged });
   const runStatus = (operation, label, confirmMessage) => { if (window.confirm(confirmMessage ?? `¿${label} ESTE PARTIDO?`)) status.execute(operation); };
-  const revertButton = <button className="scoreboard-btn-text scoreboard-btn-revert" disabled={status.loading} onClick={() => runStatus('reset', 'REVERTIR', '¿REVERTIR ESTE PARTIDO A PENDIENTE 0-0? SE BORRARÁN LOS GOLES Y TARJETAS REGISTRADOS.')}>↺ REVERTIR A PENDIENTE (0-0)</button>;
+  const revertButton = <button className="scoreboard-btn-text scoreboard-btn-revert" disabled={status.loading} onClick={() => runStatus('reset', 'REVERTIR', '¿Revertir este partido a pendiente 0-0? Se borrarán los goles y tarjetas registrados.')}>↺ REVERTIR A PENDIENTE (0-0)</button>;
   const goalsCount = match.goals?.length ?? 0;
   const goalsButton = <button className="scoreboard-btn-text" disabled={status.loading} onClick={() => setPopover('goals')}>📋 VER/ANULAR GOLES{goalsCount ? ` (${goalsCount})` : ''}</button>;
   const redCardsCount = match.redCards?.length ?? 0;
@@ -147,7 +147,7 @@ function ScoreboardControls({ match, onChanged, compact }) {
   </div>;
 
   if (match.status === 'finished') return <div className="scoreboard-controls scoreboard-controls-closed">
-    <button className="scoreboard-btn-text" disabled={status.loading} onClick={() => runStatus('reopen', 'REABRIR')}>↺ REABRIR PARTIDO (VUELVE A EN VIVO)</button>
+    <button className="scoreboard-btn-text" disabled={status.loading} onClick={() => runStatus('reopen', 'REABRIR')}>↺ Reabrir partido (vuelve a en vivo)</button>
   </div>;
 
   if (match.status === 'cancelled') return <div className="scoreboard-controls scoreboard-controls-closed">
@@ -232,7 +232,7 @@ export function Scoreboard({ matchId, mode: requestedMode = 'view', density = 't
   const awayFlash = useScoreFlash(match ? (match.awayScore ?? 0) : undefined);
   useFinishedNotifier(match?.status, onFinished);
 
-  if (!match) return <article className={`scoreboard scoreboard-${density} scoreboard-loading`}>{detail.error ? <p>NO SE PUDO CARGAR EL PARTIDO.</p> : <p>CARGANDO CARTUCHO...</p>}</article>;
+  if (!match) return <article className={`scoreboard scoreboard-${density} scoreboard-loading`}>{detail.error ? <p>No se pudo cargar el partido.</p> : <p>CARGANDO CARTUCHO...</p>}</article>;
 
   return <article className={`scoreboard scoreboard-${density} scoreboard-status-${match.status}`}>
     <header className="scoreboard-bezel" onClick={onOpen} role={onOpen ? 'button' : undefined} tabIndex={onOpen ? 0 : undefined}>

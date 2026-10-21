@@ -121,8 +121,8 @@ function TerminateButton({ team, contract, onDone }) {
   if (!confirming) return <button type="button" className="ghost" onClick={() => setConfirming(true)}>{contract.endsWith ? 'SOLTAR' : 'RESCINDIR'}</button>;
   return <span className="offer-confirm" role="group" aria-label="CONFIRMAR RESCISIÓN">
     <span>{contract.endsWith
-      ? `¿SOLTAR A ${upper(contract.playerName)}? SU CONTRATO TERMINA CON EL ${upper(contract.endsWith.name)}: NO PAGAS NADA, NO RECIBES NADA Y NO BAJA LA REPUTACIÓN. QUEDA AGENTE LIBRE.`
-      : `¿RESCINDIR A ${upper(contract.playerName)}? PAGAS ${gp(contract.terminationCost)} (50% DE ${contract.seasonsLeft} TORNEO(S)), NO RECIBES NADA Y BAJA LA REPUTACIÓN. NO SE DESHACE.`}</span>
+      ? `¿Soltar a ${upper(contract.playerName)}? Su contrato termina con el ${upper(contract.endsWith.name)}: no pagas nada, no recibes nada y no baja la reputación. Queda agente libre.`
+      : `¿Rescindir a ${upper(contract.playerName)}? Pagas ${gp(contract.terminationCost)} (50% de ${contract.seasonsLeft} torneo(s)), no recibes nada y baja la reputación. No se deshace.`}</span>
     <button type="button" disabled={release.loading} onClick={() => release.execute()}>{release.loading ? 'ESPERA…' : contract.endsWith ? 'SÍ, SOLTAR' : 'SÍ, RESCINDIR'}</button>
     <button type="button" className="ghost" disabled={release.loading} onClick={() => setConfirming(false)}>VOLVER</button>
     <FormFeedback mutation={release}/>
@@ -175,7 +175,7 @@ function RenewAll({ team, expiredCount, onDone, marketOpen }) {
   if (!expiredCount && !results) return null;
   return <section className="renew-all">
     <header><h3>RENOVAR A TODOS</h3><p>{expiredCount} JUGADOR(ES) CON CONTRATO VENCIDO O POR TERMINAR: UNA PROPUESTA PARA TODOS.</p><HowItWorks><p>Cada uno acepta, contraoferta o se niega según su ánimo y personalidad. A los que no acepten los negocias uno a uno en su hoja (hasta 3 propuestas en total).</p></HowItWorks></header>
-    {expiredCount > 0 && !marketOpen && <p className="payroll-empty">🔒 SIN MERCADO ABIERTO: LAS RENOVACIONES SOLO SE HACEN EN PERIODOS DE MERCADO.</p>}
+    {expiredCount > 0 && !marketOpen && <p className="payroll-empty">🔒 Sin mercado abierto: las renovaciones solo se hacen en periodos de mercado.</p>}
     {expiredCount > 0 && marketOpen && <div className="renew-all-form">
       <span className="chips">{SEASONS.map(n => <button type="button" key={n} className={seasons === n ? 'on' : ''} onClick={() => setSeasons(n)}>{n} TORNEOS</button>)}</span>
       <span className="sheet-slider"><input type="range" min="1" max="100" value={raise} onChange={event => setRaise(Number(event.target.value))} aria-label="Aumento de sueldo en porcentaje"/><b>+{raise}%</b></span>
@@ -227,9 +227,9 @@ function RealView({ team, query, balance, marketOpen, canEdit, layout, refresh }
   return <div className="payroll-real">
     <div className="view-badge is-real">📄 NÓMINA REAL · CONTRATOS FIRMADOS</div>
     <HowItWorks title="¿Cómo funcionan los contratos?"><p>Cada jugador tiene un contrato de 2 a 6 torneos. Su sueldo queda congelado y se cobra al terminar cada torneo de liga mientras siga en el club. Nadie puede cobrar más del 20% de su valor de mercado.{upcoming[0] ? ` Los sueldos se cobran desde el ${upcoming[0]}; el torneo en curso no se cobra.` : ''}</p></HowItWorks>
-    {!enabled && <p className="payroll-empty">LOS CONTRATOS TODAVÍA NO ESTÁN ACTIVOS. MIENTRAS TANTO USA LA SIMULACIÓN PARA PLANIFICAR.</p>}
+    {!enabled && <p className="payroll-empty">Los contratos todavía no están activos. Mientras tanto usa la simulación para planificar.</p>}
     {enabled && <>
-      {canEdit && !marketOpen && <p className="payroll-empty">🔒 MERCADO CERRADO: AÑOS Y RENOVACIONES SE CAMBIAN CUANDO ABRA. RESCINDIR SE PUEDE SIEMPRE.</p>}
+      {canEdit && !marketOpen && <p className="payroll-empty">🔒 Mercado cerrado: años y renovaciones se cambian cuando abra. Rescindir se puede siempre.</p>}
       <Tiles items={[
         ['NÓMINA ANUAL', gp(livePayroll)],
         ['TOPE DE NÓMINA', cap === null ? 'SIN DEFINIR' : gp(cap), cap !== null && livePayroll > cap ? `TE PASAS POR ${gp(livePayroll - cap)}` : null],
@@ -309,13 +309,13 @@ function SimView({ team, projection, balance, canEdit, layout, currentPosition, 
   const yearsInput = row => (canEdit ? <YearsChips value={row.years} onChange={years => changePlayer(row.playerId, { years })} label={`Torneos simulados de ${row.playerName}`}/> : <span>{row.years} TORNEOS</span>);
 
   return <div className="payroll-sim">
-    <div className="view-badge is-sim">🧪 SIMULACIÓN · NADA DE ESTO ES REAL NI SE COBRA</div>
-    {onTab && <p className="payroll-note sim-link">¿QUIERES PROBAR FICHAJES Y VENTAS? <button type="button" className="ghost" onClick={() => onTab('finanzas')}>IR AL SIMULADOR →</button></p>}
-    <p className="payroll-note">PRUEBA SUELDOS, AÑOS, AUMENTOS Y VENTAS: NADA DE ESTO SE GUARDA EN LA LIGA.</p>
+    <div className="view-badge is-sim">🧪 Simulación · nada de esto es real ni se cobra</div>
+    {onTab && <p className="payroll-note sim-link">¿Quieres probar fichajes y ventas? <button type="button" className="ghost" onClick={() => onTab('finanzas')}>IR AL SIMULADOR →</button></p>}
+    <p className="payroll-note">Prueba sueldos, años, aumentos y ventas: nada de esto se guarda en la liga.</p>
     <HowItWorks><p>El aumento se aplica cuando vence cada contrato, así que se nota en los últimos torneos, en el costo total y en los gráficos.</p><p>Usa los valores de mercado de hoy (cambian con cada refresco de Transfermarkt). La simulación se guarda en tu cuenta, no en la liga. Si un jugador pasa el 20% de su valor sale en rojo: ese sueldo no se podría firmar.</p></HowItWorks>
     <section className="sim-controls">
-      <label>AUMENTO AL RENOVAR (POR DEFECTO)<span className="sheet-slider"><input type="range" min="0" max="100" value={sim.raise} onChange={event => applyToAll({ raise: Number(event.target.value) })} aria-label="Aumento al renovar en porcentaje"/><b>+{sim.raise}%</b></span><small className="sim-hint">SE APLICA A TODOS LOS JUGADORES; DESPUÉS CAMBIAS A LOS QUE QUIERAS DISTINTOS.</small></label>
-      <label className="sim-check"><input type="checkbox" checked={sim.renew} onChange={event => applyToAll({ renew: event.target.checked })}/> RENOVAR A QUIEN LE VENZA EL CONTRATO (POR DEFECTO)</label>
+      <label>AUMENTO AL RENOVAR (POR DEFECTO)<span className="sheet-slider"><input type="range" min="0" max="100" value={sim.raise} onChange={event => applyToAll({ raise: Number(event.target.value) })} aria-label="Aumento al renovar en porcentaje"/><b>+{sim.raise}%</b></span><small className="sim-hint">Se aplica a todos los jugadores; después cambias a los que quieras distintos.</small></label>
+      <label className="sim-check"><input type="checkbox" checked={sim.renew} onChange={event => applyToAll({ renew: event.target.checked })}/> Renovar a quien le venza el contrato (por defecto)</label>
       <label>PUESTO POR DEFECTO{sim.position === null && currentPosition ? ' (TU PUESTO HOY)' : ''}<select value={defaultPosition} onChange={event => change({ position: Number(event.target.value) })}>{Array.from({ length: 8 }, (_, i) => i + 1).map(n => <option key={n} value={n}>{n}.º · {gp(leaguePrize(n))}</option>)}</select></label>
       <label>PLAYOFFS POR DEFECTO<select value={sim.playoff} onChange={event => change({ playoff: event.target.value })}>{Object.keys(PLAYOFF_PRIZES).map(key => <option key={key} value={key}>{PLAYOFF_LABEL[key]}{PLAYOFF_PRIZES[key] ? ` · ${gp(PLAYOFF_PRIZES[key])}` : ''}</option>)}</select></label>
       {canEdit && <button type="button" className="ghost" onClick={reset}>RESTABLECER</button>}
@@ -327,7 +327,7 @@ function SimView({ team, projection, balance, canEdit, layout, currentPosition, 
       [`SALDO AL ${upcoming[0] ? upper(upcoming[0]) : 'TORNEO 1'}`, first ? gp(first.balance) : '—', first && first.net < 0 ? 'GASTAS MÁS DE LO QUE GANAS' : null],
       ['CONTRATOS DE HOY (SUELDO × TORNEOS)', gp(total)],
       [`NÓMINA EN EL ${labelOf(HORIZON - 1)}`, gp(last.payroll), `${last.payroll >= payroll ? '+' : '−'}${gp(Math.abs(last.payroll - payroll))} VS HOY, CON LAS RENOVACIONES`],
-      [`COSTO ${labelOf(0)} A ${labelOf(HORIZON - 1)}`, gp(timelineCost), 'INCLUYE RENOVACIONES CON EL AUMENTO ELEGIDO'],
+      [`COSTO ${labelOf(0)} A ${labelOf(HORIZON - 1)}`, gp(timelineCost), 'Incluye renovaciones con el aumento elegido'],
     ]}/>
     {kept.filter(row => row.renew && row.renewalRisk === 'alto').length > 0 && <p className="payroll-empty sim-warn">🔴 {kept.filter(row => row.renew && row.renewalRisk === 'alto').map(row => row.playerName).join(', ')}: HOY SE NEGARÍA(N) A RENOVAR. LA SIMULACIÓN SUPONE QUE RENUEVAN; ARREGLA SU ROL O SU SUELDO ANTES.</p>}
     {overCount > 0 && <p className="payroll-empty sim-warn">⚠️ {overCount} JUGADOR(ES) SOBRE EL 20% DE SU VALOR: ESOS SUELDOS NO SE PODRÍAN FIRMAR.</p>}
@@ -338,7 +338,7 @@ function SimView({ team, projection, balance, canEdit, layout, currentPosition, 
         <ShareBar salary={row.salary} value={row.marketValue}/>
         {yearsInput(row)}
         {renewControls(row)}
-        <small className="payroll-card-total">{row.sold ? 'VENDIDO: NO CUENTA DESDE EL T1' : <>{row.years} TORNEOS × {gp(row.salary)} = <b>{gp(row.salary * row.years)}</b></>}</small>
+        <small className="payroll-card-total">{row.sold ? 'Vendido: no cuenta desde el t1' : <>{row.years} TORNEOS × {gp(row.salary)} = <b>{gp(row.salary * row.years)}</b></>}</small>
       </article>)}</div>
       : <div className="ptable-wrap"><table className="ptable ptable-sim">
         <thead><tr><th>JUGADOR</th><th>VALOR</th><th>SUELDO / TORNEO</th><th>% DEL VALOR</th><th>TORNEOS</th><th>AL RENOVAR</th><th>COSTO TOTAL</th></tr></thead>
@@ -370,7 +370,7 @@ function SimView({ team, projection, balance, canEdit, layout, currentPosition, 
           <td>{row.expiring ? `${row.expiring} · ${row.renewed ? `${row.renewed} RENUEVA(N)` : ''}${row.renewed && row.leaving ? ' · ' : ''}${row.leaving ? `${row.leaving} SALE(N)` : ''}` : '—'}</td>
         </tr>)}</tbody>
       </table></div>
-      <p className="payroll-note">{upcoming[0] ? `EL PRIMER TORNEO QUE SE COBRA ES EL ${upper(upcoming[0])}.` : 'T1 ES EL PRIMER TORNEO CON CONTRATOS.'}</p>
+      <p className="payroll-note">{upcoming[0] ? `El primer torneo que se cobra es el ${upper(upcoming[0])}.` : 'T1 es el primer torneo con contratos.'}</p>
       <HowItWorks><p>Los premios son los de la tabla de la liga según el puesto y los playoffs que elijas en cada fila (parten de tu puesto de hoy). No incluye fichajes nuevos.</p></HowItWorks>
     </section>
   </div>;

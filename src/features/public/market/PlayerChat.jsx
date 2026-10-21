@@ -13,14 +13,14 @@ const LEVEL = { frio: [1, '🧊 FRÍO'], tibio: [2, '🌤️ TIBIO'], caliente: 
 const KIND_TAG = { dato: 'DATO', promesa: 'PROMESA · QUEDA REGISTRADA', argumento: 'ARGUMENTO · NO OBLIGA', negativa: 'HONESTA', pedido_si: 'ACEPTAR', pedido_no: 'RECHAZAR' };
 // Promesas con consecuencia automática: se dice claro qué te obliga.
 const PROMISE_TAG = {
-  keep: 'PROMESA · NO PODRÁS SOLTARLO HASTA EL PRÓXIMO MERCADO',
-  sell: 'PROMESA · DEBES VENDERLO ANTES DE QUE CIERRE EL PRÓXIMO MERCADO',
+  keep: 'Promesa · no podrás soltarlo hasta el próximo mercado',
+  sell: 'Promesa · debes venderlo antes de que cierre el próximo mercado',
 };
 const tagOf = option => PROMISE_TAG[option.promiseKind] ?? KIND_TAG[option.kind ?? 'dato'] ?? 'DATO';
 const isRequest = topic => /^pedido:/.test(String(topic ?? ''));
 const REQUEST_TITLE = {
-  subir: '💰 QUIERE QUE SUBAS TU OFERTA', traer: '🤝 QUIERE QUE LE TRAIGAS A ALGUIEN', dorsal: '👕 PIDE UN DORSAL',
-  capitan: '©️ QUIERE LA CINTA DE CAPITÁN', penales: '🎯 QUIERE PATEAR LOS PENALES', tiros_libres: '🌀 QUIERE LOS TIROS LIBRES',
+  subir: '💰 Quiere que subas tu oferta', traer: '🤝 Quiere que le traigas a alguien', dorsal: '👕 PIDE UN DORSAL',
+  capitan: '©️ Quiere la cinta de capitán', penales: '🎯 Quiere patear los penales', tiros_libres: '🌀 Quiere los tiros libres',
 };
 
 const clock = value => {
@@ -150,7 +150,7 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
         keep(result);
         setPicks([]);
         setConfirmTopic('');
-        setNotice(undoneKind.current === 'promesa' ? 'LA PROMESA QUEDÓ RETIRADA.' : 'RESPUESTA DESHECHA: VUELVE A RESPONDERLA CUANDO QUIERAS.');
+        setNotice(undoneKind.current === 'promesa' ? 'LA PROMESA QUEDÓ RETIRADA.' : 'Respuesta deshecha: vuelve a responderla cuando quieras.');
         onChanged?.();
       },
     },
@@ -310,7 +310,7 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
     <header className="pc-head">
       {sheet && <button type="button" className="pc-back" aria-label="VOLVER A LA SUBASTA" onClick={() => setShown(false)}>←</button>}
       <PlayerFace src={player.faceUrl} name={player.name}/>
-      <div className="pc-who"><b>{player.name.toUpperCase()}</b><small>{thinking || firstHidden !== -1 ? 'ESCRIBIENDO…' : 'CHAT PRIVADO · SOLO TU CLUB LO VE'}</small></div>
+      <div className="pc-who"><b>{player.name.toUpperCase()}</b><small>{thinking || firstHidden !== -1 ? 'ESCRIBIENDO…' : 'Chat privado · solo tu club lo ve'}</small></div>
       <button type="button" className="pc-sound" aria-pressed={muted} aria-label={muted ? 'ACTIVAR SONIDO' : 'SILENCIAR SONIDO'} title={muted ? 'ACTIVAR SONIDO' : 'SILENCIAR SONIDO'} onClick={toggleMuted}>{muted ? '🔕' : '🔔'}</button>
       {!sheet && <button type="button" className="pc-close" onClick={() => setShown(false)}>CERRAR</button>}
     </header>
@@ -357,7 +357,7 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
               const blocked = !on && Boolean(blockedBy(option));
               const full = !on && picks.length >= MAX_PICKS;
               return <button type="button" key={option.code} role="checkbox" aria-checked={on}
-                disabled={thinking || blocked || full} title={blocked ? 'NO CALZA CON LO QUE ELEGISTE' : undefined}
+                disabled={thinking || blocked || full} title={blocked ? 'No calza con lo que elegiste' : undefined}
                 className={`pc-chip ${kind} ${option.promiseKind ? `promise-${option.promiseKind}` : ''} ${on ? 'on' : ''} ${blocked ? 'blocked' : ''}`} onClick={() => tapOption(option)}>
                 <em>{tagOf(option)}</em>
                 <span>{option.text}</span>
@@ -365,15 +365,15 @@ export function PlayerChat({ auction, teams = [], clubs: allowedClubs = null, on
               </button>;
             })}
           </div>
-          {options.length === 0 && <p className="pc-note">NO HAY RESPUESTAS PREPARADAS PARA ESTA PREGUNTA. ESCRÍBELE ABAJO.</p>}
+          {options.length === 0 && <p className="pc-note">No hay respuestas preparadas para esta pregunta. Escríbele abajo.</p>}
           {options.length > 0 && <div className="pc-send-row">
             <small>{pending.request ? 'SI ACEPTAS, QUEDA COMO PROMESA (Y SI LO ROMPES, BAJA TU REPUTACIÓN).'
-              : picks.length ? `${picks.length} ELEGIDA${picks.length > 1 ? 'S' : ''} · PUEDES COMBINAR HASTA ${MAX_PICKS} QUE CALCEN ENTRE SÍ.`
-                : 'ELIGE UNA O COMBINA HASTA 3 QUE CALCEN. LAS QUE SE CONTRADICEN SE BLOQUEAN SOLAS.'}</small>
+              : picks.length ? `${picks.length} elegida${picks.length > 1 ? 'S' : ''} · puedes combinar hasta ${MAX_PICKS} que calcen entre sí.`
+                : 'Elige una o combina hasta 3 que calcen. Las que se contradicen se bloquean solas.'}</small>
             <Button variant="positive" disabled={thinking || !picks.length} onClick={() => send(picks)}>ENVIAR{picks.length > 1 ? ` (${picks.length})` : ''}</Button>
           </div>}
           {answer.error && <p className="form-feedback error" role="alert">{answer.error.message}</p>}
-        </div> : chat.finished && <p className="pc-finished" role="status">✅ LE RESPONDISTE TODO · PUEDES CAMBIAR UNA RESPUESTA O TU OFERTA. SI YA ESTÁS, MARCA «ESTOY LISTO».</p>}
+        </div> : chat.finished && <p className="pc-finished" role="status">✅ Le respondiste todo · puedes cambiar una respuesta o tu oferta. Si ya estás, marca «ESTOY LISTO».</p>}
         {rewind.error && <p className="form-feedback error" role="alert">{rewind.error.message}</p>}
 
       </div>

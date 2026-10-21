@@ -39,7 +39,7 @@ function SendToAuction({ poll, onChanged }) {
   // Abrir la subasta es tarea del admin: a los demás no se les muestra este bloque.
   if (!isAdmin) return null;
   return <div className="poll-auction">
-    <p><b>⚖️ VA A SUBASTA SELLADA.</b> OTRO CLUB TAMBIÉN LO QUIERE: LA COMPRA QUEDA BLOQUEADA HASTA QUE UN ADMIN ABRA LA SUBASTA. AHÍ TODOS OFERTAN EN SECRETO Y EL JUGADOR ELIGE.</p>
+    <p><b>⚖️ VA A SUBASTA SELLADA.</b> Otro club también lo quiere: la compra queda bloqueada hasta que un admin abra la subasta. Ahí todos ofertan en secreto y el jugador elige.</p>
     {<form className="poll-auction-form" onSubmit={event => { event.preventDefault(); if (moderatorId) open.execute({ playerId: poll.player.id, moderatorPresidentId: moderatorId }); }}>
       <label>PRESI MODERADOR<select required value={moderatorId} onChange={event => setModeratorId(event.target.value)}>
         <option value="">ELEGIR MODERADOR</option>
@@ -76,7 +76,7 @@ function PollCard({ poll, teams, onChanged }) {
       <Voters title={`DELE NOMÁS (${confirms.length}/${poll.window?.minConfirmations ?? '?'})`} votes={confirms} tone="yes"/>
       <Voters title="VAMOS A SUBASTA" votes={objections} tone="no"/>
     </div>
-    {poll.window && <p className="poll-meta">{marketOpen ? `EL MERCADO CIERRA ${formatDate(poll.window.closesAt).toUpperCase()}` : 'MERCADO CERRADO: LOS VOTOS QUEDARON CONGELADOS.'}{poll.myVote ? ` · TU VOTO: ${poll.myVote === 'confirm' ? 'DELE NOMÁS' : 'VAMOS A SUBASTA'}` : ''}</p>}
+    {poll.window && <p className="poll-meta">{marketOpen ? `EL MERCADO CIERRA ${formatDate(poll.window.closesAt).toUpperCase()}` : 'Mercado cerrado: los votos quedaron congelados.'}{poll.myVote ? ` · TU VOTO: ${poll.myVote === 'confirm' ? 'DELE NOMÁS' : 'VAMOS A SUBASTA'}` : ''}</p>}
 
     {active && marketOpen && isPresident && <div className="mini-actions poll-vote-actions">
       <button className={poll.myVote === 'confirm' ? 'chosen' : ''} disabled={act.loading} onClick={() => act.execute('vote', { choice: 'confirm' })}>🟢 DELE NOMÁS{poll.myVote === 'confirm' ? ' · RETIRAR' : ''}</button>
@@ -86,7 +86,7 @@ function PollCard({ poll, teams, onChanged }) {
     {poll.status === 'awaiting' && canDecide && <div className="poll-confirm">
       <p>{poll.team.name.toUpperCase()}: ¿CONFIRMAS LA COMPRA POR {gp(poll.price)}?</p>
       <div className="mini-actions">
-        <button disabled={act.loading} onClick={() => { if (window.confirm(`¿CONFIRMAS LA COMPRA DE ${poll.player.name} POR ${gp(poll.price)}?`)) act.execute('confirm'); }}>✅ CONFIRMO LA COMPRA</button>
+        <button disabled={act.loading} onClick={() => { if (window.confirm(`¿Confirmas la compra de ${poll.player.name} por ${gp(poll.price)}?`)) act.execute('confirm'); }}>✅ CONFIRMO LA COMPRA</button>
         <button className="danger" disabled={act.loading} onClick={() => act.execute('decline')}>AL FINAL NO</button>
       </div>
     </div>}
@@ -116,7 +116,7 @@ export function PollsSection({ teams, revision, onChanged, children = null }) {
   return <>
     {children}
     <section className="market-section market-polls">
-      <header><h2>ENCUESTAS DE COMPRA <small>{rows.length}</small></h2><p>VOTA SI ESTÁS DE ACUERDO O PIDE SUBASTA. SON LAS MISMAS QUE EN DISCORD: VOTA DONDE QUIERAS.</p></header>
+      <header><h2>ENCUESTAS DE COMPRA <small>{rows.length}</small></h2><p>Vota si estás de acuerdo o pide subasta. Son las mismas que en Discord: vota donde quieras.</p></header>
       <div className="poll-filters">
         <div className="offer-toggle" role="radiogroup" aria-label="QUÉ ENCUESTAS VER">
           <button type="button" role="radio" aria-checked={scope === 'market'} className={scope === 'market' ? 'on' : ''} onClick={() => setScope('market')}>ESTE MERCADO</button>
@@ -129,8 +129,8 @@ export function PollsSection({ teams, revision, onChanged, children = null }) {
       </div>
       {polls.loading && polls.data === null && <div className="arcade-state compact">CARGANDO ENCUESTAS...</div>}
       {polls.error && !unavailable && <DataState query={polls}/>}
-      {unavailable && <p className="empty-copy">LAS ENCUESTAS TODAVÍA NO ESTÁN DISPONIBLES EN LA API.</p>}
-      {!polls.error && !polls.loading && !rows.length && <p className="empty-copy">{teamFilter ? 'ESE EQUIPO NO TIENE ENCUESTAS AQUÍ.' : 'NO HAY ENCUESTAS. ABRE UNA BUSCANDO AL JUGADOR ARRIBA.'}</p>}
+      {unavailable && <p className="empty-copy">Las encuestas todavía no están disponibles en la api.</p>}
+      {!polls.error && !polls.loading && !rows.length && <p className="empty-copy">{teamFilter ? 'Ese equipo no tiene encuestas aquí.' : 'No hay encuestas. Abre una buscando al jugador arriba.'}</p>}
       {open.length > 0 && <><h3 className="market-subtitle">🗳️ ABIERTAS · {open.length}</h3><div className="poll-list">{open.map(poll => <PollCard key={poll.id} poll={poll} teams={teams} onChanged={refresh}/>)}</div></>}
       {closed.length > 0 && <><h3 className="market-subtitle">📁 CERRADAS · {closed.length}</h3><div className="poll-list">{closed.map(poll => <PollCard key={poll.id} poll={poll} teams={teams} onChanged={refresh}/>)}</div></>}
     </section>

@@ -89,14 +89,14 @@ export function ConsentPanel({ player, toTeam, payer, leavingIds = [], terms, on
       {quote.reasons?.length > 0 && <ul className="consent-reasons">{quote.reasons.slice(0, 6).map(reason => <li key={reason.key} className={reason.delta >= 0 ? 'up' : 'down'}>
         <i aria-hidden="true">{reason.delta >= 0 ? '▲' : '▼'}</i><span>{upper(reason.text)}</span>
       </li>)}</ul>}
-      {quote.wantsOut && <p className="consent-note">PIDIÓ SALIR DE SU CLUB: ACEPTA CASI CUALQUIER DESTINO.</p>}
-      {quote.derby && <p className="consent-note is-derby"><Icon name="fire" size={12}/> CRUCE ENTRE CLÁSICOS: SI LLEGA, SU NUEVA HINCHADA LO MIRARÁ CON DESCONFIANZA.</p>}
+      {quote.wantsOut && <p className="consent-note">Pidió salir de su club: acepta casi cualquier destino.</p>}
+      {quote.derby && <p className="consent-note is-derby"><Icon name="fire" size={12}/> Cruce entre clásicos: si llega, su nueva hinchada lo mirará con desconfianza.</p>}
 
       {quote.verdict !== 'acepta' || bonus > 0 || role || canTalk ? <div className="consent-levers" role="group" aria-label="Cómo convencerlo">
         <h4>{quote.verdict === 'acepta' ? 'YA DICE QUE SÍ · PUEDES IGUAL' : 'CÓMO CONVENCERLO'}</h4>
         {canTalk && <div className={`consent-lever ${talking ? 'is-open' : ''}`}>
           <span className="consent-lever-title"><Icon name="mail" size={14}/> HABLAR CON ÉL</span>
-          <small>{talk ? `LA CHARLA YA ${talk > 0 ? 'SUMA' : 'RESTA'} ${Math.abs(talk)}` : 'TE PREGUNTA POR TU CLUB; RESPONDES CON DATOS REALES'}</small>
+          <small>{talk ? `LA CHARLA YA ${talk > 0 ? 'SUMA' : 'RESTA'} ${Math.abs(talk)}` : 'Te pregunta por tu club; respondes con datos reales'}</small>
           <button type="button" className="consent-lever-action" aria-expanded={talking} onClick={() => setTalking(value => !value)}>{talking ? 'OCULTAR CHAT' : talk ? 'SEGUIR LA CHARLA' : 'ABRIR CHAT'}</button>
         </div>}
         {!hopeless && <label className="consent-lever">
@@ -111,7 +111,7 @@ export function ConsentPanel({ player, toTeam, payer, leavingIds = [], terms, on
           <select value={role} onChange={event => setRole(event.target.value)}>{ROLES.map(([key, label]) => <option key={key} value={key}>{label}</option>)}</select>
           {quote.roleAsked && role !== quote.roleAsked && <button type="button" className="consent-lever-quick" onClick={() => setRole(quote.roleAsked)}>PIDE SER {ROLE_LABEL[quote.roleAsked]}</button>}
         </label>}
-        {hopeless && <p className="consent-note is-bad">NO HAY PRIMA QUE LO CONVENZA{canTalk ? ': PRUEBA HABLANDO CON ÉL, O BUSCA OTRO JUGADOR.' : '. BUSCA OTRO JUGADOR.'}</p>}
+        {hopeless && <p className="consent-note is-bad">NO HAY PRIMA QUE LO CONVENZA{canTalk ? ': Prueba hablando con él, o busca otro jugador.' : '. BUSCA OTRO JUGADOR.'}</p>}
       </div> : null}
       {talking && canTalk && <TransferChat player={player} teamId={toTeam.id} onChanged={() => setTalkRevision(value => value + 1)} onPromiseRole={value => setRole(value)} onClose={() => setTalking(false)}/>}
       <HowItWorks><p>El jugador compara tu club con el suyo (minutos, compañeros, DT, historia y proyecto) y suma su ánimo, su lealtad y si lo mandan al clásico rival. La plata no cuenta, porque su sueldo viaja tal cual.</p><p>La <b>charla</b> mueve hasta ±10 según lo que respondas. La <b>prima</b> va directo al jugador y la paga el club que lo recibe (tope: 15% de su valor). El <b>rol prometido</b> queda en su contrato: si no se cumple, se molesta.</p></HowItWorks>

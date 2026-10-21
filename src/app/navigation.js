@@ -1,29 +1,25 @@
-// Menú principal: seis áreas (más Mi club y Admin según quién entra). Las demás pantallas cuelgan de una de ellas.
+// Menú principal "modo carrera": cuatro áreas (más Admin). Todo lo demás cuelga de una de ellas.
+//  Inicio = la central de tu club · Liga = tabla, partidos, clubes, estadios y más · Mercado = buscar y fichar · Mi club.
 export function navigationFor({ teamId = null, isAdmin = false } = {}) {
   return [
-    { label: 'Inicio', path: '/' },
-    { label: 'Partidos', path: '/partidos' },
-    { label: 'Torneos', path: '/torneos' },
-    { label: 'Equipos', path: '/equipos' },
-    { label: 'Jugadores', path: '/equipos/jugadores' },
-    { label: 'Mercado', path: '/transferencias' },
-    ...(teamId ? [{ label: 'Mi club', path: `/equipos/${teamId}` }] : []),
-    ...(isAdmin ? [{ label: 'Admin', path: '/admin' }] : []),
+    { label: 'Inicio', path: '/', icon: 'home' },
+    { label: 'Liga', path: '/liga', icon: 'trophy' },
+    { label: 'Mercado', path: '/transferencias', icon: 'handshake' },
+    ...(teamId ? [{ label: 'Mi club', path: `/equipos/${teamId}`, icon: 'shirt' }] : []),
+    ...(isAdmin ? [{ label: 'Admin', path: '/admin', icon: 'cog' }] : []),
   ];
 }
 
-const LEAGUE_VIEWS = new Set(['/torneos', '/calculadora', '/clasificacion']);
-const CLUB_VIEWS = new Set(['/equipos/rankings', '/equipos/plantillas', '/equipos/presupuestos', '/equipos/presidentes', '/equipos/directores-tecnicos', '/equipos/emblemas', '/equipos/selecciones', '/equipos/estadios']);
+// Rutas que viven dentro de Liga (las viejas siguen andando y se muestran como una pestaña de Liga).
+export const LEAGUE_PATHS = new Set(['/liga', '/torneos', '/calculadora', '/clasificacion', '/partidos', '/partidos/jugados', '/partidos/pendientes', '/partidos/calendario', '/sanciones',
+  '/equipos', '/equipos/rankings', '/equipos/plantillas', '/equipos/presupuestos', '/equipos/presidentes', '/equipos/directores-tecnicos', '/equipos/emblemas', '/equipos/selecciones', '/equipos/estadios']);
 
 /** A qué ítem del menú pertenece la pantalla actual (null si no cuelga de ninguno, como Reglas o Notificaciones). */
 export function activeNavigationPath(route, teamId = null) {
   if (route.name === 'home' || route.name === 'newsArticle' || route.path === '/noticias') return '/';
-  if (route.name === 'player' || route.name === 'card' || route.path.startsWith('/equipos/jugadores')) return '/equipos/jugadores';
-  if (route.name === 'team') return teamId && route.teamId === teamId ? `/equipos/${teamId}` : '/equipos';
-  if (route.path === '/equipos' || CLUB_VIEWS.has(route.path)) return '/equipos';
-  if (route.path === '/partidos' || route.path.startsWith('/partidos/') || route.name === 'match' || route.path === '/sanciones') return '/partidos';
-  if (LEAGUE_VIEWS.has(route.path)) return '/torneos';
-  if (route.path === '/transferencias') return '/transferencias';
+  if (route.name === 'player' || route.name === 'card' || route.path.startsWith('/equipos/jugadores') || route.path === '/transferencias') return '/transferencias';
+  if (route.name === 'team') return teamId && route.teamId === teamId ? `/equipos/${teamId}` : '/liga';
+  if (route.name === 'match' || LEAGUE_PATHS.has(route.path)) return '/liga';
   if (route.path === '/admin' || route.path === '/personas') return '/admin';
   return null;
 }

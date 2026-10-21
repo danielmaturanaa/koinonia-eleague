@@ -1,4 +1,3 @@
-import { LeagueSectionTabs } from '../../components/SectionTabs.jsx';
 import { PageHeader } from './DataStates.jsx';
 import { ProjectionPanel } from './ProjectionPanel.jsx';
 
@@ -10,9 +9,8 @@ export function CalculatorPage({ tournament, teams = [], initialTeamId = null })
 
   return <main className="newspaper data-page"><section className="data-paper calculator-page">
     <PageHeader kicker="HERRAMIENTAS DE LA LIGA" title="CALCULADORA"/>
-    <LeagueSectionTabs current="/calculadora"/>
     {tournament
       ? <ProjectionPanel tournamentId={tournament.id} participantIds={participantIds} initialTeamId={initialTeamId} initialView={initialTeamId ? 'needs' : 'odds'} resolveTeam={resolveTeam}/>
-      : <p className="empty-copy">NO HAY UNA LIGA ACTIVA PARA CALCULAR.</p>}
+      : <p className="empty-copy">No hay una liga activa para calcular.</p>}
   </section></main>;
 }

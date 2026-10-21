@@ -23,7 +23,7 @@ export function ClubLifeAdmin() {
   return <div className="control-section">
     <Card title="VIDA DE CLUB" aside={<Chip tone={enabled ? 'green' : 'neutral'} icon={enabled ? 'check' : 'lock'}>{enabled ? 'ACTIVA' : 'APAGADA'}</Chip>}>
       <DataState query={status}/>
-      <p className="control-note">CON LA VIDA DE CLUB ACTIVA, CADA PARTIDO DE CLUBES QUE TERMINE COBRA TAQUILLA AL LOCAL Y MUEVE HINCHAS Y ÁNIMO; LOS PRESIS PUEDEN HACER CONCIERTOS Y VENDER SUS DERECHOS DE TV (SE COBRAN AL CERRAR CADA TORNEO DE LIGA). LOS PARTIDOS YA JUGADOS NO COBRAN NADA.</p>
+      <p className="control-note">Con la vida de club activa, cada partido de clubes que termine cobra taquilla al local y mueve hinchas y ánimo; los presis pueden hacer conciertos y vender sus derechos de TV (se cobran al cerrar cada torneo de liga). Los partidos ya jugados no cobran nada.</p>
       {data && !enabled && (confirm === 'start'
         ? <ConfirmStep message="¿ACTIVAR? DESDE AHORA CADA PARTIDO TERMINADO MUEVE PLATA E HINCHAS." confirmLabel="SÍ, ACTIVAR" busy={act.loading} onConfirm={() => act.execute(signal => endpoints.startClubLife(signal))} onCancel={() => setConfirm(null)}/>
         : <Button icon="stadium" onClick={() => setConfirm('start')}>ACTIVAR VIDA DE CLUB</Button>)}
@@ -36,7 +36,7 @@ export function ClubLifeAdmin() {
       <div className="control-actions">
         {round?.status !== 'open' && <>
           <label className="control-picker">HORAS PARA OFRECER<input type="number" min="1" max="336" value={hours} onChange={event => setHours(Number(event.target.value) || 48)}/></label>
-          <Button icon="mic" disabled={act.loading} onClick={() => act.execute(signal => endpoints.openVelada({ closesAt: new Date(Date.now() + hours * 3600000).toISOString() }, signal))}>ABRIR BÚSQUEDA DE ESTADIO</Button>
+          <Button icon="mic" disabled={act.loading} onClick={() => act.execute(signal => endpoints.openVelada({ closesAt: new Date(Date.now() + hours * 3600000).toISOString() }, signal))}>Abrir búsqueda de estadio</Button>
         </>}
         {round?.status === 'open' && (confirm === 'resolve'
           ? <ConfirmStep message="¿CERRAR AHORA Y QUE IBAI ELIJA?" confirmLabel="SÍ, QUE ELIJA" busy={act.loading} onConfirm={() => act.execute(signal => endpoints.resolveVelada(signal))} onCancel={() => setConfirm(null)}/>
@@ -45,7 +45,7 @@ export function ClubLifeAdmin() {
     </Card>}
     {act.error && <Notice tone="error">{act.error.message}</Notice>}
     {enabled && Array.isArray(ranking.data) && <Card title="HINCHADAS Y PAÍS DE CADA CLUB">
-      <p className="control-note">EL PAÍS DEFINE DE DÓNDE SALEN SUS HINCHAS. SI LO CAMBIAS, SU HINCHADA SE RECALCULA (LO GANADO JUGANDO SE MANTIENE EN PROPORCIÓN).</p>
+      <p className="control-note">El país define de dónde salen sus hinchas. Si lo cambias, su hinchada se recalcula (lo ganado jugando se mantiene en proporción).</p>
       <ol className="fan-ranking">{ranking.data.map(row => <li key={row.teamId}>
         <b>{row.emoji ?? '⚽'} {upper(row.name)}</b>
         <span>{people(row.followers)} HINCHAS</span>

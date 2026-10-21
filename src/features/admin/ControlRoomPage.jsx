@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { useAuth } from '../../app/AuthGate.jsx';
-import { Card, EmptyState, Icon, Tabs } from '../../ui/index.js';
+import { Card, EmptyState, Icon, Screen, Tabs } from '../../ui/index.js';
 import { DataState, PageHeader } from '../public/DataStates.jsx';
 import { MarketAdmin, loadAllPlayers } from '../public/MarketPage.jsx';
 import { AuctionSimulator } from '../public/market/AuctionSimulator.jsx';
@@ -61,7 +61,7 @@ function MarketSection({ teams }) {
   const access = useApiQuery(signal => endpoints.auctionSimAccess(signal).catch(() => ({ data: { allowed: false } })), []);
   return <div className="control-section">
     <Card title="REGISTRAR OPERACIÓN MANUAL">
-      <p className="control-note">LOS TRASPASOS Y TRUEQUES NORMALMENTE SE HACEN POR DISCORD O EN EL MERCADO; USA ESTO SOLO PARA CORREGIR O REGISTRAR ALGO A MANO.</p>
+      <p className="control-note">Los traspasos y trueques normalmente se hacen por Discord o en el mercado; usa esto solo para corregir o registrar algo a mano.</p>
       <DataState query={players}/>
       {Array.isArray(players.data) && <MarketAdmin teams={teams} players={players.data} onChanged={() => players.retry()}/>}
     </Card>
@@ -76,11 +76,10 @@ export function ControlRoomPage({ teams = [], initialTab = 'personas', tournamen
   useEffect(() => { if (sectionOf(initialTab)) setTab(sectionOf(initialTab)); }, [initialTab, tournamentId]);
   if (!isAdmin) {
     return <main className="newspaper data-page"><section className="data-paper"><PageHeader kicker="ADMINISTRACIÓN" title="SALA DE CONTROL"/>
-      <EmptyState icon="lock" title="SOLO PARA ADMINISTRADORES">SI NECESITAS ALGO DE AQUÍ, PÍDELO A UN ADMIN DE LA LIGA.</EmptyState></section></main>;
+      <EmptyState icon="lock" title="SOLO PARA ADMINISTRADORES">Si necesitas algo de aquí, pídelo a un admin de la liga.</EmptyState></section></main>;
   }
-  return <main className="newspaper data-page"><section className="data-paper control-room">
-    <PageHeader kicker="ADMINISTRACIÓN" title="SALA DE CONTROL"/>
-    <Tabs tabs={SECTIONS} value={tab} onChange={id => { window.location.hash = `/admin?tab=${id}`; }} label="Secciones de administración"/>
+  return <Screen className="control-room" kicker="Administración" title="Sala de control" intro="Herramientas de los admins: personas, torneos, mercado, vida de club y atajos."
+    tabs={SECTIONS} active={tab} onTab={id => { window.location.hash = `/admin?tab=${id}`; }}>
     {tab === 'personas' && <PeoplePage teams={teams} embedded/>}
     {tab === 'torneos' && <TournamentsSection teams={teams} initialId={tournamentId}/>}
     {tab === 'mercado' && <MarketSection teams={teams}/>}
@@ -88,18 +87,18 @@ export function ControlRoomPage({ teams = [], initialTab = 'personas', tournamen
     {tab === 'atajos' && <div className="control-section">
       <Card title="ATAJOS">
         <ShortcutCards items={[
-          ['#/partidos', 'ball', 'CENTRO DE PARTIDOS', 'CREAR, INICIAR, ANOTAR Y CORREGIR'],
-          ['#/partidos/calendario', 'clock', 'CALENDARIO', 'ARRASTRA PARTIDOS A OTRO DÍA'],
-          ['#/sanciones', 'warning', 'SANCIONES', 'EXPULSIONES Y SUSPENSIONES'],
-          ['#/equipos/jugadores/importar', 'search', 'AGREGAR JUGADORES', 'DESDE EFOOTBALLDB O A MANO'],
-          ['#/equipos/jugadores', 'shield', 'DIRECTORIO DE JUGADORES', 'EDITAR O ELIMINAR DESDE SU FICHA'],
-          ['#/equipos/estadios', 'stadium', 'ESTADIOS', 'SUBIR FOTOS DEL CATÁLOGO'],
-          ['#/noticias', 'mail', 'PERIÓDICO DE LA LIGA', 'PLANTILLAS E IMÁGENES GENÉRICAS'],
+          ['#/liga?tab=partidos', 'ball', 'CENTRO DE PARTIDOS', 'CREAR, INICIAR, ANOTAR Y CORREGIR'],
+          ['#/liga?tab=mas&ver=calendario', 'clock', 'CALENDARIO', 'Arrastra partidos a otro día'],
+          ['#/liga?tab=mas&ver=sanciones', 'warning', 'SANCIONES', 'EXPULSIONES Y SUSPENSIONES'],
+          ['#/equipos/jugadores/importar', 'search', 'AGREGAR JUGADORES', 'Desde eFootballDB o a mano'],
+          ['#/transferencias?tab=buscar', 'shield', 'DIRECTORIO DE JUGADORES', 'Editar o eliminar desde su ficha'],
+          ['#/liga?tab=estadios', 'stadium', 'ESTADIOS', 'SUBIR FOTOS DEL CATÁLOGO'],
+          ['#/liga?tab=mas&ver=noticias', 'mail', 'PERIÓDICO DE LA LIGA', 'Plantillas e imágenes genéricas'],
         ]}/>
       </Card>
       <Card title="CREAR CLUB O SELECCIÓN"><CreateTeamForm/>
-        <p className="control-note">PARA EDITAR UN CLUB (ESCUDO, PRESIDENTE, DT, HIMNO) ENTRA A SU FICHA: EL ADMIN LO EDITA IGUAL QUE SU PRESIDENTE.</p>
+        <p className="control-note">Para editar un club (escudo, presidente, DT, himno) entra a su ficha: el admin lo edita igual que su presidente.</p>
       </Card>
     </div>}
-  </section></main>;
+  </Screen>;
 }

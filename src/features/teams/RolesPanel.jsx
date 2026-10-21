@@ -33,8 +33,8 @@ export function RolesPanel({ team }) {
   const marketOpen = useMarketOpen();
   const rows = Array.isArray(query.data) ? query.data : [];
   return <section className="roles-panel">
-    <header><h3>ROLES Y ÁNIMO</h3><p>EL ROL LO ELIGES TÚ. SI ES MENOR AL QUE CREE MERECER, SE ENOJA.</p><HowItWorks><p>Cada jugador cree merecer un rol según lo que vale en la liga. Su ánimo sale de eso, del rendimiento del equipo, su sueldo y su personalidad. Si lo tienes por debajo de lo que cree merecer, pide más (o se niega) al renovar. Pasa el mouse por una fila para ver por qué.</p></HowItWorks></header>
-    {canEdit && marketOpen && <p className="payroll-empty">🔒 MERCADO ABIERTO: LOS ROLES ESTÁN BLOQUEADOS PARA NO MANIPULAR LOS FICHAJES. SE PUEDEN CAMBIAR MIENTRAS SE JUEGA EL TORNEO.</p>}
+    <header><h3>ROLES Y ÁNIMO</h3><p>El rol lo eliges tú. Si es menor al que cree merecer, se enoja.</p><HowItWorks><p>Cada jugador cree merecer un rol según lo que vale en la liga. Su ánimo sale de eso, del rendimiento del equipo, su sueldo y su personalidad. Si lo tienes por debajo de lo que cree merecer, pide más (o se niega) al renovar. Pasa el mouse por una fila para ver por qué.</p></HowItWorks></header>
+    {canEdit && marketOpen && <p className="payroll-empty">🔒 Mercado abierto: los roles están bloqueados para no manipular los fichajes. Se pueden cambiar mientras se juega el torneo.</p>}
     <DataState query={query}/>
     {rows.length > 0 && <div className="payroll-table-wrap"><table className="payroll-table roles-table">
       <thead><tr><th>JUGADOR</th><th>ROL</th><th>CREE MERECER</th><th>ÁNIMO</th><th>PERSONALIDAD</th></tr></thead>

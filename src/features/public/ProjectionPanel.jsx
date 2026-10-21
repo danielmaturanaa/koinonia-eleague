@@ -109,7 +109,7 @@ function ScenarioBoard({ group, fixed, setFixed, winnerTeam }) {
   </div>;
 }
 
-const STATUS_HEADLINE = { clinched: 'ASEGURADO', eliminated: 'SIN OPCIONES', tiebreak: 'SE DEFINE POR DIFERENCIA DE GOL', open: 'EN CARRERA' };
+const STATUS_HEADLINE = { clinched: 'ASEGURADO', eliminated: 'SIN OPCIONES', tiebreak: 'Se define por diferencia de gol', open: 'EN CARRERA' };
 
 function NeedsView({ group, teams, focusTeamId, setFocusTeamId, resolveTeam, onFix }) {
   const outlook = group?.outlook;
@@ -120,7 +120,7 @@ function NeedsView({ group, teams, focusTeamId, setFocusTeamId, resolveTeam, onF
     <label className="needs-picker">EQUIPO<select value={focusTeamId ?? ''} onChange={event => setFocusTeamId(event.target.value || null)}>
       <option value="">ELEGIR EQUIPO…</option>{teams.map(team => <option key={team.teamId} value={team.teamId}>{team.name}</option>)}
     </select></label>
-    {!focusTeamId && <p className="empty-copy">ELIGE UN EQUIPO PARA VER QUÉ NECESITA.</p>}
+    {!focusTeamId && <p className="empty-copy">Elige un equipo para ver qué necesita.</p>}
     {focusTeamId && outlook && <>
       <header className={`needs-headline status-${outlook.status}`}>
         <TeamMark team={resolveTeam({ id: focusTeam?.teamId, name: focusTeam?.name, emoji: focusTeam?.emoji })}/>
@@ -135,7 +135,7 @@ function NeedsView({ group, teams, focusTeamId, setFocusTeamId, resolveTeam, onF
         <div><dt>{outlook.exact ? 'PUNTOS QUE LO ASEGURAN' : 'LO ASEGURAN (COTA)'}</dt><dd>{outlook.status === 'clinched' ? '✔' : outlook.safePoints ?? '—'}</dd></div>
       </dl>
       {!outlook.exact && <p className="needs-note">CON TANTOS PARTIDOS POR JUGAR, LA MATEMÁTICA EXACTA SE REEMPLAZA POR COTAS SEGURAS: LO QUE DICE &quot;SEGURO&quot; ES SEGURO, PERO PODRÍA BASTAR CON MENOS.</p>}
-      {outlook.keyMatches.length > 0 && <section className="needs-key-matches"><h4>LOS PARTIDOS DE OTROS QUE MÁS LE IMPORTAN</h4><ul>
+      {outlook.keyMatches.length > 0 && <section className="needs-key-matches"><h4>Los partidos de otros que más le importan</h4><ul>
         {outlook.keyMatches.map(entry => <li key={entry.matchId}>
           <span className="needs-match-name">{nameOf(entry.homeTeamId)} – {nameOf(entry.awayTeamId)}</span>
           <span className="needs-conditional">{OUTCOME_LABELS.map(([key, label]) => <i key={key} className={entry.best === key ? 'best' : ''} title={`Si ${outcomeText(entry, key).toLowerCase()}`}>{label} {pct(entry.conditional[key])}%</i>)}</span>
@@ -181,7 +181,7 @@ export function ProjectionPanel({ tournamentId, participantIds = [], initialTeam
 
   return <section className="workspace-panel projection-panel">
     <h3>CALCULADORA <small>{data ? `${data.runs.toLocaleString('es-CL')} SIMULACIONES` : 'CALCULANDO…'}</small></h3>
-    <p className="projection-disclaimer" role="note"><b>NO ES UN RESULTADO OFICIAL.</b> PROBABILIDADES CALCULADAS SIMULANDO LOS PARTIDOS PENDIENTES CON EL MOTOR DEL SIMULADOR. NO SE GUARDA NADA.</p>
+    <p className="projection-disclaimer" role="note"><b>NO ES UN RESULTADO OFICIAL.</b> Probabilidades calculadas simulando los partidos pendientes con el motor del simulador. No se guarda nada.</p>
     {data && <label className="projection-team-picker">EQUIPO A ANALIZAR<select value={focusTeamId ?? ''} onChange={event => setFocusTeamId(event.target.value || null)}>
       <option value="">ELEGIR EQUIPO…</option>{allTeams.map(team => <option key={team.teamId} value={team.teamId}>{team.name}</option>)}
     </select></label>}
@@ -196,12 +196,12 @@ export function ProjectionPanel({ tournamentId, participantIds = [], initialTeam
       {view === 'odds' && groups.map(group => <section key={group.groupLabel ?? 'liga'} className="projection-group">
         {group.groupLabel && <h4>DIVISIÓN {group.groupLabel}</h4>}
         <ProbabilityTable group={group} resolveTeam={resolveTeam} focusTeamId={focusTeamId} onPick={pick}/>
-        <p className="projection-legend">xPTS: PUNTOS ESPERADOS · RANGO: MÍNIMO Y MÁXIMO POSIBLE · TOCA UN EQUIPO PARA VER QUÉ NECESITA.</p>
+        <p className="projection-legend">Xpts: puntos esperados · rango: mínimo y máximo posible · toca un equipo para ver qué necesita.</p>
       </section>)}
       {view === 'scenarios' && groups.map(group => <section key={group.groupLabel ?? 'liga'} className="projection-group scenario-layout">
         {group.groupLabel && <h4>DIVISIÓN {group.groupLabel}</h4>}
         <ScenarioBoard group={group} fixed={fixed} setFixed={setFixed} winnerTeam={group.teams.some(team => team.teamId === winnerTeam?.teamId) ? winnerTeam : null}/>
-        <div className="scenario-table"><h4>TABLA PROYECTADA <small>{fixedCount ? 'PTS INCLUYE RESULTADOS FIJADOS' : 'PTS OFICIALES'}</small></h4><ProbabilityTable group={group} resolveTeam={resolveTeam} focusTeamId={focusTeamId} onPick={pick} scenario/></div>
+        <div className="scenario-table"><h4>TABLA PROYECTADA <small>{fixedCount ? 'Pts incluye resultados fijados' : 'PTS OFICIALES'}</small></h4><ProbabilityTable group={group} resolveTeam={resolveTeam} focusTeamId={focusTeamId} onPick={pick} scenario/></div>
       </section>)}
       {view === 'needs' && <NeedsView group={focusGroup} teams={allTeams} focusTeamId={focusTeamId} setFocusTeamId={setFocusTeamId} resolveTeam={resolveTeam} onFix={fix}/>}
     </div>}

@@ -19,14 +19,14 @@ export function MatchdayPanel({ match, revision }) {
     <h2>DÍA DE PARTIDO {data.derby && <Chip tone="red" icon="fire">{data.officialDerby ? 'CLÁSICO OFICIAL' : 'CLÁSICO'}</Chip>}</h2>
     {numbers && <div className="matchday-venue">
       <div>
-        <small><Icon name="stadium" size={14}/> {numbers.neutral ? 'FINAL EN CANCHA NEUTRAL · ' : ''}{upper(numbers.venue)}</small>
+        <small><Icon name="stadium" size={14}/> {numbers.neutral ? 'Final en cancha neutral · ' : ''}{upper(numbers.venue)}</small>
         <b>{gate ? (gate.closedDoors ? 'A PUERTAS CERRADAS' : `${people(gate.attendance)} PERSONAS`) : `SE ESPERAN ~${people(Math.min(forecast.demand, forecast.capacity))}`}</b>
         <span className="gate-bar"><span style={{ width: `${occupancy}%` }}/><em>{occupancy}% DE {people(numbers.capacity)}</em></span>
       </div>
       <dl>
         <div><dt>ENTRADA</dt><dd>{upper(numbers.tier)} · {numbers.price} €</dd></div>
         {gate ? <div><dt>TAQUILLA</dt><dd>{gp(gate.revenue)}{gate.neutral ? ' (MITAD Y MITAD)' : ''}</dd></div>
-          : <div><dt>SI SE LLENA</dt><dd>{forecast.full ? 'YA HAY MÁS DEMANDA QUE ASIENTOS' : 'QUEDARÍAN ASIENTOS LIBRES'}</dd></div>}
+          : <div><dt>SI SE LLENA</dt><dd>{forecast.full ? 'Ya hay más demanda que asientos' : 'QUEDARÍAN ASIENTOS LIBRES'}</dd></div>}
         {(gate?.leftOutside ?? forecast?.leftOutside) > 0 && <div><dt>SE QUEDAN AFUERA</dt><dd>{people(gate?.leftOutside ?? forecast.leftOutside)}</dd></div>}
       </dl>
     </div>}

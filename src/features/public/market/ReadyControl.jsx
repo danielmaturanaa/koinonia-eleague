@@ -13,7 +13,7 @@ export function ReadyControl({ auction, teamId, onChanged }) {
   if (!hasBid) return null;
   if (ready) {
     return <div className="sealed-ready on" role="status">
-      <span><b>🏁 LISTO</b> · NO FALTA NADA DE TU PARTE</span>
+      <span><b>🏁 LISTO</b> · No falta nada de tu parte</span>
       <button type="button" className="link-button" disabled={mutation.loading} onClick={() => mutation.execute({ teamId, ready: false })}>VOLVER A EDITAR</button>
       {mutation.error && <p className="form-feedback error" role="alert">{mutation.error.message}</p>}
     </div>;
@@ -22,7 +22,7 @@ export function ReadyControl({ auction, teamId, onChanged }) {
     <Button variant="positive" className="sealed-ready-btn" disabled={mutation.loading} onClick={() => mutation.execute({ teamId, ready: true })}>
       {mutation.loading ? 'MARCANDO…' : '🏁 ESTOY LISTO'}
     </Button>
-    <small>CUANDO YA OFERTASTE Y RESPONDISTE TODO, AVÍSALES A LOS DEMÁS.</small>
+    <small>Cuando ya ofertaste y respondiste todo, avísales a los demás.</small>
     {mutation.error && <p className="form-feedback error" role="alert">{mutation.error.message}</p>}
   </div>;
 }

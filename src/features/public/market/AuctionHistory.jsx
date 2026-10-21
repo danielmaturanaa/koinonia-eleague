@@ -8,12 +8,12 @@ import { Stars } from './stars.jsx';
 import { serverNow } from './serverClock.js';
 
 const TRAIT_LABEL = {
-  ganador: ['GANADOR', 'QUIERE TÍTULOS Y UN CLUB IMPORTANTE.'],
-  titular: ['TITULAR', 'QUIERE JUGAR SIEMPRE Y HUYE DE DONDE YA HAY ALGUIEN EN SU PUESTO.'],
-  sociable: ['SOCIABLE', 'LE IMPORTA CON QUIÉN JUEGA: PAISANOS, GENTE DE SU EDAD Y QUE SE COMPLEMENTEN.'],
-  mercenario: ['MERCENARIO', 'SE VA CON EL QUE MÁS PAGA.'],
-  ego: ['EGO', 'QUIERE SER LA FIGURA, NO COMPARTIR PROTAGONISMO.'],
-  leal: ['LEAL AL PROYECTO', 'PREFIERE UN CLUB ESTABLE Y UN PRESI QUE CUMPLE.'],
+  ganador: ['GANADOR', 'Quiere títulos y un club importante.'],
+  titular: ['TITULAR', 'Quiere jugar siempre y huye de donde ya hay alguien en su puesto.'],
+  sociable: ['SOCIABLE', 'Le importa con quién juega: paisanos, gente de su edad y que se complementen.'],
+  mercenario: ['MERCENARIO', 'Se va con el que más paga.'],
+  ego: ['EGO', 'Quiere ser la figura, no compartir protagonismo.'],
+  leal: ['LEAL AL PROYECTO', 'Prefiere un club estable y un presi que cumple.'],
 };
 const FACTOR_LABEL = {
   dinero: 'DINERO', minutos: 'MINUTOS', companeros: 'COMPAÑEROS', dt: 'ENTRENADOR',
@@ -21,9 +21,9 @@ const FACTOR_LABEL = {
 };
 const INTEREST = { caliente: ['🔥 CALIENTE', 'hot'], tibio: ['🌤️ TIBIO', 'warm'], frio: ['🧊 FRÍO', 'cold'] };
 const NO_SALE_LABEL = {
-  sin_ofertas: 'NADIE OFERTÓ POR ÉL: SIGUE LIBRE.',
-  nadie_convence: 'NINGÚN CLUB LO CONVENCIÓ: SIGUE LIBRE.',
-  sin_club_valido: 'LOS CLUBES QUE LO CONVENCÍAN YA NO PODÍAN PAGARLO: SIGUE LIBRE.',
+  sin_ofertas: 'Nadie ofertó por él: sigue libre.',
+  nadie_convence: 'Ningún club lo convenció: sigue libre.',
+  sin_club_valido: 'Los clubes que lo convencían ya no podían pagarlo: sigue libre.',
 };
 
 /** Detalle técnico de cómo decidió el jugador: rasgos, pesos y la nota de cada club en cada tema. */
@@ -31,7 +31,7 @@ function Breakdown({ result }) {
   if (!result?.ranking?.length) return null;
   const factors = Object.keys(FACTOR_LABEL);
   return <div className="sealed-breakdown">
-    <p className="poll-hint">CÓMO VIO EL JUGADOR A CADA CLUB, DE 0 A 5 ESTRELLAS POR TEMA. CON TODO ESO SALE EL ENCAJE, QUE MULTIPLICA LA OFERTA: GANA EL VALOR FINAL MÁS ALTO.</p>
+    <p className="poll-hint">Cómo vio el jugador a cada club, de 0 a 5 estrellas por tema. Con todo eso sale el encaje, que multiplica la oferta: gana el valor final más alto.</p>
     <div className="sealed-traits">
       {(result.traits ?? []).map(trait => <span key={trait}><b>{TRAIT_LABEL[trait]?.[0] ?? String(trait).toUpperCase()}</b> {TRAIT_LABEL[trait]?.[1]}</span>)}
     </div>
@@ -94,11 +94,11 @@ export function AuctionHistory({ revision, teams = [] }) {
   return <section className="market-section market-sealed-history">
     <header>
       <h2>HISTORIAL DE SUBASTAS <small>{rows.length}</small></h2>
-      <p>LAS SUBASTAS TERMINADAS, CON EL DETALLE TÉCNICO DE CÓMO DECIDIÓ CADA JUGADOR. LA HISTORIA CORTA SALE EN LA NOTICIA DEL FICHAJE.</p>
+      <p>Las subastas terminadas, con el detalle técnico de cómo decidió cada jugador. La historia corta sale en la noticia del fichaje.</p>
     </header>
     {auctions.loading && auctions.data === null && <div className="arcade-state compact">CARGANDO HISTORIAL...</div>}
     {auctions.error && <DataState query={auctions}/>}
-    {!auctions.error && !auctions.loading && !rows.length && <p className="empty-copy">TODAVÍA NO HAY SUBASTAS TERMINADAS.</p>}
+    {!auctions.error && !auctions.loading && !rows.length && <p className="empty-copy">Todavía no hay subastas terminadas.</p>}
     <div className="sealed-history-list">{rows.map(auction => <HistoryRow key={auction.id} auction={auction} teams={teams}/>)}</div>
   </section>;
 }

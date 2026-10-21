@@ -187,7 +187,7 @@ export function GlobalSearch({ navigate, teams = [] }) {
             </div>;
           })}
       </div>
-      {term.length >= MIN_QUERY && !state.crossing && <button type="button" className="global-search-all" onClick={() => { setOpen(false); navigate(`/equipos/jugadores?q=${encodeURIComponent(term)}`); }}>VER TODOS LOS RESULTADOS EN JUGADORES →</button>}
+      {term.length >= MIN_QUERY && !state.crossing && <button type="button" className="global-search-all" onClick={() => { setOpen(false); navigate(`/equipos/jugadores?q=${encodeURIComponent(term)}`); }}>Ver todos los resultados en jugadores →</button>}
     </div>}
   </div>;
 }

@@ -16,7 +16,7 @@ export function SiteLayout({ route, navigate, children, sidebar, error, dismissE
         <button className="brand" onClick={() => navigate('/')} aria-label="Koinonia e-League, ir al inicio">
           <TransparentLogo className="brand-logo" src="/koinonia-eleague-logo.png" label="Koinonia e-League"/>
         </button>
-        <Navigation route={route} navigate={navigate} teams={teams}/>
+        <Navigation route={route} navigate={navigate}/>
         <GlobalSearch navigate={navigate} teams={teams}/>
         {!mobile && <MusicPlayer tracks={playlist}/>}
         <div className="header-tools"><NotificationBell navigate={navigate}/><AccountMenu navigate={navigate} teams={teams}/></div>

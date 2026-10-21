@@ -237,7 +237,7 @@ export function AuctionReveal({ auction, startAt, onClose, onSkip = null, teams 
   })();
   const done = phase === 'done';
 
-  return createPortal(<div className={`reveal phase-${phase} ${winnerId ? 'has-winner' : 'no-winner'}`} role="dialog" aria-modal="true" aria-label={`RESULTADO DE LA SUBASTA DE ${player.name}`}>
+  return createPortal(<div className={`reveal phase-${phase} ${winnerId ? 'has-winner' : 'no-winner'}`} role="dialog" aria-modal="true" aria-label={`Resultado de la subasta de ${player.name}`}>
     <div className="reveal-spot" aria-hidden="true"/>
     {done && winnerId && <Confetti/>}
     <button type="button" className="reveal-close" onClick={onClose} aria-label="CERRAR">✕</button>

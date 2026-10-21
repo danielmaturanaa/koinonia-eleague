@@ -2,31 +2,27 @@
 
 Resultado del rediseño por fases (1 a 8). Las reglas de negocio no cambiaron: solo dónde vive cada cosa y cómo se avisa.
 
-## 1. Mapa de navegación
+## 1. Mapa de navegación (rediseño "modo carrera", 2026-10-21)
 
-Menú principal (`src/app/navigation.js`): **Inicio · Partidos · Torneos · Equipos · Jugadores · Mercado**, más **Mi club** (si tienes club) y **Admin** (si eres admin). `activeNavigationPath` decide qué ítem se ilumina en cada ruta.
+Menú de cuatro (`src/app/navigation.js`): **Inicio · Liga · Mercado · Mi club** (+ Admin). En el celular es una barra abajo (`.bottom-nav`, por portal fuera del encabezado). Todas las pantallas usan `Screen` (`src/ui/Screen.jsx`): franja azul con título y una frase de qué se hace ahí, **una sola fila de pestañas** y el cuerpo en papel. Las páginas viejas que se reutilizan como pestaña no pintan su encabezado (`useEmbedded`; `PageHeader` deja solo sus botones). Tarjetas grandes apretables: `Tile`.
 
-| Área | Rutas | Notas |
+| Área | Rutas | Pestañas |
 |---|---|---|
-| Inicio | `/`, `/noticias`, `/noticias/:id` | Las noticias viven en Inicio; "Noticias" también en el pie y en el menú de cuenta |
-| Partidos | `/partidos[/jugados\|pendientes\|calendario]`, `/partidos/:id`, `/sanciones`, `/marcador/:id` | Sanciones es un botón del Centro de partidos |
-| Torneos | `/torneos?torneo=&vista=tabla\|goleadores\|playoffs`, `/calculadora` | Barra propia (Torneos · Calculadora). El torneo y la vista quedan en el enlace |
-| Equipos | `/equipos`, `/equipos/estadios\|rankings\|plantillas\|presupuestos\|presidentes\|directores-tecnicos\|emblemas\|selecciones`, fichas de clubes ajenos | `LeagueSectionTabs` muestra la barra de Equipos; Estadios es el catálogo global (comprar, cambiar, vender, fotos) |
-| Jugadores | `/equipos/jugadores[/importar]`, `/jugadores/:id`, `/efootball/:id` | |
-| Mercado | `/transferencias?tab=subastas\|encuestas\|ofertas\|venta\|historial&id=` | `tab` e `id` los respeta el enlace de los avisos |
-| Mi club | `/equipos/:miClubId?tab=` | Central y seis secciones (ver §2) |
-| Admin | `/admin?tab=personas\|torneos\|mercado\|vida\|atajos[&id=]`, alias `/personas` | Sala de control. Las pestañas viejas (equipos, jugadores, partidos, noticias) caen en Clubes y atajos |
-| Cuenta | `/notificaciones?tab=avisos\|preferencias`, `/reglas` | Menú de cuenta y pie |
+| Inicio | `/` | Central de tu club (todos son presis): próximo partido (con 🔥 si es clásico), mensajes, caja, mercado, tu clásico, plantel, estadio; "esperando tu decisión"; últimos partidos, directiva, tabla y noticias. Sin club: noticias |
+| Liga | `/liga?tab=tabla\|partidos\|goleadores\|playoffs\|clubes\|estadios\|mas&ver=&torneo=` | "Más": calendario, calculadora, rankings, plantillas, presupuestos, presidentes, DTs, escudos, selecciones, sanciones, noticias, reglamento (`ver=`). Las rutas viejas (`/torneos`, `/partidos…`, `/equipos…`, `/calculadora`, `/sanciones`, `/noticias`, `/reglas`) caen aquí |
+| Mercado | `/transferencias?tab=buscar\|subastas\|libres\|ofertas\|venta\|seguidos\|historial` | Buscar = el directorio de jugadores (`/equipos/jugadores` cae aquí; el comparador es `vista=comparador`) |
+| Jugador | `/jugadores/:id` | Botones grandes: Hacer oferta (o Fichar si es libre) · Hablarle (chat en una ventana, también con el mercado cerrado) · Seguir. Si es tuyo: Su contrato · Sus mensajes |
+| Club | `/equipos/:id?tab=&ver=` | Ver §2 |
+| Cuenta | `/notificaciones?tab=avisos\|preferencias` | |
+| Admin | `/admin?tab=personas\|torneos\|mercado\|vida\|atajos` | |
 
 ## 2. Mi club frente a la ficha pública
 
-`TeamDetailPage` muestra una u otra según quién mira (`ownerMode`):
+Las dos tienen seis pestañas y ninguna subpestaña:
+- **Mi club:** Plantel (cancha, media, goleadores, roles y ánimo; "Editar plantel" abre una ventana) · Mensajes (charlas con jugadores que quieres fichar + bandeja de tus jugadores) · Finanzas (contratos y nómina, caja; "Simular" abre una ventana) · Estadio (estadio e hinchas, eventos con La Velada, TV, en una sola página) · Clásico · Historia (presidente, DT, palmarés, reseña, fichajes).
+- **Otro club:** Plantel · Partidos · Nómina · Estadio · Clásico · Historia.
 
-- **Presidente de ese club → Mi club** (abre en Central): CENTRAL · EQUIPO (Resumen | Partidos | Tabla | Clásico | Historia, con los fichajes) · PLANTEL · FINANZAS (Contratos y nómina | Caja | Simulador) · ESTADIO (Estadio y taquilla | Eventos | Derechos de TV) · SEGUIMIENTO · BANDEJA. Comprar o cambiar de estadio se hace en Equipos › Estadios.
-- **Cualquier otra persona → ficha pública**: Resumen · Plantel · Partidos · Tabla · Clásico · Historia (con los fichajes) · Nómina (solo lectura) · Estadio (hinchada y taquilla, sin el negocio).
-- **Admin en un club ajeno** ve la ficha del presi, con un aviso arriba de que actúa por él y que todo queda registrado a su nombre.
-
-El id de la pestaña en la URL es siempre la "hoja" (`central`, `nomina`, `finanzas`, `seguimiento`, `fichajes`, `bandeja`, `resumen`, `partidos`, `tabla`, `historia`, `estadio`, `eventos`, `tv`, `clasico`, `plantel`); la sección se deduce de ella. Los enlaces viejos siguen funcionando: `catalogo` cae en `estadio`, `fichajes` en `historia` y `auspicio` en `tv`.
+`ver=` lleva a una parte de la pestaña (`estadio`, `hinchas`, `eventos`, `velada`, `tv`, `nomina`, `caja`, `simulador`). Enlaces viejos: `bandeja→mensajes`, `nomina/movimientos→finanzas`, `eventos/tv→estadio`, `resumen→plantel`, `central/directiva→Inicio`, `seguimiento→Mercado › Seguidos`, `partidos/tabla` del presi → Liga.
 
 ## 3. Qué vivía dónde → dónde vive ahora
 

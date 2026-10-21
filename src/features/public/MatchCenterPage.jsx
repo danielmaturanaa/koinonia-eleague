@@ -34,7 +34,7 @@ function Incidents({ match }) {
   </ul>;
   const empty = !goals.length && !redCards.length;
   return <section className="match-card-panel match-incidents-panel"><h2>INCIDENCIAS</h2>
-    {empty ? <p className="empty-copy">{match.status === 'pending' ? 'EL PARTIDO AÚN NO COMIENZA.' : 'SIN GOLES NI TARJETAS REGISTRADAS.'}</p>
+    {empty ? <p className="empty-copy">{match.status === 'pending' ? 'El partido aún no comienza.' : 'Sin goles ni tarjetas registradas.'}</p>
       : <div className="match-incidents"><div><h3>{match.homeTeam?.name}</h3>{side(match.homeTeam?.id)}</div><div><h3>{match.awayTeam?.name}</h3>{side(match.awayTeam?.id)}</div></div>}
   </section>;
 }
@@ -111,13 +111,13 @@ export function MatchCenterPage({ matchId, teams = [], navigate }) {
         ? <div className="match-center-score">{sharedReplay
           ? <SimulationReplay match={match} simulation={simulation} resolveTeam={resolveTeam} startsAt={new Date(simulation.replayStartsAt).getTime()} durationSeconds={simulation.durationSeconds} onEnded={onSharedReplayEnded}/>
           : <><SimulationReplay key={localReplay.startsAt} match={match} simulation={simulation} resolveTeam={resolveTeam} startsAt={localReplay.startsAt} durationSeconds={localReplay.durationSeconds}/><button type="button" className="sim-replay-close" onClick={() => setLocalReplay(null)}>✕ CERRAR REPETICIÓN</button></>}</div>
-        : <><div className="match-center-score"><Scoreboard matchId={matchId} mode="manage" density="full" teams={teams} refreshKey={revision} onChanged={bump} showActa={false}/>{match?.sanctioned && <p className="match-sanction-banner"><SanctionBadge match={match}/> RESULTADO ADMINISTRATIVO 0-3: EL PARTIDO NO SE JUGÓ.</p>}{match?.simulated && <SimulationBanner match={match} simulation={simulation} onReplay={durationSeconds => setLocalReplay({ startsAt: Date.now(), durationSeconds })}/>}</div>
+        : <><div className="match-center-score"><Scoreboard matchId={matchId} mode="manage" density="full" teams={teams} refreshKey={revision} onChanged={bump} showActa={false}/>{match?.sanctioned && <p className="match-sanction-banner"><SanctionBadge match={match}/> Resultado administrativo 0-3: el partido no se jugó.</p>}{match?.simulated && <SimulationBanner match={match} simulation={simulation} onReplay={durationSeconds => setLocalReplay({ startsAt: Date.now(), durationSeconds })}/>}</div>
           {match?.status === 'pending' ? <SimulationPreview key={revision} match={match} onSimulated={bump}/> : match && <Incidents match={match}/>}</>}</div>
       {match && <div className="match-center-h2h"><HeadToHead match={match} resolveTeam={resolveTeam}/></div>}
     </div>
     {match && <>
       {!replaying && !loadingSimulation && <MatchdayPanel match={match} revision={revision}/>}
-      <section className="match-card-panel"><h2>ALINEACIONES <small>TITULARES ACTUALES DE CADA CLUB</small></h2><div className="match-lineups"><Lineup team={resolveTeam(match.homeTeam)}/><Lineup team={resolveTeam(match.awayTeam)}/></div></section>
+      <section className="match-card-panel"><h2>ALINEACIONES <small>Titulares actuales de cada club</small></h2><div className="match-lineups"><Lineup team={resolveTeam(match.homeTeam)}/><Lineup team={resolveTeam(match.awayTeam)}/></div></section>
       {canOperateMatches && <details className="match-corrections"><summary>SANCIONES Y CORRECCIONES</summary><div><SanctionPanel key={`${match.id}-${revision}`} match={match} onChanged={bump}/></div></details>}
     </>}
   </section></main>;

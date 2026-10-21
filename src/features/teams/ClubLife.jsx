@@ -25,7 +25,7 @@ const when = value => {
 };
 
 function OffNotice() {
-  return <EmptyState icon="stadium" title="LA VIDA DE CLUB AÚN NO PARTE">CUANDO LA ADMINISTRACIÓN LA ACTIVE, CADA PARTIDO DE LOCAL COBRARÁ ENTRADAS SEGÚN TU HINCHADA Y PODRÁS HACER CONCIERTOS, VENDER TUS DERECHOS DE TV Y PELEAR POR LA VELADA DE IBAI.</EmptyState>;
+  return <EmptyState icon="stadium" title="LA VIDA DE CLUB AÚN NO PARTE">Cuando la administración la active, cada partido de local cobrará entradas según tu hinchada y podrás hacer conciertos, vender tus derechos de TV y pelear por la Velada de Ibai.</EmptyState>;
 }
 
 /** Gradas pixel: se llenan según la ocupación (0–100). */
@@ -47,9 +47,9 @@ function Stands({ occupancy = 0, label }) {
 
 function TierPicker({ fans, canEdit, onChanged }) {
   const toast = useToast();
-  const save = useApiMutation((tier, signal) => endpoints.setTicketTier(fans.teamId, tier, signal), { onSuccess: () => { toast({ tone: 'success', title: 'PRECIO DE LA ENTRADA ACTUALIZADO' }); onChanged?.(); } });
-  const effect = { popular: 'MÁS GENTE, MENOS PLATA POR CABEZA. LA HINCHADA LO AGRADECE.', normal: 'EL PRECIO DE SIEMPRE.', premium: 'MÁS PLATA POR CABEZA, MENOS GENTE. LA HINCHADA REFUNFUÑA.' };
-  return <Card title="PRECIO DE LA ENTRADA" aside={<Chip icon="ticket">RIGE PARA TUS PARTIDOS DE LOCAL</Chip>}>
+  const save = useApiMutation((tier, signal) => endpoints.setTicketTier(fans.teamId, tier, signal), { onSuccess: () => { toast({ tone: 'success', title: 'Precio de la entrada actualizado' }); onChanged?.(); } });
+  const effect = { popular: 'Más gente, menos plata por cabeza. La hinchada lo agradece.', normal: 'EL PRECIO DE SIEMPRE.', premium: 'Más plata por cabeza, menos gente. La hinchada refunfuña.' };
+  return <Card title="PRECIO DE LA ENTRADA" aside={<Chip icon="ticket">Rige para tus partidos de local</Chip>}>
     <div className="tier-picker" role="radiogroup" aria-label="Precio de la entrada">
       {fans.tiers.map(tier => <button type="button" role="radio" key={tier.key} aria-checked={fans.ticketTier === tier.key} className={fans.ticketTier === tier.key ? 'on' : ''}
         disabled={!canEdit || save.loading} onClick={() => fans.ticketTier !== tier.key && save.execute(tier.key)}>
@@ -98,7 +98,7 @@ export function VenueTab({ team, onTab: _onTab }) {
       <TierPicker fans={fans} canEdit={canEdit} onChanged={query.retry}/>
       <Card title="PARTIDOS DE LOCAL" aside={<Chip icon="people">ASISTENCIA Y RECAUDACIÓN</Chip>}>
         {fans.gates.length ? <ul className="gate-list">{fans.gates.map(gate => <GateRow key={gate.matchId} gate={gate}/>)}</ul>
-          : <EmptyState icon="ticket" title="SIN PARTIDOS DE LOCAL AÚN">CUANDO JUEGUES DE LOCAL VERÁS AQUÍ CUÁNTA GENTE FUE Y CUÁNTO RECAUDASTE.</EmptyState>}
+          : <EmptyState icon="ticket" title="SIN PARTIDOS DE LOCAL AÚN">Cuando juegues de local verás aquí cuánta gente fue y cuánto recaudaste.</EmptyState>}
         <HowItWorks title="¿De qué depende la asistencia?"><p>De tus hinchas que viven cerca (en tu país y unos pocos de afuera), el rival, si es clásico o playoffs, el ánimo de la hinchada y el precio de la entrada. El aforo es el techo. El marcador no cambia: esto solo mueve plata, hinchas y ánimo.</p></HowItWorks>
       </Card>
       <FanMap fans={fans}/>
@@ -159,7 +159,7 @@ function Step({ n, state, title, children }) {
 function VeladaCard({ team, velada, canEdit, onChanged }) {
   const toast = useToast();
   const [amount, setAmount] = useState(velada.myBid ?? '');
-  const bid = useApiMutation((value, signal) => endpoints.bidVelada(team.id, value, signal), { onSuccess: () => { toast({ tone: 'success', title: 'OFERTA ENVIADA', body: 'SOLO IBAI LA VE. SI NO TE ELIGE, NO PAGAS NADA.' }); onChanged(); } });
+  const bid = useApiMutation((value, signal) => endpoints.bidVelada(team.id, value, signal), { onSuccess: () => { toast({ tone: 'success', title: 'OFERTA ENVIADA', body: 'Solo Ibai la ve. Si no te elige, no pagas nada.' }); onChanged(); } });
   const withdraw = useApiMutation((_, signal) => endpoints.withdrawVelada(team.id, signal), { onSuccess: onChanged });
   const round = velada.round;
   const open = round?.status === 'open';
@@ -170,26 +170,26 @@ function VeladaCard({ team, velada, canEdit, onChanged }) {
   const closes = round?.closesAt ? new Date(round.closesAt).toLocaleString('es-CL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'America/Santiago' }) : null;
   const capacityOk = (me?.capacity ?? 0) >= req.minCapacity;
   const fansOk = (me?.followers ?? 0) >= req.minFollowers;
-  return <Card tone="gold" className="velada-card" title="LA VELADA DEL AÑO" aside={<Chip tone={open ? 'red' : 'navy'} icon="mic">{open ? timeLeft(round.closesAt) : round?.status === 'resolved' ? 'YA TIENE SEDE' : 'IBAI AÚN NO BUSCA'}</Chip>}>
-    <p className="velada-lead">IBAI BUSCA UN ESTADIO PARA SU EVENTO DE BOXEO. FUNCIONA COMO UNA SUBASTA: LOS CLUBES LE OFRECEN PLATA PARA QUE LO HAGA EN SU ESTADIO, Y EL ELEGIDO PAGA LO QUE OFRECIÓ PERO SE QUEDA CON TODAS LAS ENTRADAS Y LA TRANSMISIÓN.</p>
+  return <Card id="ver-velada" tone="gold" className="velada-card" title="LA VELADA DEL AÑO" aside={<Chip tone={open ? 'red' : 'navy'} icon="mic">{open ? timeLeft(round.closesAt) : round?.status === 'resolved' ? 'YA TIENE SEDE' : 'IBAI AÚN NO BUSCA'}</Chip>}>
+    <p className="velada-lead">Ibai busca un estadio para su evento de boxeo. Funciona como una subasta: los clubes le ofrecen plata para que lo haga en su estadio, y el elegido paga lo que ofreció pero se queda con todas las entradas y la transmisión.</p>
     {round?.status === 'resolved' && <div className="velada-result">
       <blockquote>«{round.result?.line}»<cite>— IBAI</cite></blockquote>
       {round.winnerTeamId === team.id && <p className="velada-win">GANASTE {gp(round.result.profit)} NETOS Y TU HINCHADA CRECIÓ 5%.</p>}
       {round.result?.ranking?.length > 0 && <ol className="velada-ranking">{round.result.ranking.map(row => <li key={row.teamId}><b>{upper(row.name)}</b><span>{gp(row.amount)}</span><small>{row.score} PTS</small></li>)}</ol>}
     </div>}
     {round?.status !== 'resolved' && <ol className="velada-steps">
-      <Step n={1} state={open ? 'done' : 'now'} title={open ? `IBAI ESTÁ BUSCANDO ESTADIO · CIERRA EL ${upper(closes)}` : 'ESPERA A QUE IBAI ABRA LA BÚSQUEDA'}>
-        <small>{open ? (round.bidders.length ? `YA LE OFRECIERON: ${round.bidders.map(bidder => upper(bidder.name)).join(' · ')}` : 'TODAVÍA NADIE LE OFRECE SU ESTADIO.') : 'LA ABRE LA ADMINISTRACIÓN UNA VEZ POR TEMPORADA. TE LLEGA UN AVISO.'}</small>
+      <Step n={1} state={open ? 'done' : 'now'} title={open ? `Ibai está buscando estadio · cierra el ${upper(closes)}` : 'Espera a que Ibai abra la búsqueda'}>
+        <small>{open ? (round.bidders.length ? `YA LE OFRECIERON: ${round.bidders.map(bidder => upper(bidder.name)).join(' · ')}` : 'Todavía nadie le ofrece su estadio.') : 'La abre la administración una vez por temporada. Te llega un aviso.'}</small>
       </Step>
-      <Step n={2} state={eligible ? 'done' : 'blocked'} title={eligible ? 'TU CLUB CUMPLE LOS REQUISITOS' : 'TU CLUB TODAVÍA NO CUMPLE LOS REQUISITOS'}>
+      <Step n={2} state={eligible ? 'done' : 'blocked'} title={eligible ? 'Tu club cumple los requisitos' : 'Tu club todavía no cumple los requisitos'}>
         <ul className="velada-reqs">
           <li className={capacityOk ? 'ok' : 'no'}>{capacityOk ? '✓' : '✗'} ESTADIO DE {people(req.minCapacity)} PERSONAS · EL TUYO: {people(me?.capacity)}</li>
           <li className={fansOk ? 'ok' : 'no'}>{fansOk ? '✓' : '✗'} {compact(req.minFollowers)} HINCHAS · TIENES {compact(me?.followers)}</li>
         </ul>
-        {!capacityOk && <a className="velada-link" href="#/equipos/estadios">VER ESTADIOS DE 50.000 O MÁS →</a>}
+        {!capacityOk && <a className="velada-link" href="#/equipos/estadios">Ver estadios de 50.000 o más →</a>}
       </Step>
-      <Step n={3} state={!open || !eligible ? 'wait' : velada.myBid !== null ? 'done' : 'now'} title={velada.myBid !== null ? `LE OFRECISTE ${gp(velada.myBid)} · NADIE MÁS LO VE` : 'OFRÉCELE PLATA A IBAI PARA QUE LA HAGA EN TU ESTADIO'}>
-        <small>AL CIERRE IBAI ELIGE UNO SOLO, MIRANDO LA PLATA QUE LE OFRECEN (50%), EL TAMAÑO DEL ESTADIO (30%) Y LOS HINCHAS (20%). OFRECER MÁS TE DA MÁS CHANCE, PERO TE QUEDA MENOS. SI NO TE ELIGE, NO PAGAS NADA.</small>
+      <Step n={3} state={!open || !eligible ? 'wait' : velada.myBid !== null ? 'done' : 'now'} title={velada.myBid !== null ? `Le ofreciste ${gp(velada.myBid)} · nadie más lo ve` : 'Ofrécele plata a Ibai para que la haga en tu estadio'}>
+        <small>Al cierre Ibai elige uno solo, mirando la plata que le ofrecen (50%), el tamaño del estadio (30%) y los hinchas (20%). Ofrecer más te da más chance, pero te queda menos. Si no te elige, no pagas nada.</small>
         {open && eligible && canEdit && <div className="velada-bid">
           <label>CUÁNTO LE OFRECES<GpInput value={amount} onChange={event => setAmount(event.target.value)} placeholder="0" aria-label="Oferta para La Velada"/></label>
           <Button icon="gavel" disabled={bid.loading || amount === ''} onClick={() => bid.execute(offer)}>{velada.myBid !== null ? 'CAMBIAR OFERTA' : 'OFRECER'}</Button>
@@ -223,10 +223,10 @@ export function EventsTab({ team, onChanged }) {
   const catalog = data.concerts;
   return <section className="club-life events-tab">
     <VeladaCard team={team} velada={data.velada} canEdit={canEdit} onChanged={query.retry}/>
-    {scheduled && <Card tone="navy" className="event-scheduled" title={`PRÓXIMO SHOW: ${upper(scheduled.artist?.name)}`} aside={<Chip tone="yellow" icon="clock">EN TU PRÓXIMA FECHA DE LOCAL</Chip>}>
+    {scheduled && <Card tone="navy" className="event-scheduled" title={`PRÓXIMO SHOW: ${upper(scheduled.artist?.name)}`} aside={<Chip tone="yellow" icon="clock">En tu próxima fecha de local</Chip>}>
       <p>YA LE PAGASTE AL ARTISTA ({gp(scheduled.cost)}). SE HACE AL TERMINAR TU PRÓXIMO PARTIDO DE LOCAL.</p>
       {canEdit && (confirm === scheduled.id
-        ? <ConfirmStep message={`¿CANCELAR? TE DEVUELVEN ${gp(Math.floor(scheduled.cost / 2))} (LA MITAD DE LO QUE LE PAGASTE).`} confirmLabel="SÍ, CANCELAR" danger busy={act.loading} onConfirm={() => { label.current = 'CONCIERTO CANCELADO'; act.execute(signal => endpoints.cancelConcert(team.id, scheduled.id, signal)); }} onCancel={() => setConfirm(null)}/>
+        ? <ConfirmStep message={`¿Cancelar? Te devuelven ${gp(Math.floor(scheduled.cost / 2))} (la mitad de lo que le pagaste).`} confirmLabel="SÍ, CANCELAR" danger busy={act.loading} onConfirm={() => { label.current = 'CONCIERTO CANCELADO'; act.execute(signal => endpoints.cancelConcert(team.id, scheduled.id, signal)); }} onCancel={() => setConfirm(null)}/>
         : <Button variant="ghost" size="sm" onClick={() => setConfirm(scheduled.id)}>CANCELAR SHOW</Button>)}
     </Card>}
     <Card title="CONCIERTOS DE MÚSICA CRISTIANA" aside={<Chip icon="music">{catalog.used} / {catalog.limit} ESTA TEMPORADA</Chip>}>
@@ -273,8 +273,8 @@ export function TvRightsTab({ team, onChanged }) {
         <p>TEMPORADA {Math.min(sponsor.seasonsPaid + 1, sponsor.seasons)} DE {sponsor.seasons} · YA PAGÓ {gp(sponsor.paid)}</p>
         <dl className="sponsor-terms"><div><dt>FIJO POR TORNEO</dt><dd>{gp(sponsor.fixed)}</dd></div>{sponsor.playoffBonus > 0 && <div><dt>SI LLEGAS A PLAYOFFS</dt><dd>+{gp(sponsor.playoffBonus)}</dd></div>}{sponsor.titleBonus > 0 && <div><dt>SI SALES CAMPEÓN</dt><dd>+{gp(sponsor.titleBonus)}</dd></div>}</dl>
       </div>
-    </Card> : <Card title="DERECHOS DE TV" aside={<Chip icon="handshake">3 CANALES TE QUIEREN TRANSMITIR</Chip>}>
-      <p className="club-life-hint">ELIGE UN CANAL: PAGA AL CERRAR CADA TORNEO DE LIGA. LOS MÁS GRANDES PAGAN MÁS.</p>
+    </Card> : <Card title="DERECHOS DE TV" aside={<Chip icon="handshake">3 canales te quieren transmitir</Chip>}>
+      <p className="club-life-hint">Elige un canal: paga al cerrar cada torneo de liga. Los más grandes pagan más.</p>
       <HowItWorks><p>Cada canal paga según su tamaño y tus hinchas. Los gigantes globales (Prime Video, DAZN, ESPN) pagan más, pero solo llaman a clubes con mucha hinchada; la TV abierta paga menos y le transmite a cualquiera. La oferta <b>fija</b> es plata segura; la <b>arriesgada</b> paga poco fijo pero mucho si llegas a playoffs o sales campeón; la <b>mixta</b> va al medio.</p><p>No va en la camiseta: en el juego usan camisetas reales con su propia marca.</p></HowItWorks>
       <div className="sponsor-offers">{data.sponsorOffers.map(offer => <article key={offer.key} className={`sponsor-offer style-${offer.style}`}>
         <TvSet channel={offer.brand} small/>
@@ -283,7 +283,7 @@ export function TvRightsTab({ team, onChanged }) {
         <Chip tone={offer.style === 'arriesgada' ? 'red' : offer.style === 'mixta' ? 'yellow' : 'green'}>{upper(offer.styleLabel)} · {offer.seasons} TORNEO{offer.seasons === 1 ? '' : 'S'}</Chip>
         <dl><div><dt>FIJO POR TORNEO</dt><dd>{gp(offer.fixed)}</dd></div><div><dt>SI LLEGAS A PLAYOFFS</dt><dd>{offer.playoffBonus ? `+${gp(offer.playoffBonus)}` : '—'}</dd></div><div><dt>SI SALES CAMPEÓN</dt><dd>{offer.titleBonus ? `+${gp(offer.titleBonus)}` : '—'}</dd></div></dl>
         {canEdit && (confirm === offer.key
-          ? <ConfirmStep message={`¿FIRMAR CON ${upper(offer.brand)} POR ${offer.seasons} TORNEO${offer.seasons === 1 ? '' : 'S'}? NO SE PUEDE CAMBIAR HASTA QUE TERMINE.`} confirmLabel="SÍ, FIRMAR" busy={sign.loading} onConfirm={() => sign.execute(offer.key)} onCancel={() => setConfirm(null)}/>
+          ? <ConfirmStep message={`¿Firmar con ${upper(offer.brand)} por ${offer.seasons} torneo${offer.seasons === 1 ? '' : 'S'}? No se puede cambiar hasta que termine.`} confirmLabel="SÍ, FIRMAR" busy={sign.loading} onConfirm={() => sign.execute(offer.key)} onCancel={() => setConfirm(null)}/>
           : <Button size="sm" icon="contract" onClick={() => setConfirm(offer.key)}>FIRMAR</Button>)}
       </article>)}</div>
       {data.tvNext && <p className="tv-next"><Icon name="people" size={14}/> CON {compact(data.tvNext.minFollowers)} HINCHAS TE LLAMARÍA <b>{upper(data.tvNext.name)}</b> ({upper(data.tvNext.reach)}): TE FALTAN {compact(data.tvNext.missing)}.</p>}

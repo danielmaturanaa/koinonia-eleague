@@ -23,8 +23,8 @@ const upper = text => String(text ?? '').toUpperCase();
 function bandProblem(player, price) {
   if (!player || !Number.isFinite(price)) return null;
   const { min, max } = priceBand(player.gpValue ?? 0);
-  if (price < min) return `${upper(player.name)} NO PUEDE SALIR POR MENOS DE ${gp(min)} (0,7× SU VALOR).`;
-  if (price > max) return `${upper(player.name)} NO PUEDE SALIR POR MÁS DE ${gp(max)} (1,25× SU VALOR).`;
+  if (price < min) return `${upper(player.name)} no puede salir por menos de ${gp(min)} (0,7× su valor).`;
+  if (price > max) return `${upper(player.name)} no puede salir por más de ${gp(max)} (1,25× su valor).`;
   return null;
 }
 
@@ -62,7 +62,7 @@ function CounterForm({ offer, me, other, onDone, onCancel }) {
   return <div className="offer-counter" role="group" aria-label="CONTRAOFERTA">
     <b>🔁 CONTRAOFERTA</b>
     {!asking && <label>PRECIO QUE PROPONES<GpInput value={price} onChange={event => setPrice(event.target.value)} aria-label="Precio de la contraoferta"/></label>}
-    {(isTrade || iAmSeller) && <label>{isTrade ? 'JUGADOR QUE PIDES' : 'PEDIR UN JUGADOR A CAMBIO (OPCIONAL)'}
+    {(isTrade || iAmSeller) && <label>{isTrade ? 'JUGADOR QUE PIDES' : 'Pedir un jugador a cambio (opcional)'}
       <select value={ask} onChange={event => setAsk(event.target.value)}>{isTrade ? null : <option value="">NO, SOLO PLATA</option>}{asList(theirSquad.squad).map(player => <option key={player.id} value={player.id}>{player.name} · {player.position} · {gp(player.gpValue)}</option>)}</select>
     </label>}
     {asking && <div className="offer-counter-gp">
@@ -109,7 +109,7 @@ function OfferCard({ offer, onChanged, highlighted = false }) {
   const acceptLabel = incoming ? 'ACEPTAR' : `ACEPTAR POR ${upper(counterpart?.name)}`;
   const rejectLabel = incoming ? 'RECHAZAR' : outgoing ? 'RETIRAR OFERTA' : 'ANULAR';
   const canReject = incoming ? offer.canReject : outgoing ? offer.canWithdraw : isAdmin;
-  const ask = { approve: incoming ? '¿ACEPTAS? SE MUEVEN LOS JUGADORES Y LOS GP AL TIRO.' : `¿ACEPTAR EN NOMBRE DE ${upper(counterpart?.name)}?`,
+  const ask = { approve: incoming ? '¿Aceptas? Se mueven los jugadores y los GP al tiro.' : `¿ACEPTAR EN NOMBRE DE ${upper(counterpart?.name)}?`,
     reject: incoming ? '¿RECHAZAS ESTA OFERTA?' : outgoing ? '¿RETIRAS TU OFERTA?' : '¿ANULAR ESTA OFERTA?' };
 
   return <article ref={card} className={`offer-card ${incoming ? 'is-incoming' : ''} ${highlighted ? 'is-highlighted' : ''}`}>
@@ -129,7 +129,7 @@ function OfferCard({ offer, onChanged, highlighted = false }) {
         <div><small>{upper(teamLabel(offer.toTeam))} PAGA</small><b className="offer-price">{gp(offer.gpAmount)}</b></div>
       </div>}
     {termsText(offer) && <p className="offer-terms">📄 ACORDADO CON {offer.kind === 'trade' ? 'LOS JUGADORES' : 'EL JUGADOR'}: {termsText(offer)}.</p>}
-    <p className="offer-status">{incoming ? '👉 TE TOCA RESPONDER. TAMBIÉN PUEDES HACERLO DESDE DISCORD.' : `⏳ ESPERANDO A ${upper(teamLabel(counterpart))}.`}</p>
+    <p className="offer-status">{incoming ? '👉 Te toca responder. También puedes hacerlo desde Discord.' : `⏳ ESPERANDO A ${upper(teamLabel(counterpart))}.`}</p>
     {confirming
       ? <div className="offer-confirm" role="group" aria-label="CONFIRMAR">
         <span>{ask[confirming]}</span>
@@ -160,8 +160,8 @@ export function OffersInbox({ revision, onChanged, highlightId = null }) {
   ].map(([direction, title]) => [title, rows.filter(row => row.direction === direction)]).filter(([, items]) => items.length);
   const refresh = () => { offers.retry(); onChanged?.(); };
   return <section className="market-section market-offers">
-    <header><h2>OFERTAS <small>{rows.length}</small></h2><p>TRASPASOS Y TRUEQUES PENDIENTES. SON LOS MISMOS QUE EN DISCORD: RESPONDE DONDE QUIERAS.</p></header>
-    {unavailable && <p className="empty-copy">LAS OFERTAS TODAVÍA NO ESTÁN DISPONIBLES EN LA API.</p>}
+    <header><h2>OFERTAS <small>{rows.length}</small></h2><p>Traspasos y trueques pendientes. Son los mismos que en Discord: responde donde quieras.</p></header>
+    {unavailable && <p className="empty-copy">Las ofertas todavía no están disponibles en la api.</p>}
     {offers.error && !unavailable && <DataState query={offers}/>}
     {!offers.error && !offers.loading && !rows.length && <p className="empty-copy">NO HAY OFERTAS PENDIENTES.</p>}
     {groups.map(([title, items]) => <div className="offer-group" key={title}>
@@ -189,7 +189,7 @@ const TERM_SEASONS = [2, 3, 4, 5, 6];
 function TermsFields({ player, club, terms, onChange }) {
   return <fieldset className="contract-terms">
     <legend>📄 CONTRATO VENCIDO: {upper(player.name)} TIENE QUE ACORDAR CON {upper(club)}</legend>
-    <p className="poll-hint">SI NO ACEPTA, EL SISTEMA TE DICE CUÁNTO PIDE. DESPUÉS DE FIRMAR NO SE PUEDE REVENDER HASTA QUE SE COBRE SU PRIMER TORNEO.</p>
+    <p className="poll-hint">Si no acepta, el sistema te dice cuánto pide. Después de firmar no se puede revender hasta que se cobre su primer torneo.</p>
     <div className="chips">{TERM_SEASONS.map(n => <button type="button" key={n} className={terms.seasons === n ? 'on' : ''} onClick={() => onChange({ ...terms, seasons: n })}>{n} TORNEOS</button>)}</div>
     <div className="sheet-slider"><input type="range" min="1" max="100" value={terms.raisePercent} onChange={event => onChange({ ...terms, raisePercent: Number(event.target.value) })} aria-label="Aumento de sueldo en porcentaje"/><b>+{terms.raisePercent}%</b></div>
   </fieldset>;
@@ -237,7 +237,7 @@ function TransferProposal({ myTeamId, rivals, onDone, prefill = null }) {
   useEffect(() => { if (player && form.gpAmount === '') setForm(current => ({ ...current, gpAmount: String(player.gpValue ?? '') })); }, [player?.id]);
   useEffect(() => { setConsentTerms(NO_CONSENT_TERMS); setVerdict(null); }, [form.playerId, form.otherTeamId, form.side]);
   const mutation = useApiMutation((body, signal) => endpoints.createTransfer(body, signal), {
-    onSuccess: () => { setSent(`OFERTA ENVIADA A ${upper(other?.name)}: LE LLEGA A SU BANDEJA Y A DISCORD. SE CONCRETA CUANDO LA ACEPTE.`); setForm(empty); setConsentTerms(NO_CONSENT_TERMS); onDone?.(); },
+    onSuccess: () => { setSent(`Oferta enviada a ${upper(other?.name)}: le llega a su bandeja y a Discord. Se concreta cuando la acepte.`); setForm(empty); setConsentTerms(NO_CONSENT_TERMS); onDone?.(); },
   });
   const set = (name, value) => setForm(current => ({ ...current, [name]: value,
     ...(['side', 'otherTeamId'].includes(name) ? { playerId: '', gpAmount: '' } : {}),
@@ -295,7 +295,7 @@ function TradeProposal({ myTeamId, rivals, onDone }) {
   useEffect(() => { setOfferedConsent(NO_CONSENT_TERMS); setOfferedVerdict(null); }, [form.fromPlayerId, form.otherTeamId]);
   useEffect(() => { setRequestedConsent(NO_CONSENT_TERMS); setRequestedVerdict(null); }, [form.toPlayerId, form.otherTeamId]);
   const mutation = useApiMutation((body, signal) => endpoints.createTrade(body, signal), {
-    onSuccess: () => { setSent(`TRUEQUE ENVIADO A ${upper(other?.name)}: LE LLEGA A SU BANDEJA Y A DISCORD. SE CONCRETA CUANDO LO ACEPTE.`); setForm(empty); onDone?.(); },
+    onSuccess: () => { setSent(`Trueque enviado a ${upper(other?.name)}: le llega a su bandeja y a Discord. Se concreta cuando lo acepte.`); setForm(empty); onDone?.(); },
   });
   const set = (name, value) => setForm(current => ({ ...current, [name]: value, ...(name === 'otherTeamId' ? { toPlayerId: '' } : {}) }));
   const consentReady = (needsOfferedTerms || offeredVerdict === 'acepta') && (needsRequestedTerms || requestedVerdict === 'acepta');
@@ -360,13 +360,13 @@ export function ProposeOffers({ teams, marketOpen, onChanged, prefill = null }) 
   // Traspasos y trueques solo con el mercado abierto; liberar se puede siempre.
   const closed = marketOpen === false && tab !== 'release';
   return <section className="market-section market-propose">
-    <header><h2>PROPONER UNA OPERACIÓN</h2><p>SE CONCRETA CUANDO LA OTRA PARTE LA ACEPTA. PRECIO ENTRE 0,7× Y 1,25× EL VALOR.</p></header>
+    <header><h2>PROPONER UNA OPERACIÓN</h2><p>Se concreta cuando la otra parte la acepta. Precio entre 0,7× y 1,25× el valor.</p></header>
     <nav className="market-tabs offer-tabs" aria-label="TIPO DE OPERACIÓN">
       <button type="button" className={tab === 'transfer' ? 'active' : ''} onClick={() => setTab('transfer')}>TRASPASO</button>
       <button type="button" className={tab === 'trade' ? 'active' : ''} onClick={() => setTab('trade')}>TRUEQUE</button>
       <button type="button" className={tab === 'release' ? 'active' : ''} onClick={() => setTab('release')}>LIBERAR</button>
     </nav>
-    {closed && <p className="empty-copy">EL MERCADO ESTÁ CERRADO: LOS TRASPASOS Y TRUEQUES SE PROPONEN CUANDO SE ABRA.</p>}
+    {closed && <p className="empty-copy">El mercado está cerrado: los traspasos y trueques se proponen cuando se abra.</p>}
     {!closed && tab === 'transfer' && <TransferProposal myTeamId={myTeamId} rivals={rivals} onDone={onChanged} prefill={prefill}/>}
     {!closed && tab === 'trade' && <TradeProposal myTeamId={myTeamId} rivals={rivals} onDone={onChanged}/>}
     {tab === 'release' && <ReleaseForm myTeamId={myTeamId} onDone={onChanged}/>}

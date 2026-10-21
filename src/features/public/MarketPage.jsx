@@ -16,7 +16,9 @@ import { AuctionHistory } from './market/AuctionHistory.jsx';
 import { SealedAuctionsSection } from './market/SealedAuctionsSection.jsx';
 import { gpLabel } from '../../utils/money.js';
 import { GpInput } from '../../components/GpInput.jsx';
-import { Button, Icon } from '../../ui/index.js';
+import { Button, Icon, Screen } from '../../ui/index.js';
+import { PlayersPage } from './PlayersPage.jsx';
+import { WatchlistTab } from '../teams/WatchlistTab.jsx';
 
 const asList = value => Array.isArray(value) ? value : [];
 
@@ -42,7 +44,7 @@ function TransferForm({ teams, players, onChanged }) {
   const change = event => setForm(current => ({ ...current, [event.target.name]: event.target.value, ...(event.target.name === 'fromTeamId' ? { playerId: '' } : {}) }));
   const submit = event => {
     event.preventDefault();
-    if (window.confirm(`¿REGISTRAR ESTA TRANSFERENCIA POR ${gpLabel(Number(form.gpAmount))}?`)) mutation.execute({ ...form, gpAmount: Number(form.gpAmount) });
+    if (window.confirm(`¿Registrar esta transferencia por ${gpLabel(Number(form.gpAmount))}?`)) mutation.execute({ ...form, gpAmount: Number(form.gpAmount) });
   };
   return <form className="admin-form market-form" onSubmit={submit}>
     <label>EQUIPO DE ORIGEN<select name="fromTeamId" value={form.fromTeamId} onChange={change}><TeamOptions teams={teams}/></select></label>
@@ -61,7 +63,7 @@ function TradeForm({ teams, players, onChanged }) {
   const submit = event => {
     event.preventDefault();
     const payload = { fromTeamId: form.fromTeamId, toTeamId: form.toTeamId, fromPlayerId: form.fromPlayerId, toPlayerId: form.toPlayerId, ...(form.gpFrom ? { gpFrom: Number(form.gpFrom) } : {}), ...(form.gpTo ? { gpTo: Number(form.gpTo) } : {}) };
-    if (window.confirm('¿REGISTRAR ESTE TRUEQUE Y SUS MONTOS GP ADICIONALES?')) mutation.execute(payload);
+    if (window.confirm('¿Registrar este trueque y sus montos GP adicionales?')) mutation.execute(payload);
   };
   return <form className="admin-form market-form" onSubmit={submit}>
     <label>EQUIPO A<select name="fromTeamId" value={form.fromTeamId} onChange={change}><TeamOptions teams={teams}/></select></label>
@@ -94,7 +96,7 @@ function SigningForm({ player, teams, onDone }) {
     <div className="button-row">
       <Button variant="positive" disabled={!teamId || short || buy.loading} onClick={() => { if (window.confirm(`¿${team.name} COMPRA A ${player.name} POR ${gp(player.price)}?`)) buy.execute(teamId); }}>COMPRAR · {gp(player.price)}</Button>
     </div>
-    {short && <small className="signing-warning">SALDO INSUFICIENTE PARA COMPRARLO.</small>}
+    {short && <small className="signing-warning">Saldo insuficiente para comprarlo.</small>}
     <FormFeedback mutation={buy}/>
   </div>;
 }
@@ -121,7 +123,7 @@ function InterestButton({ player, interest }) {
   const mine = interest.mine.includes(player.playerId);
   if (!player.playerId) return null;
   return <button type="button" className={`interest-toggle ${mine ? 'on' : ''}`} aria-pressed={mine} disabled={!myTeamId || interest.busy}
-    title={myTeamId ? (mine ? 'YA NO LO PIDES EN SUBASTA' : 'PEDIR QUE SALGA A SUBASTA') : 'SOLO LOS PRESIS PIDEN SUBASTAS'}
+    title={myTeamId ? (mine ? 'YA NO LO PIDES EN SUBASTA' : 'Pedir que salga a subasta') : 'Solo los presis piden subastas'}
     aria-label={`${mine ? 'Quitar pedido de subasta' : 'Pedir subasta'} de ${player.name ?? 'este jugador'}${count ? ` (lo piden ${count} clubes)` : ''}`}
     onClick={() => interest.toggle(player.playerId, !mine)}>
     {/* Martillo, no estrella: la estrella es "Seguir" (Mi club > Seguimiento). */}
@@ -168,7 +170,7 @@ function PollSearch({ teams, club, interest, onChanged }) {
   const players = useApiQuery(signal => query ? endpoints.playerDirectory({ status: 'free', sort: 'price_desc', pageSize: PREVIEW, q: query }, signal) : Promise.resolve({ data: [] }), [query]);
   const rows = asList(players.data);
   return <section className="market-section poll-search">
-    <header><h2>ABRIR UNA ENCUESTA</h2><p>ESCRIBE EL NOMBRE DEL AGENTE LIBRE. TAMBIÉN PUEDES ABRIRLA DESDE SU FICHA.</p></header>
+    <header><h2>ABRIR UNA ENCUESTA</h2><p>Escribe el nombre del agente libre. También puedes abrirla desde su ficha.</p></header>
     <label className="poll-search-box"><span className="sr-only">BUSCAR AGENTE LIBRE</span>
       <input type="search" value={text} placeholder="🔎 BUSCAR AGENTE LIBRE (EJ.: MBAPPÉ)" autoComplete="off" onChange={event => setText(event.target.value)}/>
     </label>
@@ -180,7 +182,7 @@ function PollSearch({ teams, club, interest, onChanged }) {
 }
 
 const TAB_KEY = 'mercado-pestana';
-const readTab = () => { try { return window.sessionStorage.getItem(TAB_KEY) ?? 'subastas'; } catch { return 'subastas'; } };
+const readTab = () => { try { return window.sessionStorage.getItem(TAB_KEY) ?? 'buscar'; } catch { return 'buscar'; } };
 
 /** Promesas de tu club: cuántas cumpliste y rompiste (pesa en tu reputación ante los jugadores libres). */
 function PromiseRecord({ teamId, revision }) {
@@ -193,11 +195,26 @@ function PromiseRecord({ teamId, revision }) {
   return <details className="promise-record">
     <summary>PROMESAS · <b className="ok">{kept} CUMPLIDAS</b> · <b className={broken ? 'bad' : ''}>{broken} ROTAS</b>{active.length ? ` · ${active.length} PENDIENTES` : ''}</summary>
     {active.length > 0 && <ul>{active.map((item, index) => <li key={index}><b>{item.playerName}:</b> {item.text}{item.status === 'voting' ? ' · 🗳️ EN VOTACIÓN EN DISCORD' : ''}</li>)}</ul>}
-    <p className="poll-hint">ROMPER UNA PROMESA BAJA TU REPUTACIÓN: LOS JUGADORES LIBRES SE ACUERDAN. LAS DE PALABRA (CAPITANÍA, PENALES, TIROS LIBRES…) LAS JUZGAN LOS PRESIS VOTANDO EN DISCORD.</p>
+    <p className="poll-hint">Romper una promesa baja tu reputación: los jugadores libres se acuerdan. Las de palabra (capitanía, penales, tiros libres…) las juzgan los presis votando en Discord.</p>
   </details>;
 }
 
-export function MarketPage({ teams, initialTab = null, highlightId = null, prefill = null }) {
+const INTRO = {
+  buscar: 'Busca cualquier jugador de la liga o de eFootball. En su ficha le haces una oferta, le hablas o lo sigues.',
+  subastas: 'Los agentes libres más pedidos se subastan en sobre cerrado: nadie ve lo que ofrecen los demás.',
+  libres: 'Para fichar a un agente libre se abre una encuesta y los demás presis la confirman.',
+  ofertas: 'Las ofertas que te hicieron y las que hiciste. Aquí aceptas, rechazas o contraofertas.',
+  venta: 'Jugadores que sus clubes quieren vender. Toca «Hacer oferta» en el que te guste.',
+  seguidos: 'Los jugadores que sigues. Te avisamos si cambian de club, quedan libres o los ponen a la venta.',
+  historial: 'Todos los fichajes y subastas que ya pasaron.',
+};
+
+const when = value => {
+  const date = value ? new Date(value) : null;
+  return date && !Number.isNaN(date.getTime()) ? date.toLocaleString('es-CL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'America/Santiago' }) : null;
+};
+
+export function MarketPage({ teams, initialTab = null, highlightId = null, prefill = null, query = {}, navigate }) {
   const { isAdmin, teamId: myTeamId } = useAuth();
   const [revision, setRevision] = useState(0);
   const status = useApiQuery(signal => endpoints.marketStatus(signal), [revision]);
@@ -209,42 +226,48 @@ export function MarketPage({ teams, initialTab = null, highlightId = null, prefi
   const club = { figures, marketOpen };
   const myTeam = teams.find(team => team.id === myTeamId);
   const interest = useInterest(revision);
-  const [tab, setTabState] = useState(() => initialTab || readTab());
-  useEffect(() => { if (initialTab) setTabState(initialTab); }, [initialTab, highlightId]);
-  const setTab = value => { setTabState(value); try { window.sessionStorage.setItem(TAB_KEY, value); } catch { /* sin almacenamiento */ } };
+  // Enlaces viejos: encuestas → libres.
+  const asked = { encuestas: 'libres' }[initialTab] ?? initialTab;
+  const [tab, setTabState] = useState(() => asked || readTab());
+  useEffect(() => { if (asked) setTabState(asked); }, [asked, highlightId]);
+  const setTab = value => {
+    setTabState(value);
+    try { window.sessionStorage.setItem(TAB_KEY, value); } catch { /* sin almacenamiento */ }
+    try { window.history.replaceState(null, '', `#/transferencias?tab=${value}`); } catch { /* sin historial */ }
+  };
   const live = useApiQuery(signal => endpoints.sealedAuctions({ active: 1 }, signal).catch(() => ({ data: [] })), [revision]);
   const liveCount = (Array.isArray(live.data) ? live.data : []).filter(row => row.status === 'open').length;
   const offers = useApiQuery(signal => (myTeamId ? endpoints.marketOffers(signal).catch(() => ({ data: [] })) : Promise.resolve({ data: [] })), [myTeamId, revision]);
   const incoming = (Array.isArray(offers.data) ? offers.data : []).filter(offer => offer.direction === 'incoming').length;
   const tabs = [
-    ['subastas', 'gavel', 'SUBASTAS', liveCount],
-    ...(operates ? [['encuestas', 'people', 'ENCUESTAS', null], ['ofertas', 'handshake', 'OFERTAS', incoming], ['venta', 'coin', 'A LA VENTA', null]] : []),
-    ['historial', 'clock', 'HISTORIAL', null],
+    { id: 'buscar', label: 'Buscar' },
+    { id: 'subastas', label: 'Subastas', badge: liveCount },
+    ...(operates ? [{ id: 'libres', label: 'Fichar libres' }, { id: 'ofertas', label: 'Ofertas', badge: incoming }, { id: 'venta', label: 'A la venta' }] : []),
+    ...(myTeam ? [{ id: 'seguidos', label: 'Seguidos' }] : []),
+    { id: 'historial', label: 'Historial' },
   ];
-  const current = tabs.some(([key]) => key === tab) ? tab : 'subastas';
-  return <main className="newspaper data-page"><section className="data-paper">
-    <PageHeader kicker="JUGADORES DISPONIBLES" title="MERCADO">{isAdmin && <a className="page-action" href="#/admin?tab=mercado">⚙ ADMINISTRAR MERCADO</a>}</PageHeader>
-    {operates && <MyClubPanel team={myTeam} figures={figures} profileQuery={myTeamId ? profile : null} status={status.data} statusQuery={status}>
+  const current = tabs.some(item => item.id === tab) ? tab : 'buscar';
+  const kicker = status.data ? (status.data.open ? `Mercado abierto${when(status.data.closesAt) ? ` · cierra el ${when(status.data.closesAt)}` : ''}` : 'Mercado cerrado · igual puedes buscar jugadores y hablarles') : 'Mercado';
+  // El buscador recibe sus filtros; el comparador llega como vista=comparador (tab ya es la pestaña del mercado).
+  const directoryQuery = Object.fromEntries(Object.entries({ ...query, tab: query.vista === 'comparador' || query.tab === 'comparador' ? 'comparador' : undefined }).filter(([key, value]) => value !== undefined && !['id', 'jugador', 'club', 'vista'].includes(key)));
+  return <Screen kicker={kicker} title="Mercado" intro={INTRO[current]} tabs={tabs} active={current} onTab={setTab}
+    actions={isAdmin ? <a className="ui-btn ui-btn--ghost ui-btn--sm screen-admin-link" href="#/admin?tab=mercado">Administrar mercado</a> : null}>
+    {operates && current !== 'buscar' && <MyClubPanel team={myTeam} figures={figures} profileQuery={myTeamId ? profile : null} status={status.data} statusQuery={status}>
       {myTeamId && <PromiseRecord teamId={myTeamId} revision={revision}/>}
     </MyClubPanel>}
-    <nav className="market-tabs" role="tablist" aria-label="SECCIONES DEL MERCADO">
-      {tabs.map(([key, icon, label, badge]) => <button key={key} type="button" role="tab" aria-selected={current === key} className={current === key ? 'active' : ''} onClick={() => setTab(key)}>
-        <Icon name={icon} size={14}/> {label}{badge ? <span className="market-tab-badge">{badge}</span> : null}
-      </button>)}
-    </nav>
-    <div className="market-tab-panel" role="tabpanel">
-      {current === 'subastas' && <SealedAuctionsSection revision={revision} onChanged={refresh} teams={teams}/>}
-      {current === 'encuestas' && <PollsSection teams={teams} revision={revision} onChanged={refresh}>
-        <PollSearch teams={teams} club={club} interest={interest} onChanged={refresh}/>
-      </PollsSection>}
-      {current === 'ofertas' && <>
-        {/* Si llegas desde la ficha de un jugador, el formulario va primero y con él ya elegido. */}
-        {operates && myTeamId && prefill && <ProposeOffers teams={teams} marketOpen={marketOpen} onChanged={refresh} prefill={prefill}/>}
-        {operates && <OffersInbox revision={revision} onChanged={refresh} highlightId={highlightId}/>}
-        {operates && myTeamId && !prefill && <ProposeOffers teams={teams} marketOpen={marketOpen} onChanged={refresh}/>}
-      </>}
-      {current === 'venta' && <ForSaleSection teams={teams} revision={revision} onChanged={refresh}/>}
-      {current === 'historial' && <AuctionHistory revision={revision} teams={teams}/>}
-    </div>
-  </section></main>;
+    {current === 'buscar' && <PlayersPage key={JSON.stringify(directoryQuery)} teams={teams} initialQuery={directoryQuery}/>}
+    {current === 'subastas' && <SealedAuctionsSection revision={revision} onChanged={refresh} teams={teams}/>}
+    {current === 'libres' && <PollsSection teams={teams} revision={revision} onChanged={refresh}>
+      <PollSearch teams={teams} club={club} interest={interest} onChanged={refresh}/>
+    </PollsSection>}
+    {current === 'ofertas' && <>
+      {/* Si llegas desde la ficha de un jugador, el formulario va primero y con él ya elegido. */}
+      {operates && myTeamId && prefill && <ProposeOffers teams={teams} marketOpen={marketOpen} onChanged={refresh} prefill={prefill}/>}
+      {operates && <OffersInbox revision={revision} onChanged={refresh} highlightId={highlightId}/>}
+      {operates && myTeamId && !prefill && <ProposeOffers teams={teams} marketOpen={marketOpen} onChanged={refresh}/>}
+    </>}
+    {current === 'venta' && <ForSaleSection teams={teams} revision={revision} onChanged={refresh}/>}
+    {current === 'seguidos' && myTeam && <WatchlistTab team={myTeam}/>}
+    {current === 'historial' && <AuctionHistory revision={revision} teams={teams}/>}
+  </Screen>;
 }

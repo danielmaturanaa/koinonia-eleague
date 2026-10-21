@@ -59,7 +59,7 @@ export function HomePage({ teams = [], navigate, openNewsId, onCloseNews }) {
   const closeSelected = useCallback(() => setSelected(null), []);
   return <main className="newspaper home-news">
     <header className="home-news-masthead"><h1><span>KOINONIA <em>e-LEAGUE</em> NEWS</span></h1><p>FÚTBOL VIRTUAL. PASIÓN REAL.</p>{newsDate(news[0]) && <small>ÚLTIMA HORA · {formatDate(newsDate(news[0]))}</small>}</header>
-    {stories.length ? <NewsStories items={stories} teams={teams} onOpen={setSelected}/> : <div className="arcade-state">{loading ? 'CARGANDO NOTICIAS…' : 'AÚN NO HAY NOTICIAS PUBLICADAS.'}</div>}
+    {stories.length ? <NewsStories items={stories} teams={teams} onOpen={setSelected}/> : <div className="arcade-state">{loading ? 'CARGANDO NOTICIAS…' : 'Aún no hay noticias publicadas.'}</div>}
     {news.length > 0 && <button type="button" className="home-news-all" onClick={() => navigate('/noticias')}>VER TODAS LAS NOTICIAS →</button>}
     {selected && <NewsModal item={selected} teams={teams} onClose={closeSelected}/>}
     {openNewsId && !selected && <NewsModal item={linked.item} loading={linked.loading} teams={teams} onClose={closeLinked}/>}

@@ -21,7 +21,7 @@ export function WatchlistTab({ team }) {
   const found = (Array.isArray(results.data) ? results.data : []).filter(player => player.team?.id !== team.id);
   const alerting = rows.filter(row => row.alerts.length);
   return <section className="watchlist-tab">
-    <header><h2>SEGUIMIENTO <Chip tone="navy">{rows.length}</Chip></h2><p>TE AVISAMOS SI QUEDA LIBRE, CAMBIA DE CLUB, SE PONE EN VENTA, CAMBIA DE VALOR O LE QUEDA UN TORNEO.</p></header>
+    <header><h2>SEGUIMIENTO <Chip tone="navy">{rows.length}</Chip></h2><p>Te avisamos si queda libre, cambia de club, se pone en venta, cambia de valor o le queda un torneo.</p></header>
     <div className="watchlist-search">
       <input type="search" value={search} onChange={event => setSearch(event.target.value)} placeholder="BUSCAR JUGADOR PARA SEGUIR" aria-label="Buscar jugador para seguir"/>
       {found.length > 0 && <ul className="watch-results">{found.map(player => <li key={player.id} className="watch-row">
@@ -32,7 +32,7 @@ export function WatchlistTab({ team }) {
     </div>
     {act.error && <Notice tone="error">{act.error.message}</Notice>}
     {!(list.data && rows.length === 0) && <DataState query={list}/>}
-    {list.data && rows.length === 0 && <EmptyState icon="search" title="TODAVÍA NO SIGUES A NADIE">BUSCA UN JUGADOR ARRIBA Y TE AVISAMOS CUANDO CAMBIE ALGO.</EmptyState>}
+    {list.data && rows.length === 0 && <EmptyState icon="search" title="TODAVÍA NO SIGUES A NADIE">Busca un jugador arriba y te avisamos cuando cambie algo.</EmptyState>}
     {alerting.length > 0 && <div className="watchlist-seen"><span><Icon name="bell"/> {alerting.length} CON NOVEDADES</span><Button variant="ghost" size="sm" onClick={() => run(signal => endpoints.watchlistSeen(team.id, {}, signal), 'TODO VISTO')}>DAR TODO POR VISTO</Button></div>}
     <ul className="watchlist-list">{rows.map(row => <li key={row.playerId} className={`watch-row ${row.alerts.length ? 'has-alerts' : ''}`}>
       <PlayerAvatar src={row.faceUrl} name={row.name}/>

@@ -1,14 +1,18 @@
 import { gpLabel } from '../../utils/money.js';
+import { useEmbedded } from '../../ui/index.js';
 
 export function DataState({ query, empty = 'NO HAY REGISTROS PUBLICADOS.' }) {
   if (query.loading) return <div className="arcade-state compact">CARGANDO DATOS...</div>;
-  if (query.error) return <div className="data-error"><b>{query.error.status === 404 ? 'NO DISPONIBLE EN LA API ACTUAL' : 'NO FUE POSIBLE CARGAR'}</b><span>{query.error.message}</span><button onClick={query.retry}>REINTENTAR</button></div>;
+  if (query.error) return <div className="data-error"><b>{query.error.status === 404 ? 'No disponible en la API actual' : 'NO FUE POSIBLE CARGAR'}</b><span>{query.error.message}</span><button onClick={query.retry}>REINTENTAR</button></div>;
   // empty={null}: la pantalla ya explica el vacío a su manera (así no salen dos mensajes seguidos).
   if (Array.isArray(query.data) && !query.data.length) return empty ? <p className="empty-copy data-empty">{empty}</p> : null;
   return null;
 }
 
 export function PageHeader({ kicker, title, children }) {
+  // Dentro de una Screen el título ya está arriba: solo quedan las acciones de la página, en una barra.
+  const embedded = useEmbedded();
+  if (embedded) return children ? <div className="screen-toolbar">{children}</div> : null;
   return <header className="data-page-header"><p>{kicker}</p><h1>{title}</h1>{children}</header>;
 }
 

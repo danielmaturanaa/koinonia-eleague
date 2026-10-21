@@ -119,7 +119,7 @@ export function CalendarPage({ teams, navigate }) {
       {isAdmin && <>
         <label className="calendar-field">POR DÍA<input type="number" min="1" max="20" value={perDay} onChange={event => setPerDay(event.target.value)}/></label>
         {confirmAuto
-          ? <span className="calendar-confirm">¿REEMPLAZAR LOS DÍAS ACTUALES?<Button onClick={autoSchedule}>SÍ, ARMAR</Button><Button onClick={() => setConfirmAuto(false)}>NO</Button></span>
+          ? <span className="calendar-confirm">¿Reemplazar los días actuales?<Button onClick={autoSchedule}>SÍ, ARMAR</Button><Button onClick={() => setConfirmAuto(false)}>NO</Button></span>
           : <Button disabled={status.busy || !activeId} onClick={() => (scheduledCount ? setConfirmAuto(true) : autoSchedule())}>ARMAR AUTOMÁTICO</Button>}
         <Button onClick={addDay}>+ DÍA</Button>
       </>}
@@ -145,6 +145,6 @@ export function CalendarPage({ teams, navigate }) {
             onSelect={id => setSelected(current => (current === id ? null : id))} onOpen={id => navigate(`/partidos/${encodeURIComponent(id)}`)}/>)}</div>
         </section>;
       })}</div>
-      : <p className="empty-copy">NO HAY PARTIDOS DE LIGA EN LOS TORNEOS ACTIVOS.</p>)}
+      : <p className="empty-copy">No hay partidos de liga en los torneos activos.</p>)}
   </section></main>;
 }

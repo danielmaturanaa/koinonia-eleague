@@ -36,7 +36,7 @@ export function RivalryTab({ team, teams = [] }) {
   const query = useApiQuery(signal => endpoints.teamRivalry(team.id, signal), [team.id]);
   const [picking, setPicking] = useState(null);
   const choose = useApiMutation((rivalTeamId, signal) => endpoints.setRival(team.id, rivalTeamId, signal), {
-    onSuccess: result => { setPicking(null); toast({ tone: 'success', title: result?.data?.rival ? `TU CLÁSICO AHORA ES ${upper(result.data.rival.name)}` : 'VOLVISTE AL RIVAL NATURAL' }); query.retry(); },
+    onSuccess: result => { setPicking(null); toast({ tone: 'success', title: result?.data?.rival ? `TU CLÁSICO AHORA ES ${upper(result.data.rival.name)}` : 'Volviste al rival natural' }); query.retry(); },
   });
   const data = query.data;
   if (!data) return <DataState query={query}/>;
@@ -45,7 +45,7 @@ export function RivalryTab({ team, teams = [] }) {
   const h2h = data.headToHead;
   const streak = h2h?.streak ? `${h2h.streak.count} PARTIDO${h2h.streak.count === 1 ? '' : 'S'} ${h2h.streak.kind === 'sin_perder' ? 'SIN PERDER' : 'SIN GANAR'}` : null;
   return <section className="rivalry-tab">
-    {!rival ? <EmptyState icon="fire" title="SIN CLÁSICO TODAVÍA">FALTAN PARTIDOS PARA QUE NAZCA UNA RIVALIDAD. {canEdit ? 'PUEDES ELEGIR UN RIVAL ABAJO.' : ''}</EmptyState>
+    {!rival ? <EmptyState icon="fire" title="SIN CLÁSICO TODAVÍA">FALTAN PARTIDOS PARA QUE NAZCA UNA RIVALIDAD. {canEdit ? 'Puedes elegir un rival abajo.' : ''}</EmptyState>
       : <Card tone="navy" className={`rivalry-hero ${data.official ? 'is-official' : ''}`}>
         <div className="rivalry-side"><TeamMark team={team} className="rivalry-crest"/><b>{upper(team.name)}</b></div>
         <div className="rivalry-vs">
@@ -74,14 +74,14 @@ export function RivalryTab({ team, teams = [] }) {
     </div>}
     <Card title="QUÉ MUEVE UN CLÁSICO">
       <ul className="rivalry-effects">
-        <li><Icon name="ticket" size={16}/> LA DEMANDA DE ENTRADAS SUBE 60% (90% SI ES OFICIAL).</li>
-        <li><Icon name="people" size={16}/> GANARLO SUMA HINCHAS Y ÁNIMO MÁS QUE CUALQUIER PARTIDO; PERDERLO DUELE EL DOBLE.</li>
-        <li><Icon name="handshake" size={16}/> UN JUGADOR DUDA ANTES DE IRSE AL CLÁSICO RIVAL, Y SI VA, LLEGA MIRADO DE REOJO.</li>
+        <li><Icon name="ticket" size={16}/> La demanda de entradas sube 60% (90% si es oficial).</li>
+        <li><Icon name="people" size={16}/> Ganarlo suma hinchas y ánimo más que cualquier partido; perderlo duele el doble.</li>
+        <li><Icon name="handshake" size={16}/> Un jugador duda antes de irse al clásico rival, y si va, llega mirado de reojo.</li>
       </ul>
     </Card>
     {data.admirers?.length > 0 && <p className="club-life-hint"><Icon name="fire" size={12}/> TE TIENEN DE RIVAL: {data.admirers.map(club => upper(club.name)).join(' · ')}.</p>}
-    {canEdit && <Card title="ELEGIR CLÁSICO" aside={<Chip icon={data.canChange ? 'check' : 'lock'}>{data.canChange ? 'PUEDES CAMBIARLO UNA VEZ ESTA TEMPORADA' : 'YA LO CAMBIASTE ESTA TEMPORADA'}</Chip>}>
-      <p className="club-life-hint">EL PUNTAJE SALE DEL HISTORIAL: PARTIDOS, ELIMINATORIAS, FINALES, GOLEADAS Y TRASPASOS ENTRE AMBOS (MÁS ALTO SI LA RIVALIDAD ES PAREJA).</p>
+    {canEdit && <Card title="ELEGIR CLÁSICO" aside={<Chip icon={data.canChange ? 'check' : 'lock'}>{data.canChange ? 'Puedes cambiarlo una vez esta temporada' : 'YA LO CAMBIASTE ESTA TEMPORADA'}</Chip>}>
+      <p className="club-life-hint">El puntaje sale del historial: partidos, eliminatorias, finales, goleadas y traspasos entre ambos (más alto si la rivalidad es pareja).</p>
       <ul className="rival-candidates">{data.candidates.map(candidate => {
         const max = Math.max(1, ...data.candidates.map(item => item.score));
         const current = rival?.id === candidate.teamId;
@@ -91,7 +91,7 @@ export function RivalryTab({ team, teams = [] }) {
           <span className="rival-score" aria-label={`Puntaje ${candidate.score}`}><span style={{ width: `${candidate.score / max * 100}%` }}/></span>
           {current ? <Chip tone="red" icon="fire">TU CLÁSICO</Chip>
             : data.canChange && (picking === candidate.teamId
-              ? <ConfirmStep message={`¿${upper(candidate.name)} ES TU CLÁSICO? NO PODRÁS CAMBIARLO HASTA LA PRÓXIMA TEMPORADA.`} confirmLabel="SÍ, ES MI CLÁSICO" busy={choose.loading} onConfirm={() => choose.execute(candidate.teamId)} onCancel={() => setPicking(null)}/>
+              ? <ConfirmStep message={`¿${upper(candidate.name)} es tu clásico? No podrás cambiarlo hasta la próxima temporada.`} confirmLabel="SÍ, ES MI CLÁSICO" busy={choose.loading} onConfirm={() => choose.execute(candidate.teamId)} onCancel={() => setPicking(null)}/>
               : <Button size="sm" variant="ghost" onClick={() => setPicking(candidate.teamId)}>ELEGIR</Button>)}
         </li>;
       })}</ul>

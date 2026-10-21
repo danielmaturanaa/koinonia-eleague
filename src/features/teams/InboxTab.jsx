@@ -18,12 +18,12 @@ function RequestActions({ team, request, locked, onDone }) {
     onSuccess: response => { setSummary(response?.data?.summary ?? null); onDone?.(); },
   });
   if (request.status === 'closed') return <p className="request-note">YA NO ESTÁ EN TU CLUB.</p>;
-  if (request.kind === 'leave') return <p className="request-note leave">PIDIÓ SALIR: YA NO SE LE PUEDE RENOVAR. VÉNDELO O CANJÉALO DESDE EL MERCADO.</p>;
+  if (request.kind === 'leave') return <p className="request-note leave">Pidió salir: ya no se le puede renovar. Véndelo o canjéalo desde el mercado.</p>;
   if (request.status !== 'open') return <p className="request-note">{summary ?? (request.resolution === 'escalated' ? 'NO LE RESPONDISTE A TIEMPO: PIDIÓ SALIR.' : 'RESPONDIDA.')}</p>;
   return <div className="request-actions">
     <span>¿QUÉ LE RESPONDES? <small>SI NO LE RESPONDES A TIEMPO, PIDE SALIR.</small></span>
     <div className="chips">{request.options.map(option => <button type="button" key={option.key} title={option.effect} disabled={locked || resolve.loading} className={option.key === 'ignore' ? 'danger' : ''} onClick={() => resolve.execute(option.key)}>{option.label.toUpperCase()}</button>)}</div>
-    {locked && <small>🔒 MERCADO ABIERTO: SE RESPONDE MIENTRAS SE JUEGA EL TORNEO.</small>}
+    {locked && <small>🔒 Mercado abierto: se responde mientras se juega el torneo.</small>}
     {summary && <small>{summary}</small>}
     <FormFeedback mutation={resolve}/>
   </div>;
@@ -59,9 +59,9 @@ export function InboxTab({ team, onTab, onRead, highlightId = null }) {
     if (messages.some(message => String(message.id) === String(highlightId) && !isRead(message))) markRead([highlightId]);
   }, [highlightId, query.data]);
   return <section className="inbox-tab">
-    <header><h2>BANDEJA DE ENTRADA</h2>{unread > 0 && <Button variant="ghost" size="sm" onClick={() => markRead(null)}>MARCAR TODO COMO LEÍDO ({unread})</Button>}<p>TUS JUGADORES TE ESCRIBEN POR CONTRATOS, RENOVACIONES Y SU ROL.</p></header>
+    <header><h2>BANDEJA DE ENTRADA</h2>{unread > 0 && <Button variant="ghost" size="sm" onClick={() => markRead(null)}>MARCAR TODO COMO LEÍDO ({unread})</Button>}<p>Tus jugadores te escriben por contratos, renovaciones y su rol.</p></header>
     <DataState query={query} empty={null}/>
-    {query.data && messages.length === 0 && <p className="empty-copy data-empty">TODAVÍA NO TE HAN ESCRITO. LOS MENSAJES APARECEN CUANDO EL SISTEMA DE CONTRATOS ESTÁ ACTIVO.</p>}
+    {query.data && messages.length === 0 && <p className="empty-copy data-empty">Todavía no te han escrito. Los mensajes aparecen cuando el sistema de contratos está activo.</p>}
     <ul className="inbox-list">{messages.map(message => {
       const [icon, label] = KIND[message.kind] ?? ['✉️', 'MENSAJE'];
       // El mensaje es una foto del momento en que se escribió: si desde entonces le cambiaste el rol, se avisa y no se muestra el ánimo viejo.
@@ -79,7 +79,7 @@ export function InboxTab({ team, onTab, onRead, highlightId = null }) {
           {message.request && <RequestActions team={team} request={message.request} locked={marketOpen} onDone={() => { query.retry(); rolesQuery.retry(); }}/>}
           {message.kind === 'unhappy' && roleOf.get(message.playerId) && <div className="inbox-role">
             <span>ROL AHORA:</span><RoleSelect team={team} row={roleOf.get(message.playerId)} locked={marketOpen} showWanted onDone={() => { rolesQuery.retry(); }}/>
-            <small>{marketOpen ? '🔒 MERCADO ABIERTO: LOS ROLES ESTÁN BLOQUEADOS.' : `ÁNIMO HOY: ${String(roleOf.get(message.playerId).moodLabel).toUpperCase()} (${roleOf.get(message.playerId).mood}/100)`}</small>
+            <small>{marketOpen ? '🔒 Mercado abierto: los roles están bloqueados.' : `ÁNIMO HOY: ${String(roleOf.get(message.playerId).moodLabel).toUpperCase()} (${roleOf.get(message.playerId).mood}/100)`}</small>
           </div>}
         </div>
       </li>;

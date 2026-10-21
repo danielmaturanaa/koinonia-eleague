@@ -1,4 +1,3 @@
-import { LeagueSectionTabs } from '../../components/SectionTabs.jsx';
 import { useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { TeamMark } from '../../components/TeamMark.jsx';
@@ -59,5 +58,5 @@ export function TeamsDirectoryPage({ mode, teams, onChoose }) {
     if (mode === 'squads') return `${team.playerCount ?? 0} ${metric} · ${balance === null ? 'SALDO NO INFORMADO' : `SALDO ${gp(balance)}`}`;
     return team.currentDivision ?? metric;
   };
-  return <main className="newspaper data-page"><section className="data-paper"><PageHeader kicker="DIRECTORIO DE CLUBES" title={title}/><LeagueSectionTabs current={`/equipos/${Object.entries({ squads: "plantillas", budgets: "presupuestos", presidents: "presidentes", coaches: "directores-tecnicos", emblems: "emblemas" }).find(([key]) => key === mode)?.[1] ?? ""}`}/>{needsDetails && detailedTeams.loading && <p className="directory-loading">ACTUALIZANDO SALDOS...</p>}<div className={mode === 'emblems' ? 'crest-gallery' : 'directory-grid'}>{visibleTeams.map(team => <button key={team.id} onClick={() => onChoose(team.id)}><TeamMark team={team}/><span><b>{team.name}</b>{mode !== 'emblems' && <small>{detail(team)}</small>}</span></button>)}</div></section></main>;
+  return <main className="newspaper data-page"><section className="data-paper"><PageHeader kicker="DIRECTORIO DE CLUBES" title={title}/>{needsDetails && detailedTeams.loading && <p className="directory-loading">ACTUALIZANDO SALDOS...</p>}<div className={mode === 'emblems' ? 'crest-gallery' : 'directory-grid'}>{visibleTeams.map(team => <button key={team.id} onClick={() => onChoose(team.id)}><TeamMark team={team}/><span><b>{team.name}</b>{mode !== 'emblems' && <small>{detail(team)}</small>}</span></button>)}</div></section></main>;
 }

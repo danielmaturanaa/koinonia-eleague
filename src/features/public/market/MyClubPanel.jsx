@@ -31,8 +31,8 @@ export function signingBlocker(figures, price, marketOpen) {
 export function signingNotes(figures, price) {
   if (!figures || price == null) return [];
   const notes = [];
-  if (figures.balance !== null && figures.balance < price) notes.push(`OJO: PARA CONFIRMAR LA COMPRA NECESITAS ${gp(price)} DE SALDO (HOY TIENES ${gp(figures.balance)}).`);
-  if (figures.room !== null && price > figures.room) notes.push(`OJO: CON ÉL QUEDARÍAS ${gp(price - figures.room)} SOBRE EL TOPE. TIENES HASTA EL CIERRE DEL MERCADO PARA ORDENARTE.`);
+  if (figures.balance !== null && figures.balance < price) notes.push(`Ojo: para confirmar la compra necesitas ${gp(price)} de saldo (hoy tienes ${gp(figures.balance)}).`);
+  if (figures.room !== null && price > figures.room) notes.push(`Ojo: con él quedarías ${gp(price - figures.room)} sobre el tope. Tienes hasta el cierre del mercado para ordenarte.`);
   return notes;
 }
 
@@ -47,6 +47,6 @@ export function MyClubPanel({ team, figures, profileQuery, status, statusQuery, 
       <div title={figures.limit === null ? undefined : `Tope de plantilla: ${gp(figures.limit)}`}><dt>MARGEN BAJO EL TOPE</dt><dd>{figures.room === null ? '—' : gp(figures.room)}</dd></div>
     </dl>}
     {children}
-    {statusQuery?.error && statusQuery.error.status !== 404 && <p className="signing-warning">NO SE PUDO LEER EL ESTADO DEL MERCADO.</p>}
+    {statusQuery?.error && statusQuery.error.status !== 404 && <p className="signing-warning">No se pudo leer el estado del mercado.</p>}
   </section>;
 }

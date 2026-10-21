@@ -1,30 +1,28 @@
-import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useAuth } from '../app/AuthGate.jsx';
 import { activeNavigationPath, navigationFor } from '../app/navigation.js';
+import { Icon } from '../ui/index.js';
 
-export function Navigation({ route, navigate, teams = [] }) {
-  const [menuOpen, setMenuOpen] = useState(false);
+/** Menú principal: arriba en el computador y como barra inferior (estilo app) en el celular. */
+export function Navigation({ route, navigate }) {
   const { teamId, isAdmin } = useAuth();
-  const navigationItems = navigationFor({ teamId, isAdmin });
-  const activeItemPath = activeNavigationPath(route, teamId);
-
-  useEffect(() => {
-    setMenuOpen(false);
-  }, [route.path]);
-
+  const items = navigationFor({ teamId, isAdmin });
+  const activePath = activeNavigationPath(route, teamId);
   const go = path => {
-    setMenuOpen(false);
     document.activeElement?.blur?.();
     navigate(path);
   };
-
-  return <div className="site-nav">
-    <button className="mobile-menu-toggle" type="button" aria-expanded={menuOpen} aria-controls="league-navigation" aria-label="Menú" onClick={() => setMenuOpen(open => !open)}>
-      <span className="hamburger-icon" aria-hidden="true"><i/><i/><i/></span>
-    </button>
-    <nav id="league-navigation" className={menuOpen ? 'mobile-open' : ''} aria-label="Menú de la liga">{navigationItems.map(item => {
-      const active = item.path === activeItemPath;
-      return <button className={`nav-link ${active ? 'selected' : ''}`} key={item.path} aria-current={active ? 'page' : undefined} onClick={() => go(item.path)}>{item.label}</button>;
-    })}</nav>
-  </div>;
+  return <>
+    <div className="site-nav">
+      <nav id="league-navigation" aria-label="Menú de la liga">{items.map(item => {
+        const active = item.path === activePath;
+        return <button className={`nav-link ${active ? 'selected' : ''}`} key={item.path} aria-current={active ? 'page' : undefined} onClick={() => go(item.path)}><Icon name={item.icon} size={14}/>{item.label}</button>;
+      })}</nav>
+    </div>
+    {/* Fuera del encabezado (que es sticky): así la barra queda pegada abajo de la pantalla. */}
+    {createPortal(<nav className="bottom-nav" aria-label="Menú">{items.map(item => {
+      const active = item.path === activePath;
+      return <button type="button" key={item.path} className={active ? 'on' : ''} aria-current={active ? 'page' : undefined} onClick={() => go(item.path)}><Icon name={item.icon} size={20}/>{item.label}</button>;
+    })}</nav>, document.body)}
+  </>;
 }

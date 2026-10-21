@@ -53,7 +53,7 @@ export function NotificationBell({ navigate }) {
         {chips.map(([id, label, unread]) => <button type="button" key={id || 'all'} className={category === id ? 'on' : ''} aria-pressed={category === id} onClick={() => setCategory(id)}>{label}{unread > 0 && <i>{unread}</i>}</button>)}
       </div>}
       {items.length === 0 && !list.loading
-        ? <EmptyState icon="bell" title="SIN AVISOS">AQUÍ LLEGAN TUS OFERTAS, CONTRATOS, FINANZAS Y PETICIONES.</EmptyState>
+        ? <EmptyState icon="bell" title="SIN AVISOS">Aquí llegan tus ofertas, contratos, finanzas y peticiones.</EmptyState>
         : <ul className="notif-list">{items.map(item => <NotificationItem key={item.id} item={item} onOpen={openItem} showClub={summary.byTeam.length > 1}/>)}</ul>}
     </section>}
   </div>;

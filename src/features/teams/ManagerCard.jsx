@@ -22,7 +22,7 @@ export function ManagerSummary({ manager, compact = false }) {
 export function PlayStyleSelect({ manager, value, onChange }) {
   if (!manager) return null;
   const best = STYLE_LABELS.map(([key, label]) => ({ key, label, value: manager.styles?.[key] ?? 0 })).sort((a, b) => b.value - a.value)[0];
-  return <label className="manager-style-select">ESTILO DE JUEGO DEL CLUB
+  return <label className="manager-style-select">Estilo de juego del club
     <select value={value ?? ''} onChange={event => onChange(event.target.value || null)}>
       <option value="">AUTOMÁTICO · EL MEJOR DEL DT ({best.label} {best.value} · {bonusText(managerFactor(best.value))})</option>
       {STYLE_LABELS.map(([key, label]) => <option key={key} value={key}>{label} · {manager.styles?.[key] ?? '—'} · {bonusText(managerFactor(manager.styles?.[key] ?? 0))}</option>)}

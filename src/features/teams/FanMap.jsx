@@ -71,7 +71,7 @@ export function FanMap({ fans, title = 'HINCHAS EN EL MUNDO' }) {
   const homeShare = percent(fans.homeFans, fans.followers);
   const origin = fans.origin;
   const formula = origin?.formula;
-  return <Card title={title} className="fan-map-card" aside={<Chip icon="people">{compact(fans.followers)}</Chip>}>
+  return <Card id="ver-hinchas" title={title} className="fan-map-card" aside={<Chip icon="people">{compact(fans.followers)}</Chip>}>
     <div className="fan-map">
       <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label={`Mapa de hinchas: ${top.map(country => `${country.name} ${compact(country.fans)}`).join(', ')}`}>
         {LAND.map((cell, index) => <rect key={index} x={cell.x + 0.14} y={cell.y + 0.14} width="0.72" height="0.72" className={`l${levels[index]}`}/>)}

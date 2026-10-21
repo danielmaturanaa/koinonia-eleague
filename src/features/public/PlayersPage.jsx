@@ -23,11 +23,11 @@ export function PlayerActions({ player, teams, onChanged }) {
 
   const buyPlayer = () => {
     const team = teams.find(item => item.id === teamId);
-    if (window.confirm(`¿COMPRAR A ${player.name} PARA ${team?.name ?? 'EL EQUIPO SELECCIONADO'} POR SU VALOR GP?`)) buy.execute(teamId);
+    if (window.confirm(`¿Comprar a ${player.name} para ${team?.name ?? 'EL EQUIPO SELECCIONADO'} por su valor GP?`)) buy.execute(teamId);
   };
   const releasePlayer = () => {
     const amount = Math.round(Number(player.gpValue ?? 0) * 0.2);
-    if (window.confirm(`¿LIBERAR A ${player.name}? EL CLUB RECIBE EL 20% DE SU VALOR (${gpLabel(amount)}), EL JUGADOR QUEDA LIBRE Y BAJA LA REPUTACIÓN DEL CLUB ANTE LOS AGENTES LIBRES.`)) release.execute({ teamId: currentTeamId });
+    if (window.confirm(`¿Liberar a ${player.name}? El club recibe el 20% de su valor (${gpLabel(amount)}), el jugador queda libre y baja la reputación del club ante los agentes libres.`)) release.execute({ teamId: currentTeamId });
   };
 
   return <section className="player-actions">
@@ -278,7 +278,7 @@ function PlayerComparator({ selections, onAdd, onRemove }) {
         <ComparisonHead selection={rightSelection} data={right} wins={both ? comparisonWins(rightStats, leftStats) : null} onRemove={onRemove} excludedKeys={excludedKeys} onAdd={onAdd}/>
       </div>
       {selections.length > 0 && (loading ? <div className="arcade-state compact">CARGANDO DATOS...</div> : <>
-        {[left, right].some(item => item?.error) && <p className="empty-copy">NO SE PUDO CARGAR UNO DE LOS JUGADORES.</p>}
+        {[left, right].some(item => item?.error) && <p className="empty-copy">No se pudo cargar uno de los jugadores.</p>}
         {both && statGroups.length > 0 && <section className="h2h-section h2h-overview"><h4>RESUMEN POR ÁREA</h4><div><div className="h2h-overview-rows">{statGroups.map(([title, rows]) => <ComparisonRow key={title} label={title} left={groupAverage(leftStats, rows)} right={groupAverage(rightStats, rows)} bar/>)}</div><ComparisonRadar axes={statGroups.filter(([title]) => title !== 'PORTERO' || [left, right].some(item => (item?.card?.position ?? item?.player?.position) === 'PT')).map(([title, rows]) => ({ label: title, left: groupAverage(leftStats, rows), right: groupAverage(rightStats, rows) }))}/></div></section>}
         <section className="h2h-section"><h4>DATOS GENERALES</h4>{COMPARISON_FACTS.map(([label, read, format]) => <ComparisonRow key={label} label={label} left={left ? read(left) : null} right={right ? read(right) : null} format={format}/>)}</section>
         {statGroups.map(([title, rows]) => <section className="h2h-section" key={title}><h4>{title}</h4>{rows.map(([stat, label]) => <ComparisonRow key={stat} label={label} left={leftStats[stat]} right={rightStats[stat]} bar/>)}</section>)}
@@ -337,7 +337,7 @@ export function PlayersPage({ teams, initialQuery = {} }) {
             <span className="player-card-body"><b>{player.name}</b><small>{[player.nationality, player.age ? `${player.age} AÑOS` : null].filter(Boolean).join(' · ') || '—'}</small><span className="player-card-details"><em>{player.position ?? '—'}</em><OverallBadge value={player.overall}/><strong>{gp(player.price)}</strong></span></span>
             {player.status === 'owned' && player.team?.imageUrl ? <span className="player-card-team-mark" title={player.team.name}><img src={player.team.imageUrl} alt={`Emblema de ${player.team.name}`}/></span> : <span className="player-card-team-mark player-card-status-mark"><DirectoryStatus player={player}/></span>}
           </a>
-        </article>; })}</div> : <p className="empty-copy">NINGÚN JUGADOR COINCIDE CON LOS FILTROS.</p>)}
+        </article>; })}</div> : <p className="empty-copy">Ningún jugador coincide con los filtros.</p>)}
         <Pagination pagination={directory.pagination} page={filters.page} onPage={page => { setFilters(current => ({ ...current, page })); window.scrollTo({ top: 0 }); }}/>
       </div>
     </div>

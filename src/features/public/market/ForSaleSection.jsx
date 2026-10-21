@@ -17,7 +17,7 @@ function PublishForm({ teamId, listedIds, onDone }) {
   const publish = useApiMutation((id, signal) => endpoints.setForSale(teamId, id, signal), { onSuccess: () => { setPlayerId(''); onDone(); } });
   return <form className="for-sale-form" onSubmit={event => { event.preventDefault(); if (playerId) publish.execute(playerId); }}>
     <label>PONER A LA VENTA<select value={playerId} onChange={event => setPlayerId(event.target.value)}>
-      <option value="">ELEGIR JUGADOR DE TU PLANTEL</option>
+      <option value="">Elegir jugador de tu plantel</option>
       {options.map(player => <option key={player.id} value={player.id}>{player.name} · {player.position} · {gp(player.gpValue)}</option>)}
     </select></label>
     <Button variant="positive" type="submit" disabled={!playerId || publish.loading}>🏷️ PUBLICAR</Button>
@@ -50,7 +50,7 @@ export function ForSaleSection({ teams, revision, onChanged }) {
   const counts = rows.reduce((map, row) => map.set(row.team.id, (map.get(row.team.id) ?? 0) + 1), new Map());
   const refresh = () => { list.retry(); onChanged?.(); };
   return <section className="market-section market-for-sale">
-    <header><h2>A LA VENTA <small>{rows.length}</small></h2><p>JUGADORES QUE SUS CLUBES ESTÁN DISPUESTOS A VENDER.</p></header>
+    <header><h2>A LA VENTA <small>{rows.length}</small></h2><p>Jugadores que sus clubes están dispuestos a vender.</p></header>
     {myTeamId && <PublishForm teamId={myTeamId} listedIds={new Set(rows.filter(row => row.team.id === myTeamId).map(row => row.player.id))} onDone={refresh}/>}
     <div className="poll-filters">
       <label>EQUIPO<select value={teamFilter} onChange={event => setTeamFilter(event.target.value)}>
@@ -61,6 +61,6 @@ export function ForSaleSection({ teams, revision, onChanged }) {
     <DataState query={list} empty={null}/>
     {!list.loading && !list.error && (shown.length
       ? <div className="for-sale-list">{shown.map(row => <ForSaleRow key={`${row.team.id}-${row.player.id}`} row={row} mine={myTeams.has(row.team.id)} canOffer={Boolean(myTeamId)} onChanged={refresh}/>)}</div>
-      : <p className="empty-copy">{teamFilter ? 'ESE EQUIPO NO TIENE JUGADORES A LA VENTA.' : 'NINGÚN CLUB TIENE JUGADORES A LA VENTA.'}</p>)}
+      : <p className="empty-copy">{teamFilter ? 'Ese equipo no tiene jugadores a la venta.' : 'Ningún club tiene jugadores a la venta.'}</p>)}
   </section>;
 }

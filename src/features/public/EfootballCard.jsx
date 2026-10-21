@@ -41,7 +41,7 @@ export function EfootballCardDetails({ card }) {
   const statCount = Object.keys(stats).length;
   const groups = STAT_GROUPS.map(([title, rows]) => [title, rows.filter(([key]) => stats[key] != null)]).filter(([, rows]) => rows.length);
   return <div className="card-details">
-    {statCount < 10 && <p className="card-partial-note">FICHA RESUMIDA: EL ADMINISTRADOR DEBE CORRER <code>/efootball sync</code> PARA CARGAR TODAS LAS MEDIAS Y HABILIDADES.</p>}
+    {statCount < 10 && <p className="card-partial-note">FICHA RESUMIDA: EL ADMINISTRADOR DEBE CORRER <code>/efootball sync</code> Para cargar todas las medias y habilidades.</p>}
     <div className="card-stat-groups">{groups.map(([title, rows]) => <section className="card-stat-group" key={title}><h3>{title}</h3>{rows.map(([key, label]) => <div className="card-stat" key={key}><span>{label}</span><i><em className={`tier-${statTier(stats[key])}`} style={{ width: `${Math.min(100, stats[key])}%` }}/></i><b className={`tier-${statTier(stats[key])}`}>{stats[key]}</b></div>)}</section>)}</div>
     <div className="card-side">
       {profile.positions && <section className="card-positions"><h3>POSICIONES</h3><div className="card-mini-pitch">{PITCH_POSITIONS.map(([key, label, x, y]) => <span key={key} className={`card-pos level-${profile.positions[key] ?? 0}`} style={{ left: `${x}%`, top: `${y}%` }}>{label}</span>)}</div></section>}
@@ -65,7 +65,7 @@ function RegisterCard({ card, onRegistered }) {
     event.preventDefault();
     register.execute({ name: card.name, position: card.position, gpValue: Number(value || 0), efootballPesId: card.pesId, efootballVariation: card.variation, faceUrl: card.faceUrl, nationality: card.nationality });
   };
-  return <form className="card-register" onSubmit={submit}><p>NADIE LO TIENE Y AÚN NO ESTÁ INSCRITO EN LA LIGA.</p><label>VALOR GP EN LA LIGA<GpInput value={value} onChange={event => setValue(event.target.value)}/></label><Button variant="positive" type="submit" disabled={register.loading}>INSCRIBIR EN LA LIGA</Button><FormFeedback mutation={register}/></form>;
+  return <form className="card-register" onSubmit={submit}><p>Nadie lo tiene y aún no está inscrito en la liga.</p><label>VALOR GP EN LA LIGA<GpInput value={value} onChange={event => setValue(event.target.value)}/></label><Button variant="positive" type="submit" disabled={register.loading}>INSCRIBIR EN LA LIGA</Button><FormFeedback mutation={register}/></form>;
 }
 
 export function EfootballCardPage({ pesId, variation = 0, navigate, onBack, backLabel = '← VOLVER A JUGADORES' }) {
@@ -85,7 +85,7 @@ export function EfootballCardPage({ pesId, variation = 0, navigate, onBack, back
         <span>VALOR EN LA LIGA <b>{gp(data.league.gpValue)}</b></span>
         <EntityLink to="player" id={data.league.playerId} className="club-link-button">VER FICHA EN LA LIGA →</EntityLink>
         {data.league.team && <EntityLink to="team" id={data.league.team.id} className="card-team-link"><TeamMark team={data.league.team}/></EntityLink>}
-      </> : isAdmin ? <RegisterCard card={data} onRegistered={id => id && navigate(`/jugadores/${encodeURIComponent(id)}`)}/> : <p className="card-register">NADIE LO TIENE Y AÚN NO ESTÁ INSCRITO EN LA LIGA.</p>}</div>
+      </> : isAdmin ? <RegisterCard card={data} onRegistered={id => id && navigate(`/jugadores/${encodeURIComponent(id)}`)}/> : <p className="card-register">Nadie lo tiene y aún no está inscrito en la liga.</p>}</div>
       <EfootballCardDetails card={data}/>
     </article>}
   </section></main>;

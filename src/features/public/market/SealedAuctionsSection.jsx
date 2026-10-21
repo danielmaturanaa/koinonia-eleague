@@ -72,7 +72,7 @@ function BidPanel({ auction, onChanged, teams = [], clubs: allowedClubs = null }
   const bid = useApiMutation((body, signal) => endpoints.sealedAuctionAction(auction.id, 'bids', body, signal), { onSuccess: () => { setRaising(false); onChanged(); } });
   useEffect(() => { setAmount(String(mine?.amount ?? minimum)); }, [minimum, mine?.amount, raising]);
   if (!chosen && !isAdmin) return null;
-  if (!chosen) return <p className="poll-hint">PARA OFERTAR NECESITAS UN CLUB VINCULADO.</p>;
+  if (!chosen) return <p className="poll-hint">Para ofertar necesitas un club vinculado.</p>;
   const submit = event => {
     event.preventDefault();
     bid.execute({ teamId: chosen, amount: Number(amount) });
@@ -88,7 +88,7 @@ function BidPanel({ auction, onChanged, teams = [], clubs: allowedClubs = null }
         <div><b>OFERTA REGISTRADA</b><strong>{gp(mine.amount)}</strong></div>
         <button type="button" className="link-button" onClick={() => setRaising(true)}>CAMBIAR</button>
       </div>
-      {mine.outbid && <p className="poll-confirm warn">⚠️ HAY UNA OFERTA MÁS FUERTE QUE LA TUYA.</p>}
+      {mine.outbid && <p className="poll-confirm warn">⚠️ Hay una oferta más fuerte que la tuya.</p>}
       <ReadyControl auction={auction} teamId={chosen} onChanged={onChanged}/>
     </div>;
   }
@@ -100,7 +100,7 @@ function BidPanel({ auction, onChanged, teams = [], clubs: allowedClubs = null }
     <label>{mine ? `CAMBIAR MI OFERTA (HOY ${gp(mine.amount)})` : 'MI OFERTA (GP)'}
       <GpInput min={minimum} max={auction.maxBid ?? null} required value={amount} onChange={event => setAmount(event.target.value)}/>
     </label>
-    {auction.player?.gpValue > 0 && <p className="poll-hint sealed-bid-help">📄 SI GANAS: CONTRATO DE 2 TORNEOS CON SUELDO DE <b>{gp(Math.max(10_000, Math.round(auction.player.gpValue * 0.1 / 10_000) * 10_000))}</b> POR TORNEO (10% DE SU VALOR), QUE SE COBRA AL TERMINAR CADA TORNEO DE LIGA. PUEDES CAMBIAR LOS AÑOS EN LA PESTAÑA NÓMINA ANTES DEL PRIMER COBRO.</p>}
+    {auction.player?.gpValue > 0 && <p className="poll-hint sealed-bid-help">📄 Si ganas: contrato de 2 torneos con sueldo de <b>{gp(Math.max(10_000, Math.round(auction.player.gpValue * 0.1 / 10_000) * 10_000))}</b> Por torneo (10% de su valor), que se cobra al terminar cada torneo de liga. Puedes cambiar los años en la pestaña nómina antes del primer cobro.</p>}
     <p className="poll-hint sealed-bid-help">
       ENTRE <b>{gp(minimum)}</b>{auction.maxBid != null ? <> Y <b>{gp(auction.maxBid)}</b></> : null} · 🔒 SECRETA: NADIE VE TU MONTO, SE RETIENE Y SE DEVUELVE SI NO GANAS.
     </p>
@@ -185,7 +185,7 @@ function PassControl({ auction, clubId, name, onChanged }) {
   return <div className="sealed-pass">
     {confirming
       ? <span className="sealed-confirm" role="group" aria-label="CONFIRMAR NO PARTICIPAR">
-        ¿RETIRAR TU OFERTA Y NO PARTICIPAR?
+        ¿Retirar tu oferta y no participar?
         <button type="button" disabled={pass.loading} onClick={() => pass.execute({ teamId: clubId, pass: true })}>SÍ</button>
         <button type="button" onClick={() => setConfirming(false)}>NO</button>
       </span>
@@ -210,8 +210,8 @@ function ModeratorActions({ auction, onChanged }) {
   return <div className="sealed-moderator-actions">
     <p className="poll-hint"><b>⚖️ ERES EL MODERADOR</b></p>
     <div className="mini-actions">
-      {auction.canResolve && <button disabled={act.loading || Boolean(blocked)} onClick={() => { if (window.confirm(`¿RESOLVER AHORA LA SUBASTA DE ${auction.player.name}? EL JUGADOR FIRMARÁ CON EL CLUB QUE MEJOR LE CALCE.`)) act.execute('resolve'); }}>RESOLVER AHORA</button>}
-      {auction.canCancel && <button className="danger" disabled={act.loading} onClick={() => { if (window.confirm(`¿CANCELAR LA SUBASTA DE ${auction.player.name}? SE DEVUELVE TODA LA PLATA RETENIDA Y EL JUGADOR SIGUE LIBRE.`)) act.execute('cancel'); }}>CANCELAR SUBASTA</button>}
+      {auction.canResolve && <button disabled={act.loading || Boolean(blocked)} onClick={() => { if (window.confirm(`¿Resolver ahora la subasta de ${auction.player.name}? El jugador firmará con el club que mejor le calce.`)) act.execute('resolve'); }}>RESOLVER AHORA</button>}
+      {auction.canCancel && <button className="danger" disabled={act.loading} onClick={() => { if (window.confirm(`¿Cancelar la subasta de ${auction.player.name}? Se devuelve toda la plata retenida y el jugador sigue libre.`)) act.execute('cancel'); }}>CANCELAR SUBASTA</button>}
     </div>
     {blocked && <p className="poll-hint warn">{String(blocked).toUpperCase()}</p>}
     <FormFeedback mutation={act}/>
@@ -266,7 +266,7 @@ function AuctionCard({ auction, now, onChanged, teams = [] }) {
         <small>{formatDate(auction.closesAt).toUpperCase()}{auction.extensions ? ` · EXTENDIDA ${auction.extensions}×` : ''}</small>
       </div>}
     </header>
-    {open && closing && <p className="stage-alert" role="status">⚡ QUEDAN MENOS DE 5 MINUTOS: UNA OFERTA NUEVA EXTIENDE EL RELOJ.</p>}
+    {open && closing && <p className="stage-alert" role="status">⚡ Quedan menos de 5 minutos: una oferta nueva extiende el reloj.</p>}
     {canPlay && <Steps auction={auction} clubs={playingClubs} teams={teams} heat={heat}/>}
 
     {open && <div className={`sealed-body ${canPlay ? 'with-chat' : ''}`}>
@@ -275,7 +275,7 @@ function AuctionCard({ auction, now, onChanged, teams = [] }) {
         {canPlay && <BidPanel auction={auction} onChanged={onChanged} teams={teams} clubs={playingClubs}/>}
         {passedClubs.map(id => <PassedNotice key={id} auction={auction} clubId={id} name={myClubs.length > 1 ? clubLabel(teams, id) : null} onChanged={onChanged}/>)}
         {canPlay && playingClubs.map(id => <PassControl key={id} auction={auction} clubId={id} name={myClubs.length > 1 ? clubLabel(teams, id) : null} onChanged={onChanged}/>)}
-        {myClubs.length === 0 && <p className="poll-hint">{isAdmin ? 'PARA OFERTAR NECESITAS UN CLUB VINCULADO.' : 'SOLO LOS PRESIDENTES CON CLUB PUEDEN OFERTAR.'}</p>}
+        {myClubs.length === 0 && <p className="poll-hint">{isAdmin ? 'Para ofertar necesitas un club vinculado.' : 'Solo los presidentes con club pueden ofertar.'}</p>}
         {(auction.canResolve || auction.canCancel) && <ModeratorActions auction={auction} onChanged={onChanged}/>}
       </div>
       {canPlay && <div className="sealed-chat">
@@ -283,11 +283,11 @@ function AuctionCard({ auction, now, onChanged, teams = [] }) {
       </div>}
     </div>}
 
-    {revealing && <p className="stage-alert" role="status">🔒 LA SUBASTA CERRÓ. EL JUGADOR REVELA SU DECISIÓN EN VIVO, A LA MISMA HORA PARA TODOS.</p>}
+    {revealing && <p className="stage-alert" role="status">🔒 La subasta cerró. El jugador revela su decisión en vivo, a la misma hora para todos.</p>}
     {!open && !revealing && auction.winner && <p className="poll-confirm sealed-result"><b>🚨 {auction.player.name.toUpperCase()} FIRMA POR {auction.winner.name.toUpperCase()} · {gp(auction.winner.amount)}</b></p>}
-    {!open && !revealing && !auction.winner && auction.status === 'no_sale' && <p className="poll-hint">🤷 NADIE CONVENCIÓ AL JUGADOR: SIGUE LIBRE.</p>}
-    {auction.status === 'cancelled' && <p className="poll-hint">SUBASTA CANCELADA: SE DEVOLVIÓ TODA LA PLATA RETENIDA.</p>}
-    {!open && !revealing && auction.status !== 'cancelled' && <p className="poll-hint">LAS RAZONES DE LA DECISIÓN SALEN EN LA NOTICIA DEL FICHAJE.</p>}
+    {!open && !revealing && !auction.winner && auction.status === 'no_sale' && <p className="poll-hint">🤷 Nadie convenció al jugador: sigue libre.</p>}
+    {auction.status === 'cancelled' && <p className="poll-hint">Subasta cancelada: se devolvió toda la plata retenida.</p>}
+    {!open && !revealing && auction.status !== 'cancelled' && <p className="poll-hint">Las razones de la decisión salen en la noticia del fichaje.</p>}
   </article>;
 }
 
@@ -361,8 +361,8 @@ export function SealedAuctionsSection({ revision, onChanged, teams = [] }) {
     <header>
       <h2>SUBASTAS <small>{openRows.length}</small></h2>
       {emptyLine
-        ? <p>NO HAY SUBASTAS ABIERTAS. LAS TERMINADAS ESTÁN EN EL HISTORIAL.</p>
-        : <p>AL CIERRE EL JUGADOR ELIGE EL CLUB QUE MEJOR LE CALZA: NO SOLO GANA EL QUE MÁS PAGA.</p>}
+        ? <p>No hay subastas abiertas. Las terminadas están en el historial.</p>
+        : <p>Al cierre el jugador elige el club que mejor le calza: no solo gana el que más paga.</p>}
     </header>
     {isAdmin && <details className="sealed-admin"><summary>ABRIR UNA SUBASTA</summary><OpenAuctionForm onChanged={refresh}/></details>}
     {auctions.loading && auctions.data === null && <div className="sealed-skeleton" aria-hidden="true"><i/><i/><i/></div>}

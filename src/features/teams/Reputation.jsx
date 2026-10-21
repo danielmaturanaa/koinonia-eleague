@@ -53,7 +53,7 @@ export function ReputationModal({ teamId, onClose }) {
   const rules = ranking.data?.rules;
   return <div className="person-modal-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
     <section className="person-modal reputation-modal" role="dialog" aria-modal="true" aria-label="Reputación de los presidentes">
-      <header><h2>REPUTACIÓN DE LOS PRESIDENTES</h2><button type="button" onClick={onClose} aria-label="Cerrar">×</button></header>
+      <header><h2>Reputación de los presidentes</h2><button type="button" onClick={onClose} aria-label="Cerrar">×</button></header>
       <p className="reputation-intro">Es lo que piensan los agentes libres de cada presi cuando eligen club en una subasta. Pesa poco al lado de la oferta y el proyecto deportivo, pero puede desempatar. Todo se cuenta en <b>torneos</b>, no en días.{sinceLabel(rows[0]?.since) && <> El puntaje partió de cero el <b>{sinceLabel(rows[0].since)}</b> con el nuevo sistema de contratos, pero lo que pasó antes no se borra: aparece como <b>historia</b> bajo cada club.</>}</p>
       <ul className="reputation-rules">
         <li><b>Base 50</b>, y el resultado queda entre 5 y 95.</li>
@@ -63,7 +63,7 @@ export function ReputationModal({ teamId, onClose }) {
         <li><b>Liberaciones:</b> −{rules?.perRelease ?? 4} cada una, pero pesan {Math.round((1 - (rules?.releaseDecay ?? 0.75)) * 100)}% menos por cada torneo que pasa: lo reciente pesa más y el presi se puede recuperar. Liberar a un jugador que duró {rules?.freeReleaseAfterStay ?? 4} torneos o más en el club no castiga. Soltar a alguien que llevaba {rules?.quickReleaseMaxTournaments ?? 1} torneo o menos (fichar y botar) pesa ×{(rules?.quickReleaseFactor ?? 1.5).toLocaleString('es-CL')}. Tope −{rules?.releaseCap ?? 40}. En la tabla, «recientes» son las de este torneo y el anterior.</li>
         <li><b>Promesas de subasta:</b> +{rules?.perPromiseKept ?? 3} por cada una cumplida (hasta {rules?.promisesKeptCap ?? 5}) y −{rules?.perPromiseBroken ?? 15} por cada una rota.</li>
       </ul>
-      {ranking.loading ? <p className="reputation-intro">CARGANDO RANKING…</p> : ranking.error ? <p className="reputation-intro">NO SE PUDO CARGAR EL RANKING.</p> : <div className="reputation-table-wrap"><table className="reputation-table">
+      {ranking.loading ? <p className="reputation-intro">CARGANDO RANKING…</p> : ranking.error ? <p className="reputation-intro">No se pudo cargar el ranking.</p> : <div className="reputation-table-wrap"><table className="reputation-table">
         <thead><tr><th>#</th><th>CLUB · PRESI</th>{PARTS.map(([key, label]) => <th key={key} title={label}>{label.split(' ')[0].toUpperCase()}</th>)}<th>TOTAL</th></tr></thead>
         <tbody>{rows.map(row => <tr key={row.team.id} className={row.team.id === teamId ? 'current-team' : ''}>
           <td>{row.rank}</td>

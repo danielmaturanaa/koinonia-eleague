@@ -57,7 +57,7 @@ export function PlayerPicker({ value, onChange, status = 'free', label = 'JUGADO
       onChange={event => { setText(event.target.value); setOpen(true); }} onFocus={() => setOpen(true)} onKeyDown={onKeyDown}/>
     {open && <ul id={listId} role="listbox" className="picker-list">
       {results.loading && !rows.length && <li className="picker-note">BUSCANDO…</li>}
-      {!results.loading && !rows.length && <li className="picker-note">NO HAY AGENTES LIBRES CON ESE NOMBRE.</li>}
+      {!results.loading && !rows.length && <li className="picker-note">No hay agentes libres con ese nombre.</li>}
       {rows.map((player, index) => <li key={player.playerId} id={`${listId}-${index}`} role="option" aria-selected={index === active}
         className={index === active ? 'active' : ''} onMouseEnter={() => setActive(index)} onMouseDown={event => { event.preventDefault(); choose(player); }}>
         <b>{player.name}</b><small>{detail(player)}</small><span>{gp(player.price)}</span>

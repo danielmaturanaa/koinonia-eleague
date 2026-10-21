@@ -9,3 +9,4 @@ export { Tabs } from './Tabs.jsx';
 export { Modal, ConfirmStep } from './Modal.jsx';
 export { ToastProvider, useToast } from './Toast.jsx';
 export { HowItWorks } from './HowItWorks.jsx';
+export { Screen, Tile, useEmbedded } from './Screen.jsx';

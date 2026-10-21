@@ -8,6 +8,7 @@ import { restingByRound } from '../../utils/roundRest.js';
 import { matchRoundLabel } from '../../utils/matchPresentation.js';
 import { DataState, PageHeader } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
+import { DerbyBadge } from '../../components/DerbyBadge.jsx';
 
 const labels = { pending: 'PENDIENTE', live: 'EN VIVO', finished: 'FINALIZADO', cancelled: 'CANCELADO' };
 
@@ -37,9 +38,9 @@ function FixtureCard({ match, resolveTeam, onSelect, showRound }) {
       : match.status === 'cancelled'
         ? 'CANCELADO'
         : 'PENDIENTE';
-  return <button type="button" className={`fixture-card fixture-${match.status}${match.sanctioned ? ' fixture-sanctioned' : ''}`} onClick={() => onSelect(match.id)} aria-label={`${match.homeTeam?.name ?? 'Equipo local'} contra ${match.awayTeam?.name ?? 'Equipo visitante'}: ${state}`}>
+  return <button type="button" className={`fixture-card fixture-${match.status}${match.sanctioned ? ' fixture-sanctioned' : ''}${match.derby ? ' fixture-derby' : ''}`} onClick={() => onSelect(match.id)} aria-label={`${match.homeTeam?.name ?? 'Equipo local'} contra ${match.awayTeam?.name ?? 'Equipo visitante'}: ${state}`}>
     <span className="fixture-teams">{team('home', home)}{team('away', away)}</span>
-    <small className="fixture-footer"><span>{showRound ? matchRoundLabel(match) : 'FECHA POR DEFINIR'}</span><SanctionBadge match={match} compact/><SimulatedBadge match={match}/>{match.homeTeam?.stadium && <span className="match-venue" title={`Estadio de ${match.homeTeam.name}`}>🏟️ {match.homeTeam.stadium}</span>}</small>
+    <small className="fixture-footer"><span>{showRound ? matchRoundLabel(match) : 'FECHA POR DEFINIR'}</span><DerbyBadge match={match}/><SanctionBadge match={match} compact/><SimulatedBadge match={match}/>{match.homeTeam?.stadium && <span className="match-venue" title={`Estadio de ${match.homeTeam.name}`}>🏟️ {match.homeTeam.stadium}</span>}</small>
   </button>;
 }
 
@@ -132,7 +133,7 @@ function MultiSlot({ index, teamId, matchId, matches, teams, onSelectTeam, onSel
       {teamId && <MultiMatchPicker teamId={teamId} matches={matches} value={matchId} onChange={id => onSelectMatch(index, id)}/>}
       {teamId && <button className="multi-slot-clear" onClick={() => onClear(index)}>QUITAR</button>}
     </div>
-    {matchId ? <Scoreboard matchId={matchId} mode="manage" density="tile" teams={teams} onFinished={() => onClear(index)}/> : <div className="scoreboard scoreboard-tile scoreboard-empty">{teamId ? 'ELIGE UNO DE SUS PARTIDOS PENDIENTES.' : 'ELIGE UN EQUIPO DE REFERENCIA PARA ESTA CASILLA.'}</div>}
+    {matchId ? <Scoreboard matchId={matchId} mode="manage" density="tile" teams={teams} onFinished={() => onClear(index)}/> : <div className="scoreboard scoreboard-tile scoreboard-empty">{teamId ? 'Elige uno de sus partidos pendientes.' : 'Elige un equipo de referencia para esta casilla.'}</div>}
   </div>;
 }
 
@@ -312,9 +313,9 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
   const clearMultiSlot = index => setMultiSlots(current => compactMultiSlots(current.map((slot, slotIndex) => slotIndex === index ? { ...MULTI_EMPTY_SLOT } : slot)));
   const title = mode === 'pending' ? 'PRÓXIMOS PARTIDOS' : mode === 'played' ? 'PARTIDOS JUGADOS' : 'CENTRO DE PARTIDOS';
 
-  return <main className="newspaper data-page"><section className="data-paper"><PageHeader kicker="CALENDARIO Y ACTAS" title={title}><div className="news-header-actions"><button className="page-action" onClick={() => navigate?.('/partidos/calendario')}>📅 CALENDARIO</button><button className="page-action" onClick={() => navigate?.('/sanciones')}>🟥 SANCIONES</button><button className={`page-action ${showMulti ? 'active' : ''}`} onClick={toggleMulti}>{showMulti ? 'CERRAR MULTIPARTIDO' : '🎮 MULTIPARTIDO'}</button></div></PageHeader>
+  return <main className="newspaper data-page"><section className="data-paper"><PageHeader kicker="CALENDARIO Y ACTAS" title={title}><div className="news-header-actions"><button className={`page-action ${showMulti ? 'active' : ''}`} onClick={toggleMulti}>{showMulti ? 'CERRAR MULTIPARTIDO' : '🎮 MULTIPARTIDO'}</button></div></PageHeader>
     {showMulti ? <>
-      <p className="multi-inline-help">LAS CASILLAS VACÍAS SE LLENAN SOLAS CON PARTIDOS EN VIVO. TAMBIÉN PUEDES ELEGIR UN EQUIPO Y UNO DE SUS PARTIDOS A MANO.<button type="button" className="multi-fullscreen-button" onClick={toggleMultiFullscreen}>{multiFullscreen ? '✕ SALIR DE PANTALLA COMPLETA' : '⛶ PANTALLA COMPLETA'}</button></p>
+      <p className="multi-inline-help">Las casillas vacías se llenan solas con partidos en vivo. También puedes elegir un equipo y uno de sus partidos a mano.<button type="button" className="multi-fullscreen-button" onClick={toggleMultiFullscreen}>{multiFullscreen ? '✕ Salir de pantalla completa' : '⛶ PANTALLA COMPLETA'}</button></p>
       <div className="multi-grid" ref={multiGridRef}>
         {multiSlots.map((slot, index) => <MultiSlot key={index} index={index} teamId={slot.teamId} matchId={slot.matchId} matches={multiMatches} teams={teams} onSelectTeam={selectMultiTeam} onSelectMatch={selectMultiMatch} onClear={clearMultiSlot}/>)}
       </div>
@@ -323,7 +324,7 @@ export function MatchesPage({ mode = 'all', teams, navigate }) {
       <div className="filter-bar"><select name="tournament" value={filters.tournament} onChange={change} aria-label="Torneo"><option value="">TORNEOS ACTIVOS</option>{(tournaments.data ?? []).map(item => <option value={item.id} key={item.id}>{item.name}</option>)}</select><select name="status" value={filters.status} onChange={change} aria-label="Estado"><option value="">TODOS LOS ESTADOS</option>{Object.entries(labels).map(([value, label]) => <option value={value} key={value}>{label}</option>)}</select>{filters.team && <select name="opponent" value={filters.opponent} onChange={change} aria-label="Rival para cruce directo"><option value="">CONTRA CUALQUIER RIVAL</option>{[...teams].filter(team => team.id !== filters.team).sort((a, b) => a.name.localeCompare(b.name, 'es')).map(team => <option value={team.id} key={team.id}>VS {team.name}</option>)}</select>}</div>
       <DataState query={matches} empty={null}/>{!matches.loading && !matches.error && (sections.length
         ? <div className="fixture-board">{sections.map(section => <section className="fixture-group" key={section.key}>{section.label && <h3>{section.label} <small>{section.rows.filter(match => match.status === 'finished').length} / {section.rows.filter(match => !match.rest).length} JUGADOS</small></h3>}<div className={`fixture-grid ${!filters.team && section.rows.some(match => match.rest) ? 'fixture-grid-rounds' : ''}`} style={{ '--per-round': perRoundOf(section.rows) }}>{section.rows.map(match => match.rest ? <RestCard key={match.id} rest={match} resolveTeam={resolveTeam}/> : <FixtureCard key={match.id} match={match} showRound resolveTeam={resolveTeam} onSelect={selectMatch}/>)}</div></section>)}</div>
-        : <p className="empty-copy">NO HAY PARTIDOS CON ESTOS FILTROS.</p>)}
+        : <p className="empty-copy">No hay partidos con estos filtros.</p>)}
     </>}
   </section></main>;
 }

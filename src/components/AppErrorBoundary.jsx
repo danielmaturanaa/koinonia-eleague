@@ -16,6 +16,6 @@ export class AppErrorBoundary extends Component {
 
   render() {
     if (!this.state.error) return this.props.children;
-    return <main className="fatal-screen" role="alert"><section><p>KOINONIA e-LEAGUE</p><h1>NO PUDIMOS MOSTRAR ESTA PANTALLA</h1><span>La interfaz encontró un error inesperado. Tus datos no fueron modificados.</span><button onClick={() => window.location.reload()}>RECARGAR APLICACIÓN</button></section></main>;
+    return <main className="fatal-screen" role="alert"><section><p>KOINONIA e-LEAGUE</p><h1>No pudimos mostrar esta pantalla</h1><span>La interfaz encontró un error inesperado. Tus datos no fueron modificados.</span><button onClick={() => window.location.reload()}>RECARGAR APLICACIÓN</button></section></main>;
   }
 }

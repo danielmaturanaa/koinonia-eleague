@@ -1,7 +1,6 @@
 import { useRef, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { useAuth } from '../../app/AuthGate.jsx';
-import { LeagueSectionTabs } from '../../components/SectionTabs.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
 import { Button, Chip, ConfirmStep, Icon, Notice, useToast } from '../../ui/index.js';
 import { gpLabel } from '../../utils/money.js';
@@ -51,7 +50,7 @@ function StadiumCard({ stadium, myTeamId, mine, balance, canBuy, canPhoto, confi
             : <a href={`#/equipos/${encodeURIComponent(stadium.teamId)}?tab=estadio`} className="stadium-owner-link"><TeamMark team={{ id: stadium.teamId, name: stadium.teamName, emoji: stadium.teamEmoji, imageUrl: stadium.teamImageUrl }}/>{upper(stadium.teamName)}</a>}
       </div>
       {owned && canBuy && (confirming === 'sell'
-        ? <ConfirmStep message={`¿VENDERLO Y RECUPERAR ${gpLabel(stadium.price)}? VUELVES A TU CANCHA DE 12.000.`} confirmLabel="SÍ, VENDER" danger busy={busy} onConfirm={onSell} onCancel={() => setConfirming(null)}/>
+        ? <ConfirmStep message={`¿Venderlo y recuperar ${gpLabel(stadium.price)}? Vuelves a tu cancha de 12.000.`} confirmLabel="SÍ, VENDER" danger busy={busy} onConfirm={onSell} onCancel={() => setConfirming(null)}/>
         : <Button variant="ghost" size="sm" onClick={() => setConfirming('sell')}>VENDER</Button>)}
       {free && canBuy && (confirming === stadium.id
         ? <ConfirmStep message={mine ? `¿CAMBIARTE? ${cost >= 0 ? `PAGAS ${gpLabel(cost)}` : `RECIBES ${gpLabel(-cost)}`} (TE DEVUELVEN ${upper(mine.name)}).` : `¿COMPRAR POR ${gpLabel(stadium.price)}?`} busy={busy} onConfirm={() => onBuy(stadium)} onCancel={() => setConfirming(null)}/>
@@ -79,13 +78,12 @@ export function StadiumsPage() {
   const canBuy = Boolean(myTeamId) && isPresidentOf(myTeamId);
   const shown = rows.filter(row => filter === 'todos' || (filter === 'libres' ? !row.teamId : Boolean(row.teamId)));
   return <main className="newspaper stadiums-page"><section className="team-list-paper">
-    <LeagueSectionTabs current="/equipos/estadios"/>
     <header className="team-page-header"><p>CATÁLOGO DE LA LIGA</p><h1>ESTADIOS</h1><span>{rows.filter(row => !row.teamId).length} EN VENTA · {rows.filter(row => row.teamId).length} CON DUEÑO</span></header>
     {canBuy && <div className="stadiums-mine">
       <Icon name="stadium" size={18}/>
       <span>{mine ? <>TU ESTADIO: <b>{upper(mine.name)}</b> · {people(mine.capacity)} PERSONAS</> : <>JUEGAS EN TU <b>CANCHA PROPIA</b> DE 12.000 PERSONAS</>}</span>
       {balance !== null && <small>SALDO {gpLabel(balance)}</small>}
-      <p>CADA ESTADIO TIENE UN SOLO DUEÑO. SI TE CAMBIAS, TE DEVUELVEN EL QUE TENÍAS A PRECIO DE CATÁLOGO. MÁS AFORO = MÁS TAQUILLA Y CONCIERTOS MÁS GRANDES.</p>
+      <p>Cada estadio tiene un solo dueño. Si te cambias, te devuelven el que tenías a precio de catálogo. Más aforo = más taquilla y conciertos más grandes.</p>
     </div>}
     <nav className="stadiums-filter" role="tablist" aria-label="Filtrar estadios">{FILTERS.map(([key, label]) => <button key={key} type="button" role="tab" aria-selected={filter === key} className={filter === key ? 'on' : ''} onClick={() => setFilter(key)}>{label}</button>)}</nav>
     <DataState query={query}/>

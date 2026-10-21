@@ -94,7 +94,7 @@ export function PeoplePage({ teams = [], embedded = false }) {
   const unlinked = clubs.filter(club => !holders.has(club.id));
 
   if (!isAdmin) {
-    return <main className="newspaper data-page"><section className="data-paper"><PageHeader kicker="ADMINISTRACIÓN" title="PERSONAS Y PERMISOS"/><p className="empty-copy data-empty">SOLO LOS ADMINISTRADORES PUEDEN VER ESTA PÁGINA.</p></section></main>;
+    return <main className="newspaper data-page"><section className="data-paper"><PageHeader kicker="ADMINISTRACIÓN" title="PERSONAS Y PERMISOS"/><p className="empty-copy data-empty">Solo los administradores pueden ver esta página.</p></section></main>;
   }
   const shell = content => embedded
     ? <div className="people-paper">{content}</div>
@@ -109,6 +109,6 @@ export function PeoplePage({ teams = [], embedded = false }) {
     <DataState query={people} empty={null}/>
     {!people.loading && !people.error && list.length > 0 && (visible.length
       ? <ul className="people-list">{visible.map(person => <PersonRow key={person.discordUserId} person={person} clubs={clubs} holders={holders} viewerIsOwner={isOwner} onChanged={people.retry}/>)}</ul>
-      : <p className="empty-copy data-empty">NADIE COINCIDE CON ESE FILTRO.</p>)}
+      : <p className="empty-copy data-empty">Nadie coincide con ese filtro.</p>)}
   </>);
 }

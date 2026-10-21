@@ -10,7 +10,8 @@ import { LinkedCardDetails } from './EfootballCard.jsx';
 import { useApiQuery } from './useApiQuery.js';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { addToComparison, comparisonCandidate, readComparison, writeComparison } from '../../utils/playerComparison.js';
-import { Button } from '../../ui/index.js';
+import { Button, Icon, Screen } from '../../ui/index.js';
+import { TalkModal } from '../teams/TalkModal.jsx';
 
 /** En la ficha de un agente libre, un presi le abre una encuesta de compra a su valor. */
 function OpenPollFromProfile({ player }) {
@@ -18,26 +19,38 @@ function OpenPollFromProfile({ player }) {
   const [done, setDone] = useState(false);
   const open = useApiMutation((body, signal) => endpoints.openPoll(body, signal), { onSuccess: () => setDone(true) });
   if (!myTeamId || player.team) return null;
-  if (done) return <p className="profile-poll done" role="status">✅ ENCUESTA ABIERTA POR {gp(player.gpValue)}. LA VES EN MERCADO → ENCUESTAS Y EN DISCORD. <a href="#/transferencias">IR A ENCUESTAS →</a></p>;
+  if (done) return <p className="profile-poll done" role="status">✅ Pediste ficharlo por {gp(player.gpValue)}: los demás presis lo confirman en Mercado › Fichar libres y en Discord. <a href="#/transferencias?tab=libres">Ver →</a></p>;
   return <div className="profile-poll">
-    <Button variant="positive" disabled={open.loading} onClick={() => { try { window.sessionStorage.setItem('mercado-pestana', 'encuestas'); } catch { /* sin almacenamiento */ } open.execute({ playerId: player.id, teamId: myTeamId }); }}>
-      {open.loading ? 'ABRIENDO…' : `🗳️ ABRIR ENCUESTA · ${gp(player.gpValue)}`}
+    <Button variant="positive" disabled={open.loading} onClick={() => { try { window.sessionStorage.setItem('mercado-pestana', 'libres'); } catch { /* sin almacenamiento */ } open.execute({ playerId: player.id, teamId: myTeamId }); }}>
+      {open.loading ? 'Abriendo…' : `Fichar · ${gp(player.gpValue)}`}
     </Button>
     {open.error && <p className="form-feedback error" role="alert">{open.error.message}</p>}
   </div>;
 }
 
-/** En la ficha de un jugador de otro club: hacer oferta (abre el formulario con el jugador elegido) y seguirlo. */
-function ClubActionsFromProfile({ player }) {
+/**
+ * Lo que puedes hacer con el jugador, en botones grandes. De otro club o libre: hacer oferta (o fichar si está libre),
+ * hablarle (aunque el mercado esté cerrado) y seguirlo. Tuyo: su contrato y sus mensajes.
+ */
+function ProfileActions({ player, onTalk }) {
   const { teamId: myTeamId } = useAuth();
   const watchlist = useApiQuery(signal => (myTeamId ? endpoints.teamWatchlist(myTeamId, signal).catch(() => ({ data: [] })) : Promise.resolve({ data: [] })), [myTeamId]);
   const watching = (Array.isArray(watchlist.data) ? watchlist.data : []).some(row => (row.playerId ?? row.id) === player.id);
   const toggle = useApiMutation((_, signal) => (watching ? endpoints.unwatchPlayer(myTeamId, player.id, signal) : endpoints.watchPlayer(myTeamId, player.id, signal)), { onSuccess: () => watchlist.retry() });
-  if (!myTeamId || player.team?.id === myTeamId) return null;
-  return <>
-    {player.team && <a className="ui-btn ui-btn--positive ui-btn--md" href={`#/transferencias?tab=ofertas&jugador=${encodeURIComponent(player.id)}&club=${encodeURIComponent(player.team.id)}`}>🤝 HACER OFERTA</a>}
-    <Button disabled={toggle.loading || watchlist.loading} aria-pressed={watching} onClick={() => toggle.execute()}>{watching ? '★ SIGUIENDO' : '☆ SEGUIR'}</Button>
-  </>;
+  if (!myTeamId) return null;
+  if (player.team?.id === myTeamId) {
+    return <div className="profile-actions">
+      <a className="ui-btn ui-btn--primary ui-btn--md" href={`#/equipos/${myTeamId}?tab=finanzas&ver=nomina`}><Icon name="contract" size={14}/>Su contrato</a>
+      <a className="ui-btn ui-btn--ghost ui-btn--md" href={`#/equipos/${myTeamId}?tab=mensajes`}><Icon name="chat" size={14}/>Sus mensajes</a>
+    </div>;
+  }
+  return <div className="profile-actions">
+    {player.team
+      ? <a className="ui-btn ui-btn--positive ui-btn--md" href={`#/transferencias?tab=ofertas&jugador=${encodeURIComponent(player.id)}&club=${encodeURIComponent(player.team.id)}`}><Icon name="handshake" size={14}/>Hacer oferta</a>
+      : <OpenPollFromProfile player={player}/>}
+    <Button icon="chat" onClick={onTalk}>Hablarle</Button>
+    <Button variant="ghost" icon="star" disabled={toggle.loading || watchlist.loading} aria-pressed={watching} onClick={() => toggle.execute()}>{watching ? 'Siguiendo' : 'Seguir'}</Button>
+  </div>;
 }
 
 export function PlayerProfilePage({ playerId, teams = [], onBack, backLabel = '← VOLVER A JUGADORES' }) {
@@ -48,17 +61,24 @@ export function PlayerProfilePage({ playerId, teams = [], onBack, backLabel = '�
   // Suma al jugador a la selección del comparador y abre la pestaña Comparador.
   const compare = current => {
     writeComparison(addToComparison(readComparison(), comparisonCandidate({ playerId: current.id, pesId: current.efootballPesId, variation: current.efootballVariation, name: current.name, faceUrl: current.faceUrl })));
-    window.location.hash = '/equipos/jugadores?tab=comparador';
+    window.location.hash = '/transferencias?tab=buscar&vista=comparador';
   };
   const cardStyle = { '--club-primary': colors.primary ?? '#062764', '--club-secondary': colors.secondary ?? '#10285b', '--club-tertiary': colors.tertiary ?? '#ffd42a' };
-  return <main className="newspaper data-page player-profile-page"><section className="data-paper">
-    <div className="player-profile-actions"><button className="back-button" onClick={onBack}>{backLabel}</button>{player && <Button onClick={() => compare(player)}>⇄ COMPARAR</Button>}{player && <OpenPollFromProfile player={player}/>}{player && <ClubActionsFromProfile player={player}/>}</div><DataState query={profile}/>
-    {player && <article className="player-profile-card" style={cardStyle}><header>{player.team?.imageUrl && <img className="player-banner-team-mark" src={player.team.imageUrl} alt="" onError={event => { event.currentTarget.hidden = true; }}/>}<div className="player-profile-portrait"><PlayerFace src={player.faceUrl} name={player.name} className="player-profile-face"/></div><div className="player-profile-heading"><small>FICHA DE JUGADOR</small><h1>{player.name}</h1><p className="player-profile-chips"><em>{player.position ?? '—'}</em><OverallBadge value={player.external?.overall}/><strong>{gp(player.gpValue)}</strong><span>{player.team?.name ?? 'AGENTE LIBRE'}</span></p></div></header>
+  const { teamId: myTeamId } = useAuth();
+  const [talking, setTalking] = useState(false);
+  return <Screen className="player-screen" kicker={player ? `Jugador · ${player.team?.name ?? 'agente libre'}` : 'Jugador'} title={player?.name ?? 'Jugador'}
+    hero={player ? <div className="screen-face"><PlayerFace src={player.faceUrl} name={player.name}/></div> : null}
+    intro={player ? `${player.position ?? ''}${player.external?.overall ? ` · media ${player.external.overall}` : ''} · vale ${gp(player.gpValue)}` : null}
+    actions={<div className="screen-actions-stack"><button className="back-button" onClick={onBack}>{backLabel}</button>{player && <Button size="sm" variant="ghost" onClick={() => compare(player)}>⇄ Comparar</Button>}</div>}>
+    {player && <ProfileActions player={player} onTalk={() => setTalking(true)}/>}
+    <DataState query={profile}/>
+    {talking && player && myTeamId && <TalkModal player={player} teamId={myTeamId} onClose={() => setTalking(false)}/>}
+    {player && <article className="player-profile-card" style={cardStyle}>
       <dl className="player-profile-facts"><div><dt>EQUIPO</dt><dd className="player-team-value"><EntityLink to="team" id={player.team?.id}>{player.team?.imageUrl && <img src={player.team.imageUrl} alt="" onError={event => { event.currentTarget.hidden = true; }}/>} {player.team?.name ?? 'AGENTE LIBRE'}</EntityLink></dd></div><div><dt>POSICIÓN</dt><dd>{player.position ?? '—'}</dd></div><div><dt>MEDIA eFOOTBALL</dt><dd><OverallBadge value={player.external?.overall}/>{hasCoachBoost({ overall: player.external?.overall, overallWithCoach: player.external?.overallWithCoach }) && <span className="ovr-coach-note" title={`Potenciadores de ${player.coachManager?.name ?? 'su DT'}: ${(player.coachManager?.boosters ?? []).map(boosterText).join(', ')}`}> → <b>{player.external.overallWithCoach}</b> CON DT</span>}</dd></div><div><dt>NACIONALIDAD</dt><dd>{player.flag && <i className="player-flag">{player.flag}</i>} {player.nationality ?? player.external?.nationality ?? 'NO INFORMADA'}</dd></div><div><dt>VALOR LIGA</dt><dd>{gp(player.gpValue)}</dd></div><div><dt>VALOR eFOOTBALLDB</dt><dd>{player.external ? gp(player.external.gpPrice) : '—'}</dd></div><div><dt>GOLES HISTÓRICOS</dt><dd>{player.goals ?? 0}</dd></div></dl>
-      <section className="player-tournament-form"><header><h2>RENDIMIENTO EN TORNEOS ACTIVOS</h2><small>GOLES REGISTRADOS</small></header>{player.activeGoals?.length ? <div>{player.activeGoals.map(tournament => <article key={tournament.name}><b>{tournament.name}</b><strong>{tournament.goals} GOL{tournament.goals === 1 ? '' : 'ES'}</strong></article>)}</div> : <p>AÚN NO REGISTRA GOLES EN UN TORNEO ACTIVO.</p>}</section>
-      {player.efootballPesId && <p className="player-data-source-note">FICHA, FOTO Y MEDIA SE ACTUALIZAN CON EL CATÁLOGO eFOOTBALLDB. EL VALOR GP DE LA LIGA SE MANTIENE SIN CAMBIOS.</p>}
+      <section className="player-tournament-form"><header><h2>Rendimiento en torneos activos</h2><small>GOLES REGISTRADOS</small></header>{player.activeGoals?.length ? <div>{player.activeGoals.map(tournament => <article key={tournament.name}><b>{tournament.name}</b><strong>{tournament.goals} GOL{tournament.goals === 1 ? '' : 'ES'}</strong></article>)}</div> : <p>Aún no registra goles en un torneo activo.</p>}</section>
+      {player.efootballPesId && <p className="player-data-source-note">Ficha, foto y media se actualizan con el catálogo eFootballDB. El valor GP de la liga se mantiene sin cambios.</p>}
       {player.efootballPesId && <LinkedCardDetails pesId={player.efootballPesId} variation={player.efootballVariation ?? 0}/>}
       {isAdmin && <details className="player-management"><summary>GESTIÓN DEL JUGADOR</summary><div><PlayerActions key={`actions-${player.team?.id ?? 'free'}`} player={player} teams={teams} onChanged={() => profile.retry()}/><PlayerAdmin key={`admin-${player.id}-${player.gpValue}`} player={player} onChanged={() => profile.retry()}/></div></details>}
     </article>}
-  </section></main>;
+  </Screen>;
 }

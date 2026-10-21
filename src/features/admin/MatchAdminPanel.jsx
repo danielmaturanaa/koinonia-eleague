@@ -21,7 +21,7 @@ export function SanctionPanel({ match, onChanged }) {
   };
   return <form className="admin-form match-sanction-form" onSubmit={submit}>
     <label>EQUIPO SANCIONADO<select value={sanctionedTeamId} onChange={event => setSanctionedTeamId(event.target.value)}><option value={homeId}>{match.homeTeam?.name}</option><option value={awayId}>{match.awayTeam?.name}</option></select></label>
-    <p className="match-sanction-hint">EL EQUIPO SANCIONADO PIERDE 0-3 Y EL PARTIDO QUEDA FINALIZADO DE INMEDIATO. ÚSALO PARA NO-SHOWS U OTRAS SANCIONES ADMINISTRATIVAS, NO PARA CARGAR EL RESULTADO DE UN PARTIDO JUGADO.</p>
+    <p className="match-sanction-hint">El equipo sancionado pierde 0-3 y el partido queda finalizado de inmediato. Úsalo para no-shows u otras sanciones administrativas, no para cargar el resultado de un partido jugado.</p>
     <Button variant="danger" type="submit" disabled={mutation.loading}>APLICAR CASTIGO 0-3</Button>
     <FormFeedback mutation={mutation}/>
   </form>;

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { AudioControls } from '../../audio/AudioControls.jsx';
-import { Button, EmptyState, Notice, Tabs, useToast } from '../../ui/index.js';
+import { Button, EmptyState, Notice, Screen, Tabs, useToast } from '../../ui/index.js';
 import { PageHeader } from '../public/DataStates.jsx';
 import { useApiQuery } from '../public/useApiQuery.js';
 import { CATEGORIES } from './categories.js';
@@ -42,7 +42,7 @@ function Feed({ navigate }) {
       </div>
     </div>
     {items.length === 0 && !first.loading
-      ? <EmptyState icon="bell" title="SIN AVISOS">CUANDO PASE ALGO EN TU CLUB (UNA OFERTA, UN CONTRATO, UN COBRO) LO VAS A VER AQUÍ.</EmptyState>
+      ? <EmptyState icon="bell" title="SIN AVISOS">Cuando pase algo en tu club (una oferta, un contrato, un cobro) lo vas a ver aquí.</EmptyState>
       : <ul className="notif-list">{items.map(item => <NotificationItem key={item.id} item={item} onOpen={open} showClub={summary.byTeam.length > 1}/>)}</ul>}
     {items.length >= 30 && !exhausted && items.length % 30 === 0 && <Button variant="ghost" onClick={() => more().catch(() => {})}>VER MÁS</Button>}
   </section>;
@@ -66,8 +66,8 @@ function Preferences() {
   const quietValue = value => (value === null || value === undefined ? '' : String(value));
   const setQuiet = (from, to) => save({ quietFrom: from === '' ? null : Number(from), quietTo: to === '' ? null : Number(to) });
   return <section className="notif-prefs">
-    <p className="notif-note">ELIGE QUÉ AVISOS QUIERES EN LA WEB, POR DISCORD Y CON SONIDO (SUENA CON LA WEB ABIERTA).</p>
-    {prefs.discordDmBlocked && <Notice tone="error">DISCORD NO NOS DEJA ESCRIBIRTE POR MENSAJE DIRECTO. ACTIVA «PERMITIR MENSAJES DIRECTOS DE MIEMBROS DEL SERVIDOR» EN LOS AJUSTES DE PRIVACIDAD DEL SERVIDOR; CON EL PRÓXIMO AVISO SE RESTABLECE SOLO. MIENTRAS TANTO TODO SE VE EN LA CAMPANA.</Notice>}
+    <p className="notif-note">Elige qué avisos quieres en la web, por Discord y con sonido (suena con la web abierta).</p>
+    {prefs.discordDmBlocked && <Notice tone="error">Discord no nos deja escribirte por mensaje directo. Activa «PERMITIR MENSAJES DIRECTOS DE MIEMBROS DEL SERVIDOR» en los ajustes de privacidad del servidor; con el próximo aviso se restablece solo. Mientras tanto todo se ve en la campana.</Notice>}
     <table className="notif-prefs-table">
       <thead><tr><th scope="col">CATEGORÍA</th><th scope="col">WEB</th><th scope="col">DISCORD</th><th scope="col">SONIDO</th></tr></thead>
       <tbody>{CATEGORIES.map(([id, label]) => <tr key={id}>
@@ -79,7 +79,7 @@ function Preferences() {
       </tr>)}</tbody>
     </table>
     <div className="notif-quiet">
-      <label className="notif-mute"><input type="checkbox" checked={prefs.muted} onChange={event => save({ muted: event.target.checked })}/> SILENCIAR TODOS LOS AVISOS</label>
+      <label className="notif-mute"><input type="checkbox" checked={prefs.muted} onChange={event => save({ muted: event.target.checked })}/> Silenciar todos los avisos</label>
       <div className="notif-hours">
         <span>NO MOLESTAR (HORA DE CHILE)</span>
         <label>DESDE <select value={quietValue(prefs.quietFrom)} onChange={event => setQuiet(event.target.value, event.target.value === '' ? '' : quietValue(prefs.quietTo) || '8')}>
@@ -87,12 +87,12 @@ function Preferences() {
         <label>HASTA <select value={quietValue(prefs.quietTo)} disabled={prefs.quietFrom === null} onChange={event => setQuiet(quietValue(prefs.quietFrom), event.target.value)}>
           {HOURS.map(hour => <option key={hour} value={hour}>{String(hour).padStart(2, '0')}:00</option>)}</select></label>
       </div>
-      <small>EL HORARIO DE SILENCIO CORTA DISCORD Y SONIDOS; LA CAMPANA DE LA WEB SIGUE ACUMULANDO.</small>
+      <small>El horario de silencio corta Discord y sonidos; la campana de la web sigue acumulando.</small>
     </div>
     {error && <Notice tone="error">{error.message}</Notice>}
     <section className="notif-audio">
       <h3>AUDIO DE ESTE NAVEGADOR</h3>
-      <p>EL VOLUMEN Y EL SILENCIO SON DE ESTE DISPOSITIVO; LAS CATEGORÍAS DE ARRIBA DECIDEN QUÉ AVISOS SUENAN.</p>
+      <p>El volumen y el silencio son de este dispositivo; las categorías de arriba deciden qué avisos suenan.</p>
       <AudioControls/>
     </section>
   </section>;
@@ -102,9 +102,8 @@ function Preferences() {
 export function NotificationsPage({ navigate, initialTab = 'avisos' }) {
   const [tab, setTab] = useState(TABS.some(item => item.id === initialTab) ? initialTab : 'avisos');
   useEffect(() => { if (TABS.some(item => item.id === initialTab)) setTab(initialTab); }, [initialTab]);
-  return <main className="newspaper data-page"><section className="data-paper notifications-page">
-    <PageHeader kicker="CENTRAL DE AVISOS" title="NOTIFICACIONES"/>
-    <Tabs tabs={TABS} value={tab} onChange={setTab} label="Secciones de notificaciones"/>
+  return <Screen className="notifications-page" kicker="Tu cuenta" title="Avisos" intro={tab === 'avisos' ? 'Todo lo que pasó con tu club. Toca un aviso para ir directo a donde ocurrió.' : 'Elige qué avisos quieres recibir en la web, por Discord y con sonido.'}
+    tabs={TABS} active={tab} onTab={setTab}>
     {tab === 'avisos' ? <Feed navigate={navigate}/> : <Preferences/>}
-  </section></main>;
+  </Screen>;
 }

@@ -107,9 +107,9 @@ export function SigningSheet({ team, contract, args = [], maxRounds = 3, marketO
       <div className="sheet-stamp good" role="status">FIRMADO ✔</div>
     </>}
     {outcome === 'refused' && <div className="sheet-stamp bad" role="status">NO RENUEVA ✖</div>}
-    {info?.refuses && !last && <p className="poll-hint">ESTÁ DEMASIADO MOLESTO PARA SENTARSE A NEGOCIAR: ARREGLA LO QUE LO TIENE ASÍ (ROL, SUELDO, PROMESAS) Y VUELVE.</p>}
+    {info?.refuses && !last && <p className="poll-hint">Está demasiado molesto para sentarse a negociar: arregla lo que lo tiene así (rol, sueldo, promesas) y vuelve.</p>}
 
-    {locked && <p className="poll-hint">🔒 SIN MERCADO ABIERTO: LA RENOVACIÓN SE NEGOCIA EN EL PRÓXIMO PERIODO DE MERCADO.</p>}
+    {locked && <p className="poll-hint">🔒 Sin mercado abierto: la renovación se negocia en el próximo periodo de mercado.</p>}
     {!closed && !locked && <div className="sheet-form">
       <div className="sheet-row"><span>TEMPORADAS</span><div className="chips">{SEASONS.map(n => <button type="button" key={n} className={seasons === n ? 'on' : ''} onClick={() => setSeasons(n)}>{n}</button>)}</div></div>
       <div className="sheet-row"><span>AUMENTO</span><div className="sheet-slider"><input type="range" min="1" max="100" value={raise} onChange={event => setRaise(Number(event.target.value))} aria-label="Aumento de sueldo en porcentaje"/><b>+{raise}%</b><em>{gpLabel(offered)} AL AÑO</em></div></div>

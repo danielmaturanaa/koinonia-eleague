@@ -56,7 +56,7 @@ function SimulateDialog({ match, onClose, onDone }) {
       <h3 id="sim-dialog-title">SIMULAR PARTIDO OFICIAL</h3>
       <p className="sim-dialog-teams">{match.homeTeam?.name} <span>vs</span> {match.awayTeam?.name}</p>
       <p>El resultado queda registrado en la tabla, con goles, rojas y suspensiones. <b>Cada simulación es al azar</b> y queda guardada con su semilla: cualquiera puede ver cómo se calculó.</p>
-      <fieldset className="sim-durations"><legend>DURACIÓN DE LA TRANSMISIÓN</legend>
+      <fieldset className="sim-durations"><legend>Duración de la transmisión</legend>
         {DURATIONS.map(([seconds, label]) => <button key={seconds} type="button" className={duration === seconds ? 'active' : ''} aria-pressed={duration === seconds} onClick={() => setDuration(seconds)}>{label}</button>)}
       </fieldset>
       {mutation.error && <p className="sim-dialog-error">{mutation.error.message}</p>}
@@ -74,7 +74,7 @@ export function SimulationPreview({ match, onSimulated }) {
   const [open, setOpen] = useState(false);
   const preview = useApiQuery(signal => endpoints.matchSimulationPreview(match.id, signal), [match.id]);
   const data = preview.data;
-  return <section className="match-card-panel sim-preview"><h2>PREVIA <small>SIMULADOR · SIN CASTIGOS · CARTAS EN NIVEL BASE</small></h2>
+  return <section className="match-card-panel sim-preview"><h2>PREVIA <small>Simulador · sin castigos · cartas en nivel base</small></h2>
     {preview.loading ? <p className="empty-copy">CALCULANDO…</p> : preview.error ? <p className="empty-copy">{preview.error.message}</p> : data && <>
       <div className="sim-odds" role="img" aria-label={`Probabilidades: ${match.homeTeam?.name} ${percent(data.odds.home)}, empate ${percent(data.odds.draw)}, ${match.awayTeam?.name} ${percent(data.odds.away)}`}>
         <span className="home" style={{ flexGrow: data.odds.home }}>{percent(data.odds.home)}</span>

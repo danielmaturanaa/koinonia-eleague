@@ -59,10 +59,10 @@ export function ProfileForm({ team, onChanged, onSaved }) {
     <label>NOMBRE<input required value={form.name} onChange={event => setForm(current => ({ ...current, name: event.target.value }))}/></label>
     <MediaImageField label="SUBIR NUEVO EMBLEMA" entityType="team" entityId={team.id} onUploaded={imageUrl => setForm(current => ({ ...current, imageUrl }))}/>
     <MediaImageField label="SUBIR IMAGEN DE CAMPEÓN" entityType="team" entityId={team.id} onUploaded={championImageUrl => setForm(current => ({ ...current, championImageUrl }))}/>
-    {form.championImageUrl && <div className="color-pick-preview"><img src={form.championImageUrl} alt={`Imagen de campeón de ${team.name}`}/><small>IMAGEN PARA LA NOTICIA CUANDO ESTE EQUIPO ASEGURE EL CAMPEONATO</small><Button onClick={() => setForm(current => ({ ...current, championImageUrl: '' }))}>USAR EMBLEMA DEL EQUIPO</Button></div>}
+    {form.championImageUrl && <div className="color-pick-preview"><img src={form.championImageUrl} alt={`Imagen de campeón de ${team.name}`}/><small>Imagen para la noticia cuando este equipo asegure el campeonato</small><Button onClick={() => setForm(current => ({ ...current, championImageUrl: '' }))}>USAR EMBLEMA DEL EQUIPO</Button></div>}
     {form.imageUrl && <div className="color-pick-preview">
       <img src={form.imageUrl} alt="Escudo del club, para usar con la pipeta"/>
-      <small>USA LA PIPETA SOBRE ESTE ESCUDO — AQUÍ SE VE A COLOR REAL, SIN EL FONDO OSCURO DEL MODAL</small>
+      <small>Usa la pipeta sobre este escudo — aquí se ve a color real, sin el fondo oscuro del modal</small>
     </div>}
     <ColorPickerField label="COLOR PRIMARIO" value={form.colors.primary} onChange={color => setColor('primary', color)}/>
     <ColorPickerField label="COLOR SECUNDARIO" value={form.colors.secondary} onChange={color => setColor('secondary', color)}/>
@@ -98,7 +98,7 @@ export function PresidentForm({ team, onChanged, onSaved }) {
     onChanged?.(result);
     onSaved?.();
   } });
-  if (!president?.id) return <p className="admin-empty">ESTE EQUIPO NO TIENE UN PRESIDENTE EDITABLE ASIGNADO.</p>;
+  if (!president?.id) return <p className="admin-empty">Este equipo no tiene un presidente editable asignado.</p>;
   return <form className="admin-form person-editor-form" onSubmit={event => { event.preventDefault(); mutation.execute({ name: form.name, imageUrl: form.imageUrl, age: form.age === '' ? null : Number(form.age), nationality: form.country, customFields: customFieldsPayload(form.customFields) }); }}><label>NOMBRE DEL PRESIDENTE<input required value={form.name} onChange={event => setForm(current => ({ ...current, name: event.target.value }))}/></label><label>EDAD<input type="number" min="1" max="120" value={form.age} onChange={event => setForm(current => ({ ...current, age: event.target.value }))}/></label><label>PAÍS<input value={form.country} onChange={event => setForm(current => ({ ...current, country: event.target.value }))} placeholder="PAÍS"/></label><CustomFieldsEditor fields={form.customFields} onChange={customFields => setForm(current => ({ ...current, customFields }))}/><MediaImageField label="SUBIR FOTO DEL PRESIDENTE" entityType="president" entityId={president.id} onUploaded={imageUrl => setForm(current => ({ ...current, imageUrl }))}/><Button type="submit" disabled={mutation.loading}>GUARDAR PRESIDENTE</Button><FormFeedback mutation={mutation}/></form>;
 }
 
@@ -189,13 +189,13 @@ export function SquadEditor({ team, squad, onChanged }) {
     <small>{player.position ?? '—'}</small><strong>{player.name}</strong>
     <label><span>DORSAL</span><input aria-label={`Dorsal de ${player.name}`} type="number" min="1" max="99" value={player.jerseyNumber ?? ''} onChange={event => updateJersey(player.id, event.target.value)}/></label>
   </div>;
-  if (!squad.length) return <p className="admin-empty">NO HAY JUGADORES ASIGNADOS A ESTE EQUIPO.</p>;
-  return <div className="squad-board"><p className="squad-help">ARRASTRA DESDE EL NÚMERO DE UN JUGADOR Y SUÉLTALO SOBRE OTRO PARA INTERCAMBIARLOS. LOS PUESTOS 1 A 11 SON TITULARES.</p><div className="squad-board-columns"><section><h3>TITULARES <small>11 PUESTOS</small></h3>{listHeader}{Array.from({ length: 11 }, (_, index) => ordered[index] ? playerRow(ordered[index], index) : <div className="squad-empty-slot" key={index} onDragOver={event => event.preventDefault()} onDrop={event => dropAt(event, index)}><b>{index + 1}</b><span>ARRASTRA UN JUGADOR AQUÍ</span></div>)}</section><section className="substitutes-drop-zone" onDragOver={event => event.preventDefault()} onDrop={event => dropAt(event, ordered.length)}><h3>SUPLENTES <small>{Math.max(ordered.length - 11, 0)}</small></h3>{listHeader}{ordered.slice(11).map((player, offset) => playerRow(player, offset + 11))}{ordered.length <= 11 && <div className="squad-empty-slot"><span>ARRASTRA AQUÍ PARA MOVER A SUPLENTES</span></div>}</section></div><Button className="squad-save-button" type="submit" disabled={!ordered.length || mutation.loading} onClick={() => mutation.execute(ordered)}>GUARDAR PLANTEL COMPLETO</Button><FormFeedback mutation={mutation}/></div>;
+  if (!squad.length) return <p className="admin-empty">No hay jugadores asignados a este equipo.</p>;
+  return <div className="squad-board"><p className="squad-help">Arrastra desde el número de un jugador y suéltalo sobre otro para intercambiarlos. Los puestos 1 a 11 son titulares.</p><div className="squad-board-columns"><section><h3>TITULARES <small>11 PUESTOS</small></h3>{listHeader}{Array.from({ length: 11 }, (_, index) => ordered[index] ? playerRow(ordered[index], index) : <div className="squad-empty-slot" key={index} onDragOver={event => event.preventDefault()} onDrop={event => dropAt(event, index)}><b>{index + 1}</b><span>ARRASTRA UN JUGADOR AQUÍ</span></div>)}</section><section className="substitutes-drop-zone" onDragOver={event => event.preventDefault()} onDrop={event => dropAt(event, ordered.length)}><h3>SUPLENTES <small>{Math.max(ordered.length - 11, 0)}</small></h3>{listHeader}{ordered.slice(11).map((player, offset) => playerRow(player, offset + 11))}{ordered.length <= 11 && <div className="squad-empty-slot"><span>Arrastra aquí para mover a suplentes</span></div>}</section></div><Button className="squad-save-button" type="submit" disabled={!ordered.length || mutation.loading} onClick={() => mutation.execute(ordered)}>GUARDAR PLANTEL COMPLETO</Button><FormFeedback mutation={mutation}/></div>;
 }
 
 
 export function TeamAdminPanel({ team, squad, onChanged }) {
   const [tab, setTab] = useState('profile');
   const tabs = [['profile','PERFIL'],['squad','PLANTEL']];
-  return <section className="team-admin"><header><p>GESTIÓN PÚBLICA DEL EQUIPO</p><nav>{tabs.map(([value, label]) => <button className={tab === value ? 'active' : ''} onClick={() => setTab(value)} key={value}>{label}</button>)}</nav></header>{tab === 'profile' && <TeamProfileEditor team={team} onChanged={onChanged}/>} {tab === 'squad' && <SquadEditor team={team} squad={squad} onChanged={onChanged}/>}</section>;
+  return <section className="team-admin"><header><p>Gestión pública del equipo</p><nav>{tabs.map(([value, label]) => <button className={tab === value ? 'active' : ''} onClick={() => setTab(value)} key={value}>{label}</button>)}</nav></header>{tab === 'profile' && <TeamProfileEditor team={team} onChanged={onChanged}/>} {tab === 'squad' && <SquadEditor team={team} squad={squad} onChanged={onChanged}/>}</section>;
 }

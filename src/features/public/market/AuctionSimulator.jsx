@@ -64,7 +64,7 @@ export function AuctionSimulator({ teams = [] }) {
   return <section className="market-section sim">
     <header>
       <h2>🧪 SIMULADOR DE SUBASTAS <small>SOLO TÚ</small></h2>
-      <p>DATOS REALES DEL JUGADOR Y DE LOS CLUBES. NADA DE ESTO SE GUARDA NI LO VE NADIE MÁS.</p>
+      <p>Datos reales del jugador y de los clubes. Nada de esto se guarda ni lo ve nadie más.</p>
     </header>
     <div className="sim-setup">
       <PlayerPicker value={player} onChange={setPlayer} status="registered" label="JUGADOR (CUALQUIERA)"/>
@@ -83,8 +83,8 @@ export function AuctionSimulator({ teams = [] }) {
         <h3>{result.player.name}</h3>
         <p className="poll-meta">{[result.player.position, result.player.nationality, result.player.age ? `${result.player.age} AÑOS` : null, result.player.overall ? `MEDIA ${result.player.overall}` : null, `VALE ${gp(result.player.gpValue)}`].filter(Boolean).join(' · ')}</p>
         <p className="sim-traits">{result.traits.map(trait => <span key={trait}>{TRAIT_LABEL[trait] ?? trait}</span>)}</p>
-        {result.player.signals && <p className="poll-hint">TRAYECTORIA: {result.player.signals.clubs} CLUBES · MÁS LARGO {result.player.signals.longestYears} AÑOS · {result.player.signals.giantYears} AÑOS EN GRANDES{result.player.signals.moneyMoveYoung ? ' · SE FUE JOVEN POR PLATA' : ''}{result.player.signals.peakValueEur ? ` · VALOR MÁXIMO ${(result.player.signals.peakValueEur / 1e6).toLocaleString('es-CL')} M€` : ''}</p>}
-        {!result.player.signals && <p className="poll-hint">SIN TRAYECTORIA DE TRANSFERMARKT TODAVÍA: RASGOS 100% SORTEADOS.</p>}
+        {result.player.signals && <p className="poll-hint">TRAYECTORIA: {result.player.signals.clubs} CLUBES · MÁS LARGO {result.player.signals.longestYears} AÑOS · {result.player.signals.giantYears} AÑOS EN GRANDES{result.player.signals.moneyMoveYoung ? ' · Se fue joven por plata' : ''}{result.player.signals.peakValueEur ? ` · VALOR MÁXIMO ${(result.player.signals.peakValueEur / 1e6).toLocaleString('es-CL')} M€` : ''}</p>}
+        {!result.player.signals && <p className="poll-hint">Sin trayectoria de Transfermarkt todavía: rasgos 100% sorteados.</p>}
         {result.player.career?.length > 0 && <ol className="sim-career">{result.player.career.map((spell, index) => <li key={index}>{spell.club} <small>{year(spell.from)}–{spell.to ? year(spell.to) : 'HOY'}{spell.loan ? ' · PRÉSTAMO' : ''}</small></li>)}</ol>}
       </div>
       <div className="sim-weights" aria-label="CUÁNTO LE IMPORTA CADA TEMA">
@@ -134,7 +134,7 @@ export function AuctionSimulator({ teams = [] }) {
     {result && entries.length > 0 && <p className={`sim-verdict ${result.winner ? 'ok' : 'none'}`} aria-live="polite">
       {loading ? 'CALCULANDO…' : result.winner
         ? <>🏆 GANARÍA <b>{result.winner.teamName.toUpperCase()}</b> CON {gp(result.winner.offer)} (VALOR FINAL {gp(result.winner.value)})</>
-        : result.rejectedAll ? '🤷 NADIE LO CONVENCE (NOTA BAJO 35): SEGUIRÍA LIBRE.' : 'AGREGA OFERTAS VÁLIDAS PARA VER QUIÉN GANA.'}
+        : result.rejectedAll ? '🤷 NADIE LO CONVENCE (NOTA BAJO 35): SEGUIRÍA LIBRE.' : 'Agrega ofertas válidas para ver quién gana.'}
     </p>}
   </section>;
 }

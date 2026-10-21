@@ -197,6 +197,7 @@ export const endpoints = {
   setRival: (teamId, rivalTeamId, signal) => apiClient.put(`/teams/${teamId}/rival`, { rivalTeamId }, { actor: 'web', signal }),
   playerConsent: (playerId, query, signal) => get(`/players/${playerId}/consent`, query, signal),
   playerChat: (playerId, teamId, signal) => get(`/players/${playerId}/chat`, { teamId }, signal),
+  teamChats: (teamId, signal) => get(`/teams/${teamId}/chats`, null, signal),
   playerChatAction: (playerId, action, body, signal) => apiClient.post(`/players/${playerId}/chat/${action}`, body, { actor: 'web', signal }),
   fanRanking: signal => get('/fans', null, signal),
   teamFans: (teamId, signal) => get(`/teams/${teamId}/fans`, null, signal),

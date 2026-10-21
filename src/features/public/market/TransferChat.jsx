@@ -95,7 +95,7 @@ export function TransferChat({ player, teamId, onChanged, onPromiseRole, onClose
       <small>DE ±{chat.limit} POSIBLES · {chat.finished ? 'CONVERSACIÓN TERMINADA' : `PREGUNTA ${Math.min(answered + 1, 3)} DE 3`}</small>
       <span className="tc-steps" aria-hidden="true">{Array.from({ length: 3 }, (_, index) => <i key={index} className={index < answered ? 'done' : index === answered && pending ? 'now' : ''}/>)}</span>
     </div>}
-    {!chat && !error && <p className="pc-note">LLAMANDO A SU REPRESENTANTE…</p>}
+    {!chat && !error && <p className="pc-note">Llamando a su representante…</p>}
     {error && <p className="form-feedback error" role="alert">{error.message}</p>}
     {chat && <>
       <div className="pc-log" ref={log}>
@@ -115,15 +115,15 @@ export function TransferChat({ player, teamId, onChanged, onPromiseRole, onClose
               </button>;
             })}
           </div>
-          {pending.roleHint && onPromiseRole && <p className="tc-role-hint"><Icon name="contract" size={12}/> ¿QUIERES ASEGURARLE MINUTOS? PROMÉTESELO EN LA OFERTA Y QUEDA EN SU CONTRATO. <button type="button" onClick={() => onPromiseRole('importante')}>PROMETERLE SER IMPORTANTE</button></p>}
+          {pending.roleHint && onPromiseRole && <p className="tc-role-hint"><Icon name="contract" size={12}/> ¿Quieres asegurarle minutos? Prométeselo en la oferta y queda en su contrato. <button type="button" onClick={() => onPromiseRole('importante')}>PROMETERLE SER IMPORTANTE</button></p>}
           <div className="pc-send-row">
-            <small>{picks.length ? (KIND_HINT[options.find(option => option.code === picks[0])?.kind] ?? '') : 'LOS DATOS SON REALES: SALEN DE TU CLUB.'}</small>
+            <small>{picks.length ? (KIND_HINT[options.find(option => option.code === picks[0])?.kind] ?? '') : 'Los datos son reales: salen de tu club.'}</small>
             <Button variant="positive" disabled={answer.loading || !picks.length} onClick={() => answer.execute({ topic: pending.topic, optionCodes: picks })}>RESPONDER</Button>
           </div>
         </>}
-        {chat.finished && !typing && <p className="tc-done"><Icon name="check" size={14}/> CONVERSACIÓN TERMINADA. AHORA ARMA LA OFERTA: LA PRIMA Y EL ROL HACEN EL RESTO.</p>}
+        {chat.finished && !typing && <p className="tc-done"><Icon name="check" size={14}/> Conversación terminada. Ahora arma la oferta: la prima y el rol hacen el resto.</p>}
         {chat.rewind?.available && !typing && (confirmUndo
-          ? <p className="pc-confirm">¿CAMBIAR TU ÚLTIMA RESPUESTA? <button type="button" disabled={rewind.loading} onClick={() => rewind.execute()}>SÍ</button><button type="button" onClick={() => setConfirmUndo(false)}>NO</button></p>
+          ? <p className="pc-confirm">¿Cambiar tu última respuesta? <button type="button" disabled={rewind.loading} onClick={() => rewind.execute()}>SÍ</button><button type="button" onClick={() => setConfirmUndo(false)}>NO</button></p>
           : <button type="button" className="pc-undo" onClick={() => setConfirmUndo(true)}>↩ CAMBIAR MI ÚLTIMA RESPUESTA (QUEDAN {chat.rewind.limit - chat.rewind.used})</button>)}
         {(answer.error || rewind.error) && <p className="form-feedback error" role="alert">{(answer.error ?? rewind.error).message}</p>}
       </div>
