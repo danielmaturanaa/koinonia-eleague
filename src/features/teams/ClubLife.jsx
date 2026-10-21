@@ -28,20 +28,29 @@ function OffNotice() {
   return <EmptyState icon="stadium" title="LA VIDA DE CLUB AÚN NO PARTE">Cuando la administración la active, cada partido de local cobrará entradas según tu hinchada y podrás hacer conciertos, vender tus derechos de TV y pelear por la Velada de Ibai.</EmptyState>;
 }
 
-/** Gradas pixel: se llenan según la ocupación (0–100). */
-function Stands({ occupancy = 0, label }) {
-  const rows = 6;
-  const seats = 28;
-  const filled = Math.round(Math.max(0, Math.min(100, occupancy)) / 100 * rows * seats);
-  return <div className="venue-stands" role="img" aria-label={label ?? `Ocupación ${occupancy}%`}>
-    {Array.from({ length: rows }, (_, row) => <div key={row} className="venue-row">{Array.from({ length: seats }, (_, seat) => {
-      // Se llena desde abajo (filas cercanas a la cancha) hacia arriba, de forma pareja.
-      const index = (rows - 1 - row) * seats + seat;
-      // Camisetas de colores salpicadas (estable por asiento): rojo del club, blanco y amarillo.
-      const shirt = ((seat * 7 + row * 13) * 2654435761 >>> 0) % 9;
-      return <i key={seat} className={index < filled ? `on ${shirt === 0 ? 'alt' : shirt === 1 ? 'gold' : ''}` : ''}/>;
-    })}</div>)}
-    <div className="venue-pitch" aria-hidden="true"/>
+// Estadio visto desde arriba, en pixel art: la cancha al centro y cuatro tribunas que se llenan de hinchas (con los
+// colores del club) según la ocupación promedio. Cada asiento se llena en un orden fijo pseudoaleatorio.
+const seatHash = index => ((index * 2654435761) >>> 0) % 1000;
+function Stand({ rows, seats, offset, filled, colors, side }) {
+  return <div className={`stadium-stand stand-${side}`} style={{ gridTemplateColumns: `repeat(${seats}, 1fr)` }}>
+    {Array.from({ length: rows * seats }, (_, index) => {
+      const order = seatHash(index + offset);
+      const on = order < filled;
+      return <i key={index} className={on ? 'on' : ''} style={on ? { '--shirt': order % 7 === 0 ? colors.secondary : colors.primary } : undefined}/>;
+    })}
+  </div>;
+}
+
+function Stadium({ occupancy = 0, matches = 0, colors }) {
+  const filled = Math.round(Math.max(0, Math.min(100, occupancy)) * 10);
+  const palette = { primary: colors?.primary ?? '#d10020', secondary: colors?.secondary ?? '#ffffff' };
+  return <div className="pixel-stadium" role="img" aria-label={matches ? `Ocupación promedio ${occupancy}%` : 'Todavía sin partidos de local'}>
+    <Stand side="n" rows={3} seats={30} offset={0} filled={filled} colors={palette}/>
+    <Stand side="w" rows={9} seats={3} offset={200} filled={filled} colors={palette}/>
+    <div className="stadium-pitch" aria-hidden="true"><i className="pitch-half"/><i className="pitch-circle"/><i className="pitch-box left"/><i className="pitch-box right"/></div>
+    <Stand side="e" rows={9} seats={3} offset={400} filled={filled} colors={palette}/>
+    <Stand side="s" rows={3} seats={30} offset={600} filled={filled} colors={palette}/>
+    <p className="stadium-label">{matches ? <><b>{occupancy}%</b> lleno en promedio · {matches} partido{matches === 1 ? '' : 's'} de local</> : 'Todavía no juegas de local'}</p>
   </div>;
 }
 
@@ -86,7 +95,7 @@ export function VenueTab({ team, onTab: _onTab }) {
         <p>{people(fans.venue.capacity)} ESPECTADORES</p>
         <a className="ui-btn ui-btn--primary ui-btn--sm" href="#/equipos/estadios"><Icon name="stadium" size={14}/>{canEdit ? (fans.venue.owned ? 'CAMBIAR DE ESTADIO' : 'COMPRAR ESTADIO') : 'VER TODOS LOS ESTADIOS'}</a>
       </div>
-      <Stands occupancy={average} label={`Ocupación promedio ${average}%`}/>
+      <Stadium occupancy={average} matches={fans.gates.length} colors={team.colors}/>
     </Card>
     {!fans.enabled ? <OffNotice/> : <>
       <div className="club-life-stats">

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { boosterText, STYLE_LABELS } from '../../utils/managerBoosters.js';
 import { endpoints } from '../../api/endpoints.js';
 import { EntityLink } from '../../components/EntityLink.jsx';
@@ -109,7 +109,7 @@ function narrate(event, match) {
  * Transmisión del partido simulado. Con `startsAt` + `durationSeconds` todos ven el mismo minuto;
  * la repetición local usa su propio inicio y duración.
  */
-export function SimulationReplay({ match, simulation, resolveTeam, startsAt, durationSeconds, onEnded }) {
+export function SimulationReplay({ match, simulation, resolveTeam, startsAt, durationSeconds, onEnded, onEvent }) {
   const clock = timeline(simulation);
   const [now, setNow] = useState(() => Date.now());
   const durationMs = Math.max(durationSeconds, 1) * 1000;
@@ -136,6 +136,21 @@ export function SimulationReplay({ match, simulation, resolveTeam, startsAt, dur
     ...(ended && simulation.penalties ? [{ key: 'pen', order: clock.total + 2, clock: 'PEN', icon: '🥅', text: `PENALES ${simulation.penalties.home}-${simulation.penalties.away}: GANA ${penaltyWinner?.toUpperCase()}` }] : []),
   ];
   const ordered = feed.sort((left, right) => right.order - left.order);
+  // Efectos (gol, roja, entretiempo, final) para lo que aparece mientras se mira: lo que ya había al abrir no suena.
+  const seen = useRef(null);
+  useEffect(() => {
+    const state = { count: shown.length, half: tick >= clock.halfTime, ended };
+    const before = seen.current;
+    seen.current = state;
+    if (!before || !onEvent) return;
+    for (const event of shown.slice(before.count)) {
+      const team = resolveTeam(event.side === 'home' ? match.homeTeam : match.awayTeam);
+      if (event.type === 'goal') onEvent({ kind: 'goal', side: event.side, team, detail: event.playerName });
+      else if (event.type === 'red') onEvent({ kind: 'red', side: event.side, team, detail: event.playerName });
+    }
+    if (!before.half && state.half && !ended) onEvent({ kind: 'halftime' });
+    if (!before.ended && ended) onEvent({ kind: 'fulltime', detail: `${match.homeTeam?.name} ${simulation.homeScore}-${simulation.awayScore} ${match.awayTeam?.name}` });
+  }, [shown.length, tick >= clock.halfTime, ended]);
 
   return <article className="scoreboard scoreboard-full sim-replay" aria-live="polite">
     <header className="scoreboard-bezel">{!ended && <i className="scoreboard-live-dot" aria-hidden="true"/>}<span className="scoreboard-meta">TRANSMISIÓN SIMULADA · {match.tournament?.name ?? 'TORNEO'}</span><span className={`scoreboard-tag ${ended ? 'scoreboard-tag-finished' : 'scoreboard-tag-live'}`}>{ended ? 'FINAL' : clock.clockOf(Math.max(tick, 0))}</span></header>

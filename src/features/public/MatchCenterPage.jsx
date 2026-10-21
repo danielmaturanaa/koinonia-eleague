@@ -13,6 +13,7 @@ import { useApiQuery } from './useApiQuery.js';
 import { PitchBoard } from '../teams/PitchBoard.jsx';
 import { useAuth } from '../../app/AuthGate.jsx';
 import { MatchdayPanel } from './MatchdayPanel.jsx';
+import { FxOverlay, PixelCrowd, useLiveMatchFx, useMatchFx } from './MatchFx.jsx';
 
 // Goles agrupados por jugador; los minutos solo aparecen si el acta los registró.
 function groupedGoals(goals, teamId) {
@@ -93,6 +94,9 @@ export function MatchCenterPage({ matchId, teams = [], navigate }) {
   const replaying = Boolean(simulation && (sharedReplay || localReplay));
   // Mientras llega la simulación no se muestra el marcador final: sería spoiler de la transmisión.
   const loadingSimulation = Boolean(match?.simulated && !simulationQuery.data && simulationQuery.loading);
+  // Efectos en 8 bits: hinchas que saltan, carteles y sonido para lo que pasa mientras miras (en vivo o en la transmisión simulada).
+  const [fx, fire] = useMatchFx();
+  useLiveMatchFx(replaying ? null : match, resolveTeam, fire);
   // En vivo, las incidencias se refrescan al mismo ritmo que el marcador (goles cargados desde Discord).
   useEffect(() => {
     if (match?.status !== 'live') return undefined;
@@ -104,13 +108,15 @@ export function MatchCenterPage({ matchId, teams = [], navigate }) {
     {!match && <DataState query={detail}/>}
     {/* Marcador + incidencias a la izquierda y cara a cara a la derecha, con el mismo alto:
         el historial se desplaza dentro de su columna en vez de estirar la página. */}
+    {match && <PixelCrowd home={resolveTeam(match.homeTeam)} away={resolveTeam(match.awayTeam)} excite={fx?.kind === 'goal' ? fx.side : null}/>}
+    <FxOverlay fx={fx}/>
     <div className="match-center-top">
       <div className="match-center-main">{loadingSimulation
         ? <div className="match-center-score"><article className="scoreboard scoreboard-full scoreboard-loading"><p>SINTONIZANDO LA TRANSMISIÓN…</p></article></div>
         : replaying
         ? <div className="match-center-score">{sharedReplay
-          ? <SimulationReplay match={match} simulation={simulation} resolveTeam={resolveTeam} startsAt={new Date(simulation.replayStartsAt).getTime()} durationSeconds={simulation.durationSeconds} onEnded={onSharedReplayEnded}/>
-          : <><SimulationReplay key={localReplay.startsAt} match={match} simulation={simulation} resolveTeam={resolveTeam} startsAt={localReplay.startsAt} durationSeconds={localReplay.durationSeconds}/><button type="button" className="sim-replay-close" onClick={() => setLocalReplay(null)}>✕ CERRAR REPETICIÓN</button></>}</div>
+          ? <SimulationReplay match={match} simulation={simulation} resolveTeam={resolveTeam} startsAt={new Date(simulation.replayStartsAt).getTime()} durationSeconds={simulation.durationSeconds} onEvent={fire} onEnded={onSharedReplayEnded}/>
+          : <><SimulationReplay key={localReplay.startsAt} onEvent={fire} match={match} simulation={simulation} resolveTeam={resolveTeam} startsAt={localReplay.startsAt} durationSeconds={localReplay.durationSeconds}/><button type="button" className="sim-replay-close" onClick={() => setLocalReplay(null)}>✕ CERRAR REPETICIÓN</button></>}</div>
         : <><div className="match-center-score"><Scoreboard matchId={matchId} mode="manage" density="full" teams={teams} refreshKey={revision} onChanged={bump} showActa={false}/>{match?.sanctioned && <p className="match-sanction-banner"><SanctionBadge match={match}/> Resultado administrativo 0-3: el partido no se jugó.</p>}{match?.simulated && <SimulationBanner match={match} simulation={simulation} onReplay={durationSeconds => setLocalReplay({ startsAt: Date.now(), durationSeconds })}/>}</div>
           {match?.status === 'pending' ? <SimulationPreview key={revision} match={match} onSimulated={bump}/> : match && <Incidents match={match}/>}</>}</div>
       {match && <div className="match-center-h2h"><HeadToHead match={match} resolveTeam={resolveTeam}/></div>}
