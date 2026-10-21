@@ -183,18 +183,21 @@ const ClubSystems = () => <>
   </section>
 </>;
 
-// Grabaciones de estadio usadas en la ficha de partido (recortadas y normalizadas; las CC BY-SA quedan bajo la misma licencia).
+// Grabaciones de estadio usadas en la ficha de partido (Freesound y Wikimedia Commons; recortadas y normalizadas).
 const SOUND_CREDITS = [
-  ['Pifias y ambiente', 'WWS Football Austria vs. Sweden', 'Work With Sounds / Torsten Nilsson', 'CC BY 4.0', 'File:WWS_FootballAustriavs.Sweden.ogg'],
-  ['Festejo de gol', 'Score Strasbourg-PSG (Racing 2 - Paris 0)', 'X22c23a', 'CC BY-SA 4.0', 'File:Score_Strasbourg-PSG_(RCSA-Paris_Saint_Germain)_Racing_2_-_Paris_0_MERCI_-_DE_RIEN.ogg'],
-  ['Canto', "Lève-toi si t'es Strasbourgeois", 'Xaviyeah', 'CC BY-SA 4.0', "File:Lève-toi_si_t'es_Strasbourgeois_-_Chant_des_supporters_du_RC_Strasbourg.ogg"],
-  ['Silbato', 'Referee whistle blow (gymnasium)', 'SpliceSound', 'CC0', 'File:218318_splicesound_referee-whistle-blow-gymnasium.wav'],
-  ['Aplausos', 'Applause I', 'thore', 'Dominio público', 'File:Applause_i.ogg'],
+  ['Gol', 'Football-crowd-GOAL (Brentford FC, Griffin Park)', 'paulw2k', 'CC BY 4.0', 'https://freesound.org/s/196461/'],
+  ['Gol (grito)', 'Crowd screaming GOAL, Mexico-Holland (Mundial 2014)', 'felix.blume', 'CC0', 'https://freesound.org/s/241630/'],
+  ['Festejo de la visita', "Southampton vs Hull at Saint Mary's Stadium", 'Quistard', 'CC BY 3.0', 'https://freesound.org/s/237681/'],
+  ['Pifias', 'Football stadium fans are not happy with the referee (Aris FC)', 'avakas', 'CC BY 4.0', 'https://freesound.org/s/263680/'],
+  ['Canto', "West Ham: I'm Forever Blowing Bubbles", 'zedkah', 'CC0', 'https://freesound.org/s/133833/'],
+  ['Ambiente', 'Old Trafford', 'BeeProductive', 'CC0', 'https://freesound.org/s/430020/'],
+  ['Silbato', 'Referee whistle blow (gymnasium)', 'SpliceSound', 'CC0', 'https://commons.wikimedia.org/wiki/File:218318_splicesound_referee-whistle-blow-gymnasium.wav'],
+  ['Aplausos', 'Applause I', 'thore', 'Dominio público', 'https://commons.wikimedia.org/wiki/File:Applause_i.ogg'],
 ];
 
 const SoundCredits = () => <section className="rules-section">
   <h2>Créditos de sonido</h2>
-  <ul>{SOUND_CREDITS.map(([use, title, author, license, file]) => <li key={file}><strong>{use}:</strong> <a href={`https://commons.wikimedia.org/wiki/${encodeURIComponent(file)}`} target="_blank" rel="noreferrer">{title}</a>, de {author} ({license}), vía Wikimedia Commons.</li>)}</ul>
+  <ul>{SOUND_CREDITS.map(([use, title, author, license, file]) => <li key={file}><strong>{use}:</strong> <a href={file} target="_blank" rel="noreferrer">{title}</a>, de {author} ({license}).</li>)}</ul>
 </section>;
 
 export function RulesPage() {

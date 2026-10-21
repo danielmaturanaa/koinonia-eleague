@@ -102,9 +102,10 @@ export const SOUNDS = {
   chat: { label: 'MENSAJE', notes: [880, 1175], options: { type: 'sine', gap: 0.09, last: 0.18, volume: 0.07 } },
   whistle: { label: 'SILBATO', whistle: true },
   referee: { label: 'SILBATO REAL', sample: 'silbato', volume: 0.7 },
-  celebration: { label: 'FESTEJO DE GOL', sample: 'gol-festejo' },
-  awayCheer: { label: 'FESTEJO VISITA', sample: 'gol-festejo', volume: 0.3 },
-  boo: { label: 'PIFIAS', sample: 'pifias', volume: 0.75 },
+  celebration: { label: 'GOL (BRENTFORD)', sample: 'gol-brentford' },
+  celebration2: { label: 'GOL (GRITO)', sample: 'gol-grito' },
+  awayCheer: { label: 'FESTEJO VISITA', sample: 'festejo-visita', volume: 0.35 },
+  boo: { label: 'PIFIAS', sample: 'pifias', volume: 0.7 },
   chant: { label: 'CANTO', sample: 'canto', volume: 0.55 },
   applause: { label: 'APLAUSOS', sample: 'aplausos', volume: 0.8 },
 };

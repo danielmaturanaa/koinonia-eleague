@@ -80,6 +80,7 @@ export function PixelStadium({ home, away, fx = null, derby = false, children })
 
 // Lo que suena con cada evento: [sonido, a los cuántos ms]. En modo estadio son grabaciones reales (silbato, rugido, festejo,
 // canto, aplausos); en la vista clásica, los sonidos en 8 bits de siempre.
+let goalTurn = 0;
 function soundsFor(kind, { stadium }, side) {
   if (!stadium) {
     if (kind === 'goal') return [['goal', 0]];
@@ -87,7 +88,11 @@ function soundsFor(kind, { stadium }, side) {
     return [[kind === 'notify' ? 'notify' : 'whistle', 0]];
   }
   // Gol del local: explota el estadio. Gol de la visita: la mayoría (local) pifia y se escucha bajito el sector visitante.
-  if (kind === 'goal') return side === 'away' ? [['boo', 0], ['awayCheer', 300]] : [['celebration', 0]];
+  if (kind === 'goal') {
+    if (side === 'away') return [['boo', 0], ['awayCheer', 300]];
+    goalTurn += 1;
+    return [[goalTurn % 2 ? 'celebration' : 'celebration2', 0]];
+  }
   if (kind === 'red') return [['referee', 0]];
   if (kind === 'kickoff') return [['referee', 0], ['chant', 900]];
   if (kind === 'halftime') return [['referee', 0], ['referee', 500]];
