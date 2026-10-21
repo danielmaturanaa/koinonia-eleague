@@ -128,8 +128,10 @@ export function MatchCenterPage({ matchId, teams = [], navigate }) {
     if (event.kind === 'goal' && (event.side === 'home' || event.side === 'away')) setReplayGoals(goals => ({ ...goals, [event.side]: goals[event.side] + 1 }));
     fire(event);
   }, [fire]);
-  const deficit = replaying ? replayGoals.away - replayGoals.home : (match?.awayScore ?? 0) - (match?.homeScore ?? 0);
-  const ambience = stadium && (match?.status === 'live' || replaying) ? (deficit >= 3 ? 'murmullo' : 'aliento') : null;
+  const playing = match?.status === 'live' || replaying;
+  const liveScore = playing ? (replaying ? replayGoals : { home: match?.homeScore ?? 0, away: match?.awayScore ?? 0 }) : null;
+  const deficit = liveScore ? liveScore.away - liveScore.home : 0;
+  const ambience = stadium && playing ? (deficit >= 3 ? 'murmullo' : 'aliento') : null;
   useEffect(() => (ambience ? startStadiumAmbience(ambience) : undefined), [ambience]);
   // En vivo, las incidencias se refrescan al mismo ritmo que el marcador (goles cargados desde Discord).
   useEffect(() => {
@@ -155,7 +157,7 @@ export function MatchCenterPage({ matchId, teams = [], navigate }) {
       if (stadium) return <>
         <div className={`match-center-arena ${canOperateMatches ? 'is-operator' : ''}`}>
           <div className="match-center-main">{score}{!canOperateMatches && h2h}</div>
-          <PixelStadium home={resolveTeam(match.homeTeam)} away={resolveTeam(match.awayTeam)} fx={fx} derby={Boolean(match.derby)}>
+          <PixelStadium home={resolveTeam(match.homeTeam)} away={resolveTeam(match.awayTeam)} fx={fx} derby={Boolean(match.derby)} score={liveScore}>
             {replaying || loadingSimulation ? <p className="pitch-live-tag">TRANSMISIÓN EN CURSO</p> : <Incidents match={match}/>}
           </PixelStadium>
         </div>

@@ -481,3 +481,13 @@ a.tile:focus-visible, button.tile:focus-visible { outline: 3px solid var(--c-yel
 .match-center-arena.is-operator .match-center-score { flex: 1 1 0; height: auto; min-height: 0; }
 .match-center-arena .stadium360-pitch { height: 380px; }
 @media (max-width: 1100px) { .match-center-arena .match-center-score { height: auto; max-height: 480px; } }
+/* Hinchada en juego: alienta todo el rato (más fuerte y con banderas si va ganando); perdiendo por goleada se apaga.
+   El gol (is-excited) sigue siendo la explosión: saltos más altos y todas las banderas. */
+.arena-side.is-chanting .arena-row i { animation: crowd-chant .55s steps(2) infinite; animation-delay: calc(var(--delay) / 1.5); }
+.arena-side.is-winning .arena-row i { animation: crowd-chant-hot .42s steps(2) infinite; animation-delay: calc(var(--delay) / 2); }
+.arena-side.is-winning .arena-row i.has-flag::before { opacity: 1; animation: flag-wave .6s steps(2) infinite; }
+.arena-side.is-quiet .arena-row i { animation: none; filter: brightness(.65) saturate(.7); }
+.arena-side.is-excited .arena-row i { animation: crowd-explode .28s steps(2) infinite; animation-delay: calc(var(--delay) / 4); }
+@keyframes crowd-chant { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2px); } }
+@keyframes crowd-chant-hot { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+@keyframes crowd-explode { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }

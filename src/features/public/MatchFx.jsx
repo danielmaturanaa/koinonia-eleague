@@ -17,9 +17,16 @@ function Fan({ colors, roll, back = false }) {
     '--skin': back ? HAIR[roll % HAIR.length] : SKIN[roll % SKIN.length], '--delay': `${(roll % 900) / 1000}s` }}><b/><s/></i>;
 }
 
-/** Ánimo de cada hinchada según lo que pasó: festeja la del gol, pifia la otra (y en el clásico se agarran). */
-function moodOf(fx, side, derby) {
-  if (!fx) return '';
+/**
+ * Ánimo de cada hinchada. Con un evento en curso: festeja la del gol, pifia la otra (y en el clásico se agarran). Si no,
+ * mientras se juega alientan todo el rato, más fuerte mientras mejor les va; perdiendo por goleada (3 o más) se apagan.
+ */
+function moodOf(fx, side, derby, score) {
+  if (!fx) {
+    if (!score) return '';
+    const diff = side === 'home' ? score.home - score.away : score.away - score.home;
+    return diff >= 1 ? 'is-chanting is-winning' : diff <= -3 ? 'is-quiet' : 'is-chanting';
+  }
   const angry = derby ? 'is-booing is-fighting' : 'is-booing';
   if (fx.kind === 'goal') return fx.side === side ? 'is-excited' : angry;
   if (fx.kind === 'red') return fx.side === side ? angry : '';
@@ -53,10 +60,11 @@ function EndStand({ side, local }) {
 /**
  * El estadio en 360: la tribuna del fondo de frente (con el único sector de la visita a la derecha), las cabeceras de cada barra a los lados y
  * la tribuna de abajo de espaldas (todo local), con la cancha al medio y lo que se le pase (el marcador) encima del pasto.
- * `fx`: el evento en curso. `derby`: en el clásico la hinchada que recibe el gol tira vasos y se agarra.
+ * `fx`: el evento en curso. `derby`: en el clásico la hinchada que recibe el gol tira vasos y se agarra. `score`: el marcador
+ * mientras se juega ({ home, away }; null si el partido no está en juego), para que alienten según cómo les va.
  */
-export function PixelStadium({ home, away, fx = null, derby = false, children }) {
-  const sides = [{ side: 'home', colors: colorsOf(home), mood: moodOf(fx, 'home', derby) }, { side: 'away', colors: colorsOf(away), mood: moodOf(fx, 'away', derby) }];
+export function PixelStadium({ home, away, fx = null, derby = false, score = null, children }) {
+  const sides = [{ side: 'home', colors: colorsOf(home), mood: moodOf(fx, 'home', derby, score) }, { side: 'away', colors: colorsOf(away), mood: moodOf(fx, 'away', derby, score) }];
   const board = `KOINONIA E-LEAGUE · ${home?.name ?? 'LOCAL'} VS ${away?.name ?? 'VISITA'} · ${derby ? '¡CLÁSICO! · ' : ''}FÚTBOL VIRTUAL, PASIÓN REAL · `;
   const throwing = derby && fx?.kind === 'goal' ? (fx.side === 'home' ? 'away' : 'home') : null;
   return <div className={`pixel-arena pixel-stadium360 ${fx?.kind === 'goal' ? 'is-goal' : ''}`}>
