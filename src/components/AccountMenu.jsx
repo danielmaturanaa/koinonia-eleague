@@ -39,7 +39,9 @@ export function AccountMenu({ navigate, teams = [] }) {
       </div>
       {teamId && <button type="button" role="menuitem" onClick={() => go(`/equipos/${encodeURIComponent(teamId)}`)}>MI EQUIPO{team ? ` · ${team.name}` : ''}</button>}
       <button type="button" role="menuitem" onClick={() => go('/notificaciones')}>NOTIFICACIONES</button>
-      {isAdmin && <button type="button" role="menuitem" onClick={() => go('/personas')}>PERSONAS Y PERMISOS</button>}
+      <button type="button" role="menuitem" onClick={() => go('/reglas')}>REGLAMENTO</button>
+      <button type="button" role="menuitem" onClick={() => go('/noticias')}>NOTICIAS</button>
+      {isAdmin && <button type="button" role="menuitem" onClick={() => go('/admin')}>SALA DE CONTROL</button>}
       <button type="button" role="menuitem" className="account-logout" onClick={() => { setOpen(false); logout(); }}>SALIR</button>
     </div>}
   </div>;

@@ -82,7 +82,7 @@
 .match-center-score .scoreboard-btn-finish { width: 100%; }
 
 /* Pie de portada: eslogan, controles retro y estado de API en una sola línea. */
-.site-footer { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; }
+.site-footer { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center; gap: 18px; }
 .site-slogan { min-width: 0; color: #ffd42a; font: 400 clamp(14px, 1.1vw, 20px)/1.1 'Anton', Impact, sans-serif; letter-spacing: .4px; padding: 2px 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 2px 2px #07194a, 0 0 1px #fff; text-transform: uppercase; }
 .site-footer .api-status { justify-self: end; }
 

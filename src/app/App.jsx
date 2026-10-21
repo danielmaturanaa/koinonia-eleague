@@ -1,3 +1,4 @@
+import { ControlRoomPage } from '../features/admin/ControlRoomPage.jsx';
 import { NotificationsPage } from '../features/notifications/NotificationsPage.jsx';
 import { useMemo } from 'react';
 import { SiteLayout } from '../components/SiteLayout.jsx';
@@ -22,7 +23,6 @@ import { CalculatorPage } from '../features/public/CalculatorPage.jsx';
 import { projectionLink } from '../features/public/ProjectionPanel.jsx';
 import { TeamsDirectoryPage } from '../features/public/TeamsDirectoryPage.jsx';
 import { MatchScoreboardPage } from '../features/public/MatchScoreboardPage.jsx';
-import { PeoplePage } from '../features/admin/PeoplePage.jsx';
 import { MatchCenterPage } from '../features/public/MatchCenterPage.jsx';
 import { useRoute } from './useRoute.js';
 
@@ -109,8 +109,8 @@ export function App() {
     page = <NewsPage teams={league.teams}/>;
   } else if (route.path === '/notificaciones') {
     page = <NotificationsPage navigate={navigate} initialTab={route.query.tab}/>;
-  } else if (route.path === '/personas') {
-    page = <PeoplePage teams={league.teams}/>;
+  } else if (route.path === '/admin' || route.path === '/personas') {
+    page = <ControlRoomPage teams={league.teams} initialTab={route.path === '/personas' ? 'personas' : route.query.tab} tournamentId={route.query.id ?? null}/>;
   } else if (route.path === '/reglas') {
     page = <RulesPage/>;
   } else {

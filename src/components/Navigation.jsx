@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
-import { navigationItems } from '../app/navigation.js';
+import { useAuth } from '../app/AuthGate.jsx';
+import { activeNavigationPath, navigationFor } from '../app/navigation.js';
 
 export function Navigation({ route, navigate, teams = [] }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  // Las fichas de jugador y cartas eFootball viven fuera de /equipos/jugadores, pero pertenecen a Jugadores.
-  const sectionPath = route.name === 'player' || route.name === 'card' ? '/equipos/jugadores' : route.path;
-  const activeItemPath = navigationItems
-    .filter(item => item.path === '/' ? sectionPath === '/' : sectionPath === item.path || sectionPath.startsWith(`${item.path}/`))
-    .sort((left, right) => right.path.length - left.path.length)[0]?.path;
+  const { teamId, isAdmin } = useAuth();
+  const navigationItems = navigationFor({ teamId, isAdmin });
+  const activeItemPath = activeNavigationPath(route, teamId);
 
   useEffect(() => {
     setMenuOpen(false);

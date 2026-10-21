@@ -14,7 +14,6 @@ import { PollsSection } from './market/PollsSection.jsx';
 import { ForSaleSection } from './market/ForSaleSection.jsx';
 import { AuctionHistory } from './market/AuctionHistory.jsx';
 import { SealedAuctionsSection } from './market/SealedAuctionsSection.jsx';
-import { AuctionSimulator } from './market/AuctionSimulator.jsx';
 import { gpLabel } from '../../utils/money.js';
 import { GpInput } from '../../components/GpInput.jsx';
 
@@ -75,7 +74,7 @@ function TradeForm({ teams, players, onChanged }) {
   </form>;
 }
 
-function MarketAdmin({ teams, players, onChanged }) {
+export function MarketAdmin({ teams, players, onChanged }) {
   const [tab, setTab] = useState('transfer');
   return <section className="market-admin"><nav><button className={tab === 'transfer' ? 'active' : ''} onClick={() => setTab('transfer')}>NUEVA TRANSFERENCIA</button><button className={tab === 'trade' ? 'active' : ''} onClick={() => setTab('trade')}>NUEVO TRUEQUE</button></nav>{tab === 'transfer' ? <TransferForm teams={teams} players={players} onChanged={onChanged}/> : <TradeForm teams={teams} players={players} onChanged={onChanged}/>}</section>;
 }
@@ -197,9 +196,7 @@ function PromiseRecord({ teamId, revision }) {
 
 export function MarketPage({ teams, initialTab = null, highlightId = null }) {
   const { isAdmin, teamId: myTeamId } = useAuth();
-  const [managing, setManaging] = useState(false);
   const [revision, setRevision] = useState(0);
-  const players = useApiQuery(signal => managing ? loadAllPlayers(signal) : Promise.resolve({ data: [] }), [managing, revision]);
   const status = useApiQuery(signal => endpoints.marketStatus(signal), [revision]);
   const profile = useApiQuery(signal => myTeamId ? endpoints.team(myTeamId, signal) : Promise.resolve({ data: null }), [myTeamId, revision]);
   const refresh = () => setRevision(value => value + 1);
@@ -214,17 +211,14 @@ export function MarketPage({ teams, initialTab = null, highlightId = null }) {
   const setTab = value => { setTabState(value); try { window.sessionStorage.setItem(TAB_KEY, value); } catch { /* sin almacenamiento */ } };
   const live = useApiQuery(signal => endpoints.sealedAuctions({ active: 1 }, signal).catch(() => ({ data: [] })), [revision]);
   const liveCount = (Array.isArray(live.data) ? live.data : []).filter(row => row.status === 'open').length;
-  const sim = useApiQuery(signal => isAdmin ? endpoints.auctionSimAccess(signal).catch(() => ({ data: { allowed: false } })) : Promise.resolve({ data: { allowed: false } }), [isAdmin]);
   const tabs = [
     ['subastas', '🔨 SUBASTAS', liveCount],
     ...(operates ? [['encuestas', '🗳️ ENCUESTAS', null], ['ofertas', '🤝 OFERTAS', null], ['venta', '🏷️ A LA VENTA', null]] : []),
     ['historial', '📜 HISTORIAL', null],
-    ...(sim.data?.allowed ? [['simulador', '🧪 SIMULADOR', null]] : []),
   ];
   const current = tabs.some(([key]) => key === tab) ? tab : 'subastas';
   return <main className="newspaper data-page"><section className="data-paper">
-    <PageHeader kicker="JUGADORES DISPONIBLES" title="MERCADO">{isAdmin && <button className="page-action" onClick={() => setManaging(value => !value)}>{managing ? 'CERRAR GESTIÓN' : '⚙ GESTIONAR'}</button>}</PageHeader>
-    {managing && isAdmin && <section className="market-section market-manual"><header><h2>REGISTRAR OPERACIÓN MANUAL</h2><p>Los traspasos y trueques normalmente se hacen por Discord; usa esto solo para corregir o registrar algo a mano.</p></header><MarketAdmin teams={teams} players={asList(players.data)} onChanged={refresh}/></section>}
+    <PageHeader kicker="JUGADORES DISPONIBLES" title="MERCADO">{isAdmin && <a className="page-action" href="#/admin?tab=mercado">⚙ ADMINISTRAR MERCADO</a>}</PageHeader>
     {operates && <MyClubPanel team={myTeam} figures={figures} profileQuery={myTeamId ? profile : null} status={status.data} statusQuery={status}/>}
     {myTeamId && <PromiseRecord teamId={myTeamId} revision={revision}/>}
     <nav className="market-tabs" role="tablist" aria-label="SECCIONES DEL MERCADO">
@@ -243,7 +237,6 @@ export function MarketPage({ teams, initialTab = null, highlightId = null }) {
       </>}
       {current === 'venta' && <ForSaleSection teams={teams} revision={revision} onChanged={refresh}/>}
       {current === 'historial' && <AuctionHistory revision={revision} teams={teams}/>}
-      {current === 'simulador' && <AuctionSimulator teams={teams}/>}
     </div>
   </section></main>;
 }

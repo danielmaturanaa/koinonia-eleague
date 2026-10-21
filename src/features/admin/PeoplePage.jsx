@@ -73,7 +73,7 @@ function PersonRow({ person, clubs, holders, viewerIsOwner, onChanged }) {
   </li>;
 }
 
-export function PeoplePage({ teams = [] }) {
+export function PeoplePage({ teams = [], embedded = false }) {
   const { isAdmin, isOwner } = useAuth();
   const [filter, setFilter] = useState('all');
   const [search, setSearch] = useState('');
@@ -96,8 +96,10 @@ export function PeoplePage({ teams = [] }) {
   if (!isAdmin) {
     return <main className="newspaper data-page"><section className="data-paper"><PageHeader kicker="ADMINISTRACIÓN" title="PERSONAS Y PERMISOS"/><p className="empty-copy data-empty">SOLO LOS ADMINISTRADORES PUEDEN VER ESTA PÁGINA.</p></section></main>;
   }
-  return <main className="newspaper data-page"><section className="data-paper people-paper">
-    <PageHeader kicker="ADMINISTRACIÓN" title="PERSONAS Y PERMISOS"/>
+  const shell = content => embedded
+    ? <div className="people-paper">{content}</div>
+    : <main className="newspaper data-page"><section className="data-paper people-paper"><PageHeader kicker="ADMINISTRACIÓN" title="PERSONAS Y PERMISOS"/>{content}</section></main>;
+  return shell(<>
     <p className="people-intro">Aquí aparece quien ha entrado con Discord. Vincula a cada persona con su equipo para que pueda editarlo{isOwner ? ' y nombra admins' : ''}. {!isOwner && 'Solo los dueños pueden nombrar admins.'}</p>
     {unlinked.length > 0 && <p className="people-alert" role="status"><b>{unlinked.length} {unlinked.length === 1 ? 'EQUIPO' : 'EQUIPOS'} SIN PRESI VINCULADO:</b> {unlinked.map(club => club.name).join(', ')}.</p>}
     <div className="people-tools">
@@ -108,5 +110,5 @@ export function PeoplePage({ teams = [] }) {
     {!people.loading && !people.error && list.length > 0 && (visible.length
       ? <ul className="people-list">{visible.map(person => <PersonRow key={person.discordUserId} person={person} clubs={clubs} holders={holders} viewerIsOwner={isOwner} onChanged={people.retry}/>)}</ul>
       : <p className="empty-copy data-empty">NADIE COINCIDE CON ESE FILTRO.</p>)}
-  </section></main>;
+  </>);
 }
