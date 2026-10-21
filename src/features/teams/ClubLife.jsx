@@ -154,8 +154,8 @@ function ArtistCard({ artist, team, busy, onBook }) {
   return <Card as="article" className={`artist-card ${blocked ? 'is-locked' : ''}`}>
     <header><span className={`artist-badge ${artist.scene === 'cristiana' ? 'is-christian' : ''}`} aria-hidden="true"><Icon name={artist.scene === 'cristiana' ? 'mic' : 'music'} size={18}/></span><div><b>{upper(artist.name)}</b><small>{upper(artist.genre)} · MUEVE ~{people(artist.draw)} PERSONAS</small></div></header>
     <dl>
-      <div><dt>CACHÉ</dt><dd>{gp(artist.fee)}</dd></div>
-      <div><dt>SHOW PROMEDIO</dt><dd className={artist.expectedProfit >= 0 ? 'up' : 'down'}>{artist.expectedProfit >= 0 ? '+' : ''}{gp(artist.expectedProfit)}</dd></div>
+      <div><dt>COBRA POR TOCAR</dt><dd>{gp(artist.fee)}</dd></div>
+      <div><dt>TE QUEDARÍA</dt><dd className={artist.expectedProfit >= 0 ? 'up' : 'down'}>{artist.expectedProfit >= 0 ? '+' : ''}{gp(artist.expectedProfit)}</dd></div>
     </dl>
     {artist.bookedBy ? <Chip icon="lock">DE GIRA CON {upper(artist.bookedBy)}</Chip>
       : !artist.fits ? <Chip icon="lock">PIDE {people(artist.minCapacity)} DE AFORO</Chip>
@@ -213,14 +213,14 @@ export function EventsTab({ team, onChanged }) {
   return <section className="club-life events-tab">
     <VeladaCard team={team} velada={data.velada} canEdit={canEdit} onChanged={query.retry}/>
     {scheduled && <Card tone="navy" className="event-scheduled" title={`PRÓXIMO SHOW: ${upper(scheduled.artist?.name)}`} aside={<Chip tone="yellow" icon="clock">EN TU PRÓXIMA FECHA DE LOCAL</Chip>}>
-      <p>CACHÉ PAGADO ({gp(scheduled.cost)}). SE HACE AL TERMINAR TU PRÓXIMO PARTIDO DE LOCAL.</p>
+      <p>YA LE PAGASTE AL ARTISTA ({gp(scheduled.cost)}). SE HACE AL TERMINAR TU PRÓXIMO PARTIDO DE LOCAL.</p>
       {canEdit && (confirm === scheduled.id
-        ? <ConfirmStep message={`¿CANCELAR? TE DEVUELVEN ${gp(Math.floor(scheduled.cost / 2))} (LA MITAD DEL CACHÉ).`} confirmLabel="SÍ, CANCELAR" danger busy={act.loading} onConfirm={() => { label.current = 'CONCIERTO CANCELADO'; act.execute(signal => endpoints.cancelConcert(team.id, scheduled.id, signal)); }} onCancel={() => setConfirm(null)}/>
+        ? <ConfirmStep message={`¿CANCELAR? TE DEVUELVEN ${gp(Math.floor(scheduled.cost / 2))} (LA MITAD DE LO QUE LE PAGASTE).`} confirmLabel="SÍ, CANCELAR" danger busy={act.loading} onConfirm={() => { label.current = 'CONCIERTO CANCELADO'; act.execute(signal => endpoints.cancelConcert(team.id, scheduled.id, signal)); }} onCancel={() => setConfirm(null)}/>
         : <Button variant="ghost" size="sm" onClick={() => setConfirm(scheduled.id)}>CANCELAR SHOW</Button>)}
     </Card>}
     <Card title="CARTELERA DE CONCIERTOS" aside={<Chip icon="music">{catalog.used} / {catalog.limit} ESTA TEMPORADA</Chip>}>
       <nav className="scene-filter" role="tablist" aria-label="Escena">{SCENES.map(([key, text]) => <button key={key} type="button" role="tab" aria-selected={scene === key} className={scene === key ? 'on' : ''} onClick={() => setScene(key)}>{text}</button>)}</nav>
-      <HowItWorks><p>Contratas al artista, pagas su caché y el show se hace en tu próxima fecha de local. Te quedan {catalog.sharePerHead} € por persona: estadio lleno es ganancia y más hinchas; un show flojo puede dejar pérdida. Máximo {catalog.limit} por temporada.</p><p>La escena cristiana cobra menos y cabe en canchas chicas: es la forma de que un club sin estadio grande también haga eventos.</p></HowItWorks>
+      <HowItWorks><p>Contratas al artista y le pagas por adelantado lo que cobra por tocar. El show se hace en tu próxima fecha de local y de cada entrada te quedan {catalog.sharePerHead} €. Si va mucha gente ganas plata e hinchas; si va poca, lo que recaudas puede no alcanzar a cubrir lo que le pagaste. «Te quedaría» es lo que ganarías con un show normal. Máximo {catalog.limit} por temporada.</p><p>La escena cristiana cobra menos y cabe en canchas chicas: es la forma de que un club sin estadio grande también haga eventos.</p></HowItWorks>
       {confirm && confirm !== scheduled?.id && <ConfirmStep message={`¿CONTRATAR A ${upper(confirm.name)} POR ${gp(confirm.fee)}? SE DESCUENTA AHORA.`} confirmLabel="SÍ, CONTRATAR" busy={act.loading}
         onConfirm={() => { label.current = `${upper(confirm.name)} TOCARÁ EN TU ESTADIO`; act.execute(signal => endpoints.bookConcert(team.id, confirm.key, signal)); }} onCancel={() => setConfirm(null)}/>}
       {act.error && <Notice tone="error">{act.error.message}</Notice>}
