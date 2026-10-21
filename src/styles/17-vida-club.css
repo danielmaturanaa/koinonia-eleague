@@ -308,3 +308,29 @@
 .stadium-body .ui-btn, .stadium-body .ui-chip { justify-self: start; }
 .stadium-photo-actions { display: flex; flex-wrap: wrap; gap: 6px; border-top: 1px dashed var(--c-paper-line); padding-top: 6px; }
 @media (max-width: 560px) { .stadiums-mine { grid-template-columns: auto minmax(0, 1fr); } .stadiums-mine small { grid-column: 1 / -1; } }
+
+/* La Velada en tres pasos. */
+.velada-lead { margin: 0; font: 600 var(--fs-sm)/1.4 var(--font-body); color: var(--c-ink); }
+.velada-steps { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; }
+.velada-step { display: grid; grid-template-columns: 28px minmax(0, 1fr); gap: var(--sp-3); padding: var(--sp-3) 0; border-top: 1px dashed var(--c-gold-line); }
+.velada-step:first-child { border-top: 0; }
+.velada-step > div { display: grid; gap: 6px; min-width: 0; }
+.velada-step b { font: 500 var(--fs-md)/1.2 var(--font-ui); letter-spacing: .4px; color: var(--c-navy-900); }
+.velada-step small { font: 600 var(--fs-xs)/1.4 var(--font-body); color: var(--c-ink-muted); }
+.velada-step-n { display: grid; place-items: center; width: 28px; height: 28px; font: 500 14px/1 var(--font-ui); color: var(--c-navy-900); background: var(--c-white); border: 2px solid var(--c-navy-800); }
+.velada-step.is-done .velada-step-n { color: var(--c-white); background: var(--c-green); border-color: var(--c-green); }
+.velada-step.is-now .velada-step-n { color: var(--c-navy-900); background: var(--c-yellow); animation: blink 1.2s steps(2) infinite; }
+.velada-step.is-blocked .velada-step-n { color: var(--c-white); background: var(--c-red); border-color: var(--c-red); }
+.velada-step.is-wait { opacity: .6; }
+.velada-reqs { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; font: 600 var(--fs-sm)/1.3 var(--font-body); }
+.velada-reqs .ok { color: var(--c-green); }
+.velada-reqs .no { color: var(--c-red); }
+.velada-link { justify-self: start; font: 600 var(--fs-xs)/1 var(--font-ui); letter-spacing: .5px; color: var(--c-navy-700); }
+.velada-math { display: flex; flex-wrap: wrap; gap: var(--sp-2) var(--sp-5); margin: 4px 0 0; padding: var(--sp-2) var(--sp-3); background: var(--c-white); border: 2px solid var(--c-navy-800); }
+.velada-math > div { display: grid; gap: 2px; }
+.velada-math dt { font: 600 var(--fs-xs)/1 var(--font-ui); letter-spacing: .5px; color: var(--c-ink-muted); }
+.velada-math dd { margin: 0; font: 400 22px/1 var(--font-display); color: var(--c-navy-900); }
+.velada-math .up dd { color: var(--c-green); }
+.velada-math .down dd { color: var(--c-red); }
+.velada-math small { font: 600 11px/1.2 var(--font-body); color: var(--c-ink-muted); }
+@media (prefers-reduced-motion: reduce) { .velada-step.is-now .velada-step-n { animation: none; } }

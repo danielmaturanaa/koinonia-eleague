@@ -147,12 +147,10 @@ function useBusiness(team) {
   return query;
 }
 
-const SCENES = [['todos', 'TODOS'], ['cristiana', 'MÚSICA CRISTIANA'], ['general', 'POP, URBANO Y ROCK']];
-
 function ArtistCard({ artist, team, busy, onBook }) {
   const blocked = !artist.fits || artist.bookedBy;
   return <Card as="article" className={`artist-card ${blocked ? 'is-locked' : ''}`}>
-    <header><span className={`artist-badge ${artist.scene === 'cristiana' ? 'is-christian' : ''}`} aria-hidden="true"><Icon name={artist.scene === 'cristiana' ? 'mic' : 'music'} size={18}/></span><div><b>{upper(artist.name)}</b><small>{upper(artist.genre)} · MUEVE ~{people(artist.draw)} PERSONAS</small></div></header>
+    <header><span className="artist-badge is-christian" aria-hidden="true"><Icon name="mic" size={18}/></span><div><b>{upper(artist.name)}</b><small>{upper(artist.genre)} · MUEVE ~{people(artist.draw)} PERSONAS</small></div></header>
     <dl>
       <div><dt>COBRA POR TOCAR</dt><dd>{gp(artist.fee)}</dd></div>
       <div><dt>TE QUEDARÍA</dt><dd className={artist.expectedProfit >= 0 ? 'up' : 'down'}>{artist.expectedProfit >= 0 ? '+' : ''}{gp(artist.expectedProfit)}</dd></div>
@@ -163,34 +161,72 @@ function ArtistCard({ artist, team, busy, onBook }) {
   </Card>;
 }
 
+const timeLeft = iso => {
+  const ms = Date.parse(iso) - Date.now();
+  if (!Number.isFinite(ms) || ms <= 0) return 'CERRANDO';
+  const hours = Math.floor(ms / 3600000);
+  return hours >= 24 ? `QUEDAN ${Math.floor(hours / 24)} D ${hours % 24} H` : hours >= 1 ? `QUEDAN ${hours} H` : `QUEDAN ${Math.max(1, Math.round(ms / 60000))} MIN`;
+};
+
+/** Un paso de la guía de La Velada: hecho, en curso o pendiente. */
+function Step({ n, state, title, children }) {
+  return <li className={`velada-step is-${state}`}>
+    <span className="velada-step-n" aria-hidden="true">{state === 'done' ? <Icon name="check" size={14}/> : state === 'blocked' ? <Icon name="lock" size={12}/> : n}</span>
+    <div><b>{title}</b>{children}</div>
+  </li>;
+}
+
+/**
+ * La Velada del Año en tres pasos: (1) Ibai abre la búsqueda de estadio, (2) tu club cumple los requisitos,
+ * (3) mandas una oferta en sobre cerrado antes del cierre. Muestra cuánto ganarías si te elige.
+ */
 function VeladaCard({ team, velada, canEdit, onChanged }) {
   const toast = useToast();
   const [amount, setAmount] = useState(velada.myBid ?? '');
   const bid = useApiMutation((value, signal) => endpoints.bidVelada(team.id, value, signal), { onSuccess: () => { toast({ tone: 'success', title: 'POSTULACIÓN ENVIADA', body: 'IBAI LA VE EN SOBRE CERRADO.' }); onChanged(); } });
   const withdraw = useApiMutation((_, signal) => endpoints.withdrawVelada(team.id, signal), { onSuccess: onChanged });
   const round = velada.round;
-  const eligible = velada.eligibility?.eligible;
+  const open = round?.status === 'open';
+  const req = velada.requirements;
+  const me = velada.eligibility;
+  const eligible = Boolean(me?.eligible);
+  const offer = Number(amount) || 0;
   const closes = round?.closesAt ? new Date(round.closesAt).toLocaleString('es-CL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'America/Santiago' }) : null;
-  return <Card tone="gold" className="velada-card" title="LA VELADA DEL AÑO" aside={<Chip tone="navy" icon="mic">IBAI ELIGE ESTADIO</Chip>}>
-    {!round && <p className="club-life-hint">CUANDO IBAI ABRA LA BÚSQUEDA DE ESTADIO, TE LLEGARÁ UN AVISO. SE PIDE UN ESTADIO DE {people(velada.requirements.minCapacity)} PERSONAS Y {compact(velada.requirements.minFollowers)} HINCHAS.</p>}
+  const capacityOk = (me?.capacity ?? 0) >= req.minCapacity;
+  const fansOk = (me?.followers ?? 0) >= req.minFollowers;
+  return <Card tone="gold" className="velada-card" title="LA VELADA DEL AÑO" aside={<Chip tone={open ? 'red' : 'navy'} icon="mic">{open ? timeLeft(round.closesAt) : round?.status === 'resolved' ? 'YA TIENE SEDE' : 'IBAI AÚN NO BUSCA'}</Chip>}>
+    <p className="velada-lead">IBAI ELIGE UN ESTADIO PARA SU EVENTO DE BOXEO. EL CLUB ELEGIDO SE QUEDA CON LAS ENTRADAS A ESTADIO LLENO Y LA TRANSMISIÓN.</p>
     {round?.status === 'resolved' && <div className="velada-result">
       <blockquote>«{round.result?.line}»<cite>— IBAI</cite></blockquote>
       {round.winnerTeamId === team.id && <p className="velada-win">GANASTE {gp(round.result.profit)} NETOS Y TU HINCHADA CRECIÓ 5%.</p>}
       {round.result?.ranking?.length > 0 && <ol className="velada-ranking">{round.result.ranking.map(row => <li key={row.teamId}><b>{upper(row.name)}</b><span>{gp(row.amount)}</span><small>{row.score} PTS</small></li>)}</ol>}
     </div>}
-    {round?.status === 'open' && <>
-      <p className="club-life-hint">POSTULACIÓN ABIERTA HASTA EL <b>{upper(closes)}</b>.</p>
-      <HowItWorks><p>Ofertas en sobre cerrado. Ibai mira la oferta (50%), el aforo (30%) y la hinchada (20%). El ganador paga su oferta y se queda con las entradas a estadio lleno y la transmisión.</p></HowItWorks>
-      {round.bidders.length > 0 && <p className="velada-bidders"><Icon name="people" size={14}/> POSTULAN: {round.bidders.map(bidder => upper(bidder.name)).join(' · ')}</p>}
-      {!eligible ? <Notice tone="error">NO CUMPLES LOS REQUISITOS: {upper(velada.eligibility?.reasons?.join(' '))}</Notice>
-        : canEdit && <div className="velada-bid">
-          <label>TU OFERTA A LA ORGANIZACIÓN<GpInput value={amount} onChange={event => setAmount(event.target.value)} placeholder="0" aria-label="Oferta para La Velada"/></label>
-          <Button icon="gavel" disabled={bid.loading || amount === ''} onClick={() => bid.execute(Number(amount))}>{velada.myBid !== null ? 'CAMBIAR OFERTA' : 'POSTULAR'}</Button>
+    {round?.status !== 'resolved' && <ol className="velada-steps">
+      <Step n={1} state={open ? 'done' : 'now'} title={open ? `IBAI ESTÁ BUSCANDO ESTADIO · CIERRA EL ${upper(closes)}` : 'ESPERA A QUE IBAI ABRA LA BÚSQUEDA'}>
+        <small>{open ? (round.bidders.length ? `POSTULAN: ${round.bidders.map(bidder => upper(bidder.name)).join(' · ')}` : 'TODAVÍA NO POSTULA NADIE.') : 'LA ABRE LA ADMINISTRACIÓN UNA VEZ POR TEMPORADA. TE LLEGA UN AVISO.'}</small>
+      </Step>
+      <Step n={2} state={eligible ? 'done' : 'blocked'} title={eligible ? 'TU CLUB CUMPLE LOS REQUISITOS' : 'TU CLUB TODAVÍA NO CUMPLE LOS REQUISITOS'}>
+        <ul className="velada-reqs">
+          <li className={capacityOk ? 'ok' : 'no'}>{capacityOk ? '✓' : '✗'} ESTADIO DE {people(req.minCapacity)} PERSONAS · EL TUYO: {people(me?.capacity)}</li>
+          <li className={fansOk ? 'ok' : 'no'}>{fansOk ? '✓' : '✗'} {compact(req.minFollowers)} HINCHAS · TIENES {compact(me?.followers)}</li>
+        </ul>
+        {!capacityOk && <a className="velada-link" href="#/equipos/estadios">VER ESTADIOS DE 50.000 O MÁS →</a>}
+      </Step>
+      <Step n={3} state={!open || !eligible ? 'wait' : velada.myBid !== null ? 'done' : 'now'} title={velada.myBid !== null ? `POSTULASTE CON ${gp(velada.myBid)} · NADIE MÁS VE TU OFERTA` : 'MANDA TU OFERTA EN SOBRE CERRADO'}>
+        <small>IBAI ELIGE MIRANDO LA OFERTA (50%), EL AFORO (30%) Y LA HINCHADA (20%) DE CADA POSTULANTE. OFERTAR MÁS TE DA MÁS CHANCE, PERO TE QUEDA MENOS: SOLO PAGAS SI GANAS.</small>
+        {open && eligible && canEdit && <div className="velada-bid">
+          <label>TU OFERTA<GpInput value={amount} onChange={event => setAmount(event.target.value)} placeholder="0" aria-label="Oferta para La Velada"/></label>
+          <Button icon="gavel" disabled={bid.loading || amount === ''} onClick={() => bid.execute(offer)}>{velada.myBid !== null ? 'CAMBIAR OFERTA' : 'POSTULAR'}</Button>
           {velada.myBid !== null && <Button variant="ghost" size="sm" disabled={withdraw.loading} onClick={() => withdraw.execute()}>RETIRARME</Button>}
         </div>}
-      {velada.myBid !== null && <p className="club-life-hint">TU OFERTA ACTUAL: <b>{gp(velada.myBid)}</b>. NADIE MÁS LA VE.</p>}
-      {(bid.error || withdraw.error) && <Notice tone="error">{(bid.error ?? withdraw.error).message}</Notice>}
-    </>}
+        {eligible && me?.prize > 0 && <dl className="velada-math">
+          <div><dt>SI IBAI TE ELIGE, COBRAS</dt><dd>{gp(me.prize)}</dd><small>{people(me.capacity)} ENTRADAS A 80 € + TRANSMISIÓN</small></div>
+          <div><dt>MENOS TU OFERTA</dt><dd>{offer ? `−${gp(offer)}` : '—'}</dd></div>
+          <div className={me.prize - offer >= 0 ? 'up' : 'down'}><dt>TE QUEDA</dt><dd>{gp(me.prize - offer)}</dd><small>Y TU HINCHADA CRECE 5%</small></div>
+        </dl>}
+      </Step>
+    </ol>}
+    {(bid.error || withdraw.error) && <Notice tone="error">{(bid.error ?? withdraw.error).message}</Notice>}
   </Card>;
 }
 
@@ -201,7 +237,6 @@ export function EventsTab({ team, onChanged }) {
   const toast = useToast();
   const query = useBusiness(team);
   const [confirm, setConfirm] = useState(null);
-  const [scene, setScene] = useState('todos');
   const label = useRef('');
   const act = useApiMutation((operation, signal) => operation(signal), { onSuccess: () => { setConfirm(null); toast({ tone: 'money', title: label.current }); query.retry(); onChanged?.(); } });
   const data = query.data;
@@ -218,13 +253,12 @@ export function EventsTab({ team, onChanged }) {
         ? <ConfirmStep message={`¿CANCELAR? TE DEVUELVEN ${gp(Math.floor(scheduled.cost / 2))} (LA MITAD DE LO QUE LE PAGASTE).`} confirmLabel="SÍ, CANCELAR" danger busy={act.loading} onConfirm={() => { label.current = 'CONCIERTO CANCELADO'; act.execute(signal => endpoints.cancelConcert(team.id, scheduled.id, signal)); }} onCancel={() => setConfirm(null)}/>
         : <Button variant="ghost" size="sm" onClick={() => setConfirm(scheduled.id)}>CANCELAR SHOW</Button>)}
     </Card>}
-    <Card title="CARTELERA DE CONCIERTOS" aside={<Chip icon="music">{catalog.used} / {catalog.limit} ESTA TEMPORADA</Chip>}>
-      <nav className="scene-filter" role="tablist" aria-label="Escena">{SCENES.map(([key, text]) => <button key={key} type="button" role="tab" aria-selected={scene === key} className={scene === key ? 'on' : ''} onClick={() => setScene(key)}>{text}</button>)}</nav>
-      <HowItWorks><p>Contratas al artista y le pagas por adelantado lo que cobra por tocar. El show se hace en tu próxima fecha de local y de cada entrada te quedan {catalog.sharePerHead} €. Si va mucha gente ganas plata e hinchas; si va poca, lo que recaudas puede no alcanzar a cubrir lo que le pagaste. «Te quedaría» es lo que ganarías con un show normal. Máximo {catalog.limit} por temporada.</p><p>La escena cristiana cobra menos y cabe en canchas chicas: es la forma de que un club sin estadio grande también haga eventos.</p></HowItWorks>
+    <Card title="CONCIERTOS DE MÚSICA CRISTIANA" aside={<Chip icon="music">{catalog.used} / {catalog.limit} ESTA TEMPORADA</Chip>}>
+      <HowItWorks><p>Contratas al artista y le pagas por adelantado lo que cobra por tocar. El show se hace en tu próxima fecha de local y de cada entrada te quedan {catalog.sharePerHead} €. Si va mucha gente ganas plata e hinchas; si va poca, lo que recaudas puede no alcanzar a cubrir lo que le pagaste. «Te quedaría» es lo que ganarías con un show normal. Máximo {catalog.limit} por temporada.</p><p>Toda la cartelera es de música cristiana. La mayoría cabe en una cancha de 12.000 personas, así que cualquier club puede hacer eventos.</p></HowItWorks>
       {confirm && confirm !== scheduled?.id && <ConfirmStep message={`¿CONTRATAR A ${upper(confirm.name)} POR ${gp(confirm.fee)}? SE DESCUENTA AHORA.`} confirmLabel="SÍ, CONTRATAR" busy={act.loading}
         onConfirm={() => { label.current = `${upper(confirm.name)} TOCARÁ EN TU ESTADIO`; act.execute(signal => endpoints.bookConcert(team.id, confirm.key, signal)); }} onCancel={() => setConfirm(null)}/>}
       {act.error && <Notice tone="error">{act.error.message}</Notice>}
-      <div className="artist-grid">{catalog.artists.filter(artist => scene === 'todos' || artist.scene === scene).sort((left, right) => Number(right.fits && !right.bookedBy) - Number(left.fits && !left.bookedBy) || right.draw - left.draw).map(artist => <ArtistCard key={artist.key} artist={artist} team={team} busy={act.loading || Boolean(scheduled) || catalog.used >= catalog.limit} onBook={canEdit ? setConfirm : null}/>)}</div>
+      <div className="artist-grid">{[...catalog.artists].sort((left, right) => Number(right.fits && !right.bookedBy) - Number(left.fits && !left.bookedBy) || right.draw - left.draw).map(artist => <ArtistCard key={artist.key} artist={artist} team={team} busy={act.loading || Boolean(scheduled) || catalog.used >= catalog.limit} onBook={canEdit ? setConfirm : null}/>)}</div>
     </Card>
     {past.length > 0 && <Card title="EVENTOS REALIZADOS">
       <ul className="event-history">{past.map(event => <li key={event.id}>
