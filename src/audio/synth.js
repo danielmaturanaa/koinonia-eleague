@@ -108,6 +108,8 @@ export const SOUNDS = {
   boo: { label: 'PIFIAS', sample: 'pifias', volume: 0.7 },
   chant: { label: 'CANTO', sample: 'canto', volume: 0.55 },
   applause: { label: 'APLAUSOS', sample: 'aplausos', volume: 0.8 },
+  cheering: { label: 'ALIENTO', sample: 'aliento', volume: 0.45 },
+  murmur: { label: 'MURMULLO', sample: 'murmullo', volume: 0.35 },
 };
 
 function playNow(name, scale) {
@@ -128,11 +130,14 @@ export function playSound(name) {
 /** Para el botón "probar": suena aunque los efectos estén apagados. */
 export const previewSound = name => playNow(name, getAudioSettings().effectsVolume);
 
-/** Ambiente de estadio en loop (bajito) mientras se mira un partido en modo estadio. Devuelve cómo apagarlo. */
-export function startStadiumAmbience() {
+/**
+ * Ambiente de estadio en loop mientras se mira un partido en modo estadio: 'aliento' (la hinchada cantando) o 'murmullo'
+ * (la hinchada apagada, cuando el local pierde por goleada). Devuelve cómo apagarlo.
+ */
+export function startStadiumAmbience(kind = 'aliento') {
   const settings = getAudioSettings();
   if (effectsOff(settings)) return () => {};
-  const audio = playSample('ambiente', settings.effectsVolume, { volume: 0.35, loop: true });
+  const audio = playSample(kind, settings.effectsVolume, { volume: kind === 'aliento' ? 0.45 : 0.35, loop: true });
   // Si el navegador no dejó sonar todavía (sin gesto previo), arranca con el primer toque en la página.
   const retry = () => { if (audio?.paused) audio.play()?.catch?.(() => {}); };
   window.addEventListener('pointerdown', retry, { once: true });

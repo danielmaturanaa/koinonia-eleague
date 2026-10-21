@@ -119,9 +119,18 @@ export function MatchCenterPage({ matchId, teams = [], navigate }) {
   const stadium = view === 'estadio';
   const [fx, fire] = useMatchFx({ derby: Boolean(match?.derby), stadium });
   useLiveMatchFx(replaying ? null : match, resolveTeam, fire);
-  // En modo estadio, el murmullo de la hinchada de fondo mientras el partido está en vivo o en la transmisión.
-  const ambience = stadium && (match?.status === 'live' || replaying);
-  useEffect(() => (ambience ? startStadiumAmbience() : undefined), [ambience]);
+  // En modo estadio suena la hinchada de fondo mientras el partido está en vivo o en la transmisión: alentando, salvo que el
+  // local vaya perdiendo por goleada (3 o más): ahí se apaga y queda el murmullo. En la transmisión el marcador se lleva
+  // con los goles que van saliendo.
+  const [replayGoals, setReplayGoals] = useState({ home: 0, away: 0 });
+  useEffect(() => { setReplayGoals({ home: 0, away: 0 }); }, [replaying, localReplay?.startsAt]);
+  const onReplayEvent = useCallback(event => {
+    if (event.kind === 'goal' && (event.side === 'home' || event.side === 'away')) setReplayGoals(goals => ({ ...goals, [event.side]: goals[event.side] + 1 }));
+    fire(event);
+  }, [fire]);
+  const deficit = replaying ? replayGoals.away - replayGoals.home : (match?.awayScore ?? 0) - (match?.homeScore ?? 0);
+  const ambience = stadium && (match?.status === 'live' || replaying) ? (deficit >= 3 ? 'murmullo' : 'aliento') : null;
+  useEffect(() => (ambience ? startStadiumAmbience(ambience) : undefined), [ambience]);
   // En vivo, las incidencias se refrescan al mismo ritmo que el marcador (goles cargados desde Discord).
   useEffect(() => {
     if (match?.status !== 'live') return undefined;
@@ -136,8 +145,8 @@ export function MatchCenterPage({ matchId, teams = [], navigate }) {
         ? <div className="match-center-score"><article className="scoreboard scoreboard-full scoreboard-loading"><p>SINTONIZANDO LA TRANSMISIÓN…</p></article></div>
         : replaying
         ? <div className="match-center-score">{sharedReplay
-          ? <SimulationReplay match={match} simulation={simulation} resolveTeam={resolveTeam} startsAt={new Date(simulation.replayStartsAt).getTime()} durationSeconds={simulation.durationSeconds} onEvent={fire} onEnded={onSharedReplayEnded}/>
-          : <><SimulationReplay key={localReplay.startsAt} onEvent={fire} match={match} simulation={simulation} resolveTeam={resolveTeam} startsAt={localReplay.startsAt} durationSeconds={localReplay.durationSeconds}/><button type="button" className="sim-replay-close" onClick={() => setLocalReplay(null)}>✕ CERRAR REPETICIÓN</button></>}</div>
+          ? <SimulationReplay match={match} simulation={simulation} resolveTeam={resolveTeam} startsAt={new Date(simulation.replayStartsAt).getTime()} durationSeconds={simulation.durationSeconds} onEvent={onReplayEvent} onEnded={onSharedReplayEnded}/>
+          : <><SimulationReplay key={localReplay.startsAt} onEvent={onReplayEvent} match={match} simulation={simulation} resolveTeam={resolveTeam} startsAt={localReplay.startsAt} durationSeconds={localReplay.durationSeconds}/><button type="button" className="sim-replay-close" onClick={() => setLocalReplay(null)}>✕ CERRAR REPETICIÓN</button></>}</div>
         : <div className="match-center-score"><Scoreboard matchId={matchId} mode="manage" density="full" teams={teams} refreshKey={revision} onChanged={bump} showActa={false}/>{match.sanctioned && <p className="match-sanction-banner"><SanctionBadge match={match}/> Resultado administrativo 0-3: el partido no se jugó.</p>}{match.simulated && <SimulationBanner match={match} simulation={simulation} onReplay={durationSeconds => setLocalReplay({ startsAt: Date.now(), durationSeconds })}/>}</div>;
       const incidents = !replaying && !loadingSimulation && (match.status === 'pending' ? <SimulationPreview key={revision} match={match} onSimulated={bump}/> : <Incidents match={match}/>);
       const h2h = <div className="match-center-h2h"><HeadToHead match={match} resolveTeam={resolveTeam}/></div>;

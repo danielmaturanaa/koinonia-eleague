@@ -190,7 +190,11 @@ const SOUND_CREDITS = [
   ['Festejo de la visita', "Southampton vs Hull at Saint Mary's Stadium", 'Quistard', 'CC BY 3.0', 'https://freesound.org/s/237681/'],
   ['Pifias', 'Football stadium fans are not happy with the referee (Aris FC)', 'avakas', 'CC BY 4.0', 'https://freesound.org/s/263680/'],
   ['Canto', "West Ham: I'm Forever Blowing Bubbles", 'zedkah', 'CC0', 'https://freesound.org/s/133833/'],
-  ['Ambiente', 'Old Trafford', 'BeeProductive', 'CC0', 'https://freesound.org/s/430020/'],
+  ['Aliento', 'EURO2024 - Football UK England Fans singing crowd', 'imagefilm.berlin', 'CC BY 4.0', 'https://freesound.org/s/746441/'],
+  ['Aliento', 'Colombian Soccer Stadium Crowd', 'USBMED_Ambiences_Sound_Library', 'CC BY 4.0', 'https://freesound.org/s/638367/'],
+  ['Aliento', 'Milan Derby (Milan vs Inter) at San Siro Stadium', 'neilraouf', 'CC0', 'https://freesound.org/s/424354/'],
+  ['Aliento', 'Football match chanting crowd (Wimbledon)', 'Dan_AudioFile', 'CC BY 4.0', 'https://freesound.org/s/654084/'],
+  ['Murmullo (cuando el local pierde por goleada)', 'Old Trafford', 'BeeProductive', 'CC0', 'https://freesound.org/s/430020/'],
   ['Silbato', 'Referee whistle blow (gymnasium)', 'SpliceSound', 'CC0', 'https://commons.wikimedia.org/wiki/File:218318_splicesound_referee-whistle-blow-gymnasium.wav'],
   ['Aplausos', 'Applause I', 'thore', 'Dominio público', 'https://commons.wikimedia.org/wiki/File:Applause_i.ogg'],
 ];
