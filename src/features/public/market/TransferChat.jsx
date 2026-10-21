@@ -6,8 +6,8 @@ import { useApiMutation } from '../../admin/useApiMutation.js';
 import { playIncoming } from './chatSound.js';
 
 const upper = text => String(text ?? '').toUpperCase();
-const KIND_TAG = { dato: 'DATO DE TU CLUB', argumento: 'ARGUMENTO', negativa: 'HONESTA' };
-const KIND_HINT = { dato: 'Vale lo que tu club supera al suyo en este tema.', argumento: 'Suma poco; si choca con la realidad, lo enfría.', negativa: 'Si el tema es flojo, la honestidad se agradece.' };
+const KIND_TAG = { dato: 'DATO DE TU CLUB', argumento: 'ARGUMENTO', negativa: 'HONESTA', promesa: 'PROMESA · OBLIGA SI LLEGA' };
+const KIND_HINT = { dato: 'Vale lo que tu club supera al suyo en este tema.', argumento: 'Suma poco; si choca con la realidad, lo enfría.', negativa: 'Si el tema es flojo, la honestidad se agradece.', promesa: 'Convence más. Si el jugador llega a tu club y no la cumples antes del cierre del mercado siguiente, baja tu reputación.' };
 const AGENT_ICON = { superagente: 'star', tiburon: 'gavel', papa: 'people', amigo: 'ball' };
 // Lo que provocó cada respuesta, en palabras (los puntos exactos van arriba, en el marcador de la charla).
 const effectOf = points => (points >= 3 ? 'LO CONVENCISTE' : points > 0 ? 'LE SUMÓ' : points <= -3 ? 'LO ENFRIASTE' : points < 0 ? 'LE RESTÓ' : 'NI FU NI FA');
