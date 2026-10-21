@@ -29,29 +29,24 @@ const ROLE_HINT = { crucial: 'Juega todo', importante: 'Casi siempre', rotacion:
 const rank = role => ROLES.findIndex(([key]) => key === role);
 const signedReason = reason => `${reason.delta > 0 ? '+' : '−'}${Math.abs(reason.delta)} ${reason.text}`;
 
-/** Tarjeta de un jugador: su ánimo y el rol, que el presi cambia con un toque (el que cree merecer va marcado con ★). */
-function RoleCard({ team, row, canEdit, locked, onDone }) {
+/** Fila de un jugador: ánimo, rol (con un toque; ★ = el que cree merecer), lo que cree merecer y personalidad. */
+function RoleRow({ team, row, canEdit, locked, onDone }) {
   const change = useApiMutation((body, signal) => endpoints.setPlayerRole(team.id, row.playerId, body, signal), { onSuccess: onDone });
   const under = rank(row.role) > rank(row.expectedRole);
-  const tone = moodTone(row.mood);
   const top = [...(row.reasons ?? [])].sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))[0];
-  return <article className={`role-card mood-${tone} ${under ? 'is-under' : ''}`} title={(row.reasons ?? []).map(signedReason).join('\n')}>
-    <header>
-      <PlayerFace src={row.faceUrl} name={row.name}/>
-      <span><b>{row.name}</b><small>{[row.position, ...row.traits.map(trait => (TRAIT_LABEL[trait] ?? trait).toLowerCase())].filter(Boolean).join(' · ')}</small></span>
-    </header>
-    <div className="role-mood"><MoodMeter mood={row.mood} label={row.moodLabel}/></div>
-    {top && <p className="role-reason">{signedReason(top)}</p>}
-    {canEdit
+  return <tr className={`mood-${moodTone(row.mood)} ${under ? 'is-under' : ''}`} title={(row.reasons ?? []).map(signedReason).join('\n')}>
+    <td><span className="roles-player"><PlayerFace src={row.faceUrl} name={row.name}/><span><b>{row.name}</b><small>{row.position}</small></span></span></td>
+    <td><MoodMeter mood={row.mood} label={row.moodLabel}/>{top && <small className="role-reason">{signedReason(top)}</small>}</td>
+    <td>{canEdit
       ? <div className="role-pills" role="radiogroup" aria-label={`Rol de ${row.name}`}>{ROLES.map(([key, label]) => <button type="button" key={key} role="radio" aria-checked={row.role === key}
         className={`${row.role === key ? 'on' : ''} ${row.expectedRole === key ? 'wanted' : ''}`} disabled={change.loading || locked || row.role === key}
         title={`${ROLE_HINT[key]}${row.expectedRole === key ? ' · el que cree merecer' : ''}`} onClick={() => change.execute({ role: key })}>
         {row.expectedRole === key && <i aria-hidden="true">★</i>}{label.charAt(0) + label.slice(1).toLowerCase()}
       </button>)}</div>
-      : <p className="role-current">Rol: <b>{roleLabel(row.role).toLowerCase()}</b></p>}
-    {under && <p className="role-warning">Cree merecer <b>{roleLabel(row.expectedRole).toLowerCase()}</b>: así se va a enojar.</p>}
-    <FormFeedback mutation={change}/>
-  </article>;
+      : <b className="role-now">{roleLabel(row.role).toLowerCase()}</b>}<FormFeedback mutation={change}/></td>
+    <td className={under ? 'role-under' : ''}>{roleLabel(row.expectedRole).charAt(0) + roleLabel(row.expectedRole).slice(1).toLowerCase()}{under && <small>Le diste menos: se enoja.</small>}</td>
+    <td><span className="role-traits">{row.traits.map(trait => <em key={trait}>{(TRAIT_LABEL[trait] ?? trait).toLowerCase()}</em>)}</span></td>
+  </tr>;
 }
 
 /** El presi asigna el rol de cada jugador (él es quien juega); el ánimo de cada uno depende de eso y de lo que cree merecer. */
@@ -66,9 +61,12 @@ export function RolesPanel({ team }) {
   const unhappy = rows.filter(row => row.mood < 50 || rank(row.role) > rank(row.expectedRole)).length;
   return <section className="roles-panel">
     <header><h3>ROLES Y ÁNIMO</h3><p>{rows.length ? (unhappy ? `${unhappy} jugador${unhappy === 1 ? '' : 'es'} necesita${unhappy === 1 ? '' : 'n'} atención; van primero.` : 'Todos contentos con su rol.') : ''} El rol lo eliges tú: la ★ marca el que cada uno cree merecer.</p>
-      <HowItWorks><p>Cada jugador cree merecer un rol según lo que vale en la liga. Su ánimo sale de eso, del rendimiento del equipo, su sueldo y su personalidad. Si lo tienes por debajo de lo que cree merecer, pide más (o se niega) al renovar. Pasa el mouse por una tarjeta para ver todo lo que le mueve el ánimo.</p></HowItWorks></header>
+      <HowItWorks><p>Cada jugador cree merecer un rol según lo que vale en la liga. Su ánimo sale de eso, del rendimiento del equipo, su sueldo y su personalidad. Si lo tienes por debajo de lo que cree merecer, pide más (o se niega) al renovar. Pasa el mouse por una fila para ver todo lo que le mueve el ánimo.</p></HowItWorks></header>
     {canEdit && marketOpen && <p className="payroll-empty">🔒 Mercado abierto: los roles están bloqueados para no manipular los fichajes. Se pueden cambiar mientras se juega el torneo.</p>}
     <DataState query={query}/>
-    {rows.length > 0 && <div className="role-grid">{sorted.map(row => <RoleCard key={row.playerId} team={team} row={row} canEdit={canEdit} locked={marketOpen} onDone={query.retry}/>)}</div>}
+    {rows.length > 0 && <div className="roles-table-wrap"><table className="roles-table-new">
+      <thead><tr><th>Jugador</th><th>Ánimo</th><th>Rol</th><th>Cree merecer</th><th>Personalidad</th></tr></thead>
+      <tbody>{sorted.map(row => <RoleRow key={row.playerId} team={team} row={row} canEdit={canEdit} locked={marketOpen} onDone={query.retry}/>)}</tbody>
+    </table></div>}
   </section>;
 }
