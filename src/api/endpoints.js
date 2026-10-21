@@ -190,12 +190,14 @@ export const endpoints = {
   matchSimulation: (matchId, signal) => get(`/matches/${matchId}/simulation`, null, signal),
   simulateMatch: (matchId, body, signal) => apiClient.post(`/matches/${matchId}/simulate`, body, { actor: 'web', signal }),
   setMatchWinner: (matchId, body, signal) => apiClient.post(`/matches/${matchId}/winner`, body, { actor: 'web', signal }),
-  // Vida de club: clásicos, visto bueno del jugador, hinchada, taquilla, conciertos, auspicio y La Velada.
+  // Vida de club: clásicos, visto bueno del jugador, hinchada, taquilla, conciertos, derechos de TV y La Velada.
   matchday: (matchId, signal) => get(`/matches/${matchId}/matchday`, null, signal),
   rivalries: signal => get('/rivalries', null, signal),
   teamRivalry: (teamId, signal) => get(`/teams/${teamId}/rivalry`, null, signal),
   setRival: (teamId, rivalTeamId, signal) => apiClient.put(`/teams/${teamId}/rival`, { rivalTeamId }, { actor: 'web', signal }),
   playerConsent: (playerId, query, signal) => get(`/players/${playerId}/consent`, query, signal),
+  playerChat: (playerId, teamId, signal) => get(`/players/${playerId}/chat`, { teamId }, signal),
+  playerChatAction: (playerId, action, body, signal) => apiClient.post(`/players/${playerId}/chat/${action}`, body, { actor: 'web', signal }),
   fanRanking: signal => get('/fans', null, signal),
   teamFans: (teamId, signal) => get(`/teams/${teamId}/fans`, null, signal),
   setTicketTier: (teamId, tier, signal) => apiClient.put(`/teams/${teamId}/ticket-tier`, { tier }, { actor: 'web', signal }),

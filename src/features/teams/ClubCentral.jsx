@@ -62,7 +62,7 @@ export function ClubCentral({ team, matches = [], onTab, standing = null, result
     expiring > 0 && ['contract', `${expiring} CONTRATO${expiring === 1 ? '' : 'S'} POR VENCER O VENCIDO${expiring === 1 ? '' : 'S'}`, `#/equipos/${team.id}?tab=nomina`],
     alerts > 0 && ['star', `${alerts} JUGADOR${alerts === 1 ? '' : 'ES'} QUE SIGUES CON NOVEDADES`, `#/equipos/${team.id}?tab=seguimiento`],
     veladaPending && ['mic', 'IBAI BUSCA ESTADIO PARA LA VELADA: PUEDES POSTULAR', `#/equipos/${team.id}?tab=eventos`],
-    life && !life.sponsor && ['handshake', 'TIENES 3 OFERTAS DE AUSPICIO SIN RESPONDER', `#/equipos/${team.id}?tab=auspicio`],
+    life && !life.sponsor && ['handshake', '3 CANALES QUIEREN TRANSMITIR TUS PARTIDOS', `#/equipos/${team.id}?tab=tv`],
   ].filter(Boolean);
 
   return <div className="club-central">

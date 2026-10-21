@@ -267,8 +267,10 @@
 .pc-sound:focus-visible, .pc-close:focus-visible { outline: 3px solid #ffd42a; outline-offset: 2px; }
 
 /* ===== Mercado en pestañas ===== */
-.market-tabs { position: sticky; top: var(--site-header-height); z-index: 5; display: flex; gap: 4px; margin: 4px 0 2px; padding: 6px; overflow-x: auto; scrollbar-width: none; border: 2px solid #10285b; background: #031d58 url('/paper-grain.svg'); box-shadow: 0 3px 0 #000c24; }
+.market-tabs { position: sticky; top: var(--site-header-height); z-index: 5; display: flex; flex-wrap: nowrap; gap: 4px; margin: 4px 0 2px; padding: 6px; overflow-x: auto; scrollbar-width: none; border: 2px solid #10285b; background: #031d58 url('/paper-grain.svg'); box-shadow: 0 3px 0 #000c24; }
 .market-tabs::-webkit-scrollbar { display: none; }
+/* La barra de tipo de operación (traspaso, trueque, liberar) vive dentro del formulario: no se pega arriba. */
+.market-tabs.offer-tabs { position: static; }
 .market-tabs button { position: relative; flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; min-height: 42px; padding: 0 14px; border: 2px solid transparent; color: #f1efd9; background: transparent; font: 500 16px/1 'Oswald', sans-serif; letter-spacing: .4px; white-space: nowrap; transition: background .15s ease, transform .15s ease; }
 .market-tabs button:hover { border-color: #43a8d6; background: #0a3675; }
 .market-tabs button.active { border-color: #ffb628; color: #fff; background: linear-gradient(#e70017, #bc0017); box-shadow: 3px 3px #000b23; transform: translateY(-1px); }

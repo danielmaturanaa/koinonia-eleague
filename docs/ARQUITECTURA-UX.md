@@ -22,11 +22,11 @@ Menú principal (`src/app/navigation.js`): **Inicio · Partidos · Torneos · Eq
 
 `TeamDetailPage` muestra una u otra según quién mira (`ownerMode`):
 
-- **Presidente de ese club → Mi club** (abre en Central): CENTRAL · EQUIPO (Resumen | Partidos | Tabla | Clásico | Historia, con los fichajes) · PLANTEL · FINANZAS (Contratos y nómina | Caja | Simulador) · ESTADIO (Estadio y taquilla | Eventos | Auspicio) · SEGUIMIENTO · BANDEJA. Comprar o cambiar de estadio se hace en Equipos › Estadios.
+- **Presidente de ese club → Mi club** (abre en Central): CENTRAL · EQUIPO (Resumen | Partidos | Tabla | Clásico | Historia, con los fichajes) · PLANTEL · FINANZAS (Contratos y nómina | Caja | Simulador) · ESTADIO (Estadio y taquilla | Eventos | Derechos de TV) · SEGUIMIENTO · BANDEJA. Comprar o cambiar de estadio se hace en Equipos › Estadios.
 - **Cualquier otra persona → ficha pública**: Resumen · Plantel · Partidos · Tabla · Clásico · Historia (con los fichajes) · Nómina (solo lectura) · Estadio (hinchada y taquilla, sin el negocio).
 - **Admin en un club ajeno** entra como visitante; con "Actuar como presi" ve las herramientas del club (banner visible y todo queda registrado a su nombre). Un enlace a una herramienta privada le ofrece activarlo.
 
-El id de la pestaña en la URL es siempre la "hoja" (`central`, `nomina`, `finanzas`, `seguimiento`, `fichajes`, `bandeja`, `resumen`, `partidos`, `tabla`, `historia`, `estadio`, `eventos`, `auspicio`, `clasico`, `plantel`); la sección se deduce de ella. Los enlaces viejos siguen funcionando: `catalogo` cae en `estadio` y `fichajes` en `historia`.
+El id de la pestaña en la URL es siempre la "hoja" (`central`, `nomina`, `finanzas`, `seguimiento`, `fichajes`, `bandeja`, `resumen`, `partidos`, `tabla`, `historia`, `estadio`, `eventos`, `tv`, `clasico`, `plantel`); la sección se deduce de ella. Los enlaces viejos siguen funcionando: `catalogo` cae en `estadio`, `fichajes` en `historia` y `auspicio` en `tv`.
 
 ## 3. Qué vivía dónde → dónde vive ahora
 
@@ -71,9 +71,9 @@ Entrega por Discord (`syncNotificationDMs`): DM agrupado (hasta 10 tarjetas + bo
 
 ## 4b. Vida de club
 
-Backend: `core/consent.js` (visto bueno del jugador en traspasos y trueques con contrato vigente, prima de fichaje y rol prometido; representantes en `negotiation/agents.js`), `core/rivalries.js` (clásico natural por historial o elegido, cara a cara), `core/fans.js` (hinchas, ánimo de la hinchada, taquilla al terminar cada partido de clubes y su reversión), `core/events.js` (conciertos, La Velada, auspicios). Se activa una vez con `POST /v1/admin/club-life/start` (Sala de control > Vida de club); antes de eso nada cobra.
+Backend: `core/consent.js` (visto bueno del jugador en traspasos y trueques con contrato vigente, prima de fichaje y rol prometido; representantes en `negotiation/agents.js`), `core/rivalries.js` (clásico natural por historial o elegido, cara a cara), `core/fans.js` (hinchas, ánimo de la hinchada, taquilla al terminar cada partido de clubes y su reversión), `core/events.js` (conciertos, La Velada, derechos de TV: los canales grandes pagan más y solo llaman a clubes con hinchada grande). Chat de traspaso en `negotiation/transfer-chat.js`: el jugador pregunta por lo que más le preocupa, el presi responde con datos reales y la charla mueve hasta ±10 su visto bueno (sin promesas; 3 cambios por mercado). Se activa una vez con `POST /v1/admin/club-life/start` (Sala de control > Vida de club); antes de eso nada cobra.
 
-Web: `features/teams/ClubLife.jsx` (Estadio y taquilla, Eventos, Auspicio), `features/teams/RivalryTab.jsx`, `features/public/market/ConsentPanel.jsx` (dentro del formulario de ofertas), `features/public/MatchdayPanel.jsx` (centro del partido), `features/admin/ClubLifeAdmin.jsx`. Estilos en `styles/17-vida-club.css`.
+Web: `features/teams/ClubLife.jsx` (Estadio y taquilla, Eventos, Derechos de TV), `features/public/market/TransferChat.jsx` (dentro del visto bueno: Hablar con él · Prima · Rol), `features/teams/RivalryTab.jsx`, `features/public/market/ConsentPanel.jsx` (dentro del formulario de ofertas), `features/public/MatchdayPanel.jsx` (centro del partido), `features/admin/ClubLifeAdmin.jsx`. Estilos en `styles/17-vida-club.css`.
 
 ## 5. Sistema de diseño
 

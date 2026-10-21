@@ -24,7 +24,7 @@ const when = value => {
 };
 
 function OffNotice() {
-  return <EmptyState icon="stadium" title="LA VIDA DE CLUB AÚN NO PARTE">CUANDO LA ADMINISTRACIÓN LA ACTIVE, CADA PARTIDO DE LOCAL COBRARÁ ENTRADAS SEGÚN TU HINCHADA Y PODRÁS HACER CONCIERTOS, FIRMAR AUSPICIOS Y POSTULAR A LA VELADA.</EmptyState>;
+  return <EmptyState icon="stadium" title="LA VIDA DE CLUB AÚN NO PARTE">CUANDO LA ADMINISTRACIÓN LA ACTIVE, CADA PARTIDO DE LOCAL COBRARÁ ENTRADAS SEGÚN TU HINCHADA Y PODRÁS HACER CONCIERTOS, VENDER TUS DERECHOS DE TV Y POSTULAR A LA VELADA.</EmptyState>;
 }
 
 /** Gradas pixel: se llenan según la ocupación (0–100). */
@@ -237,38 +237,46 @@ export function EventsTab({ team, onChanged }) {
   </section>;
 }
 
-/** Auspiciador de camiseta: tres ofertas por temporada, se cobra al cerrar el torneo de liga. */
-export function SponsorTab({ team, onChanged }) {
+/** Tele pixel con el canal en pantalla. */
+function TvSet({ channel, small = false }) {
+  return <div className={`tv-set ${small ? 'small' : ''}`} aria-hidden="true"><i className="tv-antenna"/><div className="tv-screen"><span>{upper(channel)}</span><em>EN VIVO</em></div></div>;
+}
+
+/** Derechos de TV: tres canales ofrecen transmitir los partidos del club cada temporada; se cobra al cerrar el torneo de liga. */
+export function TvRightsTab({ team, onChanged }) {
   const { canEditTeam } = useAuth();
   const canEdit = canEditTeam(team.id);
   const toast = useToast();
   const query = useBusiness(team);
   const [confirm, setConfirm] = useState(null);
-  const sign = useApiMutation((key, signal) => endpoints.signSponsor(team.id, key, signal), { onSuccess: () => { setConfirm(null); toast({ tone: 'money', title: 'AUSPICIO FIRMADO' }); query.retry(); onChanged?.(); } });
+  const sign = useApiMutation((key, signal) => endpoints.signSponsor(team.id, key, signal), { onSuccess: () => { setConfirm(null); toast({ tone: 'money', title: 'CONTRATO DE TV FIRMADO' }); query.retry(); onChanged?.(); } });
   const data = query.data;
   if (!data) return <DataState query={query}/>;
   if (!data.enabled) return <section className="club-life"><OffNotice/></section>;
   const sponsor = data.sponsor;
-  return <section className="club-life sponsor-tab">
+  return <section className="club-life sponsor-tab tv-tab">
     {sponsor ? <Card tone="navy" className="sponsor-current">
-      <div className="sponsor-shirt" aria-hidden="true"><span>{upper(sponsor.brand)}</span></div>
+      <TvSet channel={sponsor.brand}/>
       <div>
-        <small>AUSPICIADOR DE CAMISETA · {upper(sponsor.styleLabel)}</small>
+        <small>TRANSMITE TUS PARTIDOS{sponsor.reach ? ` · ${upper(sponsor.reach)}` : ''} · CONTRATO {upper(sponsor.styleLabel)}</small>
         <h2>{upper(sponsor.brand)}</h2>
         <p>TEMPORADA {Math.min(sponsor.seasonsPaid + 1, sponsor.seasons)} DE {sponsor.seasons} · YA PAGÓ {gp(sponsor.paid)}</p>
         <dl className="sponsor-terms"><div><dt>FIJO POR TORNEO</dt><dd>{gp(sponsor.fixed)}</dd></div>{sponsor.playoffBonus > 0 && <div><dt>SI LLEGAS A PLAYOFFS</dt><dd>+{gp(sponsor.playoffBonus)}</dd></div>}{sponsor.titleBonus > 0 && <div><dt>SI SALES CAMPEÓN</dt><dd>+{gp(sponsor.titleBonus)}</dd></div>}</dl>
       </div>
-    </Card> : <Card title="ELIGE AUSPICIADOR" aside={<Chip icon="handshake">3 OFERTAS ESTA TEMPORADA</Chip>}>
-      <HowItWorks><p>Las marcas pagan según tus hinchas. La fija es plata segura; la arriesgada paga poco fijo pero mucho si llegas a playoffs o sales campeón. Se cobra al cerrar cada torneo de liga. Sin apuestas ni alcohol.</p></HowItWorks>
+    </Card> : <Card title="DERECHOS DE TV" aside={<Chip icon="handshake">3 CANALES TE QUIEREN TRANSMITIR</Chip>}>
+      <p className="club-life-hint">ELIGE UN CANAL: PAGA AL CERRAR CADA TORNEO DE LIGA. LOS MÁS GRANDES PAGAN MÁS.</p>
+      <HowItWorks><p>Cada canal paga según su tamaño y tus hinchas. Los gigantes globales (Prime Video, DAZN, ESPN) pagan más, pero solo llaman a clubes con mucha hinchada; la TV abierta paga menos y le transmite a cualquiera. La oferta <b>fija</b> es plata segura; la <b>arriesgada</b> paga poco fijo pero mucho si llegas a playoffs o sales campeón; la <b>mixta</b> va al medio.</p><p>No va en la camiseta: en el juego usan camisetas reales con su propia marca.</p></HowItWorks>
       <div className="sponsor-offers">{data.sponsorOffers.map(offer => <article key={offer.key} className={`sponsor-offer style-${offer.style}`}>
-        <div className="sponsor-shirt small" aria-hidden="true"><span>{upper(offer.brand)}</span></div>
+        <TvSet channel={offer.brand} small/>
         <b>{upper(offer.brand)}</b>
+        {offer.reach && <small className="tv-reach">{upper(offer.reach)}</small>}
         <Chip tone={offer.style === 'arriesgada' ? 'red' : offer.style === 'mixta' ? 'yellow' : 'green'}>{upper(offer.styleLabel)} · {offer.seasons} TORNEO{offer.seasons === 1 ? '' : 'S'}</Chip>
-        <dl><div><dt>FIJO POR TORNEO</dt><dd>{gp(offer.fixed)}</dd></div><div><dt>BONO PLAYOFFS</dt><dd>{offer.playoffBonus ? `+${gp(offer.playoffBonus)}` : '—'}</dd></div><div><dt>BONO CAMPEÓN</dt><dd>{offer.titleBonus ? `+${gp(offer.titleBonus)}` : '—'}</dd></div></dl>
+        <dl><div><dt>FIJO POR TORNEO</dt><dd>{gp(offer.fixed)}</dd></div><div><dt>SI LLEGAS A PLAYOFFS</dt><dd>{offer.playoffBonus ? `+${gp(offer.playoffBonus)}` : '—'}</dd></div><div><dt>SI SALES CAMPEÓN</dt><dd>{offer.titleBonus ? `+${gp(offer.titleBonus)}` : '—'}</dd></div></dl>
         {canEdit && (confirm === offer.key
           ? <ConfirmStep message={`¿FIRMAR CON ${upper(offer.brand)} POR ${offer.seasons} TORNEO${offer.seasons === 1 ? '' : 'S'}? NO SE PUEDE CAMBIAR HASTA QUE TERMINE.`} confirmLabel="SÍ, FIRMAR" busy={sign.loading} onConfirm={() => sign.execute(offer.key)} onCancel={() => setConfirm(null)}/>
           : <Button size="sm" icon="contract" onClick={() => setConfirm(offer.key)}>FIRMAR</Button>)}
       </article>)}</div>
+      {data.tvNext && <p className="tv-next"><Icon name="people" size={14}/> CON {compact(data.tvNext.minFollowers)} HINCHAS TE LLAMARÍA <b>{upper(data.tvNext.name)}</b> ({upper(data.tvNext.reach)}): TE FALTAN {compact(data.tvNext.missing)}.</p>}
       {sign.error && <Notice tone="error">{sign.error.message}</Notice>}
     </Card>}
   </section>;

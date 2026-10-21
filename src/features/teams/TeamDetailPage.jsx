@@ -22,7 +22,7 @@ import { useNotifications } from '../notifications/NotificationsProvider.jsx';
 import { ClubCentral } from './ClubCentral.jsx';
 import { InboxTab } from './InboxTab.jsx';
 import { WatchlistTab } from './WatchlistTab.jsx';
-import { EventsTab, SponsorTab, VenueTab } from './ClubLife.jsx';
+import { EventsTab, TvRightsTab, VenueTab } from './ClubLife.jsx';
 import { RivalryTab } from './RivalryTab.jsx';
 import { LedgerTab } from './LedgerTab.jsx';
 import { PayrollTab } from './PayrollTab.jsx';
@@ -660,7 +660,7 @@ const OWNER_SECTIONS = [
   { id: 'club', label: 'EQUIPO', leaves: [['resumen', 'RESUMEN'], ['partidos', 'PARTIDOS'], ['tabla', 'TABLA'], ['clasico', 'CLÁSICO'], ['historia', 'HISTORIA']] },
   { id: 'plantel', label: 'PLANTEL', leaves: [['plantel', 'PLANTEL']] },
   { id: 'finanzas', label: 'FINANZAS', leaves: [['nomina', 'CONTRATOS Y NÓMINA'], ['movimientos', 'CAJA'], ['finanzas', 'SIMULADOR']] },
-  { id: 'estadio', label: 'ESTADIO', leaves: [['estadio', 'ESTADIO Y TAQUILLA'], ['eventos', 'EVENTOS'], ['auspicio', 'AUSPICIO']] },
+  { id: 'estadio', label: 'ESTADIO', leaves: [['estadio', 'ESTADIO Y TAQUILLA'], ['eventos', 'EVENTOS'], ['tv', 'DERECHOS DE TV']] },
   { id: 'mercado', label: 'SEGUIMIENTO', leaves: [['seguimiento', 'SEGUIMIENTO']] },
   { id: 'bandeja', label: 'BANDEJA', leaves: [['bandeja', 'BANDEJA']] },
 ];
@@ -808,7 +808,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
   const unread = inbox.data?.unread ?? 0;
   const sections = ownerMode ? OWNER_SECTIONS : VISITOR_SECTIONS;
   // Enlaces viejos a hojas que ahora viven en otro lugar: los visitantes caen donde corresponde.
-  const moved = { catalogo: 'estadio', fichajes: 'historia' };
+  const moved = { catalogo: 'estadio', fichajes: 'historia', auspicio: 'tv' };
   const requested = ownerMode ? (moved[tab] ?? tab) : ({ finanzas: 'nomina', ...moved }[tab] ?? tab);
   const activeTab = sections.some(section => section.leaves.some(([id]) => id === requested)) ? requested : sections[0].leaves[0][0];
   const activeSection = sections.find(section => section.leaves.some(([id]) => id === activeTab));
@@ -880,7 +880,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
         {activeTab === 'movimientos' && <LedgerTab team={team} balance={balance}/>}
         {activeTab === 'estadio' && <VenueTab team={team} onTab={ownerMode ? onTab : null}/>}
         {activeTab === 'eventos' && <EventsTab team={team} onChanged={onChanged}/>}
-        {activeTab === 'auspicio' && <SponsorTab team={team} onChanged={onChanged}/>}
+        {activeTab === 'tv' && <TvRightsTab team={team} onChanged={onChanged}/>}
         {activeTab === 'clasico' && <RivalryTab team={team} teams={teams}/>}
         {activeTab === 'seguimiento' && <WatchlistTab team={team}/>}
         {activeTab === 'bandeja' && <InboxTab team={team} onTab={onTab} onRead={inbox.retry} highlightId={msg}/>}

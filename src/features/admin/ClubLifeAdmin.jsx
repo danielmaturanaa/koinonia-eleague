@@ -22,7 +22,7 @@ export function ClubLifeAdmin() {
   return <div className="control-section">
     <Card title="VIDA DE CLUB" aside={<Chip tone={enabled ? 'green' : 'neutral'} icon={enabled ? 'check' : 'lock'}>{enabled ? 'ACTIVA' : 'APAGADA'}</Chip>}>
       <DataState query={status}/>
-      <p className="control-note">CON LA VIDA DE CLUB ACTIVA, CADA PARTIDO DE CLUBES QUE TERMINE COBRA TAQUILLA AL LOCAL Y MUEVE HINCHAS Y ÁNIMO; LOS PRESIS PUEDEN HACER CONCIERTOS Y FIRMAR AUSPICIOS (SE COBRAN AL CERRAR CADA TORNEO DE LIGA). LOS PARTIDOS YA JUGADOS NO COBRAN NADA.</p>
+      <p className="control-note">CON LA VIDA DE CLUB ACTIVA, CADA PARTIDO DE CLUBES QUE TERMINE COBRA TAQUILLA AL LOCAL Y MUEVE HINCHAS Y ÁNIMO; LOS PRESIS PUEDEN HACER CONCIERTOS Y VENDER SUS DERECHOS DE TV (SE COBRAN AL CERRAR CADA TORNEO DE LIGA). LOS PARTIDOS YA JUGADOS NO COBRAN NADA.</p>
       {data && !enabled && (confirm === 'start'
         ? <ConfirmStep message="¿ACTIVAR? DESDE AHORA CADA PARTIDO TERMINADO MUEVE PLATA E HINCHAS." confirmLabel="SÍ, ACTIVAR" busy={act.loading} onConfirm={() => act.execute(signal => endpoints.startClubLife(signal))} onCancel={() => setConfirm(null)}/>
         : <Button icon="stadium" onClick={() => setConfirm('start')}>ACTIVAR VIDA DE CLUB</Button>)}
