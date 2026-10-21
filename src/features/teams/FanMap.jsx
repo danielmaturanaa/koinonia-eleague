@@ -6,7 +6,7 @@ const upper = text => String(text ?? '').toUpperCase();
 const people = value => Number(value ?? 0).toLocaleString('es-CL');
 const compact = value => {
   const number = Number(value ?? 0);
-  if (number >= 1_000_000) return `${(number / 1_000_000).toLocaleString('es-CL', { maximumFractionDigits: 2 })} M`;
+  if (number >= 1_000_000) return `${(number / 1_000_000).toLocaleString('es-CL', { maximumFractionDigits: number >= 100_000_000 ? 0 : number >= 10_000_000 ? 1 : 2 })} M`;
   if (number >= 10_000) return `${Math.round(number / 1000).toLocaleString('es-CL')} MIL`;
   return people(number);
 };
@@ -65,6 +65,7 @@ export function FanMap({ fans, title = 'HINCHAS EN EL MUNDO' }) {
   if (!countries.length) return null;
   const top = countries.slice(0, 6);
   const shownFans = top.reduce((sum, country) => sum + country.fans, 0);
+  const biggest = Math.max(1, ...top.map(country => country.fans));
   const others = countries.filter(country => country.fans > 0).length - top.length;
   const abroad = fans.followers - fans.homeFans;
   const homeShare = percent(fans.homeFans, fans.followers);
@@ -93,18 +94,17 @@ export function FanMap({ fans, title = 'HINCHAS EN EL MUNDO' }) {
         onMouseEnter={() => setFocus(country.code)} onMouseLeave={() => setFocus(null)} onFocus={() => setFocus(country.code)} onBlur={() => setFocus(null)} tabIndex={0}>
         <i>{index + 1}</i>
         <span>{flag(country.code)} {upper(country.name)}{country.home && <em>CASA</em>}</span>
-        <span className="fan-country-bar" aria-hidden="true"><span style={{ width: `${percent(country.fans, top[0].fans)}%` }}/></span>
+        <span className="fan-country-bar" aria-hidden="true"><span style={{ width: `${percent(country.fans, biggest)}%` }}/></span>
         <b>{compact(country.fans)}</b>
       </li>)}
     </ol>
     {others > 0 && <p className="fan-others">Y {compact(fans.followers - shownFans)} MÁS REPARTIDOS EN {others} PAÍSES.</p>}
     {formula && <HowItWorks title="¿De dónde salen estos números?">
-      <p>Son personas que se declaran hinchas del club, no seguidores de redes. El punto de partida sale de dos cosas:</p>
+      <p>Los clubes de la liga son gigantes, como los grandes de verdad. Son personas que se declaran hinchas, no seguidores de redes.</p>
       <ul>
-        <li><b>El país del club.</b> {formula.countryName} tiene {people(formula.population)} millones de habitantes: de ahí salen los hinchas de casa. Afuera pesa qué tan mirada es su liga en el mundo (Inglaterra es la más mirada).</li>
-        <li><b>El prestigio del club ({Math.round(formula.prestige * 100)} de 100).</b> Mezcla historial ({people(formula.honorPoints)} puntos de títulos, finales y playoffs) y plantel ({Math.round(formula.squadShare * 100)}% del más caro de la liga).</li>
+        <li><b>Cuántos son: el prestigio.</b> El club más prestigioso de la liga parte con 500 millones y el resto, hacia abajo hasta 50 millones. Tu prestigio es {Math.round(formula.prestige * 100)} de 100 (el más grande tiene {Math.round(formula.topPrestige * 100)}): mezcla historial ({people(formula.honorPoints)} puntos de títulos, finales y playoffs) y plantel ({Math.round(formula.squadShare * 100)}% del más caro de la liga).</li>
+        <li><b>Dónde viven: el país.</b> En {formula.countryName} ({people(formula.population)} millones de habitantes) vive una parte; el resto se reparte por el mundo según la población de cada país, cuánto le gusta el fútbol y sus lazos con {formula.countryName}.</li>
       </ul>
-      <p>Afuera se reparten según la población de cada país, cuánto le gusta el fútbol y los lazos con {formula.countryName} (idioma, migración, historia).</p>
       <p>Partiste con <b>{compact(origin.start)}</b> y {origin.change >= 0 ? 'ganaste' : 'perdiste'} <b>{compact(Math.abs(origin.change))}</b> jugando: partidos, clásicos, títulos, posición final y conciertos.</p>
       <p>Al estadio van los que viven cerca: los de {formula.countryName} y unos pocos de afuera que viajan. Los derechos de TV, en cambio, miran a todos tus hinchas en el mundo.</p>
     </HowItWorks>}

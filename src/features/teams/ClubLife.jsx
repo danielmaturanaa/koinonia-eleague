@@ -13,7 +13,7 @@ const upper = text => String(text ?? '').toUpperCase();
 const people = value => Number(value ?? 0).toLocaleString('es-CL');
 const compact = value => {
   const number = Number(value ?? 0);
-  if (number >= 1_000_000) return `${(number / 1_000_000).toLocaleString('es-CL', { maximumFractionDigits: 2 })} M`;
+  if (number >= 1_000_000) return `${(number / 1_000_000).toLocaleString('es-CL', { maximumFractionDigits: number >= 100_000_000 ? 0 : number >= 10_000_000 ? 1 : 2 })} M`;
   if (number >= 10_000) return `${Math.round(number / 1000).toLocaleString('es-CL')} MIL`;
   return people(number);
 };
