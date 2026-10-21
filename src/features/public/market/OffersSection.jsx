@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { endpoints } from '../../../api/endpoints.js';
 import { useAuth } from '../../../app/AuthGate.jsx';
 import { PlayerFace } from '../../../components/PlayerFace.jsx';
@@ -76,8 +76,10 @@ function CounterForm({ offer, me, other, onDone, onCancel }) {
   </div>;
 }
 
-function OfferCard({ offer, onChanged }) {
+function OfferCard({ offer, onChanged, highlighted = false }) {
   const { isAdmin } = useAuth();
+  const card = useRef(null);
+  useEffect(() => { if (highlighted) card.current?.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, [highlighted]);
   const kind = offer.kind === 'trade' ? 'Trade' : 'Transfer';
   const mutation = useApiMutation((operation, signal) => endpoints[`${operation}${kind}`](offer.id, signal), { onSuccess: onChanged });
   const [confirming, setConfirming] = useState('');
@@ -94,7 +96,7 @@ function OfferCard({ offer, onChanged }) {
   const ask = { approve: incoming ? '¿ACEPTAS? SE MUEVEN LOS JUGADORES Y LOS GP AL TIRO.' : `¿ACEPTAR EN NOMBRE DE ${upper(counterpart?.name)}?`,
     reject: incoming ? '¿RECHAZAS ESTA OFERTA?' : outgoing ? '¿RETIRAS TU OFERTA?' : '¿ANULAR ESTA OFERTA?' };
 
-  return <article className={`offer-card ${incoming ? 'is-incoming' : ''}`}>
+  return <article ref={card} className={`offer-card ${incoming ? 'is-incoming' : ''} ${highlighted ? 'is-highlighted' : ''}`}>
     <header>
       <span className="offer-kind">{offer.kind === 'trade' ? '🔁 TRUEQUE' : '🤝 TRASPASO'}</span>
       <small>LA LANZÓ {upper(teamLabel(proposer))}</small>
@@ -132,7 +134,7 @@ function OfferCard({ offer, onChanged }) {
   </article>;
 }
 
-export function OffersInbox({ revision, onChanged }) {
+export function OffersInbox({ revision, onChanged, highlightId = null }) {
   const offers = useApiQuery(signal => endpoints.marketOffers(signal), [revision]);
   useAutoRefresh(offers.retry, 15000);
   const rows = asList(offers.data);
@@ -150,7 +152,7 @@ export function OffersInbox({ revision, onChanged }) {
     {!offers.error && !offers.loading && !rows.length && <p className="empty-copy">NO HAY OFERTAS PENDIENTES.</p>}
     {groups.map(([title, items]) => <div className="offer-group" key={title}>
       <h3 className="market-subtitle">{title}</h3>
-      <div className="offer-list">{items.map(offer => <OfferCard key={`${offer.kind}-${offer.id}`} offer={offer} onChanged={refresh}/>)}</div>
+      <div className="offer-list">{items.map(offer => <OfferCard key={`${offer.kind}-${offer.id}`} offer={offer} onChanged={refresh} highlighted={Boolean(highlightId) && offer.id === highlightId}/>)}</div>
     </div>)}
   </section>;
 }

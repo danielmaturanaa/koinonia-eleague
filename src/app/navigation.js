@@ -27,6 +27,7 @@ export const sectionContent = {
   '/equipos/jugadores': ['JUGADORES', 'Buscador y fichas individuales de futbolistas.'],
   '/equipos/jugadores/importar': ['AGREGAR JUGADORES', 'Importación desde eFootballDB y alta manual.'],
   '/transferencias': ['MERCADO', 'Agentes libres, jugadores no inscritos y últimos movimientos.'],
+  '/notificaciones': ['NOTIFICACIONES', 'Tus avisos y cómo quieres recibirlos.'],
   '/sanciones': ['SANCIONES', 'Expulsiones y suspensiones registradas en las actas.'],
   '/torneos': ['TORNEOS', 'Tabla, goleadores y playoffs de cada torneo.'],
   '/calculadora': ['CALCULADORA', 'Probabilidades, escenarios y qué necesita cada equipo.'],

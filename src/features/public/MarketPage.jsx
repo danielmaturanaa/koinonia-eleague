@@ -195,7 +195,7 @@ function PromiseRecord({ teamId, revision }) {
   </details>;
 }
 
-export function MarketPage({ teams }) {
+export function MarketPage({ teams, initialTab = null, highlightId = null }) {
   const { isAdmin, teamId: myTeamId } = useAuth();
   const [managing, setManaging] = useState(false);
   const [revision, setRevision] = useState(0);
@@ -209,7 +209,8 @@ export function MarketPage({ teams }) {
   const club = { figures, marketOpen };
   const myTeam = teams.find(team => team.id === myTeamId);
   const interest = useInterest(revision);
-  const [tab, setTabState] = useState(readTab);
+  const [tab, setTabState] = useState(() => initialTab || readTab());
+  useEffect(() => { if (initialTab) setTabState(initialTab); }, [initialTab]);
   const setTab = value => { setTabState(value); try { window.sessionStorage.setItem(TAB_KEY, value); } catch { /* sin almacenamiento */ } };
   const live = useApiQuery(signal => endpoints.sealedAuctions({ active: 1 }, signal).catch(() => ({ data: [] })), [revision]);
   const liveCount = (Array.isArray(live.data) ? live.data : []).filter(row => row.status === 'open').length;
@@ -237,7 +238,7 @@ export function MarketPage({ teams }) {
         <PollSearch teams={teams} club={club} interest={interest} onChanged={refresh}/>
       </PollsSection>}
       {current === 'ofertas' && <>
-        {operates && <OffersInbox revision={revision} onChanged={refresh}/>}
+        {operates && <OffersInbox revision={revision} onChanged={refresh} highlightId={highlightId}/>}
         {operates && myTeamId && <ProposeOffers teams={teams} marketOpen={marketOpen} onChanged={refresh}/>}
       </>}
       {current === 'venta' && <ForSaleSection teams={teams} revision={revision} onChanged={refresh}/>}

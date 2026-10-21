@@ -8,6 +8,8 @@ import { MoodMeter, roleLabel } from './SigningSheet.jsx';
 import { RoleSelect, useMarketOpen } from './RolesPanel.jsx';
 import { BoardPanel } from './BoardPanel.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
+import { Button } from '../../ui/index.js';
+import { useNotifications } from '../notifications/NotificationsProvider.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
 
 /** Opciones para responderle a un jugador que pide algo (mismas que los botones de Discord). */
@@ -31,18 +33,28 @@ function RequestActions({ team, request, locked, onDone }) {
 const KIND = { raise: ['💸', 'PIDE UN SUELDO ACORDE'], leave: ['🚪', 'PIDE SALIR'], expiring: ['📄', 'CONTRATO POR VENCER'], expired: ['✍️', 'QUIERE RENOVAR'], unhappy: ['😠', 'DESCONTENTO'], renewal: ['💬', 'RENOVACIÓN'] };
 
 /** Bandeja de entrada del presi: lo que le escriben sus jugadores. Al abrirla, los mensajes se marcan como leídos. */
-export function InboxTab({ team, onTab, onRead }) {
+export function InboxTab({ team, onTab, onRead, highlightId = null }) {
   const query = useApiQuery(signal => endpoints.teamInbox(team.id, signal), [team.id]);
   const messages = query.data?.messages ?? [];
   // Rol actual de cada jugador (el del mensaje puede estar desactualizado) para cambiarlo desde la propia bandeja.
   const rolesQuery = useApiQuery(signal => endpoints.teamRoles(team.id, signal), [team.id]);
   const roleOf = new Map((Array.isArray(rolesQuery.data) ? rolesQuery.data : []).map(row => [row.playerId, row]));
   const marketOpen = useMarketOpen();
+  const { refresh: refreshNotifications } = useNotifications();
+  // Cada carta se marca leída al tocarla (o al llegar por un aviso); ya no se marcan todas solo por abrir la bandeja.
+  const markRead = async ids => {
+    await endpoints.markInboxRead(team.id, ids).catch(() => {});
+    onRead?.();
+    refreshNotifications();
+  };
+  const unread = messages.filter(message => !message.read).length;
   useEffect(() => {
-    if (query.data?.unread > 0) endpoints.markInboxRead(team.id).then(() => onRead?.()).catch(() => {});
-  }, [query.data?.unread, team.id]);
+    if (!highlightId || !query.data) return;
+    document.getElementById(`msg-${highlightId}`)?.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    if (messages.some(message => message.id === highlightId && !message.read)) markRead([highlightId]);
+  }, [highlightId, query.data]);
   return <section className="inbox-tab">
-    <header><h2>BANDEJA DE ENTRADA</h2><p>AQUÍ TE ESCRIBEN TUS JUGADORES: CUANDO SU CONTRATO ESTÁ POR VENCER, CUANDO QUIEREN RENOVAR Y CUANDO NO ESTÁN CONFORMES CON SU ROL.</p></header>
+    <header><h2>BANDEJA DE ENTRADA</h2>{unread > 0 && <Button variant="ghost" size="sm" onClick={() => markRead(null)}>MARCAR TODO COMO LEÍDO ({unread})</Button>}<p>AQUÍ TE ESCRIBEN TUS JUGADORES: CUANDO SU CONTRATO ESTÁ POR VENCER, CUANDO QUIEREN RENOVAR Y CUANDO NO ESTÁN CONFORMES CON SU ROL.</p></header>
     <BoardPanel team={team}/>
     <DataState query={query}/>
     {query.data && messages.length === 0 && <p className="empty-copy data-empty">TODAVÍA NO TE HAN ESCRITO. LOS MENSAJES APARECEN CUANDO EL SISTEMA DE CONTRATOS ESTÁ ACTIVO.</p>}
@@ -51,7 +63,7 @@ export function InboxTab({ team, onTab, onRead }) {
       // El mensaje es una foto del momento en que se escribió: si desde entonces le cambiaste el rol, se avisa y no se muestra el ánimo viejo.
       const nowRow = roleOf.get(message.playerId);
       const stale = message.kind === 'unhappy' && nowRow && message.meta?.role && nowRow.role !== message.meta.role;
-      return <li key={message.id} className={`inbox-item ${message.read ? '' : 'unread'}`}>
+      return <li key={message.id} id={`msg-${message.id}`} className={`inbox-item ${message.read ? '' : 'unread'} ${message.id === highlightId ? 'is-highlighted' : ''}`} onClick={() => { if (!message.read) markRead([message.id]); }}>
         <PlayerFace src={message.faceUrl} name={message.playerName}/>
         <div className="inbox-body">
           <div className="inbox-meta"><b>{message.playerName}</b><small>{icon} {label} · {formatDate(message.createdAt)}</small></div>

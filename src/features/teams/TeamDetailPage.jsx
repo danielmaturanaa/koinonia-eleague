@@ -18,6 +18,7 @@ import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { useApiQuery } from '../public/useApiQuery.js';
 import { useLiveStandings } from '../public/useLiveStandings.js';
+import { useNotifications } from '../notifications/NotificationsProvider.jsx';
 import { InboxTab } from './InboxTab.jsx';
 import { WatchlistTab } from './WatchlistTab.jsx';
 import { StadiumTab } from './StadiumTab.jsx';
@@ -774,7 +775,7 @@ function SquadTab({ team, squad, starters, substitutes, onChanged }) {
   </div>;
 }
 
-export function TeamDetailPage({ team, teams = [], tournaments = [], squad, standings, standingsTournamentId = null, matches = [], recentMatches = [], history = [], historyError, loading, tab = 'resumen', onTab, onBack, onChanged, onProjection = null }) {
+export function TeamDetailPage({ team, teams = [], tournaments = [], squad, standings, standingsTournamentId = null, matches = [], recentMatches = [], history = [], historyError, loading, tab = 'resumen', msg = null, onTab, onBack, onChanged, onProjection = null }) {
   const { canEditTeam } = useAuth();
   const canEdit = canEditTeam(team?.id);
   const [historyEditor, setHistoryEditor] = useState('');
@@ -784,6 +785,9 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
   const [coversOpen, setCoversOpen] = useState(false);
   // Bandeja de entrada: solo la ve el presi (o un admin) y muestra cuántos mensajes sin leer hay.
   const inbox = useApiQuery(signal => canEdit && team?.id ? endpoints.teamInbox(team.id, signal).catch(() => ({ data: null })) : Promise.resolve({ data: null }), [team?.id, canEdit]);
+  const { version: notificationsVersion } = useNotifications();
+  const firstVersion = useRef(notificationsVersion);
+  useEffect(() => { if (notificationsVersion !== firstVersion.current) inbox.retry(); }, [notificationsVersion]);
   const unread = inbox.data?.unread ?? 0;
   const TABS = canEdit && inbox.data ? [...BASE_TABS.slice(0, 6), [INBOX_TAB[0], `${INBOX_TAB[1]}${unread > 0 ? ` (${unread})` : ''}`], WATCH_TAB, ...BASE_TABS.slice(6)] : BASE_TABS;
   const activeTab = TABS.some(([id]) => id === tab) ? tab : 'resumen';
@@ -849,7 +853,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
         {activeTab === 'historia' && <div className="club-history-tab-content"><HonoursList honours={honours} historyError={historyError}/><ClubHistory team={team} onEdit={canEdit ? setHistoryEditor : undefined}/></div>}
         {activeTab === 'estadio' && <StadiumTab team={team} balance={balance} onChanged={onChanged}/>}
         {activeTab === 'seguimiento' && <WatchlistTab team={team}/>}
-        {activeTab === 'bandeja' && <InboxTab team={team} onTab={onTab} onRead={inbox.retry}/>}
+        {activeTab === 'bandeja' && <InboxTab team={team} onTab={onTab} onRead={inbox.retry} highlightId={msg}/>}
         {activeTab === 'nomina' && <PayrollTab team={team} balance={balance} onChanged={onChanged} onTab={onTab} currentPosition={(displayStandings ?? []).findIndex(row => (row.team_id ?? row.teamId) === team.id) + 1 || null}/>}
         {activeTab === 'finanzas' && <div className="club-budget-tab"><SquadValueSimulator team={team} squad={squad} balance={balance}/></div>}
       </section>

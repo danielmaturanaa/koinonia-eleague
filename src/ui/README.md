@@ -13,8 +13,8 @@ Importa siempre desde `../../ui/index.js`.
 | `EmptyState`, `Notice` | Vacío con acción; aviso de resultado (aria-live) | |
 | `Tabs` | Pestañas con teclado | `tabs=[{id,label,badge}]` |
 | `Modal`, `ConfirmStep` | Ventana (foco atrapado, Escape) y confirmación en línea | para acciones que mueven plata |
-| `ToastProvider`, `useToast` | Avisos efímeros | `toast({ tone: success|error|info|money, title, body })` |
+| `ToastProvider`, `useToast` | Avisos efímeros | `toast({ tone: success|error|info|money, title, body, href })`; con `href` el aviso es un enlace |
 | `Icon` | Pixel-art 8×8 con `currentColor` | catálogo en `icons.js` |
 
 Breakpoints oficiales (las media queries no admiten variables): 560 · 900 · 1180.
-Pantallas migradas hasta ahora: Seguimiento y Estadio.
+Pantallas migradas hasta ahora: Seguimiento, Estadio y Notificaciones (campana, página y preferencias en `src/features/notifications`).

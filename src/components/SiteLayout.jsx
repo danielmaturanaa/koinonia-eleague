@@ -1,4 +1,5 @@
 import { useMediaQuery } from '../app/useMediaQuery.js';
+import { NotificationBell } from '../features/notifications/NotificationBell.jsx';
 import { AccountMenu } from './AccountMenu.jsx';
 import { ApiStatus } from './ApiStatus.jsx';
 import { GlobalSearch } from './GlobalSearch.jsx';
@@ -18,7 +19,7 @@ export function SiteLayout({ route, navigate, children, sidebar, error, dismissE
         <Navigation route={route} navigate={navigate} teams={teams}/>
         <GlobalSearch navigate={navigate} teams={teams}/>
         {!mobile && <MusicPlayer tracks={playlist}/>}
-        <AccountMenu navigate={navigate} teams={teams}/>
+        <div className="header-tools"><NotificationBell navigate={navigate}/><AccountMenu navigate={navigate} teams={teams}/></div>
       </div>
     </header>
     <div className={`site-body ${sidebar ? 'with-sidebar' : ''} ${route.name === 'home' || route.name === 'newsArticle' ? 'home-body' : ''}`}>

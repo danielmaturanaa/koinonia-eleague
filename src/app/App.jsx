@@ -1,3 +1,4 @@
+import { NotificationsPage } from '../features/notifications/NotificationsPage.jsx';
 import { useMemo } from 'react';
 import { SiteLayout } from '../components/SiteLayout.jsx';
 import { MatchSidebar } from '../components/MatchSidebar.jsx';
@@ -68,7 +69,7 @@ export function App() {
   } else if (route.name === 'team') {
     // La liga activa que juega este club (para "¿qué necesita?").
     const projectionTournament = activeTournaments.find(item => item.format === 'league' && (league.standingsByTournament?.[item.id] ?? []).some(row => row.team_id === route.teamId));
-    page = <TeamDetailPage team={teamDetail} teams={league.teams} tournaments={activeTournaments} squad={squad} standings={league.standings} standingsTournamentId={projectionTournament?.id ?? tournament?.id ?? null} matches={teamMatches} recentMatches={teamRecent} history={teamHistory} historyError={teamHistoryError} loading={state.loadingTeam} tab={route.query.tab} onTab={tab => navigate(`/equipos/${encodeURIComponent(route.teamId)}${tab === 'resumen' ? '' : `?tab=${tab}`}`)} onBack={() => navigate('/equipos')} onChanged={refresh}
+    page = <TeamDetailPage team={teamDetail} teams={league.teams} tournaments={activeTournaments} squad={squad} standings={league.standings} standingsTournamentId={projectionTournament?.id ?? tournament?.id ?? null} matches={teamMatches} recentMatches={teamRecent} history={teamHistory} historyError={teamHistoryError} loading={state.loadingTeam} tab={route.query.tab} msg={route.query.msg} onTab={tab => navigate(`/equipos/${encodeURIComponent(route.teamId)}${tab === 'resumen' ? '' : `?tab=${tab}`}`)} onBack={() => navigate('/equipos')} onChanged={refresh}
       onProjection={projectionTournament ? () => navigate(projectionLink(projectionTournament.id, route.teamId)) : null}/>;
   } else if (route.name === 'player') {
     const fromMarket = route.query.from === 'mercado';
@@ -99,13 +100,15 @@ export function App() {
     const modes = { plantillas: 'squads', presupuestos: 'budgets', presidentes: 'presidents', 'directores-tecnicos': 'coaches', emblemas: 'emblems', selecciones: 'national' };
     page = <TeamsDirectoryPage mode={modes[route.path.split('/').at(-1)]} teams={league.teams} onChoose={id => navigate(`/equipos/${encodeURIComponent(id)}`)}/>;
   } else if (route.path === '/transferencias') {
-    page = <MarketPage teams={league.teams}/>;
+    page = <MarketPage teams={league.teams} initialTab={route.query.tab} highlightId={route.query.id}/>;
   } else if (route.path === '/sanciones') {
     page = <ActivityPage sanctionsOnly/>;
   } else if (route.name === 'newsArticle') {
     page = <HomePage teams={league.teams} navigate={navigate} openNewsId={route.newsId} onCloseNews={() => navigate('/')}/>;
   } else if (route.path === '/noticias') {
     page = <NewsPage teams={league.teams}/>;
+  } else if (route.path === '/notificaciones') {
+    page = <NotificationsPage navigate={navigate} initialTab={route.query.tab}/>;
   } else if (route.path === '/personas') {
     page = <PeoplePage teams={league.teams}/>;
   } else if (route.path === '/reglas') {
