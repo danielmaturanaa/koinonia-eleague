@@ -118,6 +118,13 @@ function FanLogRow({ row }) {
         </li>;
 }
 
+const factorText = value => `${value >= 1 ? '+' : '−'}${Math.round(Math.abs(value - 1) * 100)}%`;
+
+/** Por qué tu club cobra lo que cobra de la TV: hinchas, más resultados, historia y estadio. */
+function TvClubValue({ club }) {
+  return <p className="tv-club-value"><Icon name="trophy" size={14}/> Además de tus hinchas, el canal paga por tu club: <b>resultados {factorText(club.results)}</b> · <b>historia {factorText(club.history)}</b> · <b>estadio {factorText(club.stadium)}</b> → en total <b className={club.factor >= 1 ? 'up' : 'down'}>{factorText(club.factor)}</b>.</p>;
+}
+
 function useBusiness(team) {
   const query = useApiQuery(signal => endpoints.teamBusiness(team.id, signal), [team.id]);
   return query;
@@ -286,6 +293,7 @@ export function TvRightsTab({ team, onChanged }) {
           ? <ConfirmStep message={`¿Firmar con ${upper(offer.brand)} por ${offer.seasons} torneo${offer.seasons === 1 ? '' : 'S'}? No se puede cambiar hasta que termine.`} confirmLabel="SÍ, FIRMAR" busy={sign.loading} onConfirm={() => sign.execute(offer.key)} onCancel={() => setConfirm(null)}/>
           : <Button size="sm" icon="contract" onClick={() => setConfirm(offer.key)}>FIRMAR</Button>)}
       </article>)}</div>
+      {data.sponsorOffers[0]?.club && <TvClubValue club={data.sponsorOffers[0].club}/>}
       {data.tvNext && <p className="tv-next"><Icon name="people" size={14}/> CON {compact(data.tvNext.minFollowers)} HINCHAS TE LLAMARÍA <b>{upper(data.tvNext.name)}</b> ({upper(data.tvNext.reach)}): TE FALTAN {compact(data.tvNext.missing)}.</p>}
       {sign.error && <Notice tone="error">{sign.error.message}</Notice>}
     </Card>}
