@@ -100,39 +100,70 @@ function noiseBurst(audio, { at, duration, filter = 'bandpass', frequency = 900,
   source.stop(at + duration + 0.05);
 }
 
-// La hinchada: rugido de gol (ruido que crece con un "oooh" encima), pifias (voces graves que caen) y vasos que llueven.
+// La hinchada. Rugido: un murmullo de fondo, un coro de voces que gritan "¡oooh!" (osciladores desafinados que suben y
+// pasan por los formantes de una "o"), aplausos sueltos y dos bocinazos. Vasos: golpecitos agudos que caen.
 function crowd(kind, scale) {
   try {
     const audio = audioContext();
     if (!audio || audio.state !== 'running') return;
     const at = audio.currentTime;
+    const level = value => Math.max(0.0002, value * scale);
     if (kind === 'roar') {
-      noiseBurst(audio, { at, duration: 3.2, frequency: 1100, q: 0.6, peak: Math.max(0.0002, 0.16 * scale), attack: 0.35 });
-      noiseBurst(audio, { at: at + 0.1, duration: 2.6, filter: 'lowpass', frequency: 420, q: 0.5, peak: Math.max(0.0002, 0.12 * scale), attack: 0.4 });
-    }
-    if (kind === 'boo') {
-      noiseBurst(audio, { at, duration: 1.9, filter: 'lowpass', frequency: 380, q: 0.8, peak: Math.max(0.0002, 0.1 * scale), attack: 0.3 });
-      [118, 131, 147, 165, 104].forEach((frequency, index) => {
+      noiseBurst(audio, { at, duration: 4, frequency: 700, q: 0.5, peak: level(0.07), attack: 0.5 });
+      const master = audio.createGain();
+      master.gain.value = 1;
+      [[520, 6, 1], [900, 7, 0.55], [2400, 9, 0.18]].map(([frequency, q, amount]) => {
+        const filter = audio.createBiquadFilter();
+        filter.type = 'bandpass'; filter.frequency.value = frequency; filter.Q.value = q;
+        const gain = audio.createGain(); gain.gain.value = amount;
+        master.connect(filter).connect(gain).connect(audio.destination);
+      });
+      for (let index = 0; index < 18; index += 1) {
+        const start = at + (index % 6) * 0.04 + Math.random() * 0.12;
+        const base = 170 + Math.random() * 190;
         const voice = audio.createOscillator();
-        const low = audio.createBiquadFilter();
+        const wobble = audio.createOscillator();
+        const wobbleGain = audio.createGain();
         const gain = audio.createGain();
         voice.type = 'sawtooth';
-        voice.frequency.setValueAtTime(frequency * 1.12, at);
-        voice.frequency.linearRampToValueAtTime(frequency * 0.86, at + 1.8);
-        voice.detune.value = (index - 2) * 14;
-        low.type = 'lowpass';
-        low.frequency.value = 520;
-        gain.gain.setValueAtTime(0.0001, at);
-        gain.gain.exponentialRampToValueAtTime(Math.max(0.0002, 0.022 * scale), at + 0.25 + index * 0.04);
-        gain.gain.exponentialRampToValueAtTime(0.0001, at + 1.9);
-        voice.connect(low).connect(gain).connect(audio.destination);
-        voice.start(at);
-        voice.stop(at + 2);
+        voice.frequency.setValueAtTime(base * 0.8, start);
+        voice.frequency.exponentialRampToValueAtTime(base * 1.25, start + 0.35);
+        voice.frequency.exponentialRampToValueAtTime(base * 1.1, start + 2.4);
+        wobble.frequency.value = 4 + Math.random() * 3;
+        wobbleGain.gain.value = base * 0.03;
+        wobble.connect(wobbleGain).connect(voice.frequency);
+        gain.gain.setValueAtTime(0.0001, start);
+        gain.gain.exponentialRampToValueAtTime(level(0.05), start + 0.18);
+        gain.gain.setValueAtTime(level(0.05), start + 1.4);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + 2.6 + Math.random() * 0.6);
+        voice.connect(gain).connect(master);
+        voice.start(start); wobble.start(start);
+        voice.stop(start + 3.4); wobble.stop(start + 3.4);
+      }
+      for (let index = 0; index < 46; index += 1) {
+        const when = at + 0.6 + Math.random() * 3;
+        noiseBurst(audio, { at: when, duration: 0.05, filter: 'bandpass', frequency: 1400 + Math.random() * 1600, q: 1.2, peak: level(0.06 * (1 - (when - at) / 4.2)), attack: 0.004 });
+      }
+      [0.15, 0.75].forEach(offset => {
+        [233, 294, 349].forEach(frequency => {
+          const horn = audio.createOscillator();
+          const low = audio.createBiquadFilter();
+          const gain = audio.createGain();
+          horn.type = 'square';
+          horn.frequency.value = frequency;
+          low.type = 'lowpass'; low.frequency.value = 1800;
+          gain.gain.setValueAtTime(0.0001, at + offset);
+          gain.gain.exponentialRampToValueAtTime(level(0.025), at + offset + 0.03);
+          gain.gain.setValueAtTime(level(0.025), at + offset + 0.4);
+          gain.gain.exponentialRampToValueAtTime(0.0001, at + offset + 0.5);
+          horn.connect(low).connect(gain).connect(audio.destination);
+          horn.start(at + offset); horn.stop(at + offset + 0.55);
+        });
       });
     }
     if (kind === 'cups') {
       for (let index = 0; index < 7; index += 1) {
-        noiseBurst(audio, { at: at + 0.15 + index * 0.17 + (index % 3) * 0.05, duration: 0.09, filter: 'highpass', frequency: 2600 + (index % 4) * 500, q: 1, peak: Math.max(0.0002, 0.09 * scale), attack: 0.005 });
+        noiseBurst(audio, { at: at + 0.15 + index * 0.17 + (index % 3) * 0.05, duration: 0.09, filter: 'highpass', frequency: 2600 + (index % 4) * 500, q: 1, peak: level(0.09), attack: 0.005 });
       }
     }
   } catch { /* sin audio */ }
@@ -151,7 +182,6 @@ export const SOUNDS = {
   chat: { label: 'MENSAJE', notes: [880, 1175], options: { type: 'sine', gap: 0.09, last: 0.18, volume: 0.07 } },
   whistle: { label: 'SILBATO', whistle: true },
   roar: { label: 'HINCHADA', crowd: 'roar' },
-  boo: { label: 'PIFIAS', crowd: 'boo' },
   cups: { label: 'VASOS', crowd: 'cups' },
 };
 

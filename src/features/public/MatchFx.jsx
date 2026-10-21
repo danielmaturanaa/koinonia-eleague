@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { playSound } from '../../audio/synth.js';
 
 // Efectos del partido en 8 bits: el estadio en 360 con las hinchadas de cada club (saltan y agitan banderas con un gol,
-// pifian al rival y en el clásico tiran vasos y se agarran) y el sonido de goles, rojas, pitazos, la hinchada y las pifias.
+// pifian al rival y en el clásico tiran vasos y se agarran) y el sonido de goles, rojas, pitazos y la hinchada.
 // Solo suena lo que pasa mientras miras.
 
 const colorsOf = team => ({ primary: team?.colors?.primary ?? '#062764', secondary: team?.colors?.secondary ?? '#ffffff' });
@@ -39,18 +39,22 @@ function SideStand({ sides, rows, perSide, back = false, sizeOf }) {
   </div>);
 }
 
-/** Cabecera: la barra de cada club detrás de su arco. */
-function EndStand({ side, colors, mood }) {
-  return <div className={`stadium360-end arena-side ${side === 'home' ? 'west' : 'east'} ${mood}`}>
-    {Array.from({ length: 34 }, (_, row) => <div key={row} className="arena-row">
-      {Array.from({ length: 4 }, (_, seat) => <Fan key={seat} colors={colors} roll={hash(row + (side === 'away' ? 400 : 300), seat)}/>)}
-    </div>)}
-    {mood.includes('is-fighting') && <Fight/>}
+/** Cabecera: la barra de cada club detrás de su arco. La de la visita es chica: el resto de esa cabecera es del local. */
+function EndRows({ count, colors, offset }) {
+  return Array.from({ length: count }, (_, row) => <div key={row} className="arena-row">
+    {Array.from({ length: 3 }, (_, seat) => <Fan key={seat} colors={colors} roll={hash(row + offset, seat)}/>)}
+  </div>);
+}
+function EndStand({ side, colors, mood, local }) {
+  const away = side === 'away';
+  return <div className={`stadium360-end ${away ? 'east' : 'west'}`}>
+    {away && <div className={`arena-side ${local.mood}`}><EndRows count={20} colors={local.colors} offset={500}/></div>}
+    <div className={`arena-side ${away ? 'is-visitors' : ''} ${mood}`}><EndRows count={away ? 14 : 34} colors={colors} offset={away ? 400 : 300}/>{mood.includes('is-fighting') && <Fight/>}</div>
   </div>;
 }
 
 /**
- * El estadio en 360: la tribuna del fondo de frente (mitad local, mitad visita), las cabeceras de cada barra a los lados y
+ * El estadio en 360: la tribuna del fondo de frente (casi dos tercios del local, el resto de la visita), las cabeceras de cada barra a los lados y
  * la tribuna de abajo de espaldas, con la cancha al medio y lo que se le pase (el marcador) encima del pasto.
  * `fx`: el evento en curso. `derby`: en el clásico la hinchada que recibe el gol tira vasos y se agarra.
  */
@@ -61,40 +65,41 @@ export function PixelStadium({ home, away, fx = null, derby = false, children })
   return <div className={`pixel-arena pixel-stadium360 ${fx?.kind === 'goal' ? 'is-goal' : ''}`}>
     <div className="arena-sky" aria-hidden="true"><i className="arena-light left"/><i className="arena-light right"/>{derby && <span className="arena-derby">CLÁSICO</span>}</div>
     <div className="arena-roof" aria-hidden="true"/>
-    <div className="arena-stands" aria-hidden="true"><SideStand sides={sides} rows={6} perSide={56} sizeOf={row => 5 + row}/></div>
+    <div className="arena-stands" aria-hidden="true"><SideStand sides={sides} rows={6} perSide={76} sizeOf={row => 5 + row}/></div>
     <div className="arena-board" aria-hidden="true"><span>{board.repeat(4)}</span></div>
     <div className="stadium360-middle">
-      <EndStand {...sides[0]}/>
+      <EndStand {...sides[0]} local={sides[0]}/>
       <div className="stadium360-pitch">
         <div className="stadium360-lines" aria-hidden="true"><i className="pitch-half"/><i className="pitch-circle"/><i className="pitch-box left"/><i className="pitch-box right"/></div>
         {throwing && <div key={fx.id} className={`arena-cups from-${throwing}`} aria-hidden="true">{Array.from({ length: 9 }, (_, index) => <i key={index} style={{ '--x': `${4 + ((index * 37) % 42)}%`, '--delay': `${(index % 5) * 0.18}s`, '--spin': index % 2 ? '1' : '-1' }}/>)}</div>}
         <div className="stadium360-center">{children}</div>
       </div>
-      <EndStand {...sides[1]}/>
+      <EndStand {...sides[1]} local={sides[0]}/>
     </div>
     <div className="arena-board south" aria-hidden="true"><span>{board.repeat(4)}</span></div>
-    <div className="arena-stands south" aria-hidden="true"><SideStand sides={sides} rows={3} perSide={40} back sizeOf={row => 8 + row * 2}/></div>
+    <div className="arena-stands south" aria-hidden="true"><SideStand sides={sides} rows={3} perSide={56} back sizeOf={row => 8 + row * 2}/></div>
   </div>;
 }
 
-// Lo que suena con cada evento: [sonido, a los cuántos ms].
-function soundsFor(kind, derby) {
-  if (kind === 'goal') return [['goal', 0], ['roar', 0], ['boo', 1500], ...(derby ? [['cups', 1100]] : [])];
-  if (kind === 'red') return [['whistle', 0], ['boo', 350]];
-  if (kind === 'kickoff') return [['whistle', 0], ['roar', 300]];
-  if (kind === 'fulltime') return [['whistle', 0], ['whistle', 450], ['roar', 900]];
+// Lo que suena con cada evento: [sonido, a los cuántos ms]. En modo estadio se suma la hinchada (rugido y vasos).
+function soundsFor(kind, { derby, stadium }) {
+  const crowd = sounds => (stadium ? sounds : []);
+  if (kind === 'goal') return [['goal', 0], ...crowd([['roar', 0], ...(derby ? [['cups', 1400]] : [])])];
+  if (kind === 'red') return [['whistle', 0]];
+  if (kind === 'kickoff') return [['whistle', 0], ...crowd([['roar', 300]])];
+  if (kind === 'fulltime') return [['whistle', 0], ['whistle', 450], ...crowd([['roar', 900]])];
   if (kind === 'halftime') return [['whistle', 0]];
   return [['notify', 0]];
 }
 
 /** Evento en curso (las hinchadas reaccionan unos segundos) y cómo dispararlo con sus sonidos. `derby`: es clásico. */
-export function useMatchFx({ derby = false } = {}) {
+export function useMatchFx({ derby = false, stadium = true } = {}) {
   const [fx, setFx] = useState(null);
   const timer = useRef(null);
-  const derbyRef = useRef(derby);
-  derbyRef.current = derby;
+  const options = useRef({ derby, stadium });
+  options.current = { derby, stadium };
   const fire = useCallback(event => {
-    for (const [sound, delay] of soundsFor(event.kind, derbyRef.current)) {
+    for (const [sound, delay] of soundsFor(event.kind, options.current)) {
       if (delay) window.setTimeout(() => playSound(sound), delay); else playSound(sound);
     }
     window.clearTimeout(timer.current);
