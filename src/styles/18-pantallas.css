@@ -308,3 +308,8 @@ a.tile:focus-visible, button.tile:focus-visible { outline: 3px solid var(--c-yel
 .courting-line span { padding: 2px 8px; border: 1px solid currentColor; font-weight: 600; }
 .courting-hot { color: var(--c-red); } .courting-mid { color: #9a7400; } .courting-cold { color: var(--c-green); }
 .tv-club-value { margin: 0; padding: var(--sp-2) var(--sp-3); border: 2px dashed var(--c-navy-800); background: #fff; font: 400 var(--fs-md)/1.4 var(--font-body); } .tv-club-value .up { color: var(--c-green); } .tv-club-value .down { color: var(--c-red); }
+/* Simulador a todo el ancho; su resumen ya no queda pegado arriba tapando la cancha. */
+.squad-sim-summary { position: static; margin: 0; }
+.finance-sim-page .finance-sim { display: grid; gap: var(--sp-4); }
+.finance-sim-page .squad-sim-meters { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.finance-sim-page .squad-sim-meters > :first-child { grid-column: auto; }

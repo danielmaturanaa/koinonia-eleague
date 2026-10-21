@@ -860,6 +860,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
   const anchor = ver ?? movedAnchor ?? (tab === 'finanzas' && !ownerMode ? null : null);
   useEffect(() => { if (elsewhere && navigate) navigate(elsewhere); }, [elsewhere]);
   useEffect(() => { if (tab === 'finanzas' && ver === 'simulador') setSimulatorOpen(true); }, [tab, ver]);
+  useEffect(() => { if (activeTab !== 'finanzas') setSimulatorOpen(false); }, [activeTab]);
   useScrollTo(anchor, !loading && Boolean(team));
   const liveStandings = useLiveStandings(standingsTournamentId);
   const displayStandings = Array.isArray(liveStandings.data) && liveStandings.data.length ? liveStandings.data : standings;
@@ -900,11 +901,17 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
       president={{ key: `president-${personRevision}`, photo, name: presidentName, age: presidentProfile.age, country: presidentProfile.country, customFields: team.president?.customFields, role: 'PRESIDENTE', reputation: team.president?.reputation ?? null, onReputation: () => setPersonEditor('reputation'), onEdit: canEdit ? () => setPersonEditor('president') : undefined }}
       coach={{ key: `coach-${personRevision}`, photo: managerPhoto, name: coachName, age: coachProfile.age, country: coachProfile.country, customFields: team.coach?.customFields, role: 'DT', manager: team.coach?.manager, onEdit: canEdit ? () => setPersonEditor('coach') : undefined }}/>}
     {activeTab === 'mensajes' && <MessagesTab team={team} onTab={onTab} onRead={inbox.retry} highlightId={msg}/>}
-    {activeTab === 'finanzas' && <div className="finance-page">
-      <div className="screen-toolbar"><Button icon="table" onClick={() => setSimulatorOpen(true)}>Simular fichajes y contratos</Button></div>
-      <section id="ver-nomina"><PayrollTab team={team} balance={balance} onChanged={onChanged} onTab={onTab} forcedView="actual" currentPosition={position}/></section>
-      <section id="ver-caja"><LedgerTab team={team} balance={balance}/></section>
-    </div>}
+    {activeTab === 'finanzas' && (simulatorOpen
+      // El simulador va a todo el ancho, en vez de los contratos y la caja (con un botón para volver).
+      ? <div className="finance-page finance-sim-page">
+        <div className="screen-subhead"><Button variant="ghost" size="sm" icon="back" onClick={() => setSimulatorOpen(false)}>Finanzas</Button><h2>Simulador</h2></div>
+        <FinanceSimulator team={team} squad={squad} balance={balance} onChanged={onChanged} onTab={onTab} currentPosition={position}/>
+      </div>
+      : <div className="finance-page">
+        <div className="screen-toolbar"><Button icon="table" onClick={() => setSimulatorOpen(true)}>Simular fichajes y contratos</Button></div>
+        <section id="ver-nomina"><PayrollTab team={team} balance={balance} onChanged={onChanged} onTab={onTab} forcedView="actual" currentPosition={position}/></section>
+        <section id="ver-caja"><LedgerTab team={team} balance={balance}/></section>
+      </div>)}
     {activeTab === 'nomina' && <PayrollTab team={team} balance={balance} onChanged={onChanged} onTab={onTab} forcedView="actual" currentPosition={position}/>}
     {activeTab === 'partidos' && <div className="club-matches-page"><ClubStandingSnippet standings={displayStandings} teamId={team.id} teams={teams} onMore={() => navigate?.('/torneos')}/><ClubMatches matches={matches} teams={teams} teamId={team.id}/></div>}
     {activeTab === 'estadio' && <div className="stadium-page">
@@ -920,7 +927,6 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
       <ClubTransfers teamId={team.id}/>
     </div>}
 
-    {simulatorOpen && <PersonEditorModal title="SIMULADOR" onClose={() => setSimulatorOpen(false)}><FinanceSimulator team={team} squad={squad} balance={balance} onChanged={onChanged} onTab={onTab} currentPosition={position}/></PersonEditorModal>}
     {personEditor === 'president' && <PersonEditorModal title="EDITAR PRESIDENTE" onClose={() => setPersonEditor('')}><PresidentForm team={team} onChanged={onChanged} onSaved={() => { setPersonRevision(value => value + 1); setPersonEditor(''); }}/></PersonEditorModal>}
     {personEditor === 'reputation' && <ReputationModal teamId={team.id} onClose={() => setPersonEditor('')}/>}
     {personEditor === 'coach' && <PersonEditorModal title="EDITAR DIRECTOR TÉCNICO" onClose={() => setPersonEditor('')}><CoachForm team={team} onChanged={onChanged} onSaved={() => { setPersonRevision(value => value + 1); setPersonEditor(''); }}/></PersonEditorModal>}
