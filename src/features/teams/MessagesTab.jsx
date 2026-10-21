@@ -22,9 +22,17 @@ export function MessagesTab({ team, onTab, onRead, highlightId }) {
   const [picking, setPicking] = useState(false);
   const rows = Array.isArray(chats.data) ? chats.data : [];
   const open = player => { setPicking(false); setTalking(player); };
+  const [pickError, setPickError] = useState(null);
+  // El buscador entrega filas del directorio (`playerId`); a los tuyos les hablas por la bandeja, no aquí.
+  const pick = row => {
+    if (!row) return;
+    if (row.team?.id === team.id) { setPickError(`${row.name} ya es tuyo: sus mensajes llegan a la bandeja de abajo.`); return; }
+    setPickError(null);
+    open({ id: row.playerId, name: row.name, faceUrl: row.faceUrl, position: row.position });
+  };
   return <div className="messages-tab">
     <Card title="Charlas con jugadores que quieres fichar" aside={<Button size="sm" icon="chat" onClick={() => setPicking(value => !value)}>Hablar con un jugador</Button>}>
-      {picking && <div className="messages-picker"><PlayerPicker status="" label="¿Con quién quieres hablar?" value={null} onChange={player => player && open(player)}/></div>}
+      {picking && <div className="messages-picker"><PlayerPicker status="registered" label="¿Con quién quieres hablar?" value={null} onChange={pick}/>{pickError && <p className="form-feedback error" role="alert">{pickError}</p>}</div>}
       {rows.length
         ? <ul className="chat-list">{rows.map(row => <li key={row.playerId}>
           <button type="button" onClick={() => open({ id: row.playerId, name: row.name, faceUrl: row.faceUrl, position: row.position })}>

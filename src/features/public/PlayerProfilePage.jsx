@@ -49,7 +49,8 @@ function ProfileActions({ player, onTalk }) {
   const watchlist = useApiQuery(signal => (myTeamId ? endpoints.teamWatchlist(myTeamId, signal).catch(() => ({ data: [] })) : Promise.resolve({ data: [] })), [myTeamId]);
   const watching = (Array.isArray(watchlist.data) ? watchlist.data : []).some(row => (row.playerId ?? row.id) === player.id);
   const toggle = useApiMutation((_, signal) => (watching ? endpoints.unwatchPlayer(myTeamId, player.id, signal) : endpoints.watchPlayer(myTeamId, player.id, signal)), { onSuccess: () => watchlist.retry() });
-  if (!myTeamId) return null;
+  // Un jugador dado de baja de la liga no se puede fichar ni hablar.
+  if (!myTeamId || player.active === 0 || player.active === false) return null;
   if (player.team?.id === myTeamId) {
     return <><CourtingLine teamId={myTeamId} playerId={player.id} name={player.name}/><div className="profile-actions">
       <a className="ui-btn ui-btn--primary ui-btn--md" href={`#/equipos/${myTeamId}?tab=finanzas&ver=nomina`}><Icon name="contract" size={14}/>Su contrato</a>
