@@ -815,20 +815,44 @@ function SquadAverages({ starters, substitutes }) {
 }
 
 /** Plantel: la cancha con el once, la media y la lista. El presi además ve roles y ánimo, y edita el plantel en una ventana. */
+// Vistas del plantel: la cancha (con presi, DT y goleadores), la tabla de titulares y suplentes, y (para el presi) los roles
+// y el ánimo. La que elegiste se recuerda en este navegador.
+const SQUAD_VIEW_KEY = 'koinonia:plantel-vista';
+function useSquadView(ownerMode) {
+  const [view, setView] = useState(() => {
+    try { return window.localStorage.getItem(SQUAD_VIEW_KEY) ?? 'cancha'; } catch { return 'cancha'; }
+  });
+  const choose = next => {
+    setView(next);
+    try { window.localStorage.setItem(SQUAD_VIEW_KEY, next); } catch { /* sin almacenamiento: solo por esta vez */ }
+  };
+  return [view === 'roles' && !ownerMode ? 'cancha' : view, choose];
+}
+
+function RosterTable({ starters, substitutes }) {
+  return <div className="roster-panel club-roster"><h3>TITULARES <small>{starters.length} / 11</small></h3><div className="roster-table-scroll"><RosterHeader/><div className="roster-list">{starters.length ? starters.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay titulares definidos.</p>}</div></div><h3>SUPLENTES <small>{substitutes.length}</small></h3><div className="roster-table-scroll"><RosterHeader/><div className="roster-list substitutes">{substitutes.length ? substitutes.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay suplentes registrados.</p>}</div></div></div>;
+}
+
 function SquadTab({ team, squad, starters, substitutes, onChanged, ownerMode, tournaments, president, coach }) {
   const { canEditTeam } = useAuth();
   const canEdit = canEditTeam(team.id);
   const [editing, setEditing] = useState(false);
+  const [view, setView] = useSquadView(ownerMode);
+  const views = [['cancha', 'Cancha'], ['tabla', 'Tabla'], ...(ownerMode ? [['roles', 'Roles y ánimo']] : [])];
   return <div className="club-squad-tab">
-    <div className="squad-top">
-      <PitchBoard team={team} starters={starters} substitutes={substitutes} onChanged={onChanged} readOnly={!canEdit} aside={<SquadAveragesBadge starters={starters} substitutes={substitutes}/>}
-        actions={canEdit ? <Button size="sm" variant="ghost" icon="shirt" onClick={() => setEditing(true)}>Editar dorsales</Button> : null}/>
+    <nav className="squad-views" aria-label="Vista del plantel">
+      {views.map(([id, label]) => <button type="button" key={id} className={view === id ? 'on' : ''} aria-pressed={view === id} onClick={() => setView(id)}>{label}</button>)}
+      {canEdit && <Button size="sm" variant="ghost" icon="shirt" onClick={() => setEditing(true)}>Editar dorsales</Button>}
+    </nav>
+    {view === 'cancha' && <div className="squad-top">
+      <PitchBoard team={team} starters={starters} substitutes={substitutes} onChanged={onChanged} readOnly={!canEdit} aside={<SquadAveragesBadge starters={starters} substitutes={substitutes}/>}/>
       <div className="squad-side">
         <div className="squad-leaders"><LeaderCard {...president}/><LeaderCard {...coach}/></div>
         <ClubScorers teamId={team.id} limit={5} tournaments={tournaments}/>
       </div>
-    </div>
-    {ownerMode ? <RolesPanel team={team}/> : <div className="roster-panel club-roster"><h3>TITULARES <small>{starters.length} / 11</small></h3><div className="roster-table-scroll"><RosterHeader/><div className="roster-list">{starters.length ? starters.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay titulares definidos.</p>}</div></div><h3>SUPLENTES <small>{substitutes.length}</small></h3><div className="roster-table-scroll"><RosterHeader/><div className="roster-list substitutes">{substitutes.length ? substitutes.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay suplentes registrados.</p>}</div></div></div>}
+    </div>}
+    {view === 'tabla' && <RosterTable starters={starters} substitutes={substitutes}/>}
+    {view === 'roles' && <RolesPanel team={team}/>}
     {editing && <PersonEditorModal title="EDITAR DORSALES" onClose={() => setEditing(false)}><div className="club-squad-editor"><SquadEditor team={team} squad={squad} onChanged={onChanged}/></div></PersonEditorModal>}
   </div>;
 }
