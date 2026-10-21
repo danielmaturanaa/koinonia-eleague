@@ -28,6 +28,18 @@ function OpenPollFromProfile({ player }) {
   </div>;
 }
 
+const COURTING_TONE = { entusiasmado: 'hot', 'con dudas': 'mid', 'no lo convencieron': 'cold', hablando: 'mid' };
+
+/** Para el dueño: qué clubes le están hablando a su jugador y cómo quedó cada charla (nunca qué se dijeron). */
+function CourtingLine({ teamId, playerId, name }) {
+  const query = useApiQuery(signal => endpoints.teamCourting(teamId, signal).catch(() => ({ data: {} })), [teamId]);
+  const rows = query.data?.[playerId] ?? [];
+  if (!rows.length) return null;
+  return <p className="courting-line"><Icon name="chat" size={14}/><b>Le están hablando a {name.split(' ').at(-1)}:</b>
+    {rows.map(row => <span key={row.teamId} className={`courting-${COURTING_TONE[row.status] ?? 'mid'}`}>{row.name} ({row.status})</span>)}
+  </p>;
+}
+
 /**
  * Lo que puedes hacer con el jugador, en botones grandes. De otro club o libre: hacer oferta (o fichar si está libre),
  * hablarle (aunque el mercado esté cerrado) y seguirlo. Tuyo: su contrato y sus mensajes.
@@ -39,10 +51,10 @@ function ProfileActions({ player, onTalk }) {
   const toggle = useApiMutation((_, signal) => (watching ? endpoints.unwatchPlayer(myTeamId, player.id, signal) : endpoints.watchPlayer(myTeamId, player.id, signal)), { onSuccess: () => watchlist.retry() });
   if (!myTeamId) return null;
   if (player.team?.id === myTeamId) {
-    return <div className="profile-actions">
+    return <><CourtingLine teamId={myTeamId} playerId={player.id} name={player.name}/><div className="profile-actions">
       <a className="ui-btn ui-btn--primary ui-btn--md" href={`#/equipos/${myTeamId}?tab=finanzas&ver=nomina`}><Icon name="contract" size={14}/>Su contrato</a>
       <a className="ui-btn ui-btn--ghost ui-btn--md" href={`#/equipos/${myTeamId}?tab=mensajes`}><Icon name="chat" size={14}/>Sus mensajes</a>
-    </div>;
+    </div></>;
   }
   return <div className="profile-actions">
     {player.team
