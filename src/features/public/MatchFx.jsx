@@ -1,53 +1,105 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { playSound } from '../../audio/synth.js';
 
-// Efectos del partido en 8 bits: el estadio con las hinchadas de cada club (saltan y agitan banderas con un gol) y el
-// sonido de goles, rojas, el pitazo inicial, el entretiempo y el final. Solo suena lo que pasa mientras miras.
+// Efectos del partido en 8 bits: el estadio en 360 con las hinchadas de cada club (saltan y agitan banderas con un gol,
+// pifian al rival y en el clásico tiran vasos y se agarran) y el sonido de goles, rojas, pitazos, la hinchada y las pifias.
+// Solo suena lo que pasa mientras miras.
 
 const colorsOf = team => ({ primary: team?.colors?.primary ?? '#062764', secondary: team?.colors?.secondary ?? '#ffffff' });
 // Pseudoazar estable por posición (sin Math.random: cada render dibuja lo mismo).
 const hash = (a, b) => ((a * 73856093) ^ (b * 19349663)) >>> 0;
 const SKIN = ['#f1c27d', '#e0ac69', '#c68642', '#8d5524', '#ffdbac'];
+const HAIR = ['#1b1209', '#3b2412', '#5a3a1c', '#0d0d0d', '#a8743a'];
 
-/**
- * El estadio en pixel art: cielo de noche con torres de luz, techo, tribunas en gradas (más chicas hacia arriba, mitad
- * hinchada local y mitad visita, con sus colores), un cartel LED que corre y el borde del pasto.
- * `excite`: 'home' | 'away' | null (esa hinchada salta y agita banderas; las luces destellan).
- */
-export function PixelCrowd({ home, away, excite = null, rows = 6, perSide = 64 }) {
-  const sides = [['home', colorsOf(home)], ['away', colorsOf(away)]];
-  const board = `KOINONIA E-LEAGUE · ${home?.name ?? 'LOCAL'} VS ${away?.name ?? 'VISITA'} · FÚTBOL VIRTUAL, PASIÓN REAL · `;
-  return <div className={`pixel-arena ${excite ? 'is-goal' : ''}`} aria-hidden="true">
-    <div className="arena-sky"><i className="arena-light left"/><i className="arena-light right"/></div>
-    <div className="arena-roof"/>
-    <div className="arena-stands">
-      {sides.map(([side, colors]) => <div key={side} className={`arena-side ${excite === side ? 'is-excited' : ''}`}>
-        {Array.from({ length: rows }, (_, row) => <div key={row} className="arena-row" style={{ '--size': `${5 + row}px` }}>
-          {Array.from({ length: perSide - (rows - 1 - row) * 2 }, (_, seat) => {
-            const roll = hash(row + (side === 'away' ? 50 : 0), seat);
-            const shirt = roll % 5 === 0 ? colors.secondary : colors.primary;
-            return <i key={seat} className={roll % 9 === 0 ? 'has-flag' : ''} style={{ '--shirt': shirt, '--flag': roll % 2 ? colors.primary : colors.secondary, '--skin': SKIN[roll % SKIN.length], '--delay': `${(roll % 900) / 1000}s` }}><b/><s/></i>;
-          })}
-        </div>)}
-      </div>)}
-    </div>
-    <div className="arena-board"><span>{board.repeat(4)}</span></div>
-    <div className="arena-grass"/>
+function Fan({ colors, roll, back = false }) {
+  const shirt = roll % 5 === 0 ? colors.secondary : colors.primary;
+  return <i className={roll % 9 === 0 ? 'has-flag' : ''} style={{ '--shirt': shirt, '--flag': roll % 2 ? colors.primary : colors.secondary,
+    '--skin': back ? HAIR[roll % HAIR.length] : SKIN[roll % SKIN.length], '--delay': `${(roll % 900) / 1000}s` }}><b/><s/></i>;
+}
+
+/** Ánimo de cada hinchada según lo que pasó: festeja la del gol, pifia la otra (y en el clásico se agarran). */
+function moodOf(fx, side, derby) {
+  if (!fx) return '';
+  const angry = derby ? 'is-booing is-fighting' : 'is-booing';
+  if (fx.kind === 'goal') return fx.side === side ? 'is-excited' : angry;
+  if (fx.kind === 'red') return fx.side === side ? angry : '';
+  if (fx.kind === 'kickoff' || fx.kind === 'fulltime') return 'is-cheering';
+  return '';
+}
+
+const Fight = () => <span className="arena-fight"><i/><i/><i/><em>✶</em><em>✶</em></span>;
+
+/** Tribuna larga: la del fondo de frente (más chicos arriba) o la de abajo de espaldas (más cerca, se les ve el pelo). */
+function SideStand({ sides, rows, perSide, back = false, sizeOf }) {
+  return sides.map(({ side, colors, mood }) => <div key={side} className={`arena-side ${mood}`}>
+    {Array.from({ length: rows }, (_, row) => <div key={row} className="arena-row" style={{ '--size': `${sizeOf(row)}px` }}>
+      {Array.from({ length: perSide - (back ? row : rows - 1 - row) * 2 }, (_, seat) => <Fan key={seat} colors={colors} back={back} roll={hash(row + (side === 'away' ? 50 : 0) + (back ? 200 : 0), seat)}/>)}
+    </div>)}
+    {mood.includes('is-fighting') && <Fight/>}
+  </div>);
+}
+
+/** Cabecera: la barra de cada club detrás de su arco. */
+function EndStand({ side, colors, mood }) {
+  return <div className={`stadium360-end arena-side ${side === 'home' ? 'west' : 'east'} ${mood}`}>
+    {Array.from({ length: 34 }, (_, row) => <div key={row} className="arena-row">
+      {Array.from({ length: 4 }, (_, seat) => <Fan key={seat} colors={colors} roll={hash(row + (side === 'away' ? 400 : 300), seat)}/>)}
+    </div>)}
+    {mood.includes('is-fighting') && <Fight/>}
   </div>;
 }
 
-const SOUND = { goal: 'goal', red: 'whistle', kickoff: 'whistle', halftime: 'whistle', fulltime: 'whistle' };
+/**
+ * El estadio en 360: la tribuna del fondo de frente (mitad local, mitad visita), las cabeceras de cada barra a los lados y
+ * la tribuna de abajo de espaldas, con la cancha al medio y lo que se le pase (el marcador) encima del pasto.
+ * `fx`: el evento en curso. `derby`: en el clásico la hinchada que recibe el gol tira vasos y se agarra.
+ */
+export function PixelStadium({ home, away, fx = null, derby = false, children }) {
+  const sides = [{ side: 'home', colors: colorsOf(home), mood: moodOf(fx, 'home', derby) }, { side: 'away', colors: colorsOf(away), mood: moodOf(fx, 'away', derby) }];
+  const board = `KOINONIA E-LEAGUE · ${home?.name ?? 'LOCAL'} VS ${away?.name ?? 'VISITA'} · ${derby ? '¡CLÁSICO! · ' : ''}FÚTBOL VIRTUAL, PASIÓN REAL · `;
+  const throwing = derby && fx?.kind === 'goal' ? (fx.side === 'home' ? 'away' : 'home') : null;
+  return <div className={`pixel-arena pixel-stadium360 ${fx?.kind === 'goal' ? 'is-goal' : ''}`}>
+    <div className="arena-sky" aria-hidden="true"><i className="arena-light left"/><i className="arena-light right"/>{derby && <span className="arena-derby">CLÁSICO</span>}</div>
+    <div className="arena-roof" aria-hidden="true"/>
+    <div className="arena-stands" aria-hidden="true"><SideStand sides={sides} rows={6} perSide={56} sizeOf={row => 5 + row}/></div>
+    <div className="arena-board" aria-hidden="true"><span>{board.repeat(4)}</span></div>
+    <div className="stadium360-middle">
+      <EndStand {...sides[0]}/>
+      <div className="stadium360-pitch">
+        <div className="stadium360-lines" aria-hidden="true"><i className="pitch-half"/><i className="pitch-circle"/><i className="pitch-box left"/><i className="pitch-box right"/></div>
+        {throwing && <div key={fx.id} className={`arena-cups from-${throwing}`} aria-hidden="true">{Array.from({ length: 9 }, (_, index) => <i key={index} style={{ '--x': `${4 + ((index * 37) % 42)}%`, '--delay': `${(index % 5) * 0.18}s`, '--spin': index % 2 ? '1' : '-1' }}/>)}</div>}
+        <div className="stadium360-center">{children}</div>
+      </div>
+      <EndStand {...sides[1]}/>
+    </div>
+    <div className="arena-board south" aria-hidden="true"><span>{board.repeat(4)}</span></div>
+    <div className="arena-stands south" aria-hidden="true"><SideStand sides={sides} rows={3} perSide={40} back sizeOf={row => 8 + row * 2}/></div>
+  </div>;
+}
 
-/** Evento en curso (la hinchada que festeja salta unos segundos) y cómo dispararlo con su sonido. */
-export function useMatchFx() {
+// Lo que suena con cada evento: [sonido, a los cuántos ms].
+function soundsFor(kind, derby) {
+  if (kind === 'goal') return [['goal', 0], ['roar', 0], ['boo', 1500], ...(derby ? [['cups', 1100]] : [])];
+  if (kind === 'red') return [['whistle', 0], ['boo', 350]];
+  if (kind === 'kickoff') return [['whistle', 0], ['roar', 300]];
+  if (kind === 'fulltime') return [['whistle', 0], ['whistle', 450], ['roar', 900]];
+  if (kind === 'halftime') return [['whistle', 0]];
+  return [['notify', 0]];
+}
+
+/** Evento en curso (las hinchadas reaccionan unos segundos) y cómo dispararlo con sus sonidos. `derby`: es clásico. */
+export function useMatchFx({ derby = false } = {}) {
   const [fx, setFx] = useState(null);
   const timer = useRef(null);
+  const derbyRef = useRef(derby);
+  derbyRef.current = derby;
   const fire = useCallback(event => {
-    playSound(SOUND[event.kind] ?? 'notify');
-    if (event.kind === 'fulltime') window.setTimeout(() => playSound('whistle'), 450);
+    for (const [sound, delay] of soundsFor(event.kind, derbyRef.current)) {
+      if (delay) window.setTimeout(() => playSound(sound), delay); else playSound(sound);
+    }
     window.clearTimeout(timer.current);
     setFx({ id: Date.now(), ...event });
-    timer.current = window.setTimeout(() => setFx(null), event.kind === 'goal' ? 3600 : 2600);
+    timer.current = window.setTimeout(() => setFx(null), event.kind === 'goal' ? 4200 : 2800);
   }, []);
   useEffect(() => () => window.clearTimeout(timer.current), []);
   return [fx, fire];
