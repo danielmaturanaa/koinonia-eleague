@@ -11,10 +11,12 @@ import { ConsentPanel } from './ConsentPanel.jsx';
 import { Button, HowItWorks } from '../../../ui/index.js';
 
 const RELEASE_SHARE = 0.2;
-// La misma banda que valida el servidor: todo precio queda entre 0,7× y 1,25× el valor del jugador.
+// La misma banda que valida el servidor: todo precio queda entre 0,7× y 1,25× el valor de Transfermarkt del jugador.
 const PRICE_MIN = 0.7;
 const PRICE_MAX = 1.25;
 const priceBand = value => ({ min: Math.ceil(value * PRICE_MIN - 1e-9), max: Math.floor(value * PRICE_MAX + 1e-9) });
+// La banda se mide sobre el valor de Transfermarkt, no sobre el valor que dejaron las últimas ventas (igual que el servidor).
+const referenceOf = player => player?.tmValue ?? player?.gpValue ?? 0;
 const asList = value => Array.isArray(value) ? value : [];
 const teamLabel = team => team ? `${team.emoji ?? '⚽'} ${team.name}` : 'CLUB';
 const upper = text => String(text ?? '').toUpperCase();
@@ -22,9 +24,9 @@ const upper = text => String(text ?? '').toUpperCase();
 /** Qué falla del precio (o null si está bien). */
 function bandProblem(player, price) {
   if (!player || !Number.isFinite(price)) return null;
-  const { min, max } = priceBand(player.gpValue ?? 0);
-  if (price < min) return `${upper(player.name)} no puede salir por menos de ${gp(min)} (0,7× su valor).`;
-  if (price > max) return `${upper(player.name)} no puede salir por más de ${gp(max)} (1,25× su valor).`;
+  const { min, max } = priceBand(referenceOf(player));
+  if (price < min) return `${upper(player.name)} no puede salir por menos de ${gp(min)} (0,7× su valor de Transfermarkt).`;
+  if (price > max) return `${upper(player.name)} no puede salir por más de ${gp(max)} (1,25× su valor de Transfermarkt).`;
   return null;
 }
 
@@ -40,7 +42,7 @@ function PlayerChip({ player, note }) {
   if (!player) return <span className="offer-player">JUGADOR</span>;
   return <span className="offer-player">
     <PlayerFace src={player.faceUrl} name={player.name}/>
-    <span><b>{player.name}</b><small>{player.position} · VALE {gp(player.gpValue)}{note ? ` · ${note}` : ''}</small></span>
+    <span><b>{player.name}</b><small>{player.position} · VALE {gp(player.gpValue)}{referenceOf(player) !== player.gpValue ? ` (TM ${gp(referenceOf(player))})` : ''}{note ? ` · ${note}` : ''}</small></span>
   </span>;
 }
 
@@ -224,7 +226,7 @@ function TransferProposal({ myTeamId, rivals, onDone, prefill = null }) {
   const player = squad.find(item => item.id === form.playerId);
   const other = rivals.find(team => team.id === form.otherTeamId);
   const price = form.gpAmount === '' ? NaN : Number(form.gpAmount);
-  const band = player ? priceBand(player.gpValue ?? 0) : null;
+  const band = player ? priceBand(referenceOf(player)) : null;
   const problem = bandProblem(player, price);
   const expiredAtSource = useExpiredPlayers(buying ? form.otherTeamId : myTeamId);
   const needsTerms = Boolean(player && expiredAtSource.has(player.id));
@@ -337,8 +339,8 @@ function ReleaseForm({ myTeamId, onDone }) {
   const refund = player ? Math.round((player.gpValue ?? 0) * RELEASE_SHARE) : null;
   return <form className="admin-form market-form offer-form" onSubmit={event => { event.preventDefault(); if (player) setConfirming(true); }}>
     <label>JUGADOR A LIBERAR<select value={playerId} required onChange={event => { setPlayerId(event.target.value); setConfirming(false); }}>{playerOptions(mySquad.squad)}</select></label>
-    <p className="poll-hint">RECIBES EL 20% DE SU VALOR{refund !== null ? `: ${gp(refund)}` : ''} Y QUEDA COMO AGENTE LIBRE.</p>
-    <HowItWorks><p>Los agentes libres se acuerdan: cada liberación baja tu reputación en las subastas.</p><p>Si tiene contrato vigente es una rescisión: pagas el 50% de las temporadas que faltan y no recibes nada (más detalle en Contratos y nómina).</p></HowItWorks>
+    <p className="poll-hint">RECIBES EL 20% DE SU VALOR{refund !== null ? `: ${gp(refund)}` : ''} Y QUEDA COMO AGENTE LIBRE. SU VALOR BAJA 0,15× SU VALOR DE TRANSFERMARKT (NUNCA BAJO 0,7×).</p>
+    <HowItWorks><p>Los agentes libres se acuerdan: cada liberación baja tu reputación en las subastas.</p><p>Si tiene contrato vigente es una rescisión: pagas el 50% de las temporadas que faltan y no recibes nada (más detalle en Contratos y nómina).</p><p>Un despido baja su valor de mercado. Si su contrato ya había vencido, sale sin castigo y su valor no cambia.</p></HowItWorks>
     {confirming
       ? <div className="offer-confirm" role="group" aria-label="CONFIRMAR">
         <span>¿LIBERAR A {upper(player?.name)}? RECIBES {gp(refund)} Y NO SE PUEDE DESHACER.</span>
@@ -360,7 +362,7 @@ export function ProposeOffers({ teams, marketOpen, onChanged, prefill = null }) 
   // Traspasos y trueques solo con el mercado abierto; liberar se puede siempre.
   const closed = marketOpen === false && tab !== 'release';
   return <section className="market-section market-propose">
-    <header><h2>PROPONER UNA OPERACIÓN</h2><p>Se concreta cuando la otra parte la acepta. Precio entre 0,7× y 1,25× el valor.</p></header>
+    <header><h2>PROPONER UNA OPERACIÓN</h2><p>Se concreta cuando la otra parte la acepta. Precio entre 0,7× y 1,25× su valor de Transfermarkt; el jugador queda valiendo lo que se pagó. Los trueques no mueven el valor.</p></header>
     <nav className="market-tabs offer-tabs" aria-label="TIPO DE OPERACIÓN">
       <button type="button" className={tab === 'transfer' ? 'active' : ''} onClick={() => setTab('transfer')}>TRASPASO</button>
       <button type="button" className={tab === 'trade' ? 'active' : ''} onClick={() => setTab('trade')}>TRUEQUE</button>
