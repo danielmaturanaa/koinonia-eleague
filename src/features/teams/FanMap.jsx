@@ -4,6 +4,7 @@ import { useAuth } from '../../app/AuthGate.jsx';
 import { Button, Card, Chip, HowItWorks, useToast } from '../../ui/index.js';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { CHILE_MASK } from './chileMask.js';
+import { WORLD_MASK } from './worldMask.js';
 import { COMUNAS } from './comunas.js';
 
 const upper = text => String(text ?? '').toUpperCase();
@@ -66,7 +67,49 @@ function heatLevels(homes) {
   });
 }
 
-// La comuna más cercana a un punto, para ponerle nombre a "mi ubicación" sin consultar a nadie.
+// Mapa mundial en puntos (una vez): sirve para ver dónde está tu país de origen frente a Chile.
+const WORLD_LAND = (() => {
+  const { step, top, rows } = WORLD_MASK;
+  const cells = [];
+  rows.forEach((hex, y) => [...hex].forEach((digit, nibble) => {
+    const bits = parseInt(digit, 16);
+    for (let bit = 0; bit < 4; bit += 1) {
+      if (!(bits & (8 >> bit))) continue;
+      const x = nibble * 4 + bit;
+      cells.push({ x, y, i: cells.length, lon: -180 + (x + 0.5) * step, lat: top - (y + 0.5) * step });
+    }
+  }));
+  return cells;
+})();
+const worldX = lon => (lon + 180) / WORLD_MASK.step;
+const worldY = lat => (WORLD_MASK.top - lat) / WORLD_MASK.step;
+// Del mapa mundial solo se recorta lo que sirve (sin la Antártida ni el Ártico profundo).
+const WORLD_VIEW = { y: worldY(75), height: worldY(-58) - worldY(75) };
+
+/** Dónde queda tu país frente a Chile: dos focos de calor (cada uno con su cantidad de hinchas) y las casas marcadas afuera. */
+function WorldMini({ fans, countryHomes }) {
+  const rows = fans.map ?? [];
+  const sources = rows.map(row => ({ ...row, sigma: 6 }));
+  const heat = useMemo(() => {
+    const values = WORLD_LAND.map(cell => sources.reduce((sum, source) => {
+      const dx = (cell.lon - source.lon) * Math.cos(cell.lat * Math.PI / 180);
+      const dy = cell.lat - source.lat;
+      return sum + source.fans * Math.exp(-(dx * dx + dy * dy) / (2 * source.sigma * source.sigma));
+    }, 0));
+    const max = Math.max(1, ...values);
+    return values.map(value => { const share = value / max; return share < 0.01 ? 0 : share < 0.06 ? 1 : share < 0.2 ? 2 : share < 0.5 ? 3 : 4; });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [rows.map(row => `${row.code}:${row.fans}`).join('|')]);
+  return <div className="fan-world">
+    <svg viewBox={`0 ${WORLD_VIEW.y} ${WORLD_MASK.cols} ${WORLD_VIEW.height}`} role="img" aria-label={`Mapa mundial: ${rows.map(row => `${row.name} ${compact(row.fans)}`).join(' y ')}`}>
+      {WORLD_LAND.filter(cell => cell.y >= WORLD_VIEW.y && cell.y <= WORLD_VIEW.y + WORLD_VIEW.height).map(cell => <rect key={`${cell.x}-${cell.y}`} x={cell.x + 0.12} y={cell.y + 0.12} width="0.76" height="0.76" className={`l${heat[cell.i]}`}/>)}
+      {rows.map(row => <g key={row.code} className={`fan-pin ${row.home ? 'is-home' : ''}`} transform={`translate(${worldX(row.lon)} ${worldY(row.lat)})`}><rect x="-1.3" y="-1.3" width="2.6" height="2.6"/><title>{`${row.name}: ${people(row.fans)} hinchas`}</title></g>)}
+      {countryHomes.map(home => <g key={home.id} className="fan-pin is-house" transform={`translate(${worldX(home.lon)} ${worldY(home.lat)})`}><rect x="-0.9" y="-0.9" width="1.8" height="1.8"/><title>{`${home.label}`}</title></g>)}
+    </svg>
+  </div>;
+}
+
+// La ciudad o comuna más cercana a un punto, para ponerle nombre a "mi ubicación" sin consultar a nadie (solo en Chile).
 const nearestComuna = (lat, lon) => COMUNAS.reduce((best, [name, la, lo]) => {
   const distance = (la - lat) ** 2 + ((lo - lon) * Math.cos(lat * Math.PI / 180)) ** 2;
   return distance < best.distance ? { name, distance } : best;
@@ -74,12 +117,16 @@ const nearestComuna = (lat, lon) => COMUNAS.reduce((best, [name, la, lo]) => {
 
 function AddHome({ fans, onChanged }) {
   const toast = useToast();
+  const abroad = fans.country !== 'CL';
+  const [place, setPlace] = useState('CL');
   const [comuna, setComuna] = useState('');
   const [address, setAddress] = useState('');
   const [locating, setLocating] = useState(false);
   const [geoError, setGeoError] = useState('');
-  const add = useApiMutation((body, signal) => endpoints.addFanHome(fans.teamId, body, signal), {
-    onSuccess: () => { toast({ tone: 'success', title: 'Casa marcada en el mapa' }); setComuna(''); setAddress(''); onChanged?.(); },
+  const inChile = place === 'CL';
+  const placeName = inChile ? 'Chile' : fans.countryName;
+  const add = useApiMutation((body, signal) => endpoints.addFanHome(fans.teamId, { ...body, country: place }, signal), {
+    onSuccess: () => { toast({ tone: 'success', title: 'Lugar marcado en el mapa' }); setComuna(''); setAddress(''); onChanged?.(); },
   });
   const byComuna = event => {
     event.preventDefault();
@@ -92,23 +139,32 @@ function AddHome({ fans, onChanged }) {
   };
   const byLocation = () => {
     setGeoError('');
-    if (!navigator.geolocation) { setGeoError('Tu navegador no entrega la ubicación. Escribe la dirección o elige la comuna.'); return; }
+    if (!navigator.geolocation) { setGeoError('Tu navegador no entrega la ubicación. Escribe la dirección.'); return; }
     setLocating(true);
     navigator.geolocation.getCurrentPosition(
-      position => { setLocating(false); const { latitude, longitude } = position.coords; add.execute({ label: nearestComuna(latitude, longitude), lat: latitude, lon: longitude }); },
-      () => { setLocating(false); setGeoError('No pude leer tu ubicación. Escribe la dirección o elige la comuna.'); },
+      position => {
+        setLocating(false);
+        const { latitude, longitude } = position.coords;
+        add.execute({ label: inChile ? nearestComuna(latitude, longitude) : fans.countryName, lat: latitude, lon: longitude });
+      },
+      () => { setLocating(false); setGeoError('No pude leer tu ubicación. Escribe la dirección.'); },
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 },
     );
   };
   return <div className="fan-home-add">
+    {abroad && <div className="fan-place-switch" role="group" aria-label="Dónde marcar">
+      <span>MARCAR EN</span>
+      <button type="button" className={inChile ? 'on' : ''} aria-pressed={inChile} onClick={() => setPlace('CL')}>{flag('CL')} CHILE</button>
+      <button type="button" className={!inChile ? 'on' : ''} aria-pressed={!inChile} onClick={() => setPlace(fans.country)}>{flag(fans.country)} {upper(fans.countryName)}</button>
+    </div>}
     <Button type="button" onClick={byLocation} disabled={locating || add.loading}>{locating ? 'BUSCANDO…' : '📍 USAR MI UBICACIÓN'}</Button>
     <form className="fan-home-form" onSubmit={byAddress}>
-      <label>O ESCRIBE TU DIRECCIÓN
-        <input type="text" value={address} onChange={event => setAddress(event.target.value)} placeholder="Calle, número y comuna" maxLength={200} autoComplete="street-address"/>
+      <label>O ESCRIBE UNA DIRECCIÓN EN {upper(placeName)}
+        <input type="text" value={address} onChange={event => setAddress(event.target.value)} placeholder={inChile ? 'Calle, número y comuna' : 'Calle, número y ciudad'} maxLength={200} autoComplete="street-address"/>
       </label>
       <Button type="submit" disabled={address.trim().length < 5 || add.loading}>BUSCAR</Button>
     </form>
-    <form className="fan-home-form" onSubmit={byComuna}>
+    {inChile && <form className="fan-home-form" onSubmit={byComuna}>
       <label>O ELIGE SOLO LA COMUNA
         <select value={comuna} onChange={event => setComuna(event.target.value)}>
           <option value="">ELIGE LA COMUNA…</option>
@@ -116,32 +172,35 @@ function AddHome({ fans, onChanged }) {
         </select>
       </label>
       <Button type="submit" disabled={!comuna || add.loading}>MARCAR</Button>
-    </form>
-    {geoError && <p className="fan-others" role="alert">{geoError}</p>}
-    {add.error && <p className="fan-others" role="alert">{String(add.error.message ?? add.error)}</p>}
-    <p className="fan-others">TU DIRECCIÓN SOLO SE USA PARA ENCONTRAR LA ZONA: NO SE GUARDA, Y EL MAPA MUESTRA UN PUNTO REDONDEADO (~2 KM) CON EL NOMBRE DE LA COMUNA.</p>
+    </form>}
+    {geoError && <p className="fan-note" role="alert">{geoError}</p>}
+    {add.error && <p className="fan-note is-error" role="alert">{String(add.error.message ?? add.error)}</p>}
+    <p className="fan-note">TU DIRECCIÓN SOLO SE USA PARA ENCONTRAR LA ZONA: NO SE GUARDA, Y EL MAPA MUESTRA UN PUNTO REDONDEADO (~2 KM).</p>
   </div>;
 }
 
-/** Mapa de hinchas: viven en Chile y en el país del club. Chile se ve en el mapa (con las casas marcadas); el país del club, en números. */
-export function FanMap({ fans, title = 'HINCHAS EN CHILE Y EN TU PAÍS', onChanged }) {
+/** Hinchas: el total manda; abajo, cuántos viven en Chile y cuántos en el país del club, y los lugares marcados en cada uno. */
+export function FanMap({ fans, title = 'HINCHAS', onChanged }) {
   const { canEditTeam } = useAuth();
   const homes = fans.homes ?? [];
-  const levels = useMemo(() => heatLevels(homes), [homes]);
+  const chileHomes = homes.filter(home => (home.country ?? 'CL') === 'CL');
+  const countryHomes = homes.filter(home => (home.country ?? 'CL') !== 'CL');
+  const levels = useMemo(() => heatLevels(chileHomes), [chileHomes]);
   const toast = useToast();
-  const remove = useApiMutation((homeId, signal) => endpoints.removeFanHome(fans.teamId, homeId, signal), { onSuccess: () => { toast({ tone: 'success', title: 'Casa sacada del mapa' }); onChanged?.(); } });
+  const remove = useApiMutation((homeId, signal) => endpoints.removeFanHome(fans.teamId, homeId, signal), { onSuccess: () => { toast({ tone: 'success', title: 'Lugar sacado del mapa' }); onChanged?.(); } });
   const chileRow = (fans.map ?? []).find(row => row.code === 'CL');
   const countryRow = (fans.map ?? []).find(row => row.code === fans.country);
   const abroad = fans.country !== 'CL';
   const origin = fans.origin;
   const formula = origin?.formula;
-  const homeShare = percent(fans.homeFans, fans.followers);
-  return <Card id="ver-hinchas" title={title} className="fan-map-card" aside={<Chip icon="people">{compact(fans.followers)}</Chip>}>
+  const chileShare = percent(chileRow?.fans ?? 0, fans.followers);
+  const editable = canEditTeam?.(fans.teamId);
+  return <Card id="ver-hinchas" title={title} className="fan-map-card" aside={fans.rank ? <Chip icon="people">{fans.rank}.º DE {fans.clubs}</Chip> : null}>
     <div className="fan-map fan-map-chile">
       <div className="fan-map-canvas">
-        <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label={`Mapa de Chile con ${compact(chileRow?.fans ?? 0)} hinchas${homes.length ? ` y ${homes.length} casa${homes.length === 1 ? '' : 's'} marcada${homes.length === 1 ? '' : 's'}` : ''}`}>
+        <svg viewBox={`0 0 ${WIDTH} ${HEIGHT}`} role="img" aria-label={`Mapa de Chile con ${compact(chileRow?.fans ?? 0)} hinchas${chileHomes.length ? ` y ${chileHomes.length} lugar${chileHomes.length === 1 ? '' : 'es'} marcado${chileHomes.length === 1 ? '' : 's'}` : ''}`}>
           {LAND.map((cell, index) => <rect key={index} x={cell.x + 0.14} y={cell.y + 0.14} width="0.72" height="0.72" className={`l${levels[index]}`}/>)}
-          {homes.map(home => <g key={home.id} className="fan-pin is-home" transform={`translate(${toX(home.lon)} ${toY(home.lat)})`}>
+          {chileHomes.map(home => <g key={home.id} className="fan-pin is-home" transform={`translate(${toX(home.lon)} ${toY(home.lat)})`}>
             <rect x="-1.4" y="-1.4" width="2.8" height="2.8"/>
             <title>{`Casa de un hincha · ${home.label}`}</title>
           </g>)}
@@ -149,23 +208,33 @@ export function FanMap({ fans, title = 'HINCHAS EN CHILE Y EN TU PAÍS', onChang
         <div className="fan-map-legend" aria-hidden="true"><span>POCOS</span>{[1, 2, 3, 4].map(level => <i key={level} className={`l${level}`}/>)}<span>MUCHOS</span></div>
       </div>
       <div className="fan-map-side">
-        <div className="fan-split fan-split-column">
-          {abroad && <span className="fan-split-home"><small>{flag(fans.country)} EN {upper(fans.countryName)}</small><b>{compact(countryRow?.fans ?? fans.homeFans)}</b><em>{homeShare}% DE TUS HINCHAS</em></span>}
-          <span className={abroad ? 'fan-split-abroad' : 'fan-split-home'}><small>{flag('CL')} EN CHILE</small><b>{compact(chileRow?.fans ?? 0)}</b>{abroad && <em>{100 - homeShare}% DE TUS HINCHAS</em>}</span>
+        <div className="fan-total">
+          <b>{compact(fans.followers)}</b>
+          <span>HINCHAS EN TOTAL</span>
         </div>
+        <div className="fan-share" aria-label={`${100 - chileShare}% en ${fans.countryName}, ${chileShare}% en Chile`}>
+          {abroad ? <>
+            <span className="fan-share-bar"><i className="home" style={{ flexGrow: Math.max(100 - chileShare, 4) }}/><i className="chile" style={{ flexGrow: Math.max(chileShare, 4) }}/></span>
+            <span className="fan-share-legend">
+              <em>{flag(fans.country)} {upper(fans.countryName)} <b>{compact(countryRow?.fans ?? fans.homeFans)}</b> · {100 - chileShare}%</em>
+              <em>{flag('CL')} CHILE <b>{compact(chileRow?.fans ?? 0)}</b> · {chileShare}%</em>
+            </span>
+          </> : <span className="fan-share-legend"><em>{flag('CL')} TODOS EN CHILE</em></span>}
+        </div>
+        {abroad && <WorldMini fans={fans} countryHomes={countryHomes}/>}
         <section className="fan-homes">
-          <h4>CASAS MARCADAS <small>{homes.length}</small></h4>
-          {homes.length === 0 && <p className="fan-others">NINGUNA TODAVÍA. EL MAPA REPARTE A LOS HINCHAS POR LAS CIUDADES, SEGÚN LA GENTE QUE VIVE EN CADA UNA.</p>}
-          <ul>{homes.map(home => <li key={home.id}><span>{upper(home.label)}</span>{canEditTeam?.(fans.teamId) && <button type="button" onClick={() => remove.execute(home.id)} disabled={remove.loading} aria-label={`Sacar la casa de ${home.label}`}>×</button>}</li>)}</ul>
-          {canEditTeam?.(fans.teamId) && <AddHome fans={fans} onChanged={onChanged}/>}
+          <h4>LUGARES MARCADOS <small>{homes.length}</small></h4>
+          {homes.length === 0 && <p className="fan-note">NINGUNO TODAVÍA. EL MAPA DE CHILE REPARTE A LOS HINCHAS POR LAS CIUDADES, SEGÚN LA GENTE QUE VIVE EN CADA UNA.</p>}
+          <ul>{homes.map(home => <li key={home.id}><span>{flag(home.country ?? 'CL')} {upper(home.label)}</span>{editable && <button type="button" onClick={() => remove.execute(home.id)} disabled={remove.loading} aria-label={`Sacar ${home.label}`}>×</button>}</li>)}</ul>
+          {editable && <AddHome fans={fans} onChanged={onChanged}/>}
         </section>
       </div>
     </div>
     {formula && <HowItWorks title="¿De dónde salen estos números?">
       <p>Son personas que se declaran hinchas, no seguidores de redes. Viven en dos lugares: Chile, donde se juega la liga, y el país de tu club ({formula.countryName}).</p>
       <ul>
-        <li><b>Cuántos son: la grandeza del club.</b> Tu club está en {Math.round((formula.greatness ?? 0) * 100)} de 100 entre los clubes de la liga (títulos, finales, playoffs y plantel). Los más grandes tienen una parte mayor de su país, y los pequeños, una parte chica.</li>
-        <li><b>Dónde viven.</b> {abroad ? `En ${formula.countryName} vive la mayor parte (el país tiene ${people(formula.population)} millones de habitantes). Un club de afuera también se hace querer en Chile, más cuanto más grande es y más atractiva es su liga.` : `Tu club es chileno: todos tus hinchas están en Chile.`}</li>
+        <li><b>Cuántos son: la grandeza del club.</b> Tu club está en {Math.round((formula.greatness ?? 0) * 100)} de 100 entre los clubes de la liga (títulos, finales, playoffs y plantel). Los más grandes tienen más hinchas.</li>
+        <li><b>Dónde viven.</b> {abroad ? `La mayor parte vive en ${formula.countryName}, como pasa en la vida real. En Chile llegan los de un club grande y de una liga que se ve por TV: de ~10% en un club chico a ~35% en el más grande.` : `Tu club es chileno: todos tus hinchas están en Chile.`}</li>
       </ul>
       <p>Partiste con <b>{compact(origin.start)}</b> y {origin.change >= 0 ? 'ganaste' : 'perdiste'} <b>{compact(Math.abs(origin.change))}</b> jugando: partidos, clásicos, títulos, posición final y conciertos.</p>
       <p>Todos pueden ir al estadio, pero un club grande llena aunque no sea día de clásico; uno chico depende más del rival. Los derechos de TV miran a todos tus hinchas.</p>

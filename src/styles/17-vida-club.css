@@ -388,3 +388,33 @@
 .velada-math .down dd { color: var(--c-red); }
 .velada-math small { font: 600 11px/1.2 var(--font-body); color: var(--c-ink-muted); }
 @media (prefers-reduced-motion: reduce) { .velada-step.is-now .velada-step-n { animation: none; } }
+
+/* Panel de hinchas: texto claro sobre el fondo azul, el total grande y el reparto Chile / país en chico. */
+.fan-map-chile .fan-map-side { color: var(--c-cream); }
+.fan-map-side .fan-total { display: grid; gap: 2px; }
+.fan-map-side .fan-total b { font: 400 clamp(44px, 7vw, 72px)/1 var(--font-display); color: #fff; }
+.fan-map-side .fan-total span { font: 600 var(--fs-sm)/1.2 var(--font-ui); letter-spacing: 1px; color: var(--c-yellow); }
+.fan-share { display: grid; gap: 6px; margin-top: var(--sp-3); }
+.fan-share-bar { display: flex; height: 8px; gap: 2px; }
+.fan-share-bar i { display: block; min-width: 4px; }
+.fan-share-bar i.home { background: var(--c-ice); }
+.fan-share-bar i.chile { background: var(--c-yellow); }
+.fan-share-legend { display: flex; flex-wrap: wrap; gap: 4px var(--sp-4); font: 600 var(--fs-xs)/1.2 var(--font-ui); letter-spacing: .5px; }
+.fan-share-legend em { font-style: normal; color: var(--c-cream); }
+.fan-share-legend b { font: 400 var(--fs-md)/1 var(--font-display); color: #fff; margin: 0 2px; }
+.fan-world { margin-top: var(--sp-3); padding: var(--sp-2); background: rgba(255, 255, 255, .04); border: 2px solid rgba(255, 255, 255, .15); }
+.fan-world svg { display: block; width: 100%; height: auto; }
+.fan-world rect { fill: rgba(255, 255, 255, .13); }
+.fan-world rect.l1 { fill: #3f6db8; } .fan-world rect.l2 { fill: var(--c-ice); } .fan-world rect.l3 { fill: var(--c-yellow); } .fan-world rect.l4 { fill: #fff; }
+.fan-world .fan-pin rect { fill: var(--c-red); stroke: #fff; stroke-width: .3; }
+.fan-world .fan-pin.is-home rect { fill: var(--c-navy-900); stroke: var(--c-yellow); }
+.fan-world .fan-pin.is-house rect { fill: var(--c-yellow); stroke: var(--c-navy-900); stroke-width: .25; }
+.fan-map-side .fan-homes h4 { color: var(--c-cream); }
+.fan-map-side .fan-homes h4 small { color: var(--c-navy-900); background: var(--c-yellow); }
+.fan-map-side .fan-note, .fan-map-side .fan-others { margin: 0; font: 600 var(--fs-xs)/1.4 var(--font-ui); letter-spacing: .5px; color: rgba(255, 255, 255, .72); }
+.fan-map-side .fan-note.is-error { color: #ffb4a8; }
+.fan-map-side .fan-home-form label { color: var(--c-cream); }
+.fan-place-switch { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font: 600 var(--fs-xs)/1 var(--font-ui); letter-spacing: .5px; color: var(--c-cream); }
+.fan-place-switch span { margin-right: 4px; }
+.fan-place-switch button { padding: 6px 10px; font: 600 var(--fs-xs)/1 var(--font-ui); letter-spacing: .5px; color: var(--c-cream); background: transparent; border: 2px solid rgba(255, 255, 255, .35); cursor: pointer; }
+.fan-place-switch button.on { color: var(--c-navy-900); background: var(--c-yellow); border-color: var(--c-yellow); }
