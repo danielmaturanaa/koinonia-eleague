@@ -76,7 +76,9 @@ export function StadiumsPage() {
   const mine = myTeamId ? rows.find(row => row.teamId === myTeamId) ?? null : null;
   const balance = myTeam.data ? teamBalance(myTeam.data) : null;
   const canBuy = Boolean(myTeamId) && isPresidentOf(myTeamId);
-  const shown = rows.filter(row => filter === 'todos' || (filter === 'libres' ? !row.teamId : Boolean(row.teamId)));
+  // Del más caro al más barato; a igual precio, por nombre.
+  const shown = rows.filter(row => filter === 'todos' || (filter === 'libres' ? !row.teamId : Boolean(row.teamId)))
+    .sort((left, right) => right.price - left.price || String(left.name).localeCompare(String(right.name)));
   return <main className="newspaper stadiums-page"><section className="team-list-paper">
     <header className="team-page-header"><p>CATÁLOGO DE LA LIGA</p><h1>ESTADIOS</h1><span>{rows.filter(row => !row.teamId).length} EN VENTA · {rows.filter(row => row.teamId).length} CON DUEÑO</span></header>
     {canBuy && <div className="stadiums-mine">
