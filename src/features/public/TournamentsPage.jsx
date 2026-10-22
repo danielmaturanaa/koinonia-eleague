@@ -115,6 +115,12 @@ function TournamentWorkspace({ tournamentId, teams, onChanged, onDeleted, initia
   const groupLabels = useMemo(() => [...new Set((detail.data?.teams ?? []).map(team => team.groupLabel).filter(Boolean))]
     .sort((left, right) => String(left).localeCompare(String(right))), [detail.data]);
   const refresh = () => { detail.retry(); standings.retry(); scorers.retry(); onChanged?.(); };
+  const remove = useApiMutation(signal => endpoints.deleteTournament(tournamentId, signal), { onSuccess: () => onDeleted?.() });
+  const deleteTournament = () => {
+    const played = standingRows.reduce((sum, row) => sum + Number(row.played ?? 0), 0);
+    const warning = played ? ` Tiene partidos jugados: se borran sus resultados, goles y títulos.` : '';
+    if (window.confirm(`¿Eliminar ${detail.data?.name ?? 'este torneo'} para siempre?${warning} Esto no se puede deshacer.`)) remove.execute();
+  };
   useEffect(() => { setWorkspaceTab(initialTab); }, [tournamentId]);
   useEffect(() => { if (embedded) setWorkspaceTabState(['standings', 'scorers', 'playoffs'].includes(initialTab) ? initialTab : 'standings'); }, [initialTab, embedded]);
   const data = detail.data;
@@ -128,7 +134,7 @@ function TournamentWorkspace({ tournamentId, teams, onChanged, onDeleted, initia
     : null;
 
   return <section className="tournament-workspace"><DataState query={detail}/>{data && <>
-    <header className="tournament-header"><div><small>{data.format === 'league' ? 'LIGA' : data.format === 'knockout' ? 'ELIMINACIÓN DIRECTA' : 'GRUPOS + ELIMINACIÓN'}{data.format === 'league' ? ` · CAMPEONES: ${data.championPolicy === 'both' ? 'LIGA REGULAR + PLAYOFFS' : data.championPolicy === 'playoffs' ? 'PLAYOFFS' : 'TABLA'}` : ''}</small><h2>{data.name}</h2></div><b className={`status status-${data.status}`}>{statusLabel}</b>{isAdmin && <a className="tournament-manage-button" href={`#/admin?tab=torneos&id=${data.id}`}>⚙ Gestionar en la sala de control</a>}</header>
+    <header className="tournament-header"><div><small>{data.format === 'league' ? 'LIGA' : data.format === 'knockout' ? 'ELIMINACIÓN DIRECTA' : 'GRUPOS + ELIMINACIÓN'}{data.format === 'league' ? ` · CAMPEONES: ${data.championPolicy === 'both' ? 'LIGA REGULAR + PLAYOFFS' : data.championPolicy === 'playoffs' ? 'PLAYOFFS' : 'TABLA'}` : ''}</small><h2>{data.name}</h2></div><b className={`status status-${data.status}`}>{statusLabel}</b>{isAdmin && <a className="tournament-manage-button" href={`#/admin?tab=torneos&id=${data.id}`}>⚙ Gestionar en la sala de control</a>}{isAdmin && <Button variant="danger" type="button" disabled={remove.loading} onClick={deleteTournament}>ELIMINAR TORNEO</Button>}</header>{isAdmin && (remove.error || remove.success) && <FormFeedback mutation={remove}/>}
     <>
       {!embedded && <nav className="tournament-subtabs" aria-label="Secciones del torneo" role="tablist">
         <button type="button" role="tab" aria-selected={workspaceTab === 'standings'} className={workspaceTab === 'standings' ? 'active' : ''} onClick={() => setWorkspaceTab('standings')}>TABLA DE POSICIONES</button>
