@@ -35,16 +35,21 @@ function PlayerSelect({ teamId, value, onChange, required }) {
   </select>;
 }
 
+// Minuto opcional del gol: la noticia lo usa para contar un gol sobre la hora.
+const MinuteInput = ({ value, onChange }) => <input className="scoreboard-minute" type="number" min="0" max="130" step="1" placeholder="MIN. (OPCIONAL)" aria-label="Minuto del gol (opcional)" value={value} onChange={event => onChange(event.target.value)}/>;
+
 function GoalPopover({ match, teamId, teamName, onClose, onChanged }) {
   const [playerId, setPlayerId] = useState('');
+  const [minute, setMinute] = useState('');
   const mutation = useApiMutation((body, signal) => endpoints.addMatchGoal(match.id, body, signal), { onSuccess: () => { onChanged(); onClose(); } });
   const submit = event => {
     event.preventDefault();
-    mutation.execute({ scoringTeamId: teamId, ...(playerId ? { playerId } : {}) });
+    mutation.execute({ scoringTeamId: teamId, ...(playerId ? { playerId } : {}), ...(minute ? { minute: Number(minute) } : {}) });
   };
   return <form className="scoreboard-popover" onSubmit={submit}>
     <p>GOL DE {teamName?.toUpperCase()}</p>
     <PlayerSelect teamId={teamId} value={playerId} onChange={setPlayerId}/>
+    <MinuteInput value={minute} onChange={setMinute}/>
     <div className="scoreboard-popover-actions"><button type="button" onClick={onClose} disabled={mutation.loading}>CANCELAR</button><button type="submit" className="scoreboard-confirm" disabled={mutation.loading}>¡GOL!</button></div>
     {mutation.error && <p className="scoreboard-popover-error">{mutation.error.message}</p>}
   </form>;
@@ -55,13 +60,14 @@ function OwnGoalPopover({ match, onClose, onChanged }) {
   const awayId = match.awayTeam?.id;
   const [scoringTeamId, setScoringTeamId] = useState(homeId);
   const [playerId, setPlayerId] = useState('');
+  const [minute, setMinute] = useState('');
   const rivalTeamId = scoringTeamId === homeId ? awayId : homeId;
   const rivalTeamName = scoringTeamId === homeId ? match.awayTeam?.name : match.homeTeam?.name;
   const mutation = useApiMutation((body, signal) => endpoints.addMatchGoal(match.id, body, signal), { onSuccess: () => { onChanged(); onClose(); } });
   const chooseTeam = value => { setScoringTeamId(value); setPlayerId(''); };
   const submit = event => {
     event.preventDefault();
-    mutation.execute({ scoringTeamId, ownGoal: true, playerId });
+    mutation.execute({ scoringTeamId, ownGoal: true, playerId, ...(minute ? { minute: Number(minute) } : {}) });
   };
   return <form className="scoreboard-popover scoreboard-popover-danger" onSubmit={submit}>
     <p>AUTOGOL · ¿A FAVOR DE QUIÉN?</p>
@@ -71,6 +77,7 @@ function OwnGoalPopover({ match, onClose, onChanged }) {
     </div>
     <p className="scoreboard-popover-hint">LO MARCÓ UN JUGADOR DE {rivalTeamName?.toUpperCase()}</p>
     <PlayerSelect teamId={rivalTeamId} value={playerId} onChange={setPlayerId} required/>
+    <MinuteInput value={minute} onChange={setMinute}/>
     <div className="scoreboard-popover-actions"><button type="button" onClick={onClose} disabled={mutation.loading}>CANCELAR</button><button type="submit" className="scoreboard-confirm scoreboard-confirm-danger" disabled={!playerId || mutation.loading}>¡AUTOGOL!</button></div>
     {mutation.error && <p className="scoreboard-popover-error">{mutation.error.message}</p>}
   </form>;
@@ -108,7 +115,7 @@ function GoalList({ match, onClose, onChanged }) {
   return <div className="scoreboard-popover scoreboard-goal-list-popover">
     <p>GOLES DEL PARTIDO</p>
     {goals.length ? <div className="scoreboard-goal-list">{goals.map(goal => <div className="scoreboard-goal-row" key={goal.id}>
-      <span>⚽ {goalPlayerName(goal)}{goal.isOwnGoal ? ' (autogol)' : ''} · {teamName(goal)}</span>
+      <span>⚽ {goalPlayerName(goal)}{goal.isOwnGoal ? ' (autogol)' : ''}{Number.isInteger(goal.minute) ? ` · ${goal.minute}'` : ''} · {teamName(goal)}</span>
       <button type="button" className="scoreboard-goal-remove" disabled={mutation.loading} onClick={() => remove(goal)}>✕ ANULAR</button>
     </div>)}</div> : <p className="scoreboard-player-empty">SIN GOLES REGISTRADOS.</p>}
     <button type="button" className="scoreboard-btn-text" onClick={onClose}>CERRAR</button>
