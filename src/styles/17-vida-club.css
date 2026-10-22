@@ -298,6 +298,8 @@
 .fan-homes ul { display: flex; flex-wrap: wrap; gap: 4px; margin: 0 0 var(--sp-2); padding: 0; list-style: none; }
 .fan-homes li { display: inline-flex; align-items: center; gap: 6px; padding: 3px 8px; font: 600 var(--fs-xs)/1.2 var(--font-ui); letter-spacing: .5px; color: var(--c-navy-900); background: var(--c-gold-bg); border: 2px solid var(--c-navy-800); }
 .fan-homes li button { padding: 0 4px; font: 700 14px/1 var(--font-ui); color: var(--c-red); background: none; border: 0; cursor: pointer; }
+.fan-home-add { display: grid; gap: var(--sp-2); }
+.fan-home-form input { padding: 6px; border: 2px solid var(--c-navy-800); font: 600 var(--fs-xs)/1 var(--font-ui); background: var(--c-white); }
 .fan-home-form { display: flex; flex-wrap: wrap; gap: var(--sp-2); align-items: end; }
 .fan-home-form label { display: grid; gap: 4px; flex: 1 1 200px; font: 600 var(--fs-xs)/1.2 var(--font-ui); letter-spacing: .5px; }
 .fan-home-form select { padding: 6px; border: 2px solid var(--c-navy-800); font: 600 var(--fs-xs)/1 var(--font-ui); background: var(--c-white); }

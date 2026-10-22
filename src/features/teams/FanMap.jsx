@@ -66,24 +66,61 @@ function heatLevels(homes) {
   });
 }
 
+// La comuna más cercana a un punto, para ponerle nombre a "mi ubicación" sin consultar a nadie.
+const nearestComuna = (lat, lon) => COMUNAS.reduce((best, [name, la, lo]) => {
+  const distance = (la - lat) ** 2 + ((lo - lon) * Math.cos(lat * Math.PI / 180)) ** 2;
+  return distance < best.distance ? { name, distance } : best;
+}, { name: 'Chile', distance: Infinity }).name;
+
 function AddHome({ fans, onChanged }) {
   const toast = useToast();
   const [comuna, setComuna] = useState('');
-  const add = useApiMutation((body, signal) => endpoints.addFanHome(fans.teamId, body, signal), { onSuccess: () => { toast({ tone: 'success', title: 'Casa marcada en el mapa' }); setComuna(''); onChanged?.(); } });
-  const submit = event => {
+  const [address, setAddress] = useState('');
+  const [locating, setLocating] = useState(false);
+  const [geoError, setGeoError] = useState('');
+  const add = useApiMutation((body, signal) => endpoints.addFanHome(fans.teamId, body, signal), {
+    onSuccess: () => { toast({ tone: 'success', title: 'Casa marcada en el mapa' }); setComuna(''); setAddress(''); onChanged?.(); },
+  });
+  const byComuna = event => {
     event.preventDefault();
     const found = COMUNAS.find(([name]) => name === comuna);
     if (found) add.execute({ label: found[0], lat: found[1], lon: found[2] });
   };
-  return <form className="fan-home-form" onSubmit={submit}>
-    <label>SUMAR UNA CASA (SOLO SE MUESTRA LA COMUNA)
-      <select value={comuna} onChange={event => setComuna(event.target.value)}>
-        <option value="">ELIGE LA COMUNA…</option>
-        {COMUNAS.map(([name]) => <option key={name} value={name}>{upper(name)}</option>)}
-      </select>
-    </label>
-    <Button type="submit" disabled={!comuna || add.loading}>MARCAR</Button>
-  </form>;
+  const byAddress = event => {
+    event.preventDefault();
+    if (address.trim().length >= 5) add.execute({ address: address.trim() });
+  };
+  const byLocation = () => {
+    setGeoError('');
+    if (!navigator.geolocation) { setGeoError('Tu navegador no entrega la ubicación. Escribe la dirección o elige la comuna.'); return; }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      position => { setLocating(false); const { latitude, longitude } = position.coords; add.execute({ label: nearestComuna(latitude, longitude), lat: latitude, lon: longitude }); },
+      () => { setLocating(false); setGeoError('No pude leer tu ubicación. Escribe la dirección o elige la comuna.'); },
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 600000 },
+    );
+  };
+  return <div className="fan-home-add">
+    <Button type="button" onClick={byLocation} disabled={locating || add.loading}>{locating ? 'BUSCANDO…' : '📍 USAR MI UBICACIÓN'}</Button>
+    <form className="fan-home-form" onSubmit={byAddress}>
+      <label>O ESCRIBE TU DIRECCIÓN
+        <input type="text" value={address} onChange={event => setAddress(event.target.value)} placeholder="Calle, número y comuna" maxLength={200} autoComplete="street-address"/>
+      </label>
+      <Button type="submit" disabled={address.trim().length < 5 || add.loading}>BUSCAR</Button>
+    </form>
+    <form className="fan-home-form" onSubmit={byComuna}>
+      <label>O ELIGE SOLO LA COMUNA
+        <select value={comuna} onChange={event => setComuna(event.target.value)}>
+          <option value="">ELIGE LA COMUNA…</option>
+          {COMUNAS.map(([name]) => <option key={name} value={name}>{upper(name)}</option>)}
+        </select>
+      </label>
+      <Button type="submit" disabled={!comuna || add.loading}>MARCAR</Button>
+    </form>
+    {geoError && <p className="fan-others" role="alert">{geoError}</p>}
+    {add.error && <p className="fan-others" role="alert">{String(add.error.message ?? add.error)}</p>}
+    <p className="fan-others">TU DIRECCIÓN SOLO SE USA PARA ENCONTRAR LA ZONA: NO SE GUARDA, Y EL MAPA MUESTRA UN PUNTO REDONDEADO (~2 KM) CON EL NOMBRE DE LA COMUNA.</p>
+  </div>;
 }
 
 /** Mapa de hinchas: viven en Chile y en el país del club. Chile se ve en el mapa (con las casas marcadas); el país del club, en números. */
