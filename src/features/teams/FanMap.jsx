@@ -190,6 +190,7 @@ export function FanMap({ fans, title = 'HINCHAS', onChanged }) {
   const remove = useApiMutation((homeId, signal) => endpoints.removeFanHome(fans.teamId, homeId, signal), { onSuccess: () => { toast({ tone: 'success', title: 'Lugar sacado del mapa' }); onChanged?.(); } });
   const chileRow = (fans.map ?? []).find(row => row.code === 'CL');
   const countryRow = (fans.map ?? []).find(row => row.code === fans.country);
+  const restRow = (fans.map ?? []).find(row => row.code === 'REST');
   const abroad = fans.country !== 'CL';
   const origin = fans.origin;
   const formula = origin?.formula;
@@ -212,11 +213,13 @@ export function FanMap({ fans, title = 'HINCHAS', onChanged }) {
           <b>{compact(fans.followers)}</b>
           <span>HINCHAS EN TOTAL</span>
         </div>
-        <div className="fan-share" aria-label={`${100 - chileShare}% en ${fans.countryName}, ${chileShare}% en Chile`}>
-          {abroad ? <>
+        <div className="fan-share" aria-label={`${chileShare}% en Chile, ${100 - chileShare}% ${abroad ? `en ${fans.countryName}` : 'en el resto del mundo'}`}>
+          {abroad || restRow ? <>
             <span className="fan-share-bar"><i className="home" style={{ flexGrow: Math.max(100 - chileShare, 4) }}/><i className="chile" style={{ flexGrow: Math.max(chileShare, 4) }}/></span>
             <span className="fan-share-legend">
-              <em>{flag(fans.country)} {upper(fans.countryName)} <b>{compact(countryRow?.fans ?? fans.homeFans)}</b> · {100 - chileShare}%</em>
+              {abroad
+                ? <em>{flag(fans.country)} {upper(fans.countryName)} <b>{compact(countryRow?.fans ?? fans.homeFans)}</b> · {100 - chileShare}%</em>
+                : <em>🌍 RESTO DEL MUNDO <b>{compact(restRow?.fans ?? 0)}</b> · {100 - chileShare}%</em>}
               <em>{flag('CL')} CHILE <b>{compact(chileRow?.fans ?? 0)}</b> · {chileShare}%</em>
             </span>
           </> : <span className="fan-share-legend"><em>{flag('CL')} TODOS EN CHILE</em></span>}
@@ -231,10 +234,10 @@ export function FanMap({ fans, title = 'HINCHAS', onChanged }) {
       </div>
     </div>
     {formula && <HowItWorks title="¿De dónde salen estos números?">
-      <p>Son personas que se declaran hinchas, no seguidores de redes. Viven en dos lugares: Chile, donde se juega la liga, y el país de tu club ({formula.countryName}).</p>
+      <p>Son personas que se declaran hinchas, no seguidores de redes. Viven en Chile, donde se juega la liga, y {abroad ? `en el país de tu club (${formula.countryName})` : 'repartidos por el mundo'}.</p>
       <ul>
         <li><b>Cuántos son: la grandeza del club.</b> Tu club está en {Math.round((formula.greatness ?? 0) * 100)} de 100 entre los clubes de la liga (títulos, finales, playoffs y plantel). Los más grandes tienen más hinchas.</li>
-        <li><b>Dónde viven.</b> {abroad ? `La mayor parte vive en ${formula.countryName}, como pasa en la vida real. En Chile llegan los de un club grande y de una liga que se ve por TV: de ~10% en un club chico a ~35% en el más grande.` : `Tu club es chileno: todos tus hinchas están en Chile.`}</li>
+        <li><b>Chile se reparte entre todos.</b> Casi todos los chilenos (8 de cada 10) son hinchas de alguno de los clubes de la liga, y se los reparten según la grandeza de cada uno y qué tan vista es su liga por acá. {abroad ? `Los de afuera vienen de ${formula.countryName}, donde el club tiene su gente.` : 'Un club chileno parte con ventaja de local y suma hinchas en el resto del mundo.'}</li>
       </ul>
       <p>Partiste con <b>{compact(origin.start)}</b> y {origin.change >= 0 ? 'ganaste' : 'perdiste'} <b>{compact(Math.abs(origin.change))}</b> jugando: partidos, clásicos, títulos, posición final y conciertos.</p>
       <p>Todos pueden ir al estadio, pero un club grande llena aunque no sea día de clásico; uno chico depende más del rival. Los derechos de TV miran a todos tus hinchas.</p>
