@@ -213,6 +213,8 @@ a.tile:focus-visible, button.tile:focus-visible { outline: 3px solid var(--c-yel
 .club-strip > .leader-chip .reputation-chip b { color: #fff; }
 .club-tile { background: linear-gradient(180deg, rgba(0, 0, 0, 0) 35%, rgba(0, 0, 0, .55) 100%), linear-gradient(160deg, var(--club-primary) 0%, var(--club-secondary) 100%); }
 .club-tile b, .club-tile small { text-shadow: 2px 2px 0 rgba(0, 0, 0, .55); }
+/* Con estadio: la foto de fondo, oscurecida abajo para que se lea el nombre. */
+.club-tile.has-stadium { background: linear-gradient(180deg, rgba(3, 12, 36, .25) 0%, rgba(3, 12, 36, .45) 45%, rgba(3, 12, 36, .85) 100%), var(--club-stadium) center / cover no-repeat; }
 /* Plantel: la media chica en la esquina de la cancha; presi y DT al lado, en tamaño medio. */
 .pitch-board > header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--sp-2); }
 .ovr-badge { display: flex; align-items: center; gap: 10px; margin: 0; padding: 4px 8px; border: 2px solid var(--c-navy-800); background: #fff; }
