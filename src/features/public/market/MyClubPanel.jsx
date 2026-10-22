@@ -22,7 +22,7 @@ export function clubFigures(profile) {
 
 /* Por qué un club no puede pagar un fichaje (texto en mayúsculas), o null si puede. */
 // Abrir una encuesta es una propuesta: solo la frena el mercado cerrado. El saldo se exige al confirmar la
-// compra, y el tope de plantilla se revisa al cierre del mercado (hasta entonces el presi puede ordenarse).
+// compra; pasado del tope de plantilla o de nómina el club no puede jugar partidos hasta ordenarse.
 export function signingBlocker(figures, price, marketOpen) {
   return marketOpen === false ? 'EL MERCADO ESTÁ CERRADO.' : null;
 }

@@ -48,16 +48,11 @@ const Transfers = ({ squadValueLimit, payrollCap, contractsEnabled }) => <sectio
   <h3>4.3 Subastas a Final de Temporada</h3>
   <p>Si dos o más presidentes desean adquirir al mismo jugador libre al final de la temporada, la operación se resolverá mediante una <strong>subasta</strong> entre los clubes interesados.</p>
   <h3>4.4 Fair Play Financiero</h3>
-  {contractsEnabled
-    ? <ul>
-      <li>Desde el torneo v11 el límite es la <strong>nómina</strong> (la suma de los sueldos anuales de la plantilla): <strong>{payrollCap === null ? 'el tope lo define la liga' : `${gpLabel(payrollCap)} al año`}</strong>. Es un tope de aviso: se revisa al <strong>cierre del mercado</strong> y no frena operaciones durante él.</li>
-      <li>El tope de valor total de la plantilla deja de aplicarse. El valor de mercado de cada jugador viene de Transfermarkt y no cambia por traspasos, trueques, subastas ni liberaciones.</li>
-    </ul>
-    : <ul>
-      <li>El valor total de una plantilla no podrá superar <strong>{squadValueLimit === null ? 'el tope definido por la liga' : gpLabel(squadValueLimit)}</strong> (valor a definir por la liga). Durante el mercado puedes pasarte mientras ordenas tu plantel: el tope se revisa al <strong>cierre del mercado</strong>. Lo que sí frena una compra es el saldo: no puedes pagar más de lo que tienes.</li>
-      <li>Para este cálculo siempre se utilizará el valor de mercado del jugador, independientemente del precio pagado en una negociación. El valor de mercado viene de Transfermarkt y no cambia por traspasos, trueques, subastas ni liberaciones.</li>
-      <li>Desde el torneo v11 este límite se reemplaza por un tope de nómina (ver sección 6).</li>
-    </ul>}
+  <ul>
+    <li>Hay dos topes: el <strong>valor total de la plantilla</strong> no puede pasar de <strong>{squadValueLimit === null ? 'el tope que define la liga' : gpLabel(squadValueLimit)}</strong>{contractsEnabled && <> y la <strong>nómina</strong> (la suma de los sueldos anuales) no puede pasar de <strong>{payrollCap === null ? 'el tope que define la liga' : `${gpLabel(payrollCap)} al año`}</strong></>}.</li>
+    <li>Durante el mercado puedes pasarte mientras ordenas tu plantel; lo único que frena una compra es el saldo. Pero <strong>un club pasado de cualquiera de los topes no puede iniciar partidos</strong> hasta vender, liberar o trocar y quedar dentro.</li>
+    <li>El valor de mercado de cada jugador parte de su valor de Transfermarkt y se mueve entre <strong>0,7× y 1,25×</strong> de ese valor: un traspaso o una subasta lo deja valiendo lo que se pagó, un despido lo baja 0,15× (nunca bajo 0,7×), y los trueques y los contratos que vencen no lo cambian. La referencia es siempre Transfermarkt, así que nunca baja de 0,7× por muchas ventas que tenga.</li>
+  </ul>
 </section>;
 
 const Prizes = () => <>
@@ -86,7 +81,7 @@ const Contracts = ({ payrollCap }) => <section className="rules-section">
     <li>El sueldo anual es el <strong>10% del valor de mercado</strong> del jugador al firmar y queda congelado durante todo el contrato. No se paga por adelantado: se cobra al terminar cada torneo de liga, mientras el jugador siga en el club.</li>
     <li><strong>Ningún jugador puede cobrar más del 20% de su valor de mercado</strong> (se mide al firmar o renovar). Si su valor baja y el tope ya no alcanza ni para igualar su sueldo, no se puede renovar.</li>
     <li>Al renovar, el sueldo sube entre <strong>1% y 100%</strong>. El jugador pide como mínimo su sueldo actual o el 10% de su valor de hoy, el que sea mayor; si no le ofreces eso, rechaza.</li>
-    <li>La nómina del club es la suma de los sueldos de su plantilla y {payrollCap === null ? 'tiene un tope que define la liga' : `no debería pasar de ${gpLabel(payrollCap)} al año`}. Es un aviso al cierre del mercado y no bloquea operaciones.</li>
+    <li>La nómina del club es la suma de los sueldos de su plantilla y {payrollCap === null ? 'tiene un tope que define la liga' : `no puede pasar de ${gpLabel(payrollCap)} al año`}. No bloquea operaciones durante el mercado, pero un club pasado del tope no puede iniciar partidos.</li>
   </ul>
   <h3>6.3 Término, rescisión y salidas</h3>
   <ul>

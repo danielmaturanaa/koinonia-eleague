@@ -536,7 +536,7 @@ function SquadValueSimulator({ team, squad, balance }) {
   const capRoom = budgetLimit === null ? null : budgetLimit - simulatedValue;
   const exceedsLimit = capRoom !== null && capRoom < 0;
   const exceedsBalance = projectedBalance !== null && projectedBalance < 0;
-  // Nómina simulada: la real + el sueldo de cada fichaje (10% de lo que cuesta) − el sueldo real de cada salida. Solo avisa, no bloquea.
+  // Nómina simulada: la real + el sueldo de cada fichaje (10% de lo que cuesta) − el sueldo real de cada salida. No bloquea el mercado, pero pasado del tope el club no puede jugar.
   const contractsQuery = useApiQuery(signal => team?.id ? endpoints.teamContracts(team.id, signal).catch(() => ({ data: null })) : Promise.resolve({ data: null }), [team?.id]);
   const payrollInfo = contractsQuery.data?.projection?.enabled ? contractsQuery.data.projection : null;
   const realSalaries = new Map((contractsQuery.data?.contracts ?? []).filter(contract => contract.status === 'active').map(contract => [String(contract.playerId), contract.salary]));
@@ -659,7 +659,7 @@ function SquadValueSimulator({ team, squad, balance }) {
     <div className={`squad-simulator-status ${exceedsLimit || exceedsBalance || exceedsPayroll || starters.length !== SIMULATOR_STARTERS ? 'over-budget' : ''}`} role="status">
       <p>{statusMessage}</p>
       {(exceedsPayroll || starters.length !== SIMULATOR_STARTERS) && <ul>
-        {exceedsPayroll && <li>LA NÓMINA PASA EL TOPE POR {gp(simulatedPayroll - payrollCapValue)} GP (SOLO AVISA). EL SUELDO DE UN FICHAJE ES EL 10% DE LO QUE CUESTA.</li>}
+        {exceedsPayroll && <li>LA NÓMINA PASA EL TOPE POR {gp(simulatedPayroll - payrollCapValue)} GP (NO PODRÍAS JUGAR HASTA ORDENARTE). EL SUELDO DE UN FICHAJE ES EL 10% DE LO QUE CUESTA.</li>}
         {starters.length !== SIMULATOR_STARTERS && <li>TITULARES: {starters.length} DE {SIMULATOR_STARTERS}.</li>}
       </ul>}
     </div></div>
