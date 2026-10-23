@@ -67,6 +67,16 @@ function ProfileActions({ player, onTalk }) {
 }
 
 const factorText = factor => `${factor.toLocaleString('es-CL', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}×`;
+/** Premios individuales del jugador (Balón de Oro, Bota de Oro, portadas…), del más nuevo al más viejo. */
+function PlayerAwards({ awards }) {
+  return <section className="player-awards"><header><h2>Premios individuales</h2><small>{awards.length} EN SU CARRERA EN LA LIGA</small></header>
+    <ul>{awards.map((award, index) => <li key={`${award.tournamentId}-${award.award}-${index}`} className={`award-${award.award}`}>
+      <Icon name={award.award === 'guante_oro' ? 'shield' : award.award.startsWith('portada') ? 'camera' : 'trophy'} size={16}/>
+      <b>{award.label.toUpperCase()}</b><small>{award.tournamentName} · {award.teamName ?? ''}</small>
+    </li>)}</ul>
+  </section>;
+}
+
 const MOVE_LABELS = { transfer: 'Traspaso', auction: 'Subasta', poll: 'Fichaje por encuesta', free_agent: 'Fichaje de agente libre', dismissal: 'Despido', reverted: 'Operación revertida' };
 
 /** Cómo se movió su valor: cada venta lo deja en lo pagado; un despido lo baja. Siempre entre 0,70× y 1,25× Transfermarkt. */
@@ -102,6 +112,7 @@ export function PlayerProfilePage({ playerId, teams = [], onBack, backLabel = '�
     {talking && player && myTeamId && <TalkModal player={player} teamId={myTeamId} onClose={() => setTalking(false)}/>}
     {player && <article className="player-profile-card" style={cardStyle}>
       <dl className="player-profile-facts"><div><dt>EQUIPO</dt><dd className="player-team-value"><EntityLink to="team" id={player.team?.id}>{player.team?.imageUrl && <img src={player.team.imageUrl} alt="" onError={event => { event.currentTarget.hidden = true; }}/>} {player.team?.name ?? 'AGENTE LIBRE'}</EntityLink></dd></div><div><dt>POSICIÓN</dt><dd>{player.position ?? '—'}</dd></div><div><dt>MEDIA eFOOTBALL</dt><dd><OverallBadge value={player.external?.overall}/>{hasCoachBoost({ overall: player.external?.overall, overallWithCoach: player.external?.overallWithCoach }) && <span className="ovr-coach-note" title={`Potenciadores de ${player.coachManager?.name ?? 'su DT'}: ${(player.coachManager?.boosters ?? []).map(boosterText).join(', ')}`}> → <b>{player.external.overallWithCoach}</b> CON DT</span>}</dd></div><div><dt>NACIONALIDAD</dt><dd>{player.flag && <i className="player-flag">{player.flag}</i>} {player.nationality ?? player.external?.nationality ?? 'NO INFORMADA'}</dd></div><div><dt>VALOR LIGA</dt><dd>{gp(player.gpValue)}{player.market && player.market.factor !== 1 && <small className="player-value-factor"> · {factorText(player.market.factor)} TM</small>}</dd></div><div><dt>VALOR TRANSFERMARKT</dt><dd>{gp(player.market?.reference ?? player.gpValue)}</dd></div><div><dt>VALOR eFOOTBALLDB</dt><dd>{player.external ? gp(player.external.gpPrice) : '—'}</dd></div><div><dt>GOLES HISTÓRICOS</dt><dd>{player.goals ?? 0}</dd></div></dl>
+      {player.awards?.length > 0 && <PlayerAwards awards={player.awards}/>}
       {player.market?.moves?.length > 0 && <ValueMoves moves={player.market.moves}/>}
       <section className="player-tournament-form"><header><h2>Rendimiento en torneos activos</h2><small>GOLES REGISTRADOS</small></header>{player.activeGoals?.length ? <div>{player.activeGoals.map(tournament => <article key={tournament.name}><b>{tournament.name}</b><strong>{tournament.goals} GOL{tournament.goals === 1 ? '' : 'ES'}</strong></article>)}</div> : <p>Aún no registra goles en un torneo activo.</p>}</section>
       {player.efootballPesId && <p className="player-data-source-note">Ficha, foto y media se actualizan con el catálogo eFootballDB. El valor GP de la liga se mantiene sin cambios.</p>}

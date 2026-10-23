@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { AwardsPanel } from './AwardsPanel.jsx';
 import { endpoints } from '../../api/endpoints.js';
 import { EntityLink } from '../../components/EntityLink.jsx';
 import { LiveMovement, LivePosition, LiveTableStatus, liveRowClass } from '../../components/LiveStandings.jsx';
@@ -140,6 +141,7 @@ function TournamentWorkspace({ tournamentId, teams, onChanged, onDeleted, initia
         <button type="button" role="tab" aria-selected={workspaceTab === 'standings'} className={workspaceTab === 'standings' ? 'active' : ''} onClick={() => setWorkspaceTab('standings')}>TABLA DE POSICIONES</button>
         <button type="button" role="tab" aria-selected={workspaceTab === 'scorers'} className={workspaceTab === 'scorers' ? 'active' : ''} onClick={() => setWorkspaceTab('scorers')}>GOLEADORES</button>
         <button type="button" role="tab" aria-selected={workspaceTab === 'playoffs'} className={workspaceTab === 'playoffs' ? 'active' : ''} onClick={() => setWorkspaceTab('playoffs')} disabled={data.format !== 'league'}>PLAYOFFS</button>
+        {data.format === 'league' && data.competitorKind !== 'national_team' && <button type="button" role="tab" aria-selected={workspaceTab === 'awards'} className={workspaceTab === 'awards' ? 'active' : ''} onClick={() => setWorkspaceTab('awards')}>PREMIOS</button>}
       </nav>}
       <div className="tournament-main">
         {workspaceTab === 'standings' && (groupLabels.length > 0
@@ -147,13 +149,14 @@ function TournamentWorkspace({ tournamentId, teams, onChanged, onDeleted, initia
           : <section className="workspace-panel standings-workspace-panel"><h3>TABLA DE POSICIONES</h3><DataState query={standings}/>{standingRows.length > 0 && <StandingsTable rows={standingRows} resolveTeam={resolveTeam}/>} {regularChampion && <div className="playoff-champion" role="status"><span aria-hidden="true">🏆</span><TeamMark team={regularChampion}/><strong>CAMPEÓN: {regularChampion.name}</strong></div>}</section>)}
         {workspaceTab === 'scorers' && <ScorersPanel query={scorers}/>}
         {workspaceTab === 'playoffs' && data.format === 'league' && <PlayoffsSection tournamentId={tournamentId} resolveTeam={resolveTeam}/>}
+        {workspaceTab === 'awards' && <AwardsPanel tournament={data} resolveTeam={resolveTeam}/>}
       </div>
     </>
   </>}</section>;
 }
 
 // Torneo y vista quedan en el enlace (#/torneos?vista=goleadores|playoffs&torneo=…) para compartirlo o volver al mismo lugar.
-const VIEW_PARAM = { standings: 'tabla', scorers: 'goleadores', playoffs: 'playoffs' };
+const VIEW_PARAM = { standings: 'tabla', scorers: 'goleadores', playoffs: 'playoffs', awards: 'premios' };
 const VIEW_FROM_PARAM = Object.fromEntries(Object.entries(VIEW_PARAM).map(([key, value]) => [value, key]));
 const writeUrl = (id, view) => {
   const params = new URLSearchParams();

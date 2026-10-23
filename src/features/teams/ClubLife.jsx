@@ -126,12 +126,31 @@ export function FansTab({ team }) {
       <Card><Stat label="HINCHAS" value={compact(fans.followers)} hint={`${compact(fans.homeFans)} EN ${upper(fans.countryName)}${fans.rank ? ` · ${fans.rank}.º DE ${fans.clubs}` : ''}`}/></Card>
       <Card><Stat label="LA HINCHADA ESTÁ" value={upper(fans.moodLabel)} hint={`ÁNIMO ${fans.mood} / 100`} tone={MOOD_TONE(fans.mood)}/><span className={`mood-meter-bar ${fans.mood >= 70 ? 'good' : fans.mood >= 50 ? 'mid' : 'bad'}`} aria-hidden="true"><i style={{ width: `${fans.mood}%` }}/></span></Card>
     </div>
+    <ClubCountry team={team} fans={fans} onChanged={query.retry}/>
     <FanMap fans={fans} onChanged={query.retry}/>
     {fans.log.length > 0 && <Card title="LO QUE MOVIÓ A LA HINCHADA">
       <ul className="fan-log">{fans.log.slice(0, 5).map((row, index) => <FanLogRow key={index} row={row}/>)}</ul>
       {fans.log.length > 5 && <details className="fan-log-more"><summary>VER {fans.log.length - 5} MÁS</summary><ul className="fan-log">{fans.log.slice(5).map((row, index) => <FanLogRow key={index} row={row}/>)}</ul></details>}
     </Card>}
   </section>;
+}
+
+/** País del club (lo elige su presi): decide dónde viven sus hinchas. Cambiarlo recalcula la hinchada. */
+function ClubCountry({ team, fans, onChanged }) {
+  const { canEditTeam } = useAuth();
+  const countries = useApiQuery(signal => (canEditTeam(team.id) ? endpoints.clubCountries(signal) : Promise.resolve({ data: null })), [team.id]);
+  const [pending, setPending] = useState(null);
+  const change = useApiMutation((country, signal) => endpoints.setOwnClubCountry(team.id, country, signal), { onSuccess: () => { setPending(null); onChanged?.(); } });
+  if (!canEditTeam(team.id) || !countries.data) return null;
+  return <Card title="PAÍS DEL CLUB" className="club-country">
+    <p className="club-life-hint">De acá salen tus hinchas, además de los de Chile. Si lo cambias, la hinchada se recalcula y lo que ganaste jugando se mantiene en proporción.</p>
+    <select className="fan-country-select" aria-label="País del club" value={pending ?? fans.country} disabled={change.loading} onChange={event => setPending(event.target.value)}>
+      {countries.data.map(country => <option key={country.code} value={country.code}>{country.name}</option>)}
+    </select>
+    {pending && pending !== fans.country && <ConfirmStep message={`¿Cambiar el país del club a ${countries.data.find(country => country.code === pending)?.name}? Tu hinchada se recalcula.`} confirmLabel="SÍ, CAMBIAR" busy={change.loading}
+      onConfirm={() => change.execute(pending)} onCancel={() => setPending(null)}/>}
+    {change.error && <Notice tone="error">{change.error.message}</Notice>}
+  </Card>;
 }
 
 function FanLogRow({ row }) {
@@ -306,7 +325,7 @@ export function TvRightsTab({ team, onChanged }) {
       </div>
     </Card> : <Card title="DERECHOS DE TV" aside={<Chip icon="handshake">3 canales te quieren transmitir</Chip>}>
       <p className="club-life-hint">Elige un canal: paga al cerrar cada torneo de liga. Los más grandes pagan más.</p>
-      <HowItWorks><p>Cada canal paga según su tamaño y tus hinchas. Los gigantes globales (Prime Video, DAZN, ESPN) pagan más, pero solo llaman a clubes con mucha hinchada; la TV abierta paga menos y le transmite a cualquiera. La oferta <b>fija</b> es plata segura; la <b>arriesgada</b> paga poco fijo pero mucho si llegas a playoffs o sales campeón; la <b>mixta</b> va al medio.</p><p>No va en la camiseta: en el juego usan camisetas reales con su propia marca.</p></HowItWorks>
+      <HowItWorks><p>Cada canal paga según su tamaño y tus hinchas. Los gigantes globales (Prime Video, DAZN, ESPN) pagan más, pero solo llaman a clubes con mucha hinchada; la TV abierta paga menos y le transmite a cualquiera. La oferta <b>fija</b> es plata segura; la <b>arriesgada</b> paga poco fijo pero mucho si llegas a playoffs o sales campeón; la <b>mixta</b> va al medio.</p><p>Es aparte de la camiseta: las marcas de la camiseta de tu equipo base pagan por su lado (más arriba).</p></HowItWorks>
       <div className="sponsor-offers">{data.sponsorOffers.map(offer => <article key={offer.key} className={`sponsor-offer style-${offer.style}`}>
         <TvSet channel={offer.brand} small/>
         <b>{upper(offer.brand)}</b>

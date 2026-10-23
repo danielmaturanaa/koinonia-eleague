@@ -26,6 +26,7 @@ import { EventsTab, FansTab, TvRightsTab, VenueTab } from './ClubLife.jsx';
 import { DirectivaTab } from './DirectivaTab.jsx';
 import { RivalryTab } from './RivalryTab.jsx';
 import { ClubNicknames, nicknameTitle } from './ClubNicknames.jsx';
+import { ClubKit } from './ClubKit.jsx';
 import { HeadToHeadTable } from './HeadToHeadTable.jsx';
 import { LedgerTab } from './LedgerTab.jsx';
 import { PayrollTab } from './PayrollTab.jsx';
@@ -953,12 +954,13 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
       </div>)}
     {activeTab === 'caja' && <LedgerTab team={team} balance={balance}/>}
     {activeTab === 'partidos' && <div className="club-matches-page"><ClubStandingSnippet standings={displayStandings} teamId={team.id} teams={teams} onMore={() => navigate?.('/torneos')}/><ClubMatches matches={matches} teams={teams} teamId={team.id}/></div>}
-    {activeTab === 'estadio' && <VenueTab team={team}/>}
+    {activeTab === 'estadio' && <><VenueTab team={team}/>{!ownerMode && <ClubKit team={team}/>}</>}
     {activeTab === 'hinchada' && <div className="stadium-page">
       <FansTab team={team}/>
       <section id="ver-clasico"><RivalryTab team={team} teams={teams}/></section>
     </div>}
     {activeTab === 'negocios' && <div className="stadium-page">
+      <section id="ver-camiseta"><ClubKit team={team} onChanged={onChanged}/></section>
       <section id="ver-tv"><TvRightsTab team={team} onChanged={onChanged}/></section>
       <section id="ver-eventos"><EventsTab team={team} onChanged={onChanged}/></section>
     </div>}

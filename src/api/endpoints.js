@@ -231,4 +231,11 @@ export const endpoints = {
   startClubLife: signal => apiClient.post('/admin/club-life/start', {}, { actor: 'web', signal }),
   clubCountries: signal => get('/club-countries', null, signal),
   setClubCountry: (teamId, country, signal) => apiClient.put(`/admin/teams/${teamId}/country`, { country }, { actor: 'web', signal }),
+  setOwnClubCountry: (teamId, country, signal) => apiClient.put(`/teams/${teamId}/country`, { country }, { actor: 'web', signal }),
+  baseClubs: signal => get('/base-clubs', null, signal),
+  teamKit: (teamId, signal) => get(`/teams/${teamId}/kit`, null, signal),
+  setTeamKit: (teamId, body, signal) => apiClient.put(`/teams/${teamId}/kit`, body, { actor: 'web', signal }),
+  tournamentAwards: (tournamentId, signal) => get(`/tournaments/${tournamentId}/awards`, null, signal),
+  voteBallon: (tournamentId, body, signal) => apiClient.put(`/tournaments/${tournamentId}/ballon-vote`, body, { actor: 'web', signal }),
+  closeBallon: (tournamentId, signal) => apiClient.post(`/admin/tournaments/${tournamentId}/ballon-close`, {}, { actor: 'web', signal }),
 };

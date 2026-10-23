@@ -450,3 +450,60 @@
 .market-phase-action { display: grid; gap: 6px; justify-items: start; }
 .market-window-admin { display: grid; gap: var(--sp-2); }
 .market-window-admin p { margin: 0; font: 600 var(--fs-sm)/1.4 var(--font-body); }
+
+/* Camiseta y auspiciadores del equipo base */
+.club-kit-base { display: flex; align-items: center; gap: 6px; margin: 0 0 var(--sp-3); font: 600 var(--fs-sm)/1.3 var(--font-ui); letter-spacing: .4px; color: var(--c-ink-muted); }
+.club-kit-base b { color: var(--c-navy-900); }
+.club-kit-slots { display: grid; gap: var(--sp-2); grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); margin: 0 0 var(--sp-3); padding: 0; list-style: none; }
+.club-kit-slots li { display: grid; gap: 4px; align-content: start; padding: var(--sp-3); background: var(--c-white); border: var(--border); box-shadow: var(--shadow-pixel); }
+.club-kit-slots li.is-empty { opacity: .55; box-shadow: none; }
+.club-kit-slots small { font: 600 var(--fs-xs)/1.2 var(--font-ui); letter-spacing: .5px; color: var(--c-ink-muted); }
+.club-kit-slots b { font: 400 var(--fs-lg)/1.1 var(--font-display); color: var(--c-navy-900); overflow-wrap: anywhere; }
+.club-kit-slots span { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font: 600 var(--fs-sm)/1.2 var(--font-ui); color: var(--c-green); }
+.club-kit-editor { display: grid; gap: var(--sp-3); }
+.club-kit-field { display: grid; gap: 4px; font: 600 var(--fs-xs)/1.2 var(--font-ui); letter-spacing: .5px; color: var(--c-ink-muted); }
+.club-kit-field select, .club-kit-field input, .club-kit-row input, .club-kit-row select { min-height: var(--tap); padding: 6px 8px; border: var(--border); background: var(--c-white); font: 500 var(--fs-md)/1.2 var(--font-body); color: var(--c-ink); }
+.club-kit-rows { display: grid; gap: var(--sp-2); }
+.club-kit-row { display: grid; grid-template-columns: 130px minmax(0, 1fr) auto; align-items: center; gap: var(--sp-2); }
+.club-kit-row > span { font: 600 var(--fs-xs)/1.2 var(--font-ui); letter-spacing: .5px; color: var(--c-navy-900); }
+.club-country select { max-width: 280px; }
+
+/* Premios individuales del torneo */
+.awards-panel { display: grid; gap: var(--sp-4); }
+.awards-grid { display: grid; gap: var(--sp-3); grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.award-card { display: grid; gap: var(--sp-2); align-content: start; }
+.award-card > header { display: flex; align-items: center; gap: var(--sp-2); }
+.award-card > header b { font: 400 var(--fs-xl)/1 var(--font-display); color: var(--c-navy-900); letter-spacing: .4px; }
+.award-badge { display: grid; place-items: center; width: 34px; height: 34px; background: var(--c-gold-bg); border: 2px solid var(--c-gold-line); color: var(--c-navy-900); }
+.award-balon_oro .award-badge, .award-bota_oro .award-badge { background: var(--c-yellow); border-color: #b68f00; }
+.award-portada_eafc .award-badge, .award-portada_efootball .award-badge { background: var(--c-navy-900); color: var(--c-white); border-color: #000; }
+.award-winner { display: flex; align-items: center; gap: var(--sp-2); }
+.award-winner > div { display: grid; gap: 2px; min-width: 0; }
+.award-winner strong { font: 600 var(--fs-md)/1.15 var(--font-ui); color: var(--c-navy-900); overflow-wrap: anywhere; }
+.award-winner small { font: 600 var(--fs-xs)/1.3 var(--font-ui); letter-spacing: .4px; color: var(--c-ink-muted); }
+.ballon-vote-count { margin: 0 0 var(--sp-3); font: 600 var(--fs-sm)/1.35 var(--font-body); color: #cfe0f7; }
+.ballon-shortlist { display: grid; gap: var(--sp-2); margin: 0 0 var(--sp-3); padding: 0; list-style: none; }
+.ballon-shortlist li { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); padding: var(--sp-2) var(--sp-3); background: rgba(255, 255, 255, .08); border-left: 4px solid transparent; }
+.ballon-shortlist li.is-chosen { border-left-color: var(--c-yellow); background: rgba(255, 212, 42, .16); }
+.ballon-shortlist li.is-own { opacity: .6; }
+.ballon-shortlist li > div { display: grid; gap: 2px; min-width: 0; }
+.ballon-shortlist b { font: 600 var(--fs-md)/1.15 var(--font-ui); color: var(--c-white); }
+.ballon-shortlist a { color: inherit; }
+.ballon-shortlist small { font: 600 var(--fs-xs)/1.3 var(--font-ui); letter-spacing: .4px; color: #9fb6d8; }
+.ballon-own { flex: 0 0 auto; font: 600 var(--fs-xs)/1 var(--font-ui); color: #9fb6d8; }
+.ballon-results ol { display: grid; gap: 4px; margin: 0; padding-left: 22px; }
+.ballon-results li span { display: inline-flex; flex-wrap: wrap; gap: 6px; font: 600 var(--fs-md)/1.2 var(--font-ui); color: var(--c-navy-900); }
+.ballon-results li { font: 600 var(--fs-md)/1.2 var(--font-ui); }
+.ballon-results li > b { float: right; color: var(--c-green); }
+.player-awards { padding: 12px; border-top: 3px solid var(--c-navy-800); background: var(--c-gold-bg); }
+.player-awards > header { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; color: var(--c-navy-900); }
+.player-awards h2 { margin: 0; font: 500 19px/1 var(--font-display); }
+.player-awards > header small { font: 600 var(--fs-xs)/1.2 var(--font-ui); }
+.player-awards ul { display: grid; gap: 5px; margin: 8px 0 0; padding: 0; list-style: none; }
+.player-awards li { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; padding: 7px 9px; border-left: 5px solid var(--c-gold-line); background: var(--c-white); color: var(--c-navy-900); }
+.player-awards li b { font: 600 var(--fs-md)/1 var(--font-ui); }
+.player-awards li small { font: 500 var(--fs-sm)/1.2 var(--font-body); color: var(--c-ink-muted); }
+@media (max-width: 560px) {
+  .club-kit-row { grid-template-columns: minmax(0, 1fr); }
+  .ballon-shortlist li { flex-wrap: wrap; }
+}
