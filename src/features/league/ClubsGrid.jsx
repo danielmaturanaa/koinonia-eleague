@@ -1,6 +1,7 @@
 import { useAuth } from '../../app/AuthGate.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
 import { gp } from '../public/DataStates.jsx';
+import { nicknameTitle } from '../teams/ClubNicknames.jsx';
 
 /** Los clubes de la liga como tarjetas grandes (el tuyo primero y marcado): escudo, nombre, presidente y valor del plantel.
  * De fondo va la foto de su estadio; sin estadio o sin foto, el degradé con sus colores. */
@@ -17,6 +18,7 @@ export function ClubsGrid({ teams = [] }) {
       {team.id === mine && <em className="club-tile-mine">Tu club</em>}
       <TeamMark team={team} className="club-tile-crest"/>
       <b>{team.name}</b>
+      {team.nickname && <i className="club-tile-nickname">{nicknameTitle(team.nickname)}</i>}
       <small>{[team.president?.name ?? team.presidentName, typeof team.squadValue === 'number' ? `plantel ${gp(team.squadValue)}` : null].filter(Boolean).join(' · ')}</small>
     </a>;
   })}</div>;

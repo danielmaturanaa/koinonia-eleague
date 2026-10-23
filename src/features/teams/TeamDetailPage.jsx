@@ -25,6 +25,8 @@ import { MessagesTab } from './MessagesTab.jsx';
 import { EventsTab, FansTab, TvRightsTab, VenueTab } from './ClubLife.jsx';
 import { DirectivaTab } from './DirectivaTab.jsx';
 import { RivalryTab } from './RivalryTab.jsx';
+import { ClubNicknames, nicknameTitle } from './ClubNicknames.jsx';
+import { HeadToHeadTable } from './HeadToHeadTable.jsx';
 import { LedgerTab } from './LedgerTab.jsx';
 import { PayrollTab } from './PayrollTab.jsx';
 import { RolesPanel } from './RolesPanel.jsx';
@@ -922,7 +924,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
   const hero = <div className="club-crest-wrap screen-crest" style={{ '--club-primary': colors.primary ?? '#062764' }}><TeamMark team={team} className="club-crest"/>{canEdit && <button type="button" className="club-crest-edit" onClick={() => setCrestEditorOpen(true)} aria-label="Editar escudo y nombre del club" title="Editar escudo y nombre">✎</button>}</div>;
   const isMine = isPresidentOf(team.id);
   return <Screen className="club-screen" kicker={isMine ? 'Mi club' : team.kind === 'national_team' ? 'Selección' : 'Club'} title={team.name} hero={hero}
-    intro={rank > 0 ? `${rank}.º en la liga${standing ? ` con ${standing.points} puntos` : ''}.` : null}
+    intro={[nicknameTitle((team.nicknames ?? []).find(item => item.primary)?.label), rank > 0 ? `${rank}.º en la liga${standing ? ` con ${standing.points} puntos` : ''}.` : null].filter(Boolean).join(' · ') || null}
     actions={<div className="club-strip">
       <div><small>Valor del plantel</small><b>{gp(team.squadValue)}</b></div>
       {ownerMode && <div><small>En caja</small><b>{balance === null ? '—' : gp(balance)}</b></div>}
@@ -963,7 +965,9 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
     {activeTab === 'historia' && <div className="club-history-tab-content">
       {canEdit && <div className="screen-toolbar"><Button size="sm" variant="ghost" icon="camera" onClick={() => setCoversOpen(true)}>Portadas del club</Button></div>}
       <HonoursList honours={honours} historyError={historyError}/>
+      <ClubNicknames team={team} canEdit={canEdit} onChanged={onChanged}/>
       <ClubHistory team={team} onEdit={canEdit ? setHistoryEditor : undefined}/>
+      <HeadToHeadTable team={team} teams={teams}/>
       <ClubTransfers teamId={team.id}/>
     </div>}
 
