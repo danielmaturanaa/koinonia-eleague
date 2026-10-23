@@ -11,7 +11,7 @@ import { useApiMutation } from '../admin/useApiMutation.js';
 import { DataState, PageHeader, gp } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
 import { useLiveStandings } from './useLiveStandings.js';
-import { Button, useEmbedded } from '../../ui/index.js';
+import { Button, Notice, useEmbedded } from '../../ui/index.js';
 
 function StandingsTable({ rows, resolveTeam }) {
   return <><LiveTableStatus rows={rows}/><div className="table-scroll"><table className="league-table"><colgroup><col className="rank-column"/><col className="team-column"/><col className="stat-column" span="8"/></colgroup><thead><tr><th>#</th><th>EQUIPO</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th className="optional-stat">GF</th><th className="optional-stat">GC</th><th className="optional-stat">DG</th><th>PTS</th></tr></thead><tbody>{rows.map((row, index) => <tr key={row.team_id ?? row.id} className={liveRowClass(row)}><td><LivePosition position={index + 1}/></td><td><EntityLink to="team" id={row.team_id ?? row.id} className="table-team-link"><LiveMovement row={row}/><TeamMark team={resolveTeam(row)}/>{row.name}{row.isPlayingLive && <em className="live-team-tag">EN VIVO</em>}</EntityLink></td><td>{row.played}</td><td>{row.wins}</td><td>{row.draws}</td><td>{row.losses}</td><td className="optional-stat">{row.gf}</td><td className="optional-stat">{row.ga}</td><td className="optional-stat">{row.gd}</td><td><b>{row.points}</b></td></tr>)}</tbody></table></div></>;
@@ -23,7 +23,19 @@ function GroupStandings({ tournamentId, groupLabel, resolveTeam }) {
   return <section className="workspace-panel"><h4>GRUPO {groupLabel}</h4><DataState query={standings}/>{rows.length > 0 && <StandingsTable rows={rows} resolveTeam={resolveTeam}/>}</section>;
 }
 
-function PlayoffSeriesCard({ series, resolveTeam, showWinner = true }) {
+/** Serie empatada en el global: se define por penales. La anota quien opera los partidos. */
+function PlayoffPenalties({ series, home, away, onChanged }) {
+  const { canOperateMatches } = useAuth();
+  const resolve = useApiMutation((winnerTeamId, signal) => endpoints.resolvePlayoffTiebreak(series.id, winnerTeamId, signal), { onSuccess: () => onChanged?.() });
+  if (!canOperateMatches) return <em>Empate en el global: falta anotar quién ganó por penales</em>;
+  return <div className="playoff-tiebreak"><span>EMPATE EN EL GLOBAL · ¿QUIÉN GANÓ POR PENALES?</span>
+    {[home, away].map(team => <Button key={team.id} size="sm" variant="ghost" disabled={resolve.loading}
+      onClick={() => window.confirm(`¿${team.name} ganó la serie por penales?`) && resolve.execute(team.id)}>{team.name}</Button>)}
+    {resolve.error && <Notice tone="error">{resolve.error.message}</Notice>}
+  </div>;
+}
+
+function PlayoffSeriesCard({ series, resolveTeam, showWinner = true, onChanged }) {
   const stage = series.round === 'semifinal' ? `SEMIFINAL ${series.slot}` : 'FINAL';
   const home = resolveTeam(series.homeTeam); const away = resolveTeam(series.awayTeam);
   const twoLegs = series.matches.length > 1;
@@ -45,7 +57,7 @@ function PlayoffSeriesCard({ series, resolveTeam, showWinner = true }) {
   };
   const aggregate = { home: aggregateFor(home, 'home'), away: aggregateFor(away, 'away') };
   const legLink = (match, label) => match ? <EntityLink to="match" id={match.id} className="playoff-leg-link">{label}</EntityLink> : <span>{label}</span>;
-  return <article className={`playoff-series status-${series.status}`}><header className="playoff-series-head"><small>{stage}</small><span>{twoLegs ? 'IDA Y VUELTA' : 'PARTIDO ÚNICO'}</span></header><div className="playoff-score-table"><div className="playoff-score-heading"><span>CLUB</span>{legLink(firstLeg, twoLegs ? 'IDA' : 'ÚNICO')}{twoLegs ? legLink(secondLeg, 'VUELTA') : <span>—</span>}<span>GLOBAL</span></div>{[[home, 'home'], [away, 'away']].map(([team, side]) => <div className="playoff-score-row" key={team.id}><EntityLink to="team" id={team.id}><TeamMark team={team}/><span>{team.name}</span></EntityLink><b>{scoreFor(firstLeg, team, side)}</b><b>{scoreFor(secondLeg, team, side)}</b><b>{aggregate[side]}</b></div>)}</div>{series.status === 'awaiting_tiebreak' && <em>Definición por penales pendiente</em>}{showWinner && series.winnerTeamId && <strong>CLASIFICA {series.winnerTeamId === home.id ? home.name : away.name}</strong>}</article>;
+  return <article className={`playoff-series status-${series.status}`}><header className="playoff-series-head"><small>{stage}</small><span>{twoLegs ? 'IDA Y VUELTA' : 'PARTIDO ÚNICO'}</span></header><div className="playoff-score-table"><div className="playoff-score-heading"><span>CLUB</span>{legLink(firstLeg, twoLegs ? 'IDA' : 'ÚNICO')}{twoLegs ? legLink(secondLeg, 'VUELTA') : <span>—</span>}<span>GLOBAL</span></div>{[[home, 'home'], [away, 'away']].map(([team, side]) => <div className="playoff-score-row" key={team.id}><EntityLink to="team" id={team.id}><TeamMark team={team}/><span>{team.name}</span></EntityLink><b>{scoreFor(firstLeg, team, side)}</b><b>{scoreFor(secondLeg, team, side)}</b><b>{aggregate[side]}</b></div>)}</div>{series.status === 'awaiting_tiebreak' && <PlayoffPenalties series={series} home={home} away={away} onChanged={onChanged}/>}{showWinner && series.winnerTeamId && <strong>CLASIFICA {series.winnerTeamId === home.id ? home.name : away.name}</strong>}</article>;
 }
 
 export function CreateTournamentForm({ teams, onChanged }) {
@@ -99,7 +111,7 @@ function PlayoffsSection({ tournamentId, resolveTeam }) {
   const semis = data.series?.filter(series => series.round === 'semifinal') ?? [];
   const final = data.series?.find(series => series.round === 'final');
   const champion = final?.winnerTeamId ? [resolveTeam(final.homeTeam), resolveTeam(final.awayTeam)].find(team => String(team.id) === String(final.winnerTeamId)) : null;
-  return <section className="workspace-panel playoff-workspace"><h3>PLAYOFFS <small>TOP 4 · SEMIFINALES {data.semifinalLegs === 1 ? 'A PARTIDO ÚNICO' : 'IDA Y VUELTA'} · FINAL {data.finalLegs === 1 ? 'A PARTIDO ÚNICO' : 'IDA Y VUELTA'}</small></h3><div className="playoff-bracket"><div className="playoff-semi-rounds">{semis.map(series => <section className="playoff-round" key={series.id}><h4>SEMIFINAL {series.slot}</h4><PlayoffSeriesCard series={series} resolveTeam={resolveTeam}/></section>)}</div><div className="playoff-connector" aria-hidden="true"/><section className="playoff-round playoff-final-round"><h4>FINAL</h4>{final ? <PlayoffSeriesCard series={final} resolveTeam={resolveTeam} showWinner={false}/> : <p className="playoff-awaiting">ESPERANDO FINALISTAS</p>}</section></div>{champion && <div className="playoff-champion" role="status"><span aria-hidden="true">🏆</span><strong>CAMPEÓN: {champion.name}</strong></div>}</section>;
+  return <section className="workspace-panel playoff-workspace"><h3>PLAYOFFS <small>TOP 4 · SEMIFINALES {data.semifinalLegs === 1 ? 'A PARTIDO ÚNICO' : 'IDA Y VUELTA'} · FINAL {data.finalLegs === 1 ? 'A PARTIDO ÚNICO' : 'IDA Y VUELTA'}</small></h3><div className="playoff-bracket"><div className="playoff-semi-rounds">{semis.map(series => <section className="playoff-round" key={series.id}><h4>SEMIFINAL {series.slot}</h4><PlayoffSeriesCard series={series} resolveTeam={resolveTeam} onChanged={() => playoffs.retry()}/></section>)}</div><div className="playoff-connector" aria-hidden="true"/><section className="playoff-round playoff-final-round"><h4>FINAL</h4>{final ? <PlayoffSeriesCard series={final} resolveTeam={resolveTeam} showWinner={false} onChanged={() => playoffs.retry()}/> : <p className="playoff-awaiting">ESPERANDO FINALISTAS</p>}</section></div>{champion && <div className="playoff-champion" role="status"><span aria-hidden="true">🏆</span><strong>CAMPEÓN: {champion.name}</strong></div>}</section>;
 }
 
 /** Una gira se ve como su cuadro (no tiene tabla ni goleadores propios). */
