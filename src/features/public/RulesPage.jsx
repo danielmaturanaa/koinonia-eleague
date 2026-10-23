@@ -61,11 +61,12 @@ const Prizes = () => <>
   <section className="rules-section">
     <h2>5. Sistema de Premios</h2>
     <h3>Tabla de la liga</h3>
-    <ul><li><strong>1.º:</strong> 200 M GP</li><li><strong>Desde el 2.º:</strong> 20 M GP menos por cada puesto (2.º 180 M, 3.º 160 M, 4.º 140 M, y así).</li></ul>
+    <ul><li><strong>1.º:</strong> 150 M GP</li><li><strong>Desde el 2.º:</strong> 10 M GP menos por cada puesto (2.º 140 M, 3.º 130 M, 4.º 120 M, y así hasta el 10.º, que recibe 60 M).</li></ul>
     <h3>Playoffs</h3>
     <ul>
       <li><strong>Campeón:</strong> 40 M GP.</li>
       <li><strong>Subcampeón:</strong> 20 M GP.</li>
+      <li><strong>Semifinalista:</strong> 10 M GP.</li>
     </ul>
     <p>Los premios de los playoffs se suman a los de la tabla.</p>
   </section>
