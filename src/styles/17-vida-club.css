@@ -158,6 +158,13 @@
 .consent-panel.is-warn { border-color: #c79a00; }
 .consent-panel.is-bad { border-color: var(--c-red); }
 .consent-panel[aria-busy='true'] .consent-agent blockquote { opacity: .55; }
+.arrival-lead, .arrival-before { margin: 0; font: 600 var(--fs-sm)/1.4 var(--font-body); color: var(--c-ink); }
+.arrival-before { color: var(--c-ink-muted); font-family: var(--font-ui); letter-spacing: .3px; }
+.arrival-asks { display: grid; gap: 6px; padding: var(--sp-2) var(--sp-3); background: var(--c-white); border: 2px solid var(--c-navy-800); }
+.arrival-asks h4 { margin: 0; font: 600 var(--fs-xs)/1 var(--font-ui); letter-spacing: .6px; color: var(--c-ink-muted); }
+.arrival-asks ul { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.arrival-asks li { display: flex; gap: 6px; align-items: baseline; font: 600 var(--fs-sm)/1.3 var(--font-ui); letter-spacing: .3px; }
+.arrival-asks small { font: 600 var(--fs-xs)/1.2 var(--font-ui); color: var(--c-ink-muted); }
 .consent-loading { margin: 0; font: 600 var(--fs-sm)/1 var(--font-ui); color: var(--c-ink-muted); animation: blink 1s steps(2) infinite; }
 @keyframes blink { 50% { opacity: .35; } }
 .consent-agent { display: grid; grid-template-columns: auto 1fr; gap: var(--sp-3); align-items: start; }
@@ -418,3 +425,28 @@
 .fan-place-switch span { margin-right: 4px; }
 .fan-place-switch button { padding: 6px 10px; font: 600 var(--fs-xs)/1 var(--font-ui); letter-spacing: .5px; color: var(--c-cream); background: transparent; border: 2px solid rgba(255, 255, 255, .35); cursor: pointer; }
 .fan-place-switch button.on { color: var(--c-navy-900); background: var(--c-yellow); border-color: var(--c-yellow); }
+
+/* Contrato de llegada (traspaso o trueque) */
+.arrival-sheets { display: grid; gap: var(--sp-3); }
+.arrival-sheets > header h3 { margin: 0; }
+.arrival-sheets > header p { margin: 4px 0 0; font: 600 var(--fs-sm)/1.4 var(--font-body); }
+.arrival-salary { display: grid; gap: 4px; justify-items: start; }
+.arrival-salary small { font: 600 var(--fs-xs)/1.2 var(--font-ui); color: var(--c-ink-muted); }
+.arrival-check { display: flex; gap: 8px; align-items: center; font: 600 var(--fs-sm)/1.3 var(--font-ui); letter-spacing: .3px; cursor: pointer; }
+.arrival-mood { display: grid; gap: 4px; padding: var(--sp-2) var(--sp-3); border: 2px solid var(--c-navy-800); background: var(--c-white); }
+.arrival-mood > b { font: 600 var(--fs-sm)/1.2 var(--font-ui); letter-spacing: .5px; }
+.arrival-mood.good > b { color: var(--c-green-bright); }
+.arrival-mood.mid > b { color: #b07d00; }
+.arrival-mood.bad > b { color: var(--c-red); }
+.arrival-mood ul { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; font: 600 var(--fs-sm)/1.3 var(--font-body); }
+.arrival-mood li b { display: inline-block; min-width: 2.5em; }
+.arrival-mood li.down b { color: var(--c-red); }
+.arrival-mood li.up b { color: var(--c-green-bright); }
+
+/* Mercado en dos etapas */
+.market-phase-banner { display: grid; gap: 6px; padding: var(--sp-3); border: 2px solid var(--c-navy-800); border-left: 6px solid var(--c-gold-line); background: var(--c-gold-bg); }
+.market-phase-banner b { font: 600 var(--fs-sm)/1.2 var(--font-ui); letter-spacing: .6px; }
+.market-phase-banner p { margin: 0; font: 600 var(--fs-sm)/1.4 var(--font-body); }
+.market-phase-action { display: grid; gap: 6px; justify-items: start; }
+.market-window-admin { display: grid; gap: var(--sp-2); }
+.market-window-admin p { margin: 0; font: 600 var(--fs-sm)/1.4 var(--font-body); }

@@ -32,21 +32,23 @@ const Divisions = () => <section className="rules-section">
 
 const Transfers = ({ squadValueLimit, payrollCap, contractsEnabled }) => <section className="rules-section">
   <h2>4. Mercado de Fichajes, Contratos y Traspasos</h2>
-  <h3>4.1 Negociaciones y Trueques</h3>
+  <h3>4.1 Traspasos y Trueques</h3>
   <ul>
-    <li>La compra de un jugador perteneciente a otro club deberá respetar el precio de negociación impuesto por su presidente.</li>
-    <li>Los presidentes pueden acordar el valor monetario que estimen conveniente por una venta directa.</li>
+    <li>Todo se hace en el <strong>Mercado de la web</strong>: ofertas, contraofertas, trueques, encuestas y subastas.</li>
+    <li>Un traspaso lo cierran <strong>los dos presidentes</strong>: el que compra ofrece y el que vende acepta, rechaza o contraoferta. El jugador no lo puede frenar. El precio va entre <strong>0,7× y 1,25×</strong> su valor de Transfermarkt.</li>
     <li>Se permiten los trueques de jugador por jugador y de jugador más dinero por otro jugador.</li>
+    <li>Al llegar, el jugador firma un <strong>contrato nuevo</strong> con el club que lo recibe (sección 6.4). Su contrato anterior se termina: no viaja con él.</li>
   </ul>
-  <h3>4.2 Liberación y Cláusulas de Salida</h3>
+  <h3>4.2 Liberar a un jugador</h3>
   <ul>
-    <li>Un presidente puede liberar a un jugador y recibirá una compensación baja (20% de su valor). El jugador pasará a la agencia libre con su valor de mercado. Con contratos (desde el v11) liberar a alguien con contrato vigente es rescindir: ver sección 6.</li>
-    <li>Los presidentes pueden blindar jugadores mediante una <strong>Cláusula de Salida</strong>.</li>
-    <li>Si otro club paga la cláusula establecida, el equipo vendedor <strong>no puede retractarse</strong>.</li>
-    <li>Toda venta, cláusula o liberación debe informarse al área encargada de presupuestos para su registro oficial.</li>
+    <li>Sin contrato, liberar a un jugador deja una compensación baja (20% de su valor) y pasa a la agencia libre. Con contrato vigente liberar es <strong>rescindir</strong>: ver sección 6.3.</li>
+    <li>Un despido baja el valor de mercado del jugador y la reputación del club.</li>
   </ul>
-  <h3>4.3 Subastas a Final de Temporada</h3>
-  <p>Si dos o más presidentes desean adquirir al mismo jugador libre al final de la temporada, la operación se resolverá mediante una <strong>subasta</strong> entre los clubes interesados.</p>
+  <h3>4.3 Agentes libres: encuesta y subasta sellada</h3>
+  <ul>
+    <li>Para fichar un agente libre se abre una <strong>encuesta</strong>. Si junta las confirmaciones que pide el mercado y nadie pide subasta, el club lo compra a su valor.</li>
+    <li>Si otro club pide subasta, un admin abre una <strong>subasta sellada</strong>: cada club ofrece en secreto entre 0,7× y 1,25× su valor. <strong>Elige el jugador</strong>, mirando la plata y cuánto le gusta cada club (minutos, compañeros, DT, historia, proyecto y fama del presidente), con una pizca de azar.</li>
+  </ul>
   <h3>4.4 Fair Play Financiero</h3>
   <ul>
     <li>Hay dos topes: el <strong>valor total de la plantilla</strong> no puede pasar de <strong>{squadValueLimit === null ? 'el tope que define la liga' : gpLabel(squadValueLimit)}</strong>{contractsEnabled && <> y la <strong>nómina</strong> (la suma de los sueldos anuales) no puede pasar de <strong>{payrollCap === null ? 'el tope que define la liga' : `${gpLabel(payrollCap)} al año`}</strong></>}.</li>
@@ -83,13 +85,20 @@ const Contracts = ({ payrollCap }) => <section className="rules-section">
     <li>Al renovar, el sueldo sube entre <strong>1% y 100%</strong>. El jugador pide como mínimo su sueldo actual o el 10% de su valor de hoy, el que sea mayor; si no le ofreces eso, rechaza.</li>
     <li>La nómina del club es la suma de los sueldos de su plantilla y {payrollCap === null ? 'tiene un tope que define la liga' : `no puede pasar de ${gpLabel(payrollCap)} al año`}. No bloquea operaciones durante el mercado, pero un club pasado del tope no puede iniciar partidos.</li>
   </ul>
-  <h3>6.3 Término, rescisión y salidas</h3>
+  <h3>6.3 Término, renovación, rescisión y salidas</h3>
   <ul>
-    <li>Cuando el contrato cumple todas sus temporadas, el jugador sigue en el club hasta el cierre del mercado: se renueva, o pasa a la agencia libre <strong>sin castigo</strong> para la subasta.</li>
+    <li>Cuando el contrato cumple todas sus temporadas queda <strong>vencido</strong>, pero el jugador sigue en el club. Se renueva en el <strong>período de renovaciones</strong> del mercado siguiente (sección 11), negociando hasta 3 propuestas: el jugador firma, contraoferta o se niega.</li>
+    <li>Si no se renueva, queda libre <strong>sin castigo ni costo</strong> cuando el mercado pasa a <strong>transacciones</strong>, y se puede fichar en ese mismo mercado (también por su club anterior).</li>
     <li>No se puede soltar a un jugador antes de que termine su contrato sin consecuencias: rescindir cuesta una <strong>indemnización del 50% de las temporadas que faltan</strong>, sin reembolso, y el presidente sufre un castigo de reputación.</li>
-    <li>Un jugador con contrato vigente solo puede cambiar de club en periodos de mercado: por traspaso directo o pagando su cláusula de salida. El contrato acompaña al jugador a su nuevo club.</li>
+    <li>Un jugador que acaba de renovar no se puede traspasar ni canjear hasta que se cobre su primer torneo.</li>
   </ul>
-  <h3>6.4 Reputación</h3>
+  <h3>6.4 Contrato de llegada (traspaso o trueque)</h3>
+  <ul>
+    <li>Cuando un jugador llega por traspaso o trueque, su contrato anterior se termina y firma uno <strong>nuevo</strong> con el club que lo recibe. Escribe al llegar con lo que pide: sueldo, mantener sus primas, su dorsal si otro lo usa, y la cinta de capitán solo si tiene recorrido (veterano o figura con carácter de líder) y sería de los tres más valiosos del plantel.</li>
+    <li>Lo que pide toma como referencia lo que ganaba en su club anterior y nunca baja de eso, sin ser muy exigente. El sueldo va entre el 10% y el 20% de su valor. Las primas que tenía no se heredan: son solo una referencia.</li>
+    <li>El presidente del club que lo recibe decide qué le da (en Nómina). Con menos de lo que pide <strong>llega igual, pero molesto</strong> (como mucho −15 de ánimo); con lo que pide, llega conforme. Si nadie firma antes de que cierre el mercado, queda firmado con lo que pidió.</li>
+  </ul>
+  <h3>6.5 Reputación</h3>
   <p>Con el sistema de contratos la reputación de todos los clubes parte de cero. Los títulos y finales (palmarés) se mantienen intactos.</p>
 </section>;
 
@@ -97,9 +106,10 @@ const ClubSystems = () => <>
   <section className="rules-section">
     <h2>7. Roles, Ánimo y Peticiones de Jugadores</h2>
     <ul>
-      <li>El Presidente asigna a cada jugador un rol: <strong>crucial, importante, rotación o esporádico</strong>. Los roles solo se cambian con el <strong>mercado cerrado</strong>.</li>
-      <li>El ánimo del jugador (de 5 a 95) sale de su rol comparado con el que cree merecer, su sueldo frente a su valor, la forma del equipo, la reputación del club, los títulos, las promesas cumplidas y su personalidad. Con el ánimo bajo 25 no se sienta a negociar su renovación ni acepta irse a otro club. Si te pide algo y no le respondes en 3 días, pide salir: ya no se le puede renovar, solo vender o canjear.</li>
-      <li>Cuando un jugador no está conforme (con su rol o con su sueldo) le escribe al Presidente y abre una <strong>petición</strong>. Se responde desde la Bandeja (o por Discord) con una promesa, un regalo de confianza (cuesta el 25% de su sueldo), paciencia o ignorándolo, y cada respuesta tiene consecuencias en su ánimo. Solo se puede responder con el <strong>mercado cerrado</strong>.</li>
+      <li>El Presidente asigna a cada jugador un rol: <strong>crucial, importante, rotación o esporádico</strong>. El rol <strong>solo cambia a mano</strong>: mandar a alguien a la banca en la alineación no se lo cambia. Al llegar a un club recibe uno según lo que vale en ese plantel. Los roles solo se cambian con el <strong>mercado cerrado</strong>.</li>
+      <li>El ánimo del jugador (de 5 a 95) sale de su rol comparado con el que cree merecer (cada escalón se nota), su sueldo frente a su valor, la forma del equipo en los últimos 5 partidos (los de playoffs pesan el doble), cómo le fue al club en los últimos playoffs (pasar de ronda anima, quedar fuera baja), la reputación del club, los títulos, las promesas cumplidas y su personalidad. Con el ánimo bajo 25 no se sienta a negociar su renovación.</li>
+      <li>Cuando un jugador no está conforme (con su rol o con su sueldo) le escribe al Presidente y abre una <strong>petición</strong>. Se responde desde la Bandeja (o por Discord) prometiéndole el rol, <strong>prometiéndole minutos en el próximo partido</strong>, pidiéndole paciencia o ignorándolo. Ninguna respuesta cuesta plata. Solo se puede responder con el <strong>mercado cerrado</strong>.</li>
+      <li><strong>Promesa de minutos:</strong> lo que se le puede prometer depende de lo que vale (un suplente no pide ser titular): el partido completo a quien espera ser crucial o importante, medio partido al de rotación y 15 a 25 minutos al esporádico. La promesa vale para el <strong>próximo partido que inicie su club</strong>, sea cual sea. La ficha del partido la recuerda al iniciar y, al terminar, quien maneja la ficha responde si se cumplió. Cumplir suma ánimo; no cumplir resta el doble. Sin respuesta, a las 24 horas se da por cumplida.</li>
       <li>Si la petición se ignora o no se responde a tiempo, el jugador <strong>pide salir</strong>: ya no se le puede renovar y solo queda venderlo o canjearlo.</li>
     </ul>
   </section>
@@ -129,18 +139,18 @@ const ClubSystems = () => <>
   <section className="rules-section">
     <h2>11. Ventanas del Mercado</h2>
     <ul>
+      <li>El mercado puede tener <strong>dos etapas</strong>. Al abrirlo, un admin decide si empieza con el <strong>período de renovaciones</strong>: ahí solo se renuevan contratos vencidos. Cuando el admin pasa a <strong>transacciones</strong>, los vencidos que nadie renovó quedan libres y se abren fichajes, encuestas, subastas, traspasos y trueques. Si el mercado abre sin renovaciones, los vencidos quedan libres al abrir.</li>
+      <li>Si el mercado cierra sin haber pasado a transacciones, los vencidos sin renovar quedan libres al cierre, para el mercado siguiente.</li>
       <li>Con el mercado <strong>abierto</strong>: contratos, renovaciones, negociaciones, contraofertas y primas.</li>
       <li>Con el mercado <strong>cerrado</strong>: roles y respuestas a las peticiones de los jugadores, para que nadie los use para manipular las transacciones.</li>
-      <li>Rescindir un contrato se puede en cualquier momento. Los contratos vencidos pasan a la agencia libre al cierre del mercado, nunca mientras haya un torneo de liga en curso.</li>
+      <li>Rescindir un contrato se puede en cualquier momento.</li>
     </ul>
   </section>
   <section className="rules-section">
-    <h2>12. Visto Bueno del Jugador</h2>
+    <h2>12. Charla con un jugador de otro club</h2>
     <ul>
-      <li>En un traspaso o un trueque con contrato vigente deciden <strong>tres partes</strong>: el club que vende acepta el precio, el que compra paga y el <strong>jugador da (o no) su visto bueno</strong>. Su representante habla por él.</li>
-      <li>El jugador compara el club al que lo mandan con el suyo: minutos, compañeros, DT, historia, proyecto y fama del Presidente, más su ánimo, el rol que tendría, si es leal, si lo mandan al <strong>clásico rival</strong> y si lo cambiaron hace poco (no quiere ser una ficha de cambio).</li>
-      <li>Puede aceptar, <strong>pedir condiciones</strong> (una prima de fichaje y, a veces, un rol prometido) o negarse. La prima la paga el club que lo recibe, va directo al jugador y no puede pasar el <strong>15% de su valor</strong>. El rol prometido queda en su contrato: si no se cumple, se molesta.</li>
-      <li>Si el jugador pidió salir, acepta casi cualquier destino. Con el contrato vencido se negocia el sueldo como siempre (sección 6).</li>
+      <li>Antes de ofertar se puede hablar con un jugador de otro club (o con un libre). Su representante lo presenta y el jugador pregunta por lo que más le preocupa de tu club; respondes con datos reales.</li>
+      <li>La charla no decide el traspaso (lo cierran los presidentes), pero si lo convences <strong>llega con más ganas</strong> y si le mientes llega con dudas. Las promesas de vender a alguien o de quedarse con un compañero obligan si el jugador llega.</li>
     </ul>
   </section>
   <section className="rules-section">
@@ -153,8 +163,8 @@ const ClubSystems = () => <>
   <section className="rules-section">
     <h2>14. Hinchada y Taquilla</h2>
     <ul>
-      <li>Cada club tiene <strong>hinchas</strong>: personas en todo el mundo que se declaran hinchas del club (no seguidores de redes). Los clubes son gigantes, como los grandes de verdad: el más prestigioso de la liga parte con 500 millones y el resto hacia abajo, hasta 50 millones, según su prestigio (historial de títulos, finales y playoffs, y valor del plantel). Cada club tiene un país (Lalo Cura neerlandés, Real Potente inglés, PSF francés, Que Falso italiano, Bombo turco, PorLaCheetah y La Poruña alemanes, Forestyle chileno), que decide dónde viven sus hinchas: una parte en casa y el resto repartido por el mundo según población, gusto por el fútbol y lazos (idioma, migración). En la ficha del club hay un mapa con dónde viven. Desde ahí crecen o bajan con resultados, clásicos, títulos y eventos. También hay un <strong>ánimo de la hinchada</strong> que cambia partido a partido.</li>
-      <li>Al terminar cada partido de clubes, el local cobra las entradas: la asistencia depende de sus hinchas que viven cerca (los de su país y unos pocos de afuera que viajan), el rival, si es clásico o playoffs, el ánimo de la gente y el precio que fijó el Presidente (popular 35 €, normal 60 €, premium 95 €). El aforo es el techo. La final a partido único se juega en el estadio más grande de los dos y la taquilla se reparte mitad y mitad.</li>
+      <li>Cada club tiene <strong>hinchas</strong>: personas que se declaran hinchas del club (no seguidores de redes). Cuántos tiene depende de su grandeza (historial de títulos, finales y playoffs, y valor del plantel). Una parte vive en Chile, que se reparten entre todos los clubes, y el resto en el país del club. En la ficha del club hay un mapa con dónde viven. Desde ahí crecen o bajan con resultados, clásicos, títulos y eventos. También hay un <strong>ánimo de la hinchada</strong> que cambia partido a partido.</li>
+      <li>Al terminar cada partido de clubes, el local cobra las entradas: la asistencia depende de sus hinchas que viven cerca (los de su país y unos pocos de afuera que viajan), el rival, si es clásico o playoffs, el ánimo de la gente y el precio que fijó el Presidente (popular 35 €, normal 60 €, premium 95 €). El aforo es el techo. Los partidos importantes tienen piso: una <strong>semifinal de playoffs casi se llena</strong> (95% o más) y <strong>una final se llena</strong>; en la liga, un clásico, la visita de un grande o un partido decisivo del tramo final (dos de arriba de la tabla) llenan casi todo el estadio aunque el local tenga poca hinchada. La final a partido único se juega en el estadio más grande de los dos y la taquilla se reparte mitad y mitad.</li>
       <li>La taquilla cobra <strong>desde el v11</strong>. En el v10 se registra el público y los hinchas se mueven con los resultados, pero sin plata (lo que se alcanzó a cobrar se devolvió).</li>
       <li>Un castigo (W.O.) se juega a puertas cerradas: no hay taquilla. Si un partido se reabre o se anula, la taquilla y los hinchas se devuelven.</li>
       <li><strong>El marcador no cambia</strong>: la hinchada y el estadio mueven plata, hinchas y ánimo, nunca el resultado del partido.</li>

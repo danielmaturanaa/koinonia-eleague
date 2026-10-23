@@ -17,6 +17,7 @@ import { SealedAuctionsSection } from './market/SealedAuctionsSection.jsx';
 import { gpLabel } from '../../utils/money.js';
 import { GpInput } from '../../components/GpInput.jsx';
 import { Button, Icon, Screen } from '../../ui/index.js';
+import { MarketPhaseBanner } from '../admin/MarketWindowAdmin.jsx';
 import { WatchlistTab } from '../teams/WatchlistTab.jsx';
 
 const asList = value => Array.isArray(value) ? value : [];
@@ -238,6 +239,7 @@ export function MarketPage({ teams, initialTab = null, highlightId = null, prefi
   const current = tabs.some(item => item.id === tab) ? tab : 'subastas';
   return <Screen title="Mercado" tabs={tabs} active={current} onTab={setTab}>
     {isAdmin && <div className="screen-toolbar"><a className="ui-btn ui-btn--ghost ui-btn--sm" href="#/admin?tab=mercado">⚙ Administrar mercado</a></div>}
+    <MarketPhaseBanner status={status.data} onChanged={refresh}/>
     {operates && <MyClubPanel team={myTeam} figures={figures} profileQuery={myTeamId ? profile : null} status={status.data} statusQuery={status}>
       {myTeamId && <PromiseRecord teamId={myTeamId} revision={revision}/>}
     </MyClubPanel>}

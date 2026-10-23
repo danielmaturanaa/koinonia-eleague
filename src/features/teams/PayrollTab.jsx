@@ -11,6 +11,7 @@ import { useApiQuery } from '../public/useApiQuery.js';
 import { HORIZON, PLAYOFF_PRIZES, leaguePrize, maxSalaryFor, roundStep, simulate } from '../../utils/payrollSim.js';
 import { BalanceLine, PayrollBars } from './PayrollCharts.jsx';
 import { SigningSheet } from './SigningSheet.jsx';
+import { ArrivalSheets } from './ArrivalSheet.jsx';
 import { Button, HowItWorks } from '../../ui/index.js';
 
 const SEASONS = [2, 3, 4, 5, 6];
@@ -211,6 +212,7 @@ function RealView({ team, query, balance, marketOpen, canEdit, layout, refresh }
   const pending = contract => upcoming.slice(0, contract.seasonsLeft).map(upper);
   const chargeText = names => (names.length <= 2 ? names.join(' Y ') : `${names[0]} A ${names[names.length - 1]}`);
   const contractText = contract => {
+    if (contract.arrivalPending) return 'RECIÉN LLEGADO: CONTRATO POR FIRMAR';
     if (contract.status === 'expired') return 'VENCIDO: RENOVAR';
     if (contract.endsWith) return `VIGENTE: TERMINA CON EL ${upper(contract.endsWith.name)}`;
     const names = pending(contract);
@@ -226,7 +228,7 @@ function RealView({ team, query, balance, marketOpen, canEdit, layout, refresh }
 
   return <div className="payroll-real">
     <div className="view-badge is-real">📄 NÓMINA REAL · CONTRATOS FIRMADOS</div>
-    <HowItWorks title="¿Cómo funcionan los contratos?"><p>Cada jugador tiene un contrato de 2 a 6 torneos. Su sueldo queda congelado y se cobra al terminar cada torneo de liga mientras siga en el club. Nadie puede cobrar más del 20% de su valor de mercado.{upcoming[0] ? ` Los sueldos se cobran desde el ${upcoming[0]}; el torneo en curso no se cobra.` : ''}</p></HowItWorks>
+    <HowItWorks title="¿Cómo funcionan los contratos?"><p>Cada jugador tiene un contrato de 2 a 6 torneos. Su sueldo queda congelado y se cobra al terminar cada torneo de liga mientras siga en el club. Nadie puede cobrar más del 20% de su valor de mercado.{upcoming[0] ? ` Los sueldos se cobran desde el ${upcoming[0]}; el torneo en curso no se cobra.` : ''}</p><p>Cuando un contrato vence, se renueva en el período de renovaciones del mercado siguiente. Si no, el jugador queda libre cuando el mercado pasa a transacciones (sin costo ni castigo). Un jugador que llega por traspaso o trueque firma un contrato nuevo con tu club.</p></HowItWorks>
     {!enabled && <p className="payroll-empty">Los contratos todavía no están activos. Mientras tanto usa la simulación para planificar.</p>}
     {enabled && <>
       {canEdit && !marketOpen && <p className="payroll-empty">🔒 Mercado cerrado: años y renovaciones se cambian cuando abra. Rescindir se puede siempre.</p>}
@@ -237,6 +239,7 @@ function RealView({ team, query, balance, marketOpen, canEdit, layout, refresh }
         ['ALCANZA PARA', covered(livePayroll, balance)],
         ['POR PAGAR EN CONTRATOS', gp(remainingCost)],
       ]}/>
+      {canEdit && <ArrivalSheets team={team} onDone={refresh}/>}
       {canEdit && <RenewAll team={team} expiredCount={renewables.length} onDone={refresh} marketOpen={marketOpen}/>}
       {canEdit && sheets.map(contract => <SigningSheet key={contract.id} team={team} contract={contract} args={query.data?.arguments ?? []} maxRounds={query.data?.maxRounds ?? 3} marketOpen={marketOpen} onDone={refresh} onAccepted={() => keepSigned(contract)}/>)}
       {layout === 'cards'

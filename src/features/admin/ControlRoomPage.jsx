@@ -9,6 +9,7 @@ import { CreateTournamentForm } from '../public/TournamentsPage.jsx';
 import { useApiQuery } from '../public/useApiQuery.js';
 import { CreateTeamForm } from './CreateTeamForm.jsx';
 import { ClubLifeAdmin } from './ClubLifeAdmin.jsx';
+import { MarketWindowAdmin } from './MarketWindowAdmin.jsx';
 import { PeoplePage } from './PeoplePage.jsx';
 import { TournamentAdminPanel, TournamentAwardsPanel } from './TournamentAdminPanel.jsx';
 
@@ -55,13 +56,14 @@ function TournamentsSection({ teams, initialId }) {
   </div>;
 }
 
-/** Mercado: registrar a mano un traspaso o un trueque, y el simulador de subastas (solo quien tiene acceso). */
+/** Mercado: abrirlo (con o sin renovaciones), registrar a mano un traspaso o un trueque, y el simulador de subastas. */
 function MarketSection({ teams }) {
   const players = useApiQuery(signal => loadAllPlayers(signal), []);
   const access = useApiQuery(signal => endpoints.auctionSimAccess(signal).catch(() => ({ data: { allowed: false } })), []);
   return <div className="control-section">
+    <Card title="ABRIR EL MERCADO"><MarketWindowAdmin/></Card>
     <Card title="REGISTRAR OPERACIÓN MANUAL">
-      <p className="control-note">Los traspasos y trueques normalmente se hacen por Discord o en el mercado; usa esto solo para corregir o registrar algo a mano.</p>
+      <p className="control-note">Los traspasos y trueques se hacen en el mercado de la web; usa esto solo para corregir o registrar algo a mano.</p>
       <DataState query={players}/>
       {Array.isArray(players.data) && <MarketAdmin teams={teams} players={players.data} onChanged={() => players.retry()}/>}
     </Card>

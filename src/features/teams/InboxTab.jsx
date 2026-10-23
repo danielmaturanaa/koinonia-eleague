@@ -29,7 +29,7 @@ function RequestActions({ team, request, locked, onDone }) {
   </div>;
 }
 
-const KIND = { raise: ['💸', 'PIDE UN SUELDO ACORDE'], leave: ['🚪', 'PIDE SALIR'], expiring: ['📄', 'CONTRATO POR VENCER'], expired: ['✍️', 'QUIERE RENOVAR'], unhappy: ['😠', 'DESCONTENTO'], renewal: ['💬', 'RENOVACIÓN'] };
+const KIND = { arrival: ['🧳', 'LLEGÓ: CONTRATO POR FIRMAR'], raise: ['💸', 'PIDE UN SUELDO ACORDE'], leave: ['🚪', 'PIDE SALIR'], expiring: ['📄', 'CONTRATO POR VENCER'], expired: ['✍️', 'QUIERE RENOVAR'], unhappy: ['😠', 'DESCONTENTO'], renewal: ['💬', 'RENOVACIÓN'] };
 
 /** Bandeja de entrada del presi: lo que le escriben sus jugadores. Al abrirla, los mensajes se marcan como leídos. */
 export function InboxTab({ team, onTab, onRead, highlightId = null }) {
@@ -83,10 +83,12 @@ export function InboxTab({ team, onTab, onRead, highlightId = null }) {
     if (message.request?.kind === 'leave') return 'Pidió salir.';
     if (message.request?.resolution === 'role_given') return 'Le diste el rol que pedía.';
     if (message.request?.resolution === 'raised') return 'Le subiste el sueldo.';
+    if (message.request?.resolution === 'minutes') return 'Le prometiste minutos en el próximo partido.';
     if (message.request) return message.request.resolution === 'escalated' ? 'No le respondiste a tiempo: pidió salir.' : 'Respondida.';
     if (staleOf(message)) return `Le cambiaste el rol a ${roleLabel(roleOf.get(message.playerId).role).toLowerCase()}.`;
     if (message.kind === 'unhappy') return 'Ya está más tranquilo.';
     if (message.kind === 'expiring' || message.kind === 'expired') return 'Contrato resuelto.';
+    if (message.kind === 'arrival') return 'Contrato firmado.';
     return 'Leída.';
   };
   const open = message => { if (!isRead(message)) markRead([message.id]); };
@@ -104,8 +106,8 @@ export function InboxTab({ team, onTab, onRead, highlightId = null }) {
           <div className="inbox-meta"><b>{message.playerName}</b><small>{icon} {label} · {formatDate(message.createdAt)}</small></div>
           <h4>{message.subject}</h4>
           <p>{message.body}</p>
-          {message.meta?.moodLabel && message.kind !== 'renewal' && <div className="inbox-mood"><MoodMeter mood={message.meta.mood} label={message.meta.moodLabel}/>{message.meta.role && <small>ROL: {roleLabel(message.meta.role)}</small>}</div>}
-          {['expired', 'expiring'].includes(message.kind) && <Button onClick={() => onTab?.('nomina')}>{message.kind === 'expired' ? 'Ir a la hoja de firma' : 'Ver contrato'}</Button>}
+          {message.meta?.moodLabel && !['renewal', 'arrival'].includes(message.kind) && <div className="inbox-mood"><MoodMeter mood={message.meta.mood} label={message.meta.moodLabel}/>{message.meta.role && <small>ROL: {roleLabel(message.meta.role)}</small>}</div>}
+          {['expired', 'expiring', 'arrival'].includes(message.kind) && <Button onClick={() => onTab?.('nomina')}>{message.kind === 'expiring' ? 'Ver contrato' : 'Ir a la hoja de firma'}</Button>}
           {message.request && <RequestActions team={team} request={message.request} locked={marketOpen} onDone={() => { query.retry(); rolesQuery.retry(); }}/>}
           {message.kind === 'unhappy' && nowRow && <div className="inbox-role">
             <span>ROL AHORA:</span><RoleSelect team={team} row={nowRow} locked={marketOpen} showWanted onDone={() => { rolesQuery.retry(); }}/>

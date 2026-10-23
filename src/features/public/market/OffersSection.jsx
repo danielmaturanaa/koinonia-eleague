@@ -7,7 +7,7 @@ import { DataState, gp } from '../DataStates.jsx';
 import { useApiQuery } from '../useApiQuery.js';
 import { useAutoRefresh } from './PollsSection.jsx';
 import { GpInput } from '../../../components/GpInput.jsx';
-import { ConsentPanel } from './ConsentPanel.jsx';
+import { ArrivalPanel } from './ArrivalPanel.jsx';
 import { Button, HowItWorks } from '../../../ui/index.js';
 
 const RELEASE_SHARE = 0.2;
@@ -81,7 +81,7 @@ function CounterForm({ offer, me, other, onDone, onCancel }) {
 }
 
 const ROLE_TEXT = { crucial: 'CRUCIAL', importante: 'IMPORTANTE', rotacion: 'DE ROTACIÓN', esporadico: 'ESPORÁDICO' };
-/** Lo pactado con un jugador: contrato nuevo (si venía vencido), prima de fichaje y rol prometido. */
+/** Lo pactado con un jugador en las ofertas de antes del contrato de llegada (prima, rol): solo para ofertas viejas. */
 function playerTerms(terms, payer) {
   if (!terms) return null;
   return [terms.seasons && `${terms.seasons} TORNEOS, +${terms.raisePercent}%`, terms.signingBonus > 0 && `PRIMA DE FICHAJE ${gp(terms.signingBonus)} (LA PAGA ${upper(payer)})`, terms.promisedRole && `SERÁ ${ROLE_TEXT[terms.promisedRole] ?? upper(terms.promisedRole)}`].filter(Boolean).join(', ') || null;
@@ -180,27 +180,6 @@ function useSquad(teamId) {
   return { squad: asList(query.data), loading: query.loading };
 }
 
-/** Jugadores de un club con el contrato vencido: para fichar por otro club tienen que acordar sus condiciones. */
-function useExpiredPlayers(teamId) {
-  const query = useApiQuery(signal => teamId ? endpoints.teamContracts(teamId, signal).catch(() => ({ data: null })) : Promise.resolve({ data: null }), [teamId]);
-  return new Set((query.data?.contracts ?? []).filter(contract => contract.status === 'expired').map(contract => contract.playerId));
-}
-
-const TERM_SEASONS = [2, 3, 4, 5, 6];
-/** Lo que se le ofrece a un jugador con contrato vencido para que firme con el club que lo recibe. */
-function TermsFields({ player, club, terms, onChange }) {
-  return <fieldset className="contract-terms">
-    <legend>📄 CONTRATO VENCIDO: {upper(player.name)} TIENE QUE ACORDAR CON {upper(club)}</legend>
-    <p className="poll-hint">Si no acepta, el sistema te dice cuánto pide. Después de firmar no se puede revender hasta que se cobre su primer torneo.</p>
-    <div className="chips">{TERM_SEASONS.map(n => <button type="button" key={n} className={terms.seasons === n ? 'on' : ''} onClick={() => onChange({ ...terms, seasons: n })}>{n} TORNEOS</button>)}</div>
-    <div className="sheet-slider"><input type="range" min="1" max="100" value={terms.raisePercent} onChange={event => onChange({ ...terms, raisePercent: Number(event.target.value) })} aria-label="Aumento de sueldo en porcentaje"/><b>+{terms.raisePercent}%</b></div>
-  </fieldset>;
-}
-const DEFAULT_TERMS = { seasons: 3, raisePercent: 15 };
-const NO_CONSENT_TERMS = { signingBonus: 0, promisedRole: null };
-const hasConsentTerms = terms => Boolean(terms?.signingBonus > 0 || terms?.promisedRole);
-const cleanConsent = terms => ({ ...(terms.signingBonus > 0 ? { signingBonus: terms.signingBonus } : {}), ...(terms.promisedRole ? { promisedRole: terms.promisedRole } : {}) });
-
 /** Lo que queda pactado, en una línea, antes de enviar. */
 function Summary({ children, problem }) {
   return <div className={`offer-summary ${problem ? 'has-problem' : ''}`}>
@@ -228,29 +207,21 @@ function TransferProposal({ myTeamId, rivals, onDone, prefill = null }) {
   const price = form.gpAmount === '' ? NaN : Number(form.gpAmount);
   const band = player ? priceBand(referenceOf(player)) : null;
   const problem = bandProblem(player, price);
-  const expiredAtSource = useExpiredPlayers(buying ? form.otherTeamId : myTeamId);
-  const needsTerms = Boolean(player && expiredAtSource.has(player.id));
-  const [terms, setTerms] = useState(DEFAULT_TERMS);
-  // Con contrato vigente el jugador da su visto bueno: prima de fichaje y rol prometido.
-  const [consentTerms, setConsentTerms] = useState(NO_CONSENT_TERMS);
-  const [verdict, setVerdict] = useState(null);
   const buyer = buying ? { id: myTeamId, name: 'tu club' } : other;
   // Jugador elegido desde su ficha: cuando llega el plantel se propone su valor como precio.
   useEffect(() => { if (player && form.gpAmount === '') setForm(current => ({ ...current, gpAmount: String(player.gpValue ?? '') })); }, [player?.id]);
-  useEffect(() => { setConsentTerms(NO_CONSENT_TERMS); setVerdict(null); }, [form.playerId, form.otherTeamId, form.side]);
   const mutation = useApiMutation((body, signal) => endpoints.createTransfer(body, signal), {
-    onSuccess: () => { setSent(`Oferta enviada a ${upper(other?.name)}: le llega a su bandeja y a Discord. Se concreta cuando la acepte.`); setForm(empty); setConsentTerms(NO_CONSENT_TERMS); onDone?.(); },
+    onSuccess: () => { setSent(`Oferta enviada a ${upper(other?.name)}: le llega a su bandeja y a Discord. Se concreta cuando la acepte.`); setForm(empty); onDone?.(); },
   });
   const set = (name, value) => setForm(current => ({ ...current, [name]: value,
     ...(['side', 'otherTeamId'].includes(name) ? { playerId: '', gpAmount: '' } : {}),
     // Al elegir jugador se propone su valor: después se ajusta dentro de la banda.
     ...(name === 'playerId' ? { gpAmount: String(squad.find(item => item.id === value)?.gpValue ?? '') } : {}) }));
-  const consentReady = needsTerms || verdict === 'acepta';
-  const ready = form.otherTeamId && player && Number.isFinite(price) && !problem && consentReady;
+  const ready = form.otherTeamId && player && Number.isFinite(price) && !problem;
   const submit = event => {
     event.preventDefault();
     if (!ready) return;
-    mutation.execute({ playerId: form.playerId, gpAmount: price, proposerTeamId: myTeamId, ...(needsTerms ? { contractTerms: terms } : hasConsentTerms(consentTerms) ? { contractTerms: cleanConsent(consentTerms) } : {}),
+    mutation.execute({ playerId: form.playerId, gpAmount: price, proposerTeamId: myTeamId,
       fromTeamId: buying ? form.otherTeamId : myTeamId, toTeamId: buying ? myTeamId : form.otherTeamId });
   };
   if (sent) return <Sent text={sent} onAgain={() => { setSent(''); mutation.clear(); }}/>;
@@ -262,8 +233,7 @@ function TransferProposal({ myTeamId, rivals, onDone, prefill = null }) {
     <label>{buying ? 'CLUB AL QUE LE COMPRAS' : 'CLUB AL QUE LE VENDES'}<select required value={form.otherTeamId} onChange={event => set('otherTeamId', event.target.value)}><option value="">ELEGIR CLUB</option>{rivals.map(team => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label>
     <label>{buying ? 'JUGADOR QUE QUIERES' : 'JUGADOR TUYO QUE VENDES'}<select required value={form.playerId} disabled={buying && !form.otherTeamId} onChange={event => set('playerId', event.target.value)}>{playerOptions(squad)}</select></label>
     <label>PRECIO EN GP{band ? ` · ENTRE ${gp(band.min)} Y ${gp(band.max)}` : ''}<GpInput required min={band?.min ?? 0} max={band?.max} value={form.gpAmount} disabled={!player} onChange={event => set('gpAmount', event.target.value)}/></label>
-    {needsTerms && other && <TermsFields player={player} club={buying ? 'tu club' : other.name} terms={terms} onChange={setTerms}/>}
-    {!needsTerms && player && other && <ConsentPanel player={player} toTeam={buyer} payer={buying ? 'tu club' : other.name} terms={consentTerms} onChange={setConsentTerms} onVerdict={setVerdict}/>}
+    {player && other && <ArrivalPanel player={player} toTeam={buyer} price={Number.isFinite(price) && !problem ? price : null}/>}
     {player && other && Number.isFinite(price) && <Summary problem={problem}>
       {buying ? `${upper(other.name)} TE VENDE A ${upper(player.name)} POR ${gp(price)}.` : `LE VENDES ${upper(player.name)} A ${upper(other.name)} POR ${gp(price)}.`} TIENE QUE ACEPTARLO SU PRESI (EN LA WEB O EN DISCORD).
     </Summary>}
@@ -284,32 +254,16 @@ function TradeProposal({ myTeamId, rivals, onDone }) {
   const gpFrom = Number(form.gpFrom || 0);
   const gpTo = Number(form.gpTo || 0);
   const problem = tradeProblem(offered, requested, gpFrom, gpTo);
-  const expiredMine = useExpiredPlayers(myTeamId);
-  const expiredTheirs = useExpiredPlayers(form.otherTeamId);
-  const needsOfferedTerms = Boolean(offered && expiredMine.has(offered.id));
-  const needsRequestedTerms = Boolean(requested && expiredTheirs.has(requested.id));
-  const [offeredTerms, setOfferedTerms] = useState(DEFAULT_TERMS);
-  const [requestedTerms, setRequestedTerms] = useState(DEFAULT_TERMS);
-  const [offeredConsent, setOfferedConsent] = useState(NO_CONSENT_TERMS);
-  const [requestedConsent, setRequestedConsent] = useState(NO_CONSENT_TERMS);
-  const [offeredVerdict, setOfferedVerdict] = useState(null);
-  const [requestedVerdict, setRequestedVerdict] = useState(null);
-  useEffect(() => { setOfferedConsent(NO_CONSENT_TERMS); setOfferedVerdict(null); }, [form.fromPlayerId, form.otherTeamId]);
-  useEffect(() => { setRequestedConsent(NO_CONSENT_TERMS); setRequestedVerdict(null); }, [form.toPlayerId, form.otherTeamId]);
   const mutation = useApiMutation((body, signal) => endpoints.createTrade(body, signal), {
     onSuccess: () => { setSent(`Trueque enviado a ${upper(other?.name)}: le llega a su bandeja y a Discord. Se concreta cuando lo acepte.`); setForm(empty); onDone?.(); },
   });
   const set = (name, value) => setForm(current => ({ ...current, [name]: value, ...(name === 'otherTeamId' ? { toPlayerId: '' } : {}) }));
-  const consentReady = (needsOfferedTerms || offeredVerdict === 'acepta') && (needsRequestedTerms || requestedVerdict === 'acepta');
-  const ready = other && offered && requested && !problem && consentReady;
+  const ready = other && offered && requested && !problem;
   const submit = event => {
     event.preventDefault();
     if (!ready) return;
-    const fromPlayer = needsOfferedTerms ? offeredTerms : hasConsentTerms(offeredConsent) ? cleanConsent(offeredConsent) : null;
-    const toPlayer = needsRequestedTerms ? requestedTerms : hasConsentTerms(requestedConsent) ? cleanConsent(requestedConsent) : null;
     mutation.execute({ fromTeamId: myTeamId, toTeamId: form.otherTeamId, fromPlayerId: form.fromPlayerId, toPlayerId: form.toPlayerId,
-      ...(gpFrom ? { gpFrom } : {}), ...(gpTo ? { gpTo } : {}),
-      ...(fromPlayer || toPlayer ? { contractTerms: { ...(fromPlayer ? { fromPlayer } : {}), ...(toPlayer ? { toPlayer } : {}) } } : {}) });
+      ...(gpFrom ? { gpFrom } : {}), ...(gpTo ? { gpTo } : {}) });
   };
   if (sent) return <Sent text={sent} onAgain={() => { setSent(''); mutation.clear(); }}/>;
   return <form className="admin-form market-form offer-form" onSubmit={submit}>
@@ -318,10 +272,7 @@ function TradeProposal({ myTeamId, rivals, onDone }) {
     <label>PIDES<select required value={form.toPlayerId} disabled={!form.otherTeamId} onChange={event => set('toPlayerId', event.target.value)}>{playerOptions(otherSquad.squad)}</select></label>
     <label>GP QUE AGREGAS TÚ (OPCIONAL)<GpInput placeholder="0" value={form.gpFrom} onChange={event => set('gpFrom', event.target.value)}/></label>
     <label>GP QUE AGREGA {other ? upper(other.name) : 'EL OTRO CLUB'} (OPCIONAL)<GpInput placeholder="0" value={form.gpTo} onChange={event => set('gpTo', event.target.value)}/></label>
-    {needsOfferedTerms && other && <TermsFields player={offered} club={other.name} terms={offeredTerms} onChange={setOfferedTerms}/>}
-    {needsRequestedTerms && other && <TermsFields player={requested} club="tu club" terms={requestedTerms} onChange={setRequestedTerms}/>}
-    {!needsOfferedTerms && offered && other && requested && <ConsentPanel player={offered} toTeam={other} payer={other.name} leavingIds={[requested.id]} terms={offeredConsent} onChange={setOfferedConsent} onVerdict={setOfferedVerdict}/>}
-    {!needsRequestedTerms && requested && other && offered && <ConsentPanel player={requested} toTeam={{ id: myTeamId }} payer="tu club" leavingIds={[offered.id]} terms={requestedConsent} onChange={setRequestedConsent} onVerdict={setRequestedVerdict}/>}
+    {requested && other && offered && <ArrivalPanel player={requested} toTeam={{ id: myTeamId, name: 'tu club' }} leavingIds={[offered.id]}/>}
     {offered && requested && <Summary problem={problem}>
       ENTREGAS A {upper(offered.name)}{gpFrom ? ` + ${gp(gpFrom)}` : ''} Y RECIBES A {upper(requested.name)}{gpTo ? ` + ${gp(gpTo)}` : ''}. TIENE QUE ACEPTARLO EL PRESI DE {upper(other?.name)}.
     </Summary>}
@@ -362,7 +313,7 @@ export function ProposeOffers({ teams, marketOpen, onChanged, prefill = null }) 
   // Traspasos y trueques solo con el mercado abierto; liberar se puede siempre.
   const closed = marketOpen === false && tab !== 'release';
   return <section className="market-section market-propose">
-    <header><h2>PROPONER UNA OPERACIÓN</h2><p>Se concreta cuando la otra parte la acepta. Precio entre 0,7× y 1,25× su valor de Transfermarkt; el jugador queda valiendo lo que se pagó. Los trueques no mueven el valor.</p></header>
+    <header><h2>PROPONER UNA OPERACIÓN</h2><p>Se concreta cuando el otro presi la acepta: el jugador no la frena. Al llegar firma un contrato nuevo con su club. Precio entre 0,7× y 1,25× su valor de Transfermarkt; el jugador queda valiendo lo que se pagó. Los trueques no mueven el valor.</p></header>
     <nav className="market-tabs offer-tabs" aria-label="TIPO DE OPERACIÓN">
       <button type="button" className={tab === 'transfer' ? 'active' : ''} onClick={() => setTab('transfer')}>TRASPASO</button>
       <button type="button" className={tab === 'trade' ? 'active' : ''} onClick={() => setTab('trade')}>TRUEQUE</button>

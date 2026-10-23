@@ -211,3 +211,14 @@
 }
 .scoreboard-suspended { flex: 0 0 auto; padding: 3px 7px; border: 1px solid #ff5a6e; background: #7d0f22; color: #fff; cursor: pointer; font: 600 11px/1 'Oswald', sans-serif; letter-spacing: .5px; white-space: nowrap; }
 .scoreboard-suspended:hover { background: #a90020; }
+
+/* Promesas de minutos: franja en la ficha y ventanas al iniciar/terminar */
+.minute-promises-strip { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; justify-content: space-between; padding: 6px 10px; background: var(--c-gold-bg); border-left: 4px solid var(--c-gold-line); font: 600 var(--fs-xs)/1.3 var(--font-ui); letter-spacing: .4px; color: var(--c-ink); }
+.minute-promises-lead, .minute-promises-note { margin: 0 0 var(--sp-2); font: 600 var(--fs-sm)/1.4 var(--font-body); }
+.minute-promises-note { color: var(--c-ink-muted); }
+.minute-promises-list { display: grid; gap: 8px; margin: 0 0 var(--sp-3); padding: 0; list-style: none; }
+.minute-promises-list li { display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; justify-content: space-between; padding: 8px 10px; border: 2px solid var(--c-navy-800); background: var(--c-white); font: 600 var(--fs-sm)/1.3 var(--font-body); }
+.minute-promises-list li small { color: var(--c-ink-muted); font-family: var(--font-ui); }
+.minute-promises-list li.is-kept { border-color: var(--c-green-bright); }
+.minute-promises-list li.is-broken { border-color: var(--c-red); }
+.minute-promises-question { min-width: 0; }

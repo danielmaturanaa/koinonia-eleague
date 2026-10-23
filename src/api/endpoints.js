@@ -197,7 +197,18 @@ export const endpoints = {
   rivalries: signal => get('/rivalries', null, signal),
   teamRivalry: (teamId, signal) => get(`/teams/${teamId}/rivalry`, null, signal),
   setRival: (teamId, rivalTeamId, signal) => apiClient.put(`/teams/${teamId}/rival`, { rivalTeamId }, { actor: 'web', signal }),
-  playerConsent: (playerId, query, signal) => get(`/players/${playerId}/consent`, query, signal),
+  // Lo que pediría un jugador para firmar si llega a un club (traspaso o trueque).
+  arrivalPreview: (playerId, query, signal) => get(`/players/${playerId}/arrival-preview`, query, signal),
+  // Contratos de llegada por firmar de un club.
+  teamArrivals: (teamId, signal) => get(`/teams/${teamId}/arrivals`, null, signal),
+  previewArrival: (teamId, contractId, body, signal) => apiClient.post(`/teams/${teamId}/arrivals/${contractId}/preview`, body, { actor: 'web', signal }),
+  signArrival: (teamId, contractId, body, signal) => apiClient.post(`/teams/${teamId}/arrivals/${contractId}/sign`, body, { actor: 'web', signal }),
+  // Mercado en dos etapas (admin): abrir con o sin renovaciones y pasar a transacciones.
+  openMarket: (body, signal) => apiClient.post('/market/open', body, { actor: 'web', signal }),
+  startTransactions: signal => apiClient.post('/market/start-transactions', {}, { actor: 'web', signal }),
+  // Promesas de minutos de un partido: recordatorio al iniciar y confirmación al terminar.
+  matchMinutePromises: (matchId, signal) => get(`/matches/${matchId}/minute-promises`, null, signal),
+  resolveMinutePromise: (matchId, promiseId, body, signal) => apiClient.post(`/matches/${matchId}/minute-promises/${promiseId}`, body, { actor: 'web', signal }),
   playerChat: (playerId, teamId, signal) => get(`/players/${playerId}/chat`, { teamId }, signal),
   teamChats: (teamId, signal) => get(`/teams/${teamId}/chats`, null, signal),
   teamCourting: (teamId, signal) => get(`/teams/${teamId}/courting`, null, signal),

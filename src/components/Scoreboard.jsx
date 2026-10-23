@@ -6,6 +6,7 @@ import { goalPlayerName, goalTeamId, groupGoals } from '../utils/goals.js';
 import { TeamMark } from './TeamMark.jsx';
 import { useAuth } from '../app/AuthGate.jsx';
 import { matchRoundLabel } from '../utils/matchPresentation.js';
+import { MinutePromises } from './MinutePromises.jsx';
 
 const STATUS_LABEL = { pending: 'POR JUGAR', live: 'EN VIVO', finished: 'FINAL', cancelled: 'CANCELADO' };
 const LIVE_POLL_MS = 12000;
@@ -140,7 +141,13 @@ function RedCardList({ match, onClose, onChanged }) {
 
 function ScoreboardControls({ match, onChanged, compact }) {
   const [popover, setPopover] = useState(null);
-  const status = useApiMutation((operation, signal) => endpoints[`${operation}Match`](match.id, signal), { onSuccess: onChanged });
+  // Justo después de iniciar o finalizar se abren solas las promesas de minutos (recordatorio y confirmación).
+  const [moment, setMoment] = useState(null);
+  const lastOperation = useRef(null);
+  const status = useApiMutation((operation, signal) => { lastOperation.current = operation; return endpoints[`${operation}Match`](match.id, signal); }, {
+    onSuccess: () => { setMoment(lastOperation.current === 'start' ? 'start' : lastOperation.current === 'finish' ? 'finish' : null); onChanged(); },
+  });
+  const promises = <MinutePromises match={match} moment={moment} onMomentSeen={() => setMoment(null)}/>;
   const runStatus = (operation, label, confirmMessage) => { if (window.confirm(confirmMessage ?? `¿${label} ESTE PARTIDO?`)) status.execute(operation); };
   const revertButton = <button className="scoreboard-btn-text scoreboard-btn-revert" disabled={status.loading} onClick={() => runStatus('reset', 'REVERTIR', '¿Revertir este partido a pendiente 0-0? Se borrarán los goles y tarjetas registrados.')}>↺ REVERTIR A PENDIENTE (0-0)</button>;
   const goalsCount = match.goals?.length ?? 0;
@@ -149,11 +156,13 @@ function ScoreboardControls({ match, onChanged, compact }) {
   const redCardsButton = <button className="scoreboard-btn-text" disabled={status.loading} onClick={() => setPopover('redcards')}>🟥 VER/ANULAR ROJAS{redCardsCount ? ` (${redCardsCount})` : ''}</button>;
 
   if (match.status === 'pending') return <div className="scoreboard-controls scoreboard-controls-pending">
+    {promises}
     <button className="scoreboard-btn scoreboard-btn-start" disabled={status.loading} onClick={() => runStatus('start', 'INICIAR')}>▶ INICIAR PARTIDO</button>
     {!compact && <button className="scoreboard-btn-text scoreboard-btn-cancel" disabled={status.loading} onClick={() => runStatus('cancel', 'CANCELAR', '¿CANCELAR ESTE PARTIDO? QUEDARÁ ANULADO, NO SE JUGARÁ.')}>✕ CANCELAR PARTIDO (NO SE JUGARÁ)</button>}
   </div>;
 
   if (match.status === 'finished') return <div className="scoreboard-controls scoreboard-controls-closed">
+    {promises}
     <button className="scoreboard-btn-text" disabled={status.loading} onClick={() => runStatus('reopen', 'REABRIR')}>↺ Reabrir partido (vuelve a en vivo)</button>
   </div>;
 
@@ -164,6 +173,7 @@ function ScoreboardControls({ match, onChanged, compact }) {
   if (match.status !== 'live') return null;
 
   return <div className="scoreboard-controls">
+    {!popover && promises}
     {popover === 'home' && <GoalPopover match={match} teamId={match.homeTeam?.id} teamName={match.homeTeam?.name} onClose={() => setPopover(null)} onChanged={onChanged}/>}
     {popover === 'away' && <GoalPopover match={match} teamId={match.awayTeam?.id} teamName={match.awayTeam?.name} onClose={() => setPopover(null)} onChanged={onChanged}/>}
     {popover === 'owngoal' && <OwnGoalPopover match={match} onClose={() => setPopover(null)} onChanged={onChanged}/>}
