@@ -5,6 +5,7 @@ import { Card } from '../../ui/index.js';
 import { DataState } from '../public/DataStates.jsx';
 import { useApiQuery } from '../public/useApiQuery.js';
 
+// El backend manda los últimos 5 del más reciente al más antiguo; se muestran como una racha: el más reciente a la derecha.
 const gameTitle = game => `${game.goalsFor}-${game.goalsAgainst} · ${game.tournament ?? ''}`;
 
 /** Cara a cara histórico del club contra cada rival que enfrentó, en todos los torneos. */
@@ -28,7 +29,7 @@ export function HeadToHeadTable({ team, teams = [] }) {
               {row.sanctions > 0 && <small className="h2h-league-note">{row.sanctions} por castigo</small>}</td>
             <td>{row.played}</td><td className="win">{row.wins}</td><td className="draw">{row.draws}</td><td className="loss">{row.losses}</td>
             <td className="goals">{row.goalsFor}-{row.goalsAgainst}</td>
-            <td className="last"><span className="h2h-league-last">{row.last.map(game => <EntityLink key={game.matchId} to="match" id={game.matchId} className={`club-form-pill form-${game.result}`} title={gameTitle(game)}>{game.result}</EntityLink>)}</span></td>
+            <td className="last"><span className="h2h-league-last">{[...row.last].reverse().map(game => <EntityLink key={game.matchId} to="match" id={game.matchId} className={`club-form-pill form-${game.result}`} title={gameTitle(game)}>{game.result}</EntityLink>)}</span></td>
             <td className="share"><span className="h2h-bar" aria-label={`${row.wins} ganados, ${row.draws} empates, ${row.losses} perdidos`}>
               <span className="win" style={{ flex: row.wins }}/><span className="draw" style={{ flex: row.draws }}/><span className="loss" style={{ flex: row.losses }}/>
             </span></td>
