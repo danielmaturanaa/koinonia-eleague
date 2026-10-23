@@ -15,6 +15,7 @@ function asksOf(ask) {
   if (bonuses.length) items.push(`MANTENER SUS PRIMAS (${bonuses.join(' · ')})`);
   if (ask.asksShirt) items.push(`LA ${ask.shirt.number} (HOY LA USA ${upper(ask.shirt.holderName)})`);
   if (ask.captain) items.push('LA CINTA DE CAPITÁN');
+  if (ask.bonusesHidden) items.push('SUS PRIMAS ACTUALES (LAS VES CUANDO LLEGUE)');
   return items;
 }
 

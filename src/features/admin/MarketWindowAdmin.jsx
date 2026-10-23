@@ -7,6 +7,23 @@ import { useApiQuery } from '../public/useApiQuery.js';
 import { Button, ConfirmStep } from '../../ui/index.js';
 
 const when = value => (value ? new Date(value).toLocaleString('es-CL', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit', timeZone: 'America/Santiago' }) : '');
+// Lo que se escribe en el formulario es hora de Chile, esté donde esté el navegador del admin.
+function chileToIso(value) {
+  const [day, time] = String(value).split('T');
+  const [year, month, date] = day.split('-').map(Number);
+  const [hour, minute] = time.split(':').map(Number);
+  const guess = Date.UTC(year, month - 1, date, hour, minute);
+  const offsetAt = instant => {
+    const parts = Object.fromEntries(new Intl.DateTimeFormat('en-US', { timeZone: 'America/Santiago', hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+      .formatToParts(new Date(instant)).map(part => [part.type, part.value]));
+    return Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute) - Math.floor(instant / 60_000) * 60_000;
+  };
+  // Dos pasadas bastan para caer bien cerca de un cambio de horario.
+  let instant = guess - offsetAt(guess);
+  instant = guess - offsetAt(instant);
+  return new Date(instant).toISOString();
+}
+
 // Por defecto el cierre queda en 3 días a las 22:00.
 const defaultClose = () => {
   const date = new Date(Date.now() + 3 * 86_400_000);
@@ -56,7 +73,7 @@ export function MarketWindowAdmin() {
   }
   const submit = event => {
     event.preventDefault();
-    open.execute({ closesAt: new Date(closesAt).toISOString(), minConfirmations: Number(minimum), renewals });
+    open.execute({ closesAt: chileToIso(closesAt), minConfirmations: Number(minimum), renewals });
   };
   return <form className="admin-form market-window-admin" onSubmit={submit}>
     <p>🔒 El mercado está cerrado.</p>
