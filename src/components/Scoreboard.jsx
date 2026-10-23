@@ -221,7 +221,7 @@ function ScoreboardActa({ match }) {
   </div>;
 }
 
-export function Scoreboard({ matchId, mode: requestedMode = 'view', density = 'tile', onOpen, onFinished, onChanged, refreshKey = 0, showActa = true, teams = [] }) {
+export function Scoreboard({ matchId, mode: requestedMode = 'view', density = 'tile', onOpen, onFinished, onChanged, refreshKey = 0, showActa = true, teams = [], onShowSuspended }) {
   const { canOperateMatches } = useAuth();
   const mode = requestedMode === 'manage' && canOperateMatches ? 'manage' : 'view';
   const detail = useApiQuery(signal => matchId ? endpoints.match(matchId, signal) : Promise.resolve({ data: null }), [matchId, refreshKey]);
@@ -245,6 +245,7 @@ export function Scoreboard({ matchId, mode: requestedMode = 'view', density = 't
     <header className="scoreboard-bezel" onClick={onOpen} role={onOpen ? 'button' : undefined} tabIndex={onOpen ? 0 : undefined}>
       {match.status === 'live' && <i className="scoreboard-live-dot" aria-hidden="true"/>}
       <span className="scoreboard-meta">{match.tournament?.name ?? 'TORNEO'} · {matchRoundLabel(match)}</span>
+      {onShowSuspended && match.status !== 'pending' && match.suspended?.length > 0 && <button type="button" className="scoreboard-suspended" onClick={event => { event.stopPropagation(); onShowSuspended(); }}>🟥 {match.suspended.length} SUSPENDIDO{match.suspended.length === 1 ? '' : 'S'}</button>}
       <i className={`scoreboard-tag scoreboard-tag-${match.status}`}>{match.sanctioned && match.status === 'finished' ? 'CASTIGO' : STATUS_LABEL[match.status] ?? match.status}</i>
     </header>
     {match.homeTeam?.stadium && <div className="scoreboard-venue" title={`Estadio de ${match.homeTeam.name}`}>🏟️ {match.homeTeam.stadium}</div>}

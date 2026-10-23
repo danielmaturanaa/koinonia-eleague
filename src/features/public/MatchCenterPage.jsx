@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { EntityLink } from '../../components/EntityLink.jsx';
 import { PlayerFace } from '../../components/PlayerFace.jsx';
@@ -42,36 +42,16 @@ function Incidents({ match }) {
   </section>;
 }
 
-// Jugadores que cumplen suspensión en este partido (no pueden jugarlo). Se activan al iniciar el partido.
-function SuspendedPanel({ match }) {
+// Al iniciar el partido (o al entrar a uno en vivo) avisa quiénes no juegan por suspensión; sale solo una vez por partido y
+// pestaña. Después se reabre desde la etiqueta del marcador.
+const suspendedSeenKey = matchId => `koinonia:suspended-seen:${matchId}`;
+function SuspendedModal({ match, onClose }) {
   const suspended = Array.isArray(match.suspended) ? match.suspended : [];
-  if (!suspended.length || match.status === 'pending') return null;
-  const side = teamId => {
-    const rows = suspended.filter(item => item.teamId === teamId);
-    return rows.length ? <ul>{rows.map(item => <li key={item.id} className="incident-red"><span aria-hidden="true">🟥</span><EntityLink to="player" id={item.playerId}>{item.playerName}</EntityLink></li>)}</ul> : <p className="empty-copy">Sin suspendidos.</p>;
-  };
-  return <section className="match-card-panel match-incidents-panel match-suspended-panel"><h2>NO JUEGAN <small>Cumplen suspensión en este partido</small></h2>
-    <div className="match-incidents"><div><h3>{match.homeTeam?.name}</h3>{side(match.homeTeam?.id)}</div><div><h3>{match.awayTeam?.name}</h3>{side(match.awayTeam?.id)}</div></div>
-  </section>;
-}
-
-// Al iniciar el partido (o al entrar a uno en vivo) avisa quiénes no juegan por suspensión; una vez por partido y pestaña.
-function SuspendedModal({ match }) {
-  const key = `koinonia:suspended-seen:${match.id}`;
-  const suspended = Array.isArray(match.suspended) ? match.suspended : [];
-  const [open, setOpen] = useState(() => {
-    try { return !window.sessionStorage.getItem(key); } catch { return true; }
-  });
-  if (!open || match.status !== 'live' || !suspended.length) return null;
-  const close = () => {
-    setOpen(false);
-    try { window.sessionStorage.setItem(key, '1'); } catch { /* sin almacenamiento: reaparece al recargar */ }
-  };
   const side = team => {
     const rows = suspended.filter(item => item.teamId === team?.id);
     return <div><h3>{team?.name}</h3>{rows.length ? <ul>{rows.map(item => <li key={item.id}><span aria-hidden="true">🟥</span><EntityLink to="player" id={item.playerId}>{item.playerName}</EntityLink></li>)}</ul> : <p className="empty-copy">Sin suspendidos.</p>}</div>;
   };
-  return <Modal title="SUSPENDIDOS: NO JUEGAN HOY" onClose={close}>
+  return <Modal title="SUSPENDIDOS: NO JUEGAN" onClose={onClose}>
     <div className="match-incidents match-suspended-modal">{side(match.homeTeam)}{side(match.awayTeam)}</div>
   </Modal>;
 }
@@ -139,6 +119,19 @@ export function MatchCenterPage({ matchId, teams = [], navigate }) {
   const teamIndex = new Map(teams.map(team => [team.id, team]));
   const resolveTeam = team => team ? { ...team, ...(teamIndex.get(team.id) ?? {}) } : team;
   const bump = () => setRevision(value => value + 1);
+  const [suspendedOpen, setSuspendedOpen] = useState(false);
+  const suspendedAutoOpened = useRef(null);
+  useEffect(() => {
+    if (match?.status !== 'live' || !match.suspended?.length || suspendedAutoOpened.current === match.id) return;
+    suspendedAutoOpened.current = match.id;
+    let seen = false;
+    try { seen = Boolean(window.sessionStorage.getItem(suspendedSeenKey(match.id))); } catch { /* sin almacenamiento: se muestra */ }
+    if (!seen) setSuspendedOpen(true);
+  }, [match?.id, match?.status, match?.suspended?.length]);
+  const closeSuspended = () => {
+    setSuspendedOpen(false);
+    try { window.sessionStorage.setItem(suspendedSeenKey(match.id), '1'); } catch { /* reaparece al recargar */ }
+  };
   const simulationQuery = useApiQuery(signal => match?.simulated ? endpoints.matchSimulation(matchId, signal) : Promise.resolve({ data: null }), [matchId, match?.simulated, revision]);
   const simulation = match?.simulated ? simulationQuery.data : null;
   // Transmisión compartida mientras dura (todos ven el mismo minuto) o repetición pedida por quien mira.
@@ -184,7 +177,7 @@ export function MatchCenterPage({ matchId, teams = [], navigate }) {
         ? <div className="match-center-score">{sharedReplay
           ? <SimulationReplay match={match} simulation={simulation} resolveTeam={resolveTeam} startsAt={new Date(simulation.replayStartsAt).getTime()} durationSeconds={simulation.durationSeconds} onEvent={onReplayEvent} onEnded={onSharedReplayEnded}/>
           : <><SimulationReplay key={localReplay.startsAt} onEvent={onReplayEvent} match={match} simulation={simulation} resolveTeam={resolveTeam} startsAt={localReplay.startsAt} durationSeconds={localReplay.durationSeconds}/><button type="button" className="sim-replay-close" onClick={() => setLocalReplay(null)}>✕ CERRAR REPETICIÓN</button></>}</div>
-        : <div className="match-center-score"><Scoreboard matchId={matchId} mode="manage" density="full" teams={teams} refreshKey={revision} onChanged={bump} showActa={false}/>{match.sanctioned && <p className="match-sanction-banner"><SanctionBadge match={match}/> Resultado administrativo 0-3: el partido no se jugó.</p>}{match.simulated && <SimulationBanner match={match} simulation={simulation} onReplay={durationSeconds => setLocalReplay({ startsAt: Date.now(), durationSeconds })}/>}</div>;
+        : <div className="match-center-score"><Scoreboard matchId={matchId} mode="manage" onShowSuspended={() => setSuspendedOpen(true)} density="full" teams={teams} refreshKey={revision} onChanged={bump} showActa={false}/>{match.sanctioned && <p className="match-sanction-banner"><SanctionBadge match={match}/> Resultado administrativo 0-3: el partido no se jugó.</p>}{match.simulated && <SimulationBanner match={match} simulation={simulation} onReplay={durationSeconds => setLocalReplay({ startsAt: Date.now(), durationSeconds })}/>}</div>;
       const incidents = !replaying && !loadingSimulation && (match.status === 'pending' ? <SimulationPreview key={revision} match={match} onSimulated={bump}/> : <Incidents match={match}/>);
       const h2h = <div className="match-center-h2h"><HeadToHead match={match} resolveTeam={resolveTeam}/></div>;
       // Estadio: el marcador a la izquierda y el estadio con las incidencias sobre el pasto; debajo, la previa (simulador) y el
@@ -202,8 +195,7 @@ export function MatchCenterPage({ matchId, teams = [], navigate }) {
       return <div className="match-center-top"><div className="match-center-main">{score}{incidents}</div>{h2h}</div>;
     })()}
     {match && <>
-      {!replaying && !loadingSimulation && <SuspendedModal key={match.id} match={match}/>}
-      {!replaying && !loadingSimulation && <SuspendedPanel match={match}/>}
+      {suspendedOpen && !replaying && !loadingSimulation && match.suspended?.length > 0 && <SuspendedModal match={match} onClose={closeSuspended}/>}
       {!replaying && !loadingSimulation && <MatchdayPanel match={match} revision={revision}/>}
       <section className="match-card-panel"><h2>ALINEACIONES <small>Titulares actuales de cada club</small></h2><div className="match-lineups"><Lineup team={resolveTeam(match.homeTeam)}/><Lineup team={resolveTeam(match.awayTeam)}/></div></section>
       {canOperateMatches && <details className="match-corrections"><summary>SANCIONES Y CORRECCIONES</summary><div><SanctionPanel key={`${match.id}-${revision}`} match={match} onChanged={bump}/></div></details>}

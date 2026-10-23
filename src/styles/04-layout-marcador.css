@@ -207,3 +207,5 @@
   .scoreboard-page .scoreboard-full .scoreboard-digit { font-size: 60px; }
   .multi-grid { grid-template-columns: 1fr; }
 }
+.scoreboard-suspended { flex: 0 0 auto; padding: 3px 7px; border: 1px solid #ff5a6e; background: #7d0f22; color: #fff; cursor: pointer; font: 600 11px/1 'Oswald', sans-serif; letter-spacing: .5px; white-space: nowrap; }
+.scoreboard-suspended:hover { background: #a90020; }
