@@ -6,6 +6,8 @@ import { rememberNews } from '../news/newsCache.js';
 import { NewsModal, useNewsItem } from '../news/NewsModal.jsx';
 
 const STORY_LIMIT = 10;
+// Titulares largos se achican para que quepan junto al botón en la historia destacada.
+const headlineScale = (headline = '') => headline.length > 92 ? 'news-headline-xs' : headline.length > 68 ? 'news-headline-compact' : headline.length > 48 ? 'news-headline-medium' : '';
 const newsDate = item => item?.publishedAt ?? item?.date;
 
 // Historias estilo Instagram: avance automático con barras de progreso, pausa al
@@ -37,7 +39,7 @@ function NewsStories({ items, teams, onOpen }) {
       </div>
       <div className="news-story-copy">
         <p><b>{current.label}</b>{newsDate(current) && <time>{formatDate(newsDate(current))}</time>}</p>
-        <h2><button type="button" onClick={() => onOpen(current)}>{current.headline}</button></h2>
+        <h2 className={headlineScale(current.headline)}><button type="button" onClick={() => onOpen(current)}>{current.headline}</button></h2>
         {current.subtitle && <h3>{current.subtitle}</h3>}
         {current.body && <p className="news-story-excerpt">{current.body}</p>}
         <button type="button" className="news-story-read" onClick={() => onOpen(current)}>LEER NOTICIA COMPLETA →</button>
