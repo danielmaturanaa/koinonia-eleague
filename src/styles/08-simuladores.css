@@ -479,10 +479,11 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 }
 
 /* Comparador: cabeceras neutras; la comparación se expresa en los atributos. */
-.player-comparator { --h2h-left: #1f5fd6; --h2h-left-dark: #0a2a6e; --h2h-right: #d10a2c; --h2h-right-dark: #6d0014; gap: 14px; background: #efe6cf; }
+.player-comparator { --h2h-left: #d10a2c; --h2h-left-dark: #6d0014; --h2h-right: #1f5fd6; --h2h-right-dark: #0a2a6e; gap: 14px; background: #efe6cf; }
 .h2h-heads { grid-template-columns: minmax(0, 1fr) 64px minmax(0, 1fr); gap: 8px; padding: 10px 12px; background: #efe6cf; }
 .h2h-player { position: relative; min-height: 116px; overflow: hidden; border: 0; box-shadow: 0 4px 0 #0003; }
 .h2h-heads > .h2h-player:first-child, .h2h-heads > .h2h-player:last-child { padding: 8px 10px; background: linear-gradient(135deg, #0b3f8d, #062764); clip-path: none; }
+.h2h-heads > .h2h-player:first-child { background: linear-gradient(135deg, #d10a2c, #6d0014); }
 .h2h-heads > .h2h-search:last-child, .h2h-heads > .h2h-search:first-child { clip-path: none; padding: 10px; background: #fff9e8; border: 2px dashed #10285b80; }
 .h2h-player .player-comparison-face { width: 84px; height: 84px; border: 3px solid #fff; border-radius: 50%; box-shadow: 0 4px 10px #0006; background: #d9cfb8; }
 .h2h-player { grid-template-columns: 84px minmax(0, 1fr) auto auto; }
