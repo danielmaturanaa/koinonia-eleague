@@ -221,6 +221,9 @@ function ScoreboardActa({ match }) {
   </div>;
 }
 
+// Apodo principal bajo el nombre ("Los Lobos"); solo se ve en el marcador grande.
+const Nickname = ({ team }) => team?.nickname ? <i className="scoreboard-nickname">{`${team.nickname.charAt(0).toUpperCase()}${team.nickname.slice(1)}`}</i> : null;
+
 export function Scoreboard({ matchId, mode: requestedMode = 'view', density = 'tile', onOpen, onFinished, onChanged, refreshKey = 0, showActa = true, teams = [], onShowSuspended }) {
   const { canOperateMatches } = useAuth();
   const mode = requestedMode === 'manage' && canOperateMatches ? 'manage' : 'view';
@@ -250,13 +253,13 @@ export function Scoreboard({ matchId, mode: requestedMode = 'view', density = 't
     </header>
     {match.homeTeam?.stadium && <div className="scoreboard-venue" title={`Estadio de ${match.homeTeam.name}`}>🏟️ {match.homeTeam.stadium}</div>}
     <div className="scoreboard-teams">
-      <div className="scoreboard-team"><TeamMark team={resolveTeam(match.homeTeam)}/><b>{match.homeTeam?.name}</b></div>
+      <div className="scoreboard-team"><TeamMark team={resolveTeam(match.homeTeam)}/><b>{match.homeTeam?.name}</b><Nickname team={match.homeTeam}/></div>
       <div className="scoreboard-score">
         <span className={`scoreboard-digit${homeFlash ? ' scoreboard-digit-flash' : ''}`}>{match.homeScore ?? '–'}</span>
         <span className="scoreboard-colon">:</span>
         <span className={`scoreboard-digit${awayFlash ? ' scoreboard-digit-flash' : ''}`}>{match.awayScore ?? '–'}</span>
       </div>
-      <div className="scoreboard-team scoreboard-team-away"><TeamMark team={resolveTeam(match.awayTeam)}/><b>{match.awayTeam?.name}</b></div>
+      <div className="scoreboard-team scoreboard-team-away"><TeamMark team={resolveTeam(match.awayTeam)}/><b>{match.awayTeam?.name}</b><Nickname team={match.awayTeam}/></div>
     </div>
     {showActa && <ScoreboardActa match={match}/>}
     {mode === 'manage' && <ScoreboardControls match={match} onChanged={() => { detail.retry(); onChanged?.(); }} compact={density === 'tile'}/>}

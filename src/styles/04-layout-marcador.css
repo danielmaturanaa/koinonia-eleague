@@ -101,6 +101,8 @@
 .scoreboard-team { display: grid; justify-items: center; gap: 5px; min-width: 0; text-align: center; }
 .scoreboard-team .team-mark { width: 40px; height: 40px; }
 .scoreboard-team b { max-width: 100%; overflow: hidden; color: #fff; text-overflow: ellipsis; white-space: nowrap; font: 600 13px/1.15 'Roboto Condensed', sans-serif; }
+.scoreboard-nickname { display: none; max-width: 100%; margin-top: -3px; overflow: hidden; color: #ffd42a; text-overflow: ellipsis; white-space: nowrap; font: italic 600 13px/1.1 'Roboto Condensed', sans-serif; }
+.scoreboard-full .scoreboard-nickname { display: block; }
 .scoreboard-score { display: flex; align-items: center; gap: 4px; }
 .scoreboard-digit { min-width: 34px; color: #fff; text-align: center; font: 400 40px/1 'Anton', sans-serif; }
 .scoreboard-digit-flash { animation: scoreboard-flash 1.4s ease-out; }
