@@ -508,20 +508,41 @@
   .ballon-shortlist li { flex-wrap: wrap; }
 }
 
-/* Inversiones del club */
-.investment-grid { display: grid; gap: var(--sp-3); grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); margin-bottom: var(--sp-3); }
-.investment { display: grid; gap: var(--sp-2); align-content: start; padding: var(--sp-3); background: var(--c-white); border: var(--border); box-shadow: var(--shadow-pixel); }
+/* Centro de entrenamiento */
+.investment { display: grid; gap: var(--sp-2); align-content: start; margin-bottom: var(--sp-3); padding: var(--sp-3); background: var(--c-white); border: var(--border); box-shadow: var(--shadow-pixel); }
 .investment > header { display: flex; align-items: center; gap: var(--sp-2); color: var(--c-navy-900); }
 .investment > header b { font: 400 var(--fs-lg)/1 var(--font-display); letter-spacing: .4px; }
 .investment p { margin: 0; font: 600 var(--fs-sm)/1.35 var(--font-ui); color: var(--c-ink-muted); }
 .investment .investment-gain { font: 500 var(--fs-md)/1.35 var(--font-body); color: var(--c-green); }
 .investment .ui-btn { justify-self: start; }
-.tour-options { display: grid; gap: var(--sp-2); margin: 0; padding: 0; list-style: none; }
-.tour-options li { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); padding: 6px 8px; background: var(--c-cream); border-left: 4px solid var(--c-ice); }
-.tour-options li > div { display: grid; gap: 2px; min-width: 0; }
-.tour-options b { font: 600 var(--fs-sm)/1.15 var(--font-ui); color: var(--c-navy-900); }
-.tour-options small { font: 600 var(--fs-xs)/1.3 var(--font-ui); color: var(--c-ink-muted); }
-@media (max-width: 560px) { .tour-options li { flex-wrap: wrap; } }
+
+/* Torneo de pretemporada */
+.preseason-panel { margin-bottom: var(--sp-4); }
+.preseason-item { display: grid; gap: var(--sp-2); padding: var(--sp-3) 0; border-top: 2px solid var(--c-paper-line); }
+.preseason-item > header { display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-2); }
+.preseason-item > header b { font: 400 var(--fs-lg)/1 var(--font-display); color: var(--c-navy-900); }
+.preseason-rounds { display: grid; gap: var(--sp-3); grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); align-items: start; }
+.preseason-round { display: grid; gap: var(--sp-2); }
+.preseason-round h4 { margin: 0; font: 600 var(--fs-xs)/1 var(--font-ui); letter-spacing: .6px; color: var(--c-ink-muted); }
+.preseason-round.round-F h4 { color: var(--c-red); }
+.preseason-match { display: grid; gap: 2px; padding: 6px; background: var(--c-white); border: var(--border); box-shadow: var(--shadow-pixel); }
+.preseason-side { display: flex; justify-content: space-between; gap: var(--sp-2); padding: 4px 6px; font: 600 var(--fs-sm)/1.2 var(--font-ui); color: var(--c-navy-900); }
+.preseason-side a { color: inherit; overflow-wrap: anywhere; }
+.preseason-side.is-winner { background: var(--c-gold-bg); }
+.preseason-side b { font-family: var(--font-display); font-weight: 400; }
+.preseason-play { justify-self: end; font: 600 var(--fs-xs)/1 var(--font-ui); color: var(--c-red); }
+.preseason-penalties { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding-top: 4px; font: 600 var(--fs-xs)/1.2 var(--font-ui); color: var(--c-red); }
+.preseason-standings { display: grid; gap: 4px; margin: var(--sp-3) 0 0; padding: 0; list-style: none; }
+.preseason-standings li { display: grid; grid-template-columns: 90px minmax(0, 1fr) auto; gap: var(--sp-2); padding: 5px 8px; background: var(--c-cream); font: 600 var(--fs-sm)/1.2 var(--font-ui); color: var(--c-navy-900); }
+.preseason-standings li:first-child { background: var(--c-gold-bg); }
+.preseason-standings b { color: var(--c-green); }
+.preseason-form { display: grid; gap: var(--sp-3); margin-bottom: var(--sp-3); padding: var(--sp-3); background: var(--c-cream); border: var(--border); }
+.preseason-form-row { display: flex; flex-wrap: wrap; align-items: end; gap: var(--sp-3); }
+.preseason-size { display: flex; gap: 6px; }
+.preseason-slots { display: grid; gap: var(--sp-2); grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.preseason-pair { display: grid; gap: 4px; }
+.preseason-pair small { font: 600 var(--fs-xs)/1 var(--font-ui); letter-spacing: .5px; color: var(--c-ink-muted); }
+.preseason-pair select { min-height: var(--tap); padding: 6px 8px; border: var(--border); background: var(--c-white); font: 500 var(--fs-md)/1.2 var(--font-body); }
 .ballon-table-scroll { overflow-x: auto; }
 .ballon-table { width: 100%; border-collapse: collapse; font: 600 var(--fs-sm)/1.2 var(--font-ui); }
 .ballon-table th { padding: 6px 8px; text-align: right; font-size: var(--fs-xs); letter-spacing: .5px; color: var(--c-ink-muted); border-bottom: 2px solid var(--c-navy-800); }
