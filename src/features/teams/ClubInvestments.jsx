@@ -33,6 +33,6 @@ export function ClubInvestments({ team, onChanged }) {
         : <p className="investment-gain">Ya tienes la mejor ciudad deportiva.</p>}
     </article>
     {build.error && <Notice tone="error">{build.error.message}</Notice>}
-    <HowItWorks><p>No compra partidos: les sirve a tus jugadores. Mientras lo tengas, todo el plantel anda de mejor ánimo (renuevan más barato y piden menos), pero cuesta mantención cada torneo de liga. Para la pretemporada, organiza un torneo en la página de Torneos.</p></HowItWorks>
+    <HowItWorks><p>No compra partidos: les sirve a tus jugadores. Mientras lo tengas, todo el plantel anda de mejor ánimo (renuevan más barato y piden menos), pero cuesta mantención cada torneo de liga. Para las giras, arma una en la página de Torneos.</p></HowItWorks>
   </Card>;
 }

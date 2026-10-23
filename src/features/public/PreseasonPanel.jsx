@@ -12,7 +12,7 @@ const ROUND_LABEL = { QF: 'CUARTOS DE FINAL', SF: 'SEMIFINALES', F: 'FINAL', '3P
 const roundOf = slot => (slot.startsWith('QF') ? 'QF' : slot.startsWith('SF') ? 'SF' : slot);
 const PLACE = ['CAMPEÓN', '2.º', '3.º', '4.º'];
 
-/** Cuadro de un torneo de pretemporada: rondas, resultados y el ganador por penales cuando hubo empate. */
+/** Cuadro de una gira: rondas, resultados y el ganador por penales cuando hubo empate. */
 export function PreseasonBracket({ bracket, onChanged }) {
   const { canOperateMatches } = useAuth();
   const winner = useApiMutation(({ matchId, teamId }, signal) => endpoints.setMatchWinner(matchId, { kind: 'preseason', winnerTeamId: teamId }, signal), { onSuccess: onChanged });
@@ -43,7 +43,7 @@ export function PreseasonBracket({ bracket, onChanged }) {
   </div>;
 }
 
-/** Pretemporada: los torneos de esta temporada y el formulario para organizar uno (4 u 8 clubes, cruces a mano). */
+/** Giras: torneos amistosos que se arman cuando sea (4 u 8 clubes, cruces a mano) y el formulario para organizar una. */
 export function PreseasonPanel({ teams = [], myTeamId = null }) {
   const { isAdmin, canEditTeam } = useAuth();
   const query = useApiQuery(signal => endpoints.preseasons(signal), []);
@@ -52,20 +52,21 @@ export function PreseasonPanel({ teams = [], myTeamId = null }) {
   if (!data) return <DataState query={query}/>;
   const canOrganize = isAdmin || (myTeamId && canEditTeam(myTeamId) && !data.busyTeamIds.includes(myTeamId));
   const names = Object.fromEntries(teams.map(team => [team.id, team.name]));
-  return <Card title={`PRETEMPORADA${data.season ? ` · ${upper(data.season)}` : ''}`} className="preseason-panel"
-    aside={canOrganize && !creating ? <Button size="sm" icon="trophy" onClick={() => setCreating(true)}>ORGANIZAR TORNEO</Button> : null}>
-    {creating && <PreseasonForm teams={teams} busy={data.busyTeamIds} prizes={data.prizes} myTeamId={myTeamId} onDone={() => { setCreating(false); query.retry(); }} onCancel={() => setCreating(false)}/>}
+  return <Card title="GIRAS" className="preseason-panel"
+    aside={canOrganize && !creating ? <Button size="sm" icon="trophy" onClick={() => setCreating(true)}>ORGANIZAR GIRA</Button> : null}>
+    {creating && <PreseasonForm teams={teams} busy={data.busyTeamIds} paidLeft={data.paidLeft} prizes={data.prizes} myTeamId={myTeamId} onDone={() => { setCreating(false); query.retry(); }} onCancel={() => setCreating(false)}/>}
     {data.tournaments.length
       ? data.tournaments.map(item => <section key={item.id} className="preseason-item">
         <header><a href={`#/torneos?torneo=${item.id}`}><b>{upper(item.name)}</b></a><Chip tone={item.status === 'completed' ? 'green' : 'yellow'}>{item.status === 'completed' ? 'TERMINADO' : `${item.size} CLUBES · EN JUEGO`}</Chip></header>
+        {item.paidTeamIds.length < item.size && <p className="club-life-hint">Sin plata en esta gira (ya cobraron sus {data.paidPerSeason} giras de la temporada): {item.matches.flatMap(match => [match.homeTeamId, match.awayTeamId]).filter((teamId, index, list) => list.indexOf(teamId) === index && !item.paidTeamIds.includes(teamId)).map(teamId => names[teamId]).join(', ')}.</p>}
         <PreseasonBracket bracket={{ ...item, teamNames: names }} onChanged={query.retry}/>
       </section>)
-      : !creating && <p className="club-life-hint">Todavía no hay torneos de pretemporada esta temporada.</p>}
-    <HowItWorks><p>Un presi arma un torneo de 4 u 8 clubes y elige los cruces. Es a partido único (si empatan, se define por penales), con final y partido por el 3.er lugar, y se juega en el eFootball como cualquier partido. Todos recaudan: el local reparte la taquilla con la visita y la organización paga premios por puesto. Cada club juega una pretemporada por temporada.</p><p>Es un amistoso: no cuenta para la forma, el cara a cara, las suspensiones, los sueldos ni la directiva. El plantel que la juega llega más motivado al torneo (y el campeón, un poco más).</p></HowItWorks>
+      : !creating && <p className="club-life-hint">Todavía no hay giras. Si se juntan 4 u 8 en Discord, armen una acá.</p>}
+    <HowItWorks><p>Cuando se junten 4 u 8 clubes (por ejemplo en Discord), un presi arma la gira y elige los cruces. Es a partido único (si empatan, se define por penales), con final y partido por el 3.er lugar, y se juega en el eFootball como cualquier partido. Todos recaudan: el local reparte la taquilla con la visita y la organización paga premios por puesto.</p><p>Se puede jugar cuando sea, pero cada club cobra (premios, taquilla y ánimo) solo en sus primeras {data.paidPerSeason} giras de cada temporada; las demás se juegan igual, sin plata. Un club no puede estar en dos giras a la vez. Es un amistoso: no cuenta para la forma, el cara a cara, las suspensiones, los sueldos ni la directiva.</p></HowItWorks>
   </Card>;
 }
 
-function PreseasonForm({ teams, busy, prizes, myTeamId, onDone, onCancel }) {
+function PreseasonForm({ teams, busy, paidLeft = {}, prizes, myTeamId, onDone, onCancel }) {
   const { isAdmin } = useAuth();
   const clubs = useMemo(() => teams.filter(team => team.kind !== 'national_team' && !team.hidden && !busy.includes(team.id)), [teams, busy]);
   const [size, setSize] = useState(4);
@@ -79,23 +80,23 @@ function PreseasonForm({ teams, busy, prizes, myTeamId, onDone, onCancel }) {
   const prizeList = prizes?.[size] ?? [];
   return <div className="preseason-form">
     <div className="preseason-form-row">
-      <label className="club-kit-field"><span>NOMBRE</span><input value={name} maxLength={60} placeholder="Copa de Verano" onChange={event => setName(event.target.value)}/></label>
+      <label className="club-kit-field"><span>NOMBRE</span><input value={name} maxLength={60} placeholder="Gira por Asia" onChange={event => setName(event.target.value)}/></label>
       <div className="preseason-size" role="group" aria-label="Cantidad de clubes">{[4, 8].map(value => <Button key={value} size="sm" variant={size === value ? 'primary' : 'ghost'} onClick={() => setSize(value)}>{value} CLUBES</Button>)}</div>
     </div>
     <div className="preseason-slots">{Array.from({ length: size / 2 }, (_, pair) => <div key={pair} className="preseason-pair">
       <small>{size === 8 ? `CUARTOS ${pair + 1}` : `SEMI ${pair + 1}`}</small>
       {[pair * 2, pair * 2 + 1].map(index => <select key={index} value={slots[index]} aria-label={`Club ${index + 1}`} onChange={event => setSlot(index, event.target.value)}>
         <option value="">{index % 2 === 0 ? 'Local…' : 'Visita…'}</option>
-        {clubs.map(team => <option key={team.id} value={team.id} disabled={chosen.includes(team.id) && slots[index] !== team.id}>{team.name}</option>)}
+        {clubs.map(team => <option key={team.id} value={team.id} disabled={chosen.includes(team.id) && slots[index] !== team.id}>{team.name}{paidLeft[team.id] === 0 ? ' (sin plata)' : ''}</option>)}
       </select>)}
     </div>)}</div>
     <p className="club-life-hint">Premios por puesto: {prizeList.slice(0, 4).map((amount, index) => `${PLACE[index].toLowerCase()} ${gp(amount)}`).join(' · ')}{size === 8 ? ` · eliminados en cuartos ${gp(prizeList[4])}` : ''}. Además, cada partido reparte la taquilla mitad y mitad.</p>
     {!isAdmin && myTeamId && !chosen.includes(myTeamId) && <p className="club-life-hint">Tu club tiene que estar en el cuadro.</p>}
     <div className="club-nickname-actions">
       <Button type="button" size="sm" variant="ghost" onClick={onCancel} disabled={create.loading}>Cancelar</Button>
-      {!confirming && <Button type="button" size="sm" disabled={!ready || create.loading} onClick={() => setConfirming(true)}>Crear torneo</Button>}
+      {!confirming && <Button type="button" size="sm" disabled={!ready || create.loading} onClick={() => setConfirming(true)}>Crear gira</Button>}
     </div>
-    {confirming && <ConfirmStep message="¿Crear el torneo con estos cruces? Los partidos quedan listos para jugarse." confirmLabel="SÍ, CREAR" busy={create.loading}
+    {confirming && <ConfirmStep message="¿Crear la gira con estos cruces? Los partidos quedan listos para jugarse." confirmLabel="SÍ, CREAR" busy={create.loading}
       onConfirm={() => create.execute({ name: name.trim() || undefined, slots: chosen, teamId: myTeamId })} onCancel={() => setConfirming(false)}/>}
     {create.error && <Notice tone="error">{create.error.message}</Notice>}
   </div>;

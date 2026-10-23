@@ -102,12 +102,12 @@ function PlayoffsSection({ tournamentId, resolveTeam }) {
   return <section className="workspace-panel playoff-workspace"><h3>PLAYOFFS <small>TOP 4 · SEMIFINALES {data.semifinalLegs === 1 ? 'A PARTIDO ÚNICO' : 'IDA Y VUELTA'} · FINAL {data.finalLegs === 1 ? 'A PARTIDO ÚNICO' : 'IDA Y VUELTA'}</small></h3><div className="playoff-bracket"><div className="playoff-semi-rounds">{semis.map(series => <section className="playoff-round" key={series.id}><h4>SEMIFINAL {series.slot}</h4><PlayoffSeriesCard series={series} resolveTeam={resolveTeam}/></section>)}</div><div className="playoff-connector" aria-hidden="true"/><section className="playoff-round playoff-final-round"><h4>FINAL</h4>{final ? <PlayoffSeriesCard series={final} resolveTeam={resolveTeam} showWinner={false}/> : <p className="playoff-awaiting">ESPERANDO FINALISTAS</p>}</section></div>{champion && <div className="playoff-champion" role="status"><span aria-hidden="true">🏆</span><strong>CAMPEÓN: {champion.name}</strong></div>}</section>;
 }
 
-/** Un torneo de pretemporada se ve como su cuadro (no tiene tabla ni goleadores propios). */
+/** Una gira se ve como su cuadro (no tiene tabla ni goleadores propios). */
 function PreseasonWorkspace({ tournamentId, teams, onChanged }) {
   const bracket = useApiQuery(signal => endpoints.preseasonBracket(tournamentId, signal), [tournamentId]);
   const names = Object.fromEntries(teams.map(team => [team.id, team.name]));
   if (!bracket.data) return <DataState query={bracket}/>;
-  return <section className="workspace-panel"><h3>CUADRO DE PRETEMPORADA <small>{bracket.data.size} CLUBES · PARTIDO ÚNICO · FINAL Y 3.ER LUGAR</small></h3>
+  return <section className="workspace-panel"><h3>CUADRO DE LA GIRA <small>{bracket.data.size} CLUBES · PARTIDO ÚNICO · FINAL Y 3.ER LUGAR</small></h3>
     <PreseasonBracket bracket={{ ...bracket.data, teamNames: names }} onChanged={() => { bracket.retry(); onChanged?.(); }}/></section>;
 }
 
