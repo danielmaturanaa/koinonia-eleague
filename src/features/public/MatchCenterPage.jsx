@@ -6,6 +6,7 @@ import { Scoreboard } from '../../components/Scoreboard.jsx';
 import { SanctionBadge } from '../../components/SanctionBadge.jsx';
 import { SimulationBanner, SimulationPreview, SimulationReplay, replayEndsAt } from './MatchSimulation.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
+import { Modal } from '../../ui/Modal.jsx';
 import { matchRoundLabel } from '../../utils/matchPresentation.js';
 import { SanctionPanel } from '../admin/MatchAdminPanel.jsx';
 import { DataState, formatDate } from './DataStates.jsx';
@@ -39,6 +40,40 @@ function Incidents({ match }) {
     {empty ? <p className="empty-copy">{match.status === 'pending' ? 'El partido aún no comienza.' : 'Sin goles ni tarjetas registradas.'}</p>
       : <div className="match-incidents"><div><h3>{match.homeTeam?.name}</h3>{side(match.homeTeam?.id)}</div><div><h3>{match.awayTeam?.name}</h3>{side(match.awayTeam?.id)}</div></div>}
   </section>;
+}
+
+// Jugadores que cumplen suspensión en este partido (no pueden jugarlo). Se activan al iniciar el partido.
+function SuspendedPanel({ match }) {
+  const suspended = Array.isArray(match.suspended) ? match.suspended : [];
+  if (!suspended.length || match.status === 'pending') return null;
+  const side = teamId => {
+    const rows = suspended.filter(item => item.teamId === teamId);
+    return rows.length ? <ul>{rows.map(item => <li key={item.id} className="incident-red"><span aria-hidden="true">🟥</span><EntityLink to="player" id={item.playerId}>{item.playerName}</EntityLink></li>)}</ul> : <p className="empty-copy">Sin suspendidos.</p>;
+  };
+  return <section className="match-card-panel match-incidents-panel match-suspended-panel"><h2>NO JUEGAN <small>Cumplen suspensión en este partido</small></h2>
+    <div className="match-incidents"><div><h3>{match.homeTeam?.name}</h3>{side(match.homeTeam?.id)}</div><div><h3>{match.awayTeam?.name}</h3>{side(match.awayTeam?.id)}</div></div>
+  </section>;
+}
+
+// Al iniciar el partido (o al entrar a uno en vivo) avisa quiénes no juegan por suspensión; una vez por partido y pestaña.
+function SuspendedModal({ match }) {
+  const key = `koinonia:suspended-seen:${match.id}`;
+  const suspended = Array.isArray(match.suspended) ? match.suspended : [];
+  const [open, setOpen] = useState(() => {
+    try { return !window.sessionStorage.getItem(key); } catch { return true; }
+  });
+  if (!open || match.status !== 'live' || !suspended.length) return null;
+  const close = () => {
+    setOpen(false);
+    try { window.sessionStorage.setItem(key, '1'); } catch { /* sin almacenamiento: reaparece al recargar */ }
+  };
+  const side = team => {
+    const rows = suspended.filter(item => item.teamId === team?.id);
+    return <div><h3>{team?.name}</h3>{rows.length ? <ul>{rows.map(item => <li key={item.id}><span aria-hidden="true">🟥</span><EntityLink to="player" id={item.playerId}>{item.playerName}</EntityLink></li>)}</ul> : <p className="empty-copy">Sin suspendidos.</p>}</div>;
+  };
+  return <Modal title="SUSPENDIDOS: NO JUEGAN HOY" onClose={close}>
+    <div className="match-incidents match-suspended-modal">{side(match.homeTeam)}{side(match.awayTeam)}</div>
+  </Modal>;
 }
 
 const byOrder = (left, right) => (left.squadOrder ?? 999) - (right.squadOrder ?? 999);
@@ -167,6 +202,8 @@ export function MatchCenterPage({ matchId, teams = [], navigate }) {
       return <div className="match-center-top"><div className="match-center-main">{score}{incidents}</div>{h2h}</div>;
     })()}
     {match && <>
+      {!replaying && !loadingSimulation && <SuspendedModal key={match.id} match={match}/>}
+      {!replaying && !loadingSimulation && <SuspendedPanel match={match}/>}
       {!replaying && !loadingSimulation && <MatchdayPanel match={match} revision={revision}/>}
       <section className="match-card-panel"><h2>ALINEACIONES <small>Titulares actuales de cada club</small></h2><div className="match-lineups"><Lineup team={resolveTeam(match.homeTeam)}/><Lineup team={resolveTeam(match.awayTeam)}/></div></section>
       {canOperateMatches && <details className="match-corrections"><summary>SANCIONES Y CORRECCIONES</summary><div><SanctionPanel key={`${match.id}-${revision}`} match={match} onChanged={bump}/></div></details>}
