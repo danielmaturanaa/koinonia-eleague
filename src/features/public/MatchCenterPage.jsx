@@ -6,6 +6,7 @@ import { Scoreboard } from '../../components/Scoreboard.jsx';
 import { SanctionBadge } from '../../components/SanctionBadge.jsx';
 import { SimulationBanner, SimulationPreview, SimulationReplay, replayEndsAt } from './MatchSimulation.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
+import { useMediaQuery } from '../../app/useMediaQuery.js';
 import { Modal } from '../../ui/Modal.jsx';
 import { matchRoundLabel } from '../../utils/matchPresentation.js';
 import { SanctionPanel } from '../admin/MatchAdminPanel.jsx';
@@ -144,7 +145,9 @@ export function MatchCenterPage({ matchId, teams = [], navigate }) {
   const loadingSimulation = Boolean(match?.simulated && !simulationQuery.data && simulationQuery.loading);
   // Efectos en 8 bits: la hinchada que salta y el sonido de lo que pasa mientras miras (en vivo o en la transmisión simulada).
   const [view, setView] = useMatchView();
-  const stadium = view === 'estadio';
+  // En el celular siempre va la vista clásica (sin selector); la elección guardada vale para pantallas grandes.
+  const phone = useMediaQuery('(max-width: 900px)');
+  const stadium = !phone && view === 'estadio';
   const [fx, fire] = useMatchFx({ derby: Boolean(match?.derby), stadium });
   useLiveMatchFx(replaying ? null : match, resolveTeam, fire);
   // En modo estadio suena la hinchada de fondo mientras el partido está en vivo o en la transmisión: alentando, salvo que el
@@ -168,7 +171,7 @@ export function MatchCenterPage({ matchId, teams = [], navigate }) {
     return () => window.clearInterval(interval);
   }, [match?.status, detail.retry]);
   return <main className="newspaper data-page"><section className="data-paper match-center">
-    <div className="match-center-bar"><button className="back-button" onClick={() => navigate('/partidos')}>← PARTIDOS</button>{match && <span>{match.tournament?.name ?? 'TORNEO'} · {matchRoundLabel(match)}</span>}<MatchViewToggle view={view} onChange={setView}/><button className="match-center-fullscreen" onClick={() => navigate(`/marcador/${encodeURIComponent(matchId)}`)}>⛶ PANTALLA COMPLETA</button></div>
+    <div className="match-center-bar"><button className="back-button" onClick={() => navigate('/partidos')}>← PARTIDOS</button>{match && <span>{match.tournament?.name ?? 'TORNEO'} · {matchRoundLabel(match)}</span>}{!phone && <MatchViewToggle view={view} onChange={setView}/>}<button className="match-center-fullscreen" onClick={() => navigate(`/marcador/${encodeURIComponent(matchId)}`)}>⛶ PANTALLA COMPLETA</button></div>
     {!match && <DataState query={detail}/>}
     {match && (() => {
       const score = loadingSimulation
