@@ -27,6 +27,7 @@ import { DirectivaTab } from './DirectivaTab.jsx';
 import { RivalryTab } from './RivalryTab.jsx';
 import { ClubNicknames, nicknameTitle } from './ClubNicknames.jsx';
 import { ClubKit } from './ClubKit.jsx';
+import { ClubInvestments } from './ClubInvestments.jsx';
 import { HeadToHeadTable } from './HeadToHeadTable.jsx';
 import { LedgerTab } from './LedgerTab.jsx';
 import { PayrollTab } from './PayrollTab.jsx';
@@ -961,6 +962,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
     </div>}
     {activeTab === 'negocios' && <div className="stadium-page">
       <section id="ver-camiseta"><ClubKit team={team} onChanged={onChanged}/></section>
+      <section id="ver-inversiones"><ClubInvestments team={team} onChanged={onChanged}/></section>
       <section id="ver-tv"><TvRightsTab team={team} onChanged={onChanged}/></section>
       <section id="ver-eventos"><EventsTab team={team} onChanged={onChanged}/></section>
     </div>}

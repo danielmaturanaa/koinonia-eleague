@@ -19,7 +19,8 @@ const detailText = award => {
     case 'guante_oro': return `${plural(detail.conceded ?? 0, 'gol', 'goles')} en contra`;
     case 'golden_boy': return `${detail.age} años · ${plural(detail.goals ?? 0, 'gol', 'goles')}`;
     case 'dt_torneo': return detail.margin > 0 ? `superó su meta por ${plural(detail.margin, 'puesto', 'puestos')}` : 'cumplió su meta';
-    default: return detail.votes !== undefined ? plural(detail.votes, 'voto', 'votos') : '';
+    case 'balon_oro': return `${pct(detail.total)} de los puntos`;
+    default: return detail.votes !== undefined ? `${Number(detail.votes).toLocaleString('es-CL')} votos en X` : '';
   }
 };
 const closesIn = value => {
@@ -50,7 +51,7 @@ export function AwardsPanel({ tournament, resolveTeam }) {
       </Card>)}</div>
       : <EmptyState icon="trophy" title="TODAVÍA NO HAY PREMIOS">{tournament.status === 'completed' ? 'Este torneo terminó antes de que existieran los premios individuales.' : 'Se entregan al terminar el torneo.'}</EmptyState>}
     {data.voting?.status === 'closed' && <BallonResults voting={data.voting}/>}
-    <HowItWorks><p>Al terminar el torneo se entregan solos la <b>Bota de Oro</b> (el goleador), el <b>Guante de Oro</b> (el arquero de la valla menos batida en la liga), el <b>Golden Boy</b> (el mejor de 21 años o menos) y el <b>DT del torneo</b> (el que más superó lo que le pedía su directiva).</p><p>El <b>Balón de Oro</b> lo votan los presis durante 3 días, sin poder votar por los suyos. El ganador es la portada del <b>EA FC</b>, y la del <b>eFootball</b> va al más votado de otro club. Los premios no cambian el precio de nadie: suben el ánimo del jugador y quedan en su ficha.</p></HowItWorks>
+    <HowItWorks><p>Al terminar el torneo se entregan solos la <b>Bota de Oro</b> (el goleador), el <b>Guante de Oro</b> (el arquero de la valla menos batida en la liga), el <b>Golden Boy</b> (el mejor de 21 años o menos) y el <b>DT del torneo</b> (el que más superó lo que le pedía su directiva).</p><p>El <b>Balón de Oro</b> lo votan 20 periodistas de la liga, todos los jugadores de los planteles (no se votan a sí mismos) y los presis, que pesan poco: es simbólico y pueden votar por los suyos. Las <b>portadas del EA FC y del eFootball</b> las vota la gente en X; cada comunidad tiene sus gustos y las dos portadas nunca quedan en el mismo club. Los premios no cambian el precio de nadie: suben el ánimo del jugador y quedan en su ficha.</p></HowItWorks>
   </section>;
 }
 
@@ -60,29 +61,45 @@ function BallonVote({ tournament, voting, onVoted }) {
   const vote = useApiMutation((body, signal) => endpoints.voteBallon(tournament.id, body, signal), { onSuccess: onVoted });
   const close = useApiMutation(signal => endpoints.closeBallon(tournament.id, signal), { onSuccess: onVoted });
   const teamId = voting.voterTeamId;
+  const weight = Math.round((voting.weights?.presidents ?? 0) * 100);
   return <Card tone="navy" className="ballon-vote" title="VOTA EL BALÓN DE ORO" aside={<Chip icon="clock">CIERRA EN {closesIn(voting.closesAt)}</Chip>}>
-    <p className="ballon-vote-count">VOTARON {voting.voted} DE {voting.voters} CLUBES. Mientras está abierta no se ve quién va ganando.</p>
+    <p className="ballon-vote-count">VOTAN {Math.round((voting.weights?.journalists ?? 0) * 100)}% LOS PERIODISTAS, {Math.round((voting.weights?.players ?? 0) * 100)}% LOS JUGADORES DE LA LIGA Y {weight}% LOS PRESIS (ES SIMBÓLICO). VOTARON {voting.voted} DE {voting.voters} PRESIS.</p>
     <ul className="ballon-shortlist">{voting.shortlist.map(candidate => {
-      const own = candidate.teamId === teamId;
       const chosen = myVote?.playerId === candidate.playerId;
-      return <li key={candidate.playerId} className={`${chosen ? 'is-chosen' : ''} ${own ? 'is-own' : ''}`}>
+      return <li key={candidate.playerId} className={chosen ? 'is-chosen' : ''}>
         <div><EntityLink to="player" id={candidate.playerId}><b>{upper(candidate.name)}</b></EntityLink><small>{upper(candidate.teamName)} · {upper(candidate.reasons.join(' · '))}</small></div>
-        {teamId && (own
-          ? <small className="ballon-own">TU CLUB</small>
-          : <Button size="sm" variant={chosen ? 'primary' : 'ghost'} disabled={vote.loading || chosen} onClick={() => vote.execute({ teamId, playerId: candidate.playerId })}>{chosen ? 'TU VOTO' : 'VOTAR'}</Button>)}
+        {teamId && <Button size="sm" variant={chosen ? 'primary' : 'ghost'} disabled={vote.loading || chosen} onClick={() => vote.execute({ teamId, playerId: candidate.playerId })}>{chosen ? 'TU VOTO' : 'VOTAR'}</Button>}
       </li>;
     })}</ul>
-    {!teamId && <p className="club-life-hint">Votan los presis de los clubes que jugaron el torneo.</p>}
+    {!teamId && <p className="club-life-hint">Votan los presis de los clubes que jugaron el torneo. Puedes votar por uno de los tuyos.</p>}
     {vote.error && <Notice tone="error">{vote.error.message}</Notice>}
     {isAdmin && <Button size="sm" variant="ghost" icon="gavel" disabled={close.loading} onClick={() => close.execute()}>CERRAR LA VOTACIÓN AHORA</Button>}
     {close.error && <Notice tone="error">{close.error.message}</Notice>}
   </Card>;
 }
 
+const pct = value => `${String(value ?? 0).replace('.', ',')}%`;
+
 function BallonResults({ voting }) {
-  const ranked = voting.shortlist.filter(candidate => candidate.votes).sort((a, b) => b.votes - a.votes);
-  if (!ranked.length) return null;
-  return <Card title="VOTACIÓN DEL BALÓN DE ORO" className="ballon-results">
-    <ol>{ranked.map(candidate => <li key={candidate.playerId}><span>{upper(candidate.name)} <small>{upper(candidate.teamName)}</small></span><b>{plural(candidate.votes, 'VOTO', 'VOTOS')}</b></li>)}</ol>
-  </Card>;
+  const ballon = voting.results?.ballon;
+  const covers = voting.results?.covers;
+  if (!ballon) return null;
+  return <>
+    <Card title="ASÍ SE VOTÓ EL BALÓN DE ORO" className="ballon-results">
+      <div className="ballon-table-scroll"><table className="ballon-table">
+        <thead><tr><th>Jugador</th><th title={`${ballon.voters.journalists} periodistas`}>Periodistas</th><th title={`${ballon.voters.players} jugadores`}>Jugadores</th><th>Presis</th><th>Total</th></tr></thead>
+        <tbody>{ballon.rows.filter(row => row.total > 0).map((row, index) => <tr key={row.playerId} className={index === 0 ? 'is-winner' : ''}>
+          <td><EntityLink to="player" id={row.playerId}>{upper(row.name)}</EntityLink><small>{upper(row.teamName)}</small></td>
+          <td>{pct(row.journalists)}</td><td>{pct(row.players)}</td><td>{pct(row.presidents)}</td><td><b>{pct(row.total)}</b></td>
+        </tr>)}</tbody>
+      </table></div>
+      {ballon.sample?.length > 0 && <div className="ballon-ballots"><small>ALGUNAS PAPELETAS DE LA PRENSA</small>
+        <ul>{ballon.sample.map(item => <li key={item.name}><b>{item.name}</b> <i>({item.outlet})</i>: {item.picks.join(', ')}</li>)}</ul></div>}
+    </Card>
+    {covers && <div className="awards-covers">{[['portada_eafc', 'PORTADA DEL EA FC'], ['portada_efootball', 'PORTADA DEL EFOOTBALL']].map(([key, title]) => <Card key={key} title={`${title} · VOTACIÓN EN X`} className="cover-poll">
+      <ol>{(covers[key] ?? []).slice(0, 5).map(row => <li key={row.playerId}><span>{upper(row.name)} <small>{upper(row.teamName)}</small></span><b>{people(row.votes)}</b></li>)}</ol>
+    </Card>)}</div>}
+  </>;
 }
+
+const people = value => Number(value ?? 0).toLocaleString('es-CL');

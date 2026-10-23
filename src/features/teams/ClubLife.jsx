@@ -140,14 +140,16 @@ function ClubCountry({ team, fans, onChanged }) {
   const { canEditTeam } = useAuth();
   const countries = useApiQuery(signal => (canEditTeam(team.id) ? endpoints.clubCountries(signal) : Promise.resolve({ data: null })), [team.id]);
   const [pending, setPending] = useState(null);
+  const preview = useApiQuery(signal => (pending && pending !== fans.country ? endpoints.countryPreview(team.id, pending, signal) : Promise.resolve({ data: null })), [team.id, pending]);
   const change = useApiMutation((country, signal) => endpoints.setOwnClubCountry(team.id, country, signal), { onSuccess: () => { setPending(null); onChanged?.(); } });
+  const delta = preview.data?.delta ?? null;
   if (!canEditTeam(team.id) || !countries.data) return null;
   return <Card title="PAÍS DEL CLUB" className="club-country">
-    <p className="club-life-hint">De acá salen tus hinchas, además de los de Chile. Si lo cambias, la hinchada se recalcula y lo que ganaste jugando se mantiene en proporción.</p>
+    <p className="club-life-hint">De acá salen tus hinchas, además de los de Chile. Si lo cambias, ganas o pierdes hinchas según la población del país (lo que ganaste jugando se mantiene en proporción).</p>
     <select className="fan-country-select" aria-label="País del club" value={pending ?? fans.country} disabled={change.loading} onChange={event => setPending(event.target.value)}>
       {countries.data.map(country => <option key={country.code} value={country.code}>{country.name}</option>)}
     </select>
-    {pending && pending !== fans.country && <ConfirmStep message={`¿Cambiar el país del club a ${countries.data.find(country => country.code === pending)?.name}? Tu hinchada se recalcula.`} confirmLabel="SÍ, CAMBIAR" busy={change.loading}
+    {pending && pending !== fans.country && delta !== null && <ConfirmStep message={`¿Cambiar el país del club a ${countries.data.find(country => country.code === pending)?.name}? Quedarías con ${compact(preview.data.followers)} hinchas (${delta >= 0 ? 'ganas' : 'pierdes'} ${compact(Math.abs(delta))}): un país más poblado da más hinchas.`} confirmLabel="SÍ, CAMBIAR" busy={change.loading}
       onConfirm={() => change.execute(pending)} onCancel={() => setPending(null)}/>}
     {change.error && <Notice tone="error">{change.error.message}</Notice>}
   </Card>;

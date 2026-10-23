@@ -507,3 +507,33 @@
   .club-kit-row { grid-template-columns: minmax(0, 1fr); }
   .ballon-shortlist li { flex-wrap: wrap; }
 }
+
+/* Inversiones del club */
+.investment-grid { display: grid; gap: var(--sp-3); grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); margin-bottom: var(--sp-3); }
+.investment { display: grid; gap: var(--sp-2); align-content: start; padding: var(--sp-3); background: var(--c-white); border: var(--border); box-shadow: var(--shadow-pixel); }
+.investment > header { display: flex; align-items: center; gap: var(--sp-2); color: var(--c-navy-900); }
+.investment > header b { font: 400 var(--fs-lg)/1 var(--font-display); letter-spacing: .4px; }
+.investment p { margin: 0; font: 600 var(--fs-sm)/1.35 var(--font-ui); color: var(--c-ink-muted); }
+.investment .investment-gain { font: 500 var(--fs-md)/1.35 var(--font-body); color: var(--c-green); }
+.investment .ui-btn { justify-self: start; }
+.tour-options { display: grid; gap: var(--sp-2); margin: 0; padding: 0; list-style: none; }
+.tour-options li { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); padding: 6px 8px; background: var(--c-cream); border-left: 4px solid var(--c-ice); }
+.tour-options li > div { display: grid; gap: 2px; min-width: 0; }
+.tour-options b { font: 600 var(--fs-sm)/1.15 var(--font-ui); color: var(--c-navy-900); }
+.tour-options small { font: 600 var(--fs-xs)/1.3 var(--font-ui); color: var(--c-ink-muted); }
+@media (max-width: 560px) { .tour-options li { flex-wrap: wrap; } }
+.ballon-table-scroll { overflow-x: auto; }
+.ballon-table { width: 100%; border-collapse: collapse; font: 600 var(--fs-sm)/1.2 var(--font-ui); }
+.ballon-table th { padding: 6px 8px; text-align: right; font-size: var(--fs-xs); letter-spacing: .5px; color: var(--c-ink-muted); border-bottom: 2px solid var(--c-navy-800); }
+.ballon-table th:first-child, .ballon-table td:first-child { text-align: left; }
+.ballon-table td { padding: 6px 8px; text-align: right; border-bottom: 1px solid var(--c-paper-line); color: var(--c-navy-900); }
+.ballon-table td small { display: block; font-size: var(--fs-xs); color: var(--c-ink-muted); }
+.ballon-table tr.is-winner td { background: var(--c-gold-bg); }
+.ballon-ballots { display: grid; gap: 4px; margin-top: var(--sp-3); }
+.ballon-ballots small { font: 600 var(--fs-xs)/1 var(--font-ui); letter-spacing: .5px; color: var(--c-ink-muted); }
+.ballon-ballots ul { margin: 0; padding-left: 18px; font: 500 var(--fs-sm)/1.4 var(--font-body); }
+.awards-covers { display: grid; gap: var(--sp-3); grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.cover-poll ol { display: grid; gap: 4px; margin: 0; padding-left: 22px; }
+.cover-poll li { display: flex; justify-content: space-between; gap: var(--sp-2); font: 600 var(--fs-sm)/1.2 var(--font-ui); color: var(--c-navy-900); }
+.cover-poll li small { color: var(--c-ink-muted); }
+.cover-poll li b { color: var(--c-green); }
