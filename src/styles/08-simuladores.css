@@ -206,13 +206,17 @@
 @media (min-width: 1181px) {
   /* El alto de la historia lo manda la foto 4:3; el texto se adapta (contain: size). */
   .news-story-copy { contain: size; overflow: hidden; }
-  /* Si el titular es largo, se acorta antes de empujar el botón fuera de la tarjeta. */
-  .news-story-copy h2 { display: -webkit-box; flex: 0 1 auto; min-height: 0; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 6; }
-  .news-story-copy h2.news-headline-medium { font-size: clamp(24px, 2.2vw, 36px); }
-  .news-story-copy h2.news-headline-compact { font-size: clamp(22px, 1.9vw, 30px); }
-  .news-story-copy h2.news-headline-xs { font-size: clamp(20px, 1.6vw, 26px); }
+  /* El titular nunca se corta a media línea: baja de tamaño según su largo y, si no hay alto, se oculta el resumen. */
+  .news-story-copy { container-type: size; }
+  .news-story-copy h2 { display: -webkit-box; flex: 0 0 auto; overflow: hidden; -webkit-box-orient: vertical; -webkit-line-clamp: 4; }
+  .news-story-copy h2.news-headline-medium { font-size: clamp(22px, 1.9vw, 32px); }
+  .news-story-copy h2.news-headline-compact { font-size: clamp(20px, 1.6vw, 26px); }
+  .news-story-copy h2.news-headline-xs { font-size: clamp(18px, 1.4vw, 22px); }
   .news-story-copy > h3, .news-story-copy > p:first-child, .news-story-read, .news-story-count { flex-shrink: 0; }
-  .news-story-excerpt { flex: 0 1 auto; min-height: 0; }
+  .news-story-excerpt { flex: 0 0 auto; }
+}
+@container (max-height: 500px) {
+  .news-story-excerpt { display: none; }
 }
 @media (max-width: 1180px) {
   .news-story { grid-template-columns: 1fr; }
