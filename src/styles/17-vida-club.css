@@ -558,3 +558,12 @@
 .cover-poll li { display: flex; justify-content: space-between; gap: var(--sp-2); font: 600 var(--fs-sm)/1.2 var(--font-ui); color: var(--c-navy-900); }
 .cover-poll li small { color: var(--c-ink-muted); }
 .cover-poll li b { color: var(--c-green); }
+
+/* Nombre propio del estadio */
+.venue-base-name { display: block; margin-top: -4px; opacity: .8; font: 500 12px/1.2 'Oswald', sans-serif; letter-spacing: .4px; }
+.venue-rename { align-self: flex-start; padding: 3px 8px; border: 1px solid #ffffff88; background: transparent; color: inherit; font: 600 12px/1.2 'Oswald', sans-serif; letter-spacing: .4px; cursor: pointer; }
+.venue-rename:hover { background: #ffffff1f; }
+.venue-rename-form { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+.venue-rename-form input { min-width: 0; flex: 1 1 200px; padding: 6px 8px; border: 2px solid #ffd42a; font: 500 14px/1.2 'Oswald', sans-serif; }
+.venue-rename-form .form-feedback { flex-basis: 100%; }
+.stadium-base-name { display: block; color: #6b6553; font: 500 11px/1.2 'Oswald', sans-serif; letter-spacing: .3px; }

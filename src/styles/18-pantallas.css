@@ -170,6 +170,9 @@ a.tile:focus-visible, button.tile:focus-visible { outline: 3px solid var(--c-yel
 @media (max-width: 560px) { .profile-actions .ui-btn { flex: 1 1 100%; } .screen-face { width: 72px; height: 72px; } }
 .derby-badge { display: inline-flex; flex: none; align-items: center; gap: 3px; padding: 2px 5px; color: #fff; background: var(--c-red); font: 700 10px/1 var(--font-ui); letter-spacing: .5px; text-transform: uppercase; }
 .derby-badge.official { color: var(--c-navy-900); background: var(--c-yellow); }
+.derby-badge.compact { justify-content: center; width: 20px; height: 20px; padding: 0; border-radius: 50%; animation: derby-flicker 1.6s ease-in-out infinite; }
+@keyframes derby-flicker { 0%, 100% { transform: scale(1); filter: none; } 50% { transform: scale(1.12); filter: drop-shadow(0 0 3px rgba(255, 120, 0, .8)); } }
+@media (prefers-reduced-motion: reduce) { .derby-badge.compact { animation: none; } }
 .fixture-card.fixture-derby { box-shadow: inset 0 0 0 2px var(--c-red); }
 /* El cuerpo de cada pantalla va sobre papel (como el resto del sitio), para que todo se lea igual. */
 .screen-body { padding: var(--sp-4); border: var(--border); background-color: var(--paper); background-image: url('/paper-grain.svg'); box-shadow: var(--shadow-pixel); }

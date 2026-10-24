@@ -82,6 +82,22 @@ function GateRow({ gate }) {
 }
 
 /** Estadio y taquilla: lo ve cualquiera; el presi además elige el precio de la entrada. La hinchada va en FansTab. */
+/** El presi le pone nombre propio a su estadio: ese manda en toda la liga y el del catálogo queda como referencia. */
+function StadiumNameEditor({ team, venue, onChanged }) {
+  const [editing, setEditing] = useState(false);
+  const custom = venue.baseName && venue.name !== venue.baseName ? venue.name : '';
+  const [value, setValue] = useState(custom);
+  const save = useApiMutation((name, signal) => endpoints.setStadiumName(team.id, name, signal), { onSuccess: () => { setEditing(false); onChanged?.(); } });
+  if (!editing) return <button type="button" className="venue-rename" onClick={() => { setValue(custom); setEditing(true); }}><span aria-hidden="true">✎</span> {custom ? 'CAMBIAR EL NOMBRE' : 'PONERLE NOMBRE PROPIO'}</button>;
+  return <form className="venue-rename-form" onSubmit={event => { event.preventDefault(); save.execute(value.trim() || null); }}>
+    <input value={value} maxLength={60} placeholder={venue.baseName} aria-label="Nombre del estadio" onChange={event => setValue(event.target.value)} autoFocus/>
+    <Button type="submit" size="sm" disabled={save.loading}>Guardar</Button>
+    {custom && <Button type="button" size="sm" variant="ghost" disabled={save.loading} onClick={() => save.execute(null)}>Volver al real</Button>}
+    <Button type="button" size="sm" variant="ghost" disabled={save.loading} onClick={() => setEditing(false)}>Cancelar</Button>
+    {save.error && <small className="form-feedback error">{save.error.message}</small>}
+  </form>;
+}
+
 export function VenueTab({ team, onTab: _onTab }) {
   const { canEditTeam } = useAuth();
   const canEdit = canEditTeam(team.id);
@@ -95,6 +111,8 @@ export function VenueTab({ team, onTab: _onTab }) {
       <div className="venue-hero-copy">
         <small>{fans.venue.owned ? `ESTADIO · CATEGORÍA ${fans.venue.category}` : 'CANCHA PROPIA'}</small>
         <h2>{upper(fans.venue.name)}</h2>
+        {fans.venue.owned && fans.venue.baseName && fans.venue.baseName !== fans.venue.name && <small className="venue-base-name">EN EL CATÁLOGO: {upper(fans.venue.baseName)}</small>}
+        {fans.venue.owned && canEdit && <StadiumNameEditor team={team} venue={fans.venue} onChanged={query.retry}/>}
         <p>{people(fans.venue.capacity)} ESPECTADORES</p>
         <a className="ui-btn ui-btn--primary ui-btn--sm" href="#/equipos/estadios"><Icon name="stadium" size={14}/>{canEdit ? (fans.venue.owned ? 'CAMBIAR DE ESTADIO' : 'COMPRAR ESTADIO') : 'VER TODOS LOS ESTADIOS'}</a>
       </div>

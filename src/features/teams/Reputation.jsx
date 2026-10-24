@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { TeamMark } from '../../components/TeamMark.jsx';
 import { EntityLink } from '../../components/EntityLink.jsx';
@@ -41,9 +41,40 @@ export function ReputationSummary({ reputation, clubCount }) {
   </div>;
 }
 
-/** Explicación de la fórmula y el ranking de todos los presis. */
+const PART_SHORT = { stay: 'Duración', homegrown: 'Formados', cleanStreak: 'Racha', releases: 'Liberaciones', promises: 'Promesas', contractBreaks: 'Rescisiones' };
+const EVENT_ICON = { promise_kept: '🤝', promise_broken: '💔', release: '🚪', contract_break: '✂️', bankruptcy: '🟥' };
+const eventDate = value => { const date = value ? new Date(value) : null; return date && !Number.isNaN(date.getTime()) ? date.toLocaleDateString('es-CL', { day: 'numeric', month: 'short' }) : ''; };
+
+/** Cada cosa que movió la reputación de un club: lo que cuenta hoy y, aparte, la historia de antes del corte. */
+function ReputationDetail({ row }) {
+  const detail = useApiQuery(signal => endpoints.reputationDetail(row.team.id, signal), [row.team.id]);
+  const [view, setView] = useState('current');
+  const data = detail.data;
+  const parts = [...PARTS.map(([key]) => key), ...(row.parts.contractBreaks ? ['contractBreaks'] : [])];
+  const events = data ? (view === 'current' ? data.current : data.history) : [];
+  return <div className="reputation-detail">
+    <div className="reputation-breakdown">{parts.map(key => <div key={key} className={row.parts[key] < 0 ? 'negative' : row.parts[key] > 0 ? 'positive' : ''}>
+      <small>{PART_SHORT[key]}</small><b>{signed(row.parts[key])}</b>{PARTS.some(([part]) => part === key) && <em>{partNote(key, row.stats)}</em>}
+    </div>)}<div className="reputation-breakdown-total"><small>Base 50 +</small><b>= {row.score}</b></div></div>
+    <div className="reputation-views" role="tablist" aria-label="Qué mirar">
+      <button type="button" role="tab" aria-selected={view === 'current'} className={view === 'current' ? 'on' : ''} onClick={() => setView('current')}>CUENTA HOY{data ? ` (${data.current.length})` : ''}</button>
+      <button type="button" role="tab" aria-selected={view === 'history'} className={view === 'history' ? 'on' : ''} onClick={() => setView('history')}>HISTORIA{data ? ` (${data.history.length})` : ''}</button>
+    </div>
+    {view === 'history' && <p className="reputation-intro">Lo que pasó antes del corte{sinceLabel(data?.since) ? ` del ${sinceLabel(data.since)}` : ''}: los agentes libres lo recuerdan, pero ya no resta ni suma.</p>}
+    {!data ? <p className="reputation-intro">{detail.error ? 'No se pudo cargar el detalle.' : 'CARGANDO…'}</p>
+      : events.length ? <ul className="reputation-events">{events.map((event, index) => <li key={`${event.kind}-${event.at}-${index}`} className={`event-${event.kind}`}>
+        <span className="reputation-event-icon" aria-hidden="true">{EVENT_ICON[event.kind] ?? '•'}</span>
+        <span className="reputation-event-text">{event.text}<small>{eventDate(event.at)}</small></span>
+        {view === 'current' && <b className={event.points < 0 ? 'negative' : event.points > 0 ? 'positive' : ''}>{event.points ? signed(event.points) : 'no cuenta'}</b>}
+      </li>)}</ul>
+      : <p className="reputation-intro">{view === 'current' ? 'Nada todavía: solo la duración de sus jugadores y su racha.' : 'Sin historia anterior al corte.'}</p>}
+  </div>;
+}
+
+/** Explicación de la fórmula y el ranking de todos los presis; al tocar un club se ve el detalle de su puntaje. */
 export function ReputationModal({ teamId, onClose }) {
   const ranking = useApiQuery(signal => endpoints.reputation(signal), []);
+  const [open, setOpen] = useState(teamId ?? null);
   useEffect(() => {
     const closeWithEscape = event => { if (event.key === 'Escape') onClose(); };
     window.addEventListener('keydown', closeWithEscape);
@@ -54,24 +85,36 @@ export function ReputationModal({ teamId, onClose }) {
   return <div className="person-modal-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
     <section className="person-modal reputation-modal" role="dialog" aria-modal="true" aria-label="Reputación de los presidentes">
       <header><h2>Reputación de los presidentes</h2><button type="button" onClick={onClose} aria-label="Cerrar">×</button></header>
-      <p className="reputation-intro">Es lo que piensan los agentes libres de cada presi cuando eligen club en una subasta. Pesa poco al lado de la oferta y el proyecto deportivo, pero puede desempatar. Todo se cuenta en <b>torneos</b>, no en días.{sinceLabel(rows[0]?.since) && <> El puntaje partió de cero el <b>{sinceLabel(rows[0].since)}</b> con el nuevo sistema de contratos, pero lo que pasó antes no se borra: aparece como <b>historia</b> bajo cada club.</>}</p>
-      <ul className="reputation-rules">
-        <li><b>Base 50</b>, y el resultado queda entre 5 y 95.</li>
-        <li><b>Duración:</b> +{rules?.perStayTournament ?? 6} por cada torneo que duran en promedio sus jugadores en el club (contando también a los que ya se fueron), hasta {rules?.stayCap ?? 6} torneos.</li>
-        <li><b>Formados en casa:</b> +{rules?.perHomegrown ?? 1} por cada jugador que llegó sin venir de otro club (agente libre, subasta o plantel inicial) y lleva {rules?.homegrownMinTournaments ?? 3} o más torneos, hasta +{rules?.homegrownCap ?? 10}.</li>
+      <p className="reputation-intro">Es lo que piensan los agentes libres de cada presi cuando eligen club en una subasta. Pesa poco al lado de la oferta y el proyecto, pero puede desempatar. Toca un club para ver de dónde sale su puntaje: <b>lo que cuenta hoy</b> y, aparte, <b>la historia</b> de antes{sinceLabel(rows[0]?.since) ? ` del ${sinceLabel(rows[0].since)}` : ''}.</p>
+      <details className="reputation-how"><summary>¿Cómo se calcula?</summary><ul className="reputation-rules">
+        <li><b>Base 50</b>, y el resultado queda entre {rules?.min ?? 5} y {rules?.max ?? 95}.</li>
+        <li><b>Duración:</b> +{rules?.perStayTournament ?? 6} por cada torneo que duran en promedio sus jugadores en el club (también los que ya se fueron), hasta {rules?.stayCap ?? 6} torneos.</li>
+        <li><b>Formados en casa:</b> +{rules?.perHomegrown ?? 1} por cada jugador que llegó sin venir de otro club y lleva {rules?.homegrownMinTournaments ?? 3} o más torneos, hasta +{rules?.homegrownCap ?? 10}.</li>
         <li><b>Racha sin liberar:</b> +{rules?.perCleanTournament ?? 2} por cada torneo desde su última liberación, hasta +{rules?.cleanCap ?? 10}.</li>
-        <li><b>Liberaciones:</b> −{rules?.perRelease ?? 4} cada una, pero pesan {Math.round((1 - (rules?.releaseDecay ?? 0.75)) * 100)}% menos por cada torneo que pasa: lo reciente pesa más y el presi se puede recuperar. Liberar a un jugador que duró {rules?.freeReleaseAfterStay ?? 4} torneos o más en el club no castiga. Soltar a alguien que llevaba {rules?.quickReleaseMaxTournaments ?? 1} torneo o menos (fichar y botar) pesa ×{(rules?.quickReleaseFactor ?? 1.5).toLocaleString('es-CL')}. Tope −{rules?.releaseCap ?? 40}. En la tabla, «recientes» son las de este torneo y el anterior.</li>
-        <li><b>Promesas de subasta:</b> +{rules?.perPromiseKept ?? 3} por cada una cumplida (hasta {rules?.promisesKeptCap ?? 5}) y −{rules?.perPromiseBroken ?? 15} por cada una rota.</li>
-      </ul>
-      {ranking.loading ? <p className="reputation-intro">CARGANDO RANKING…</p> : ranking.error ? <p className="reputation-intro">No se pudo cargar el ranking.</p> : <div className="reputation-table-wrap"><table className="reputation-table">
-        <thead><tr><th>#</th><th>CLUB · PRESI</th>{PARTS.map(([key, label]) => <th key={key} title={label}>{label.split(' ')[0].toUpperCase()}</th>)}<th>TOTAL</th></tr></thead>
-        <tbody>{rows.map(row => <tr key={row.team.id} className={row.team.id === teamId ? 'current-team' : ''}>
-          <td>{row.rank}</td>
-          <td><EntityLink to="team" id={row.team.id} className="table-team-link" onClick={onClose}><TeamMark team={row.team}/><span>{row.team.name}<small>{row.president ?? 'SIN PRESI'}</small>{historyNote(row.history) && <small className="reputation-history">HISTORIA: {historyNote(row.history).toUpperCase()}</small>}</span></EntityLink></td>
-          {PARTS.map(([key]) => <td key={key} className={row.parts[key] < 0 ? 'negative' : ''} title={partNote(key, row.stats)}>{signed(row.parts[key])}{key === 'releases' && <small className="reputation-count">{row.stats.releases} {row.stats.releases === 1 ? 'LIBERADO' : 'LIBERADOS'}{row.stats.countedReleases != null ? ` · ${row.stats.countedReleases} CUENTAN` : ''}{row.stats.recentReleases ? ` · ${row.stats.recentReleases} RECIENTES` : ''}</small>}</td>)}
-          <td><strong className={`reputation-score ${tone(row.score)}`}>{row.score}</strong></td>
-        </tr>)}</tbody>
-      </table></div>}
+        <li><b>Liberaciones:</b> −{rules?.perRelease ?? 4} cada una, y pesan {Math.round((1 - (rules?.releaseDecay ?? 0.75)) * 100)}% menos por cada torneo que pasa. Liberar a quien duró {rules?.freeReleaseAfterStay ?? 4} torneos o más no resta; soltar a quien llevaba {rules?.quickReleaseMaxTournaments ?? 1} torneo o menos pesa ×{(rules?.quickReleaseFactor ?? 1.5).toLocaleString('es-CL')}. Tope −{rules?.releaseCap ?? 40}.</li>
+        <li><b>Promesas:</b> +{rules?.perPromiseKept ?? 3} por cada una cumplida (hasta {rules?.promisesKeptCap ?? 5}) y −{rules?.perPromiseBroken ?? 15} por cada una rota. Arrancar un torneo en números rojos resta lo mismo que una rota.</li>
+        <li><b>Rescisiones:</b> −{rules?.perContractBreak ?? 12} cada una, y pesan menos con los torneos.</li>
+      </ul></details>
+      {ranking.loading ? <p className="reputation-intro">CARGANDO RANKING…</p> : ranking.error ? <p className="reputation-intro">No se pudo cargar el ranking.</p>
+        : <ol className="reputation-list">{rows.map(row => {
+          const expanded = open === row.team.id;
+          const broken = row.stats.promisesBroken + (row.stats.bankruptcies ?? 0);
+          return <li key={row.team.id} className={`${row.team.id === teamId ? 'current-team' : ''} ${expanded ? 'is-open' : ''}`}>
+            <button type="button" className="reputation-row" aria-expanded={expanded} onClick={() => setOpen(expanded ? null : row.team.id)}>
+              <span className="reputation-rank">{row.rank}</span>
+              <TeamMark team={row.team}/>
+              <span className="reputation-who"><b>{row.team.name}</b><small>{row.president ?? 'SIN PRESI'}</small></span>
+              <span className="reputation-tags">
+                {row.stats.promisesKept > 0 && <em className="good">🤝 {row.stats.promisesKept}</em>}
+                {broken > 0 && <em className="bad">💔 {broken}</em>}
+                {row.stats.countedReleases > 0 && <em className="bad">🚪 {row.stats.countedReleases}</em>}
+              </span>
+              <strong className={`reputation-score ${tone(row.score)}`}>{row.score}</strong>
+              <span className="reputation-caret" aria-hidden="true">{expanded ? '▴' : '▾'}</span>
+            </button>
+            {expanded && <ReputationDetail row={row}/>}
+          </li>;
+        })}</ol>}
     </section>
   </div>;
 }

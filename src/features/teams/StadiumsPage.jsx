@@ -42,7 +42,7 @@ function StadiumCard({ stadium, myTeamId, mine, balance, canBuy, canPhoto, confi
       {stadium.kind === 'Ficticio' && <Chip>EFOOTBALL</Chip>}
     </div>
     <div className="stadium-body">
-      <b>{stadium.name}</b>
+      <b>{stadium.displayName ?? stadium.name}</b>{stadium.customName && <small className="stadium-base-name">{stadium.name}</small>}
       <small>{people(stadium.capacity)} ESPECTADORES · {gpLabel(stadium.price)}</small>
       <div className="stadium-owner">
         {owned ? <Chip tone="green" icon="check">ES TUYO</Chip>
@@ -83,7 +83,7 @@ export function StadiumsPage() {
     <header className="team-page-header"><p>CATÁLOGO DE LA LIGA</p><h1>ESTADIOS</h1><span>{rows.filter(row => !row.teamId).length} EN VENTA · {rows.filter(row => row.teamId).length} CON DUEÑO</span></header>
     {canBuy && <div className="stadiums-mine">
       <Icon name="stadium" size={18}/>
-      <span>{mine ? <>TU ESTADIO: <b>{upper(mine.name)}</b> · {people(mine.capacity)} PERSONAS</> : <>JUEGAS EN TU <b>CANCHA PROPIA</b> DE 12.000 PERSONAS</>}</span>
+      <span>{mine ? <>TU ESTADIO: <b>{upper(mine.displayName ?? mine.name)}</b> · {people(mine.capacity)} PERSONAS</> : <>JUEGAS EN TU <b>CANCHA PROPIA</b> DE 12.000 PERSONAS</>}</span>
       {balance !== null && <small>SALDO {gpLabel(balance)}</small>}
       <p>Cada estadio tiene un solo dueño. Si te cambias, te devuelven el que tenías a precio de catálogo. Más aforo = más taquilla y conciertos más grandes.</p>
     </div>}

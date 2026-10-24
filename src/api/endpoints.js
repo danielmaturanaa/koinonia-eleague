@@ -13,6 +13,7 @@ export const endpoints = {
   teams: (query, signal) => get('/teams', query, signal),
   team: (teamId, signal) => get(`/teams/${teamId}`, null, signal),
   reputation: signal => get('/reputation', null, signal),
+  reputationDetail: (teamId, signal) => get(`/reputation/${teamId}`, null, signal),
   teamSquad: (teamId, signal) => get(`/teams/${teamId}/squad`, null, signal),
   teamTitles: (teamId, signal) => get(`/teams/${teamId}/titles`, null, signal),
   // La API pagina de 20 en 20; la ficha del club necesita todo su historial (máximo permitido: 100).
@@ -108,6 +109,7 @@ export const endpoints = {
   setContractBonuses: (teamId, playerId, body, signal) => apiClient.put(`/teams/${teamId}/contracts/${playerId}/bonuses`, body, { actor: 'web', signal }),
   stadiums: signal => get('/stadiums', null, signal),
   buyStadium: (teamId, stadiumId, signal) => apiClient.post(`/teams/${teamId}/stadium`, { stadiumId }, { actor: 'web', signal }),
+  setStadiumName: (teamId, name, signal) => apiClient.put(`/teams/${teamId}/stadium/name`, { name }, { actor: 'web', signal }),
   setStadiumImage: (stadiumId, imageUrl, signal) => apiClient.put(`/stadiums/${stadiumId}/image`, { imageUrl }, { actor: 'web', signal }),
   sellStadium: (teamId, signal) => apiClient.delete(`/teams/${teamId}/stadium`, undefined, { actor: 'web', signal }),
   teamLedger: (teamId, query, signal) => get(`/teams/${teamId}/ledger`, query, signal),

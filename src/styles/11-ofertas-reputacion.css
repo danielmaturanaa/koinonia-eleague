@@ -154,3 +154,49 @@
 .pitch-card.bench { touch-action: pan-x pan-y; }
 .pitch-board-bench > div { overscroll-behavior-x: contain; -webkit-overflow-scrolling: touch; touch-action: pan-x pan-y; }
 .reputation-table small.reputation-history { display: block; margin-top: 2px; color: var(--c-red-dark); font-size: 12px; font-weight: 600; letter-spacing: .3px; }
+
+/* Modal de reputación: ranking en lista (no tabla ancha) y desglose por club. */
+.reputation-modal .reputation-how { margin-bottom: 10px; }
+.reputation-modal .reputation-how summary { cursor: pointer; color: #062764; font: 600 14px/1.3 'Oswald', sans-serif; letter-spacing: .4px; }
+.reputation-modal .reputation-how .reputation-rules { margin-top: 8px; }
+.reputation-list { display: grid; gap: 6px; margin: 0 14px 14px; padding: 0; list-style: none; }
+.reputation-list > li { border: 2px solid #b8b199; background: #fff9e8; }
+.reputation-list > li.current-team { border-color: #b07d00; background: #fff3c4; }
+.reputation-list > li.is-open { border-color: #062764; }
+.reputation-row { display: grid; grid-template-columns: 26px 28px minmax(0, 1fr) auto auto 14px; align-items: center; gap: 8px; width: 100%; padding: 8px 10px; border: 0; background: none; color: #062764; text-align: left; cursor: pointer; }
+.reputation-row .team-mark { width: 26px; height: 26px; }
+.reputation-rank { font: 400 18px/1 'Anton', sans-serif; text-align: center; }
+.reputation-who { display: grid; gap: 1px; min-width: 0; }
+.reputation-who b { overflow: hidden; font: 600 15px/1.15 'Oswald', sans-serif; white-space: nowrap; text-overflow: ellipsis; }
+.reputation-who small { color: #4d4839; font: 500 12px/1.2 'Oswald', sans-serif; }
+.reputation-tags { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; }
+.reputation-tags em { padding: 1px 6px; font: 600 12px/1.4 'Oswald', sans-serif; font-style: normal; white-space: nowrap; }
+.reputation-tags em.good { color: #1c5a30; background: #d9efd9; }
+.reputation-tags em.bad { color: #8a0018; background: #f6d7d7; }
+.reputation-caret { color: #4d4839; font-size: 12px; }
+.reputation-detail { display: grid; gap: 10px; padding: 4px 12px 12px; border-top: 1px dashed #b8b199; }
+.reputation-breakdown { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 6px; }
+.reputation-breakdown > div { display: grid; gap: 2px; padding: 6px 8px; border: 1px solid #10285b22; background: #fffdf5; }
+.reputation-breakdown small { color: #4d4839; font: 600 11px/1.2 'Oswald', sans-serif; letter-spacing: .4px; text-transform: uppercase; }
+.reputation-breakdown b { font: 400 18px/1 'Anton', sans-serif; }
+.reputation-breakdown em { color: #4d4839; font: 500 11px/1.25 'Roboto Condensed', sans-serif; font-style: normal; }
+.reputation-breakdown .positive b { color: #1c7a3e; }
+.reputation-breakdown .negative b { color: #a90020; }
+.reputation-breakdown-total { background: #062764 !important; color: #fff; }
+.reputation-breakdown-total small { color: #ffffffcc; }
+.reputation-views { display: flex; gap: 6px; }
+.reputation-views button { padding: 5px 10px; border: 2px solid #062764; background: #fff; color: #062764; font: 600 13px/1 'Oswald', sans-serif; letter-spacing: .4px; cursor: pointer; }
+.reputation-views button.on { background: #062764; color: #fff; }
+.reputation-events { display: grid; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.reputation-events li { display: grid; grid-template-columns: 22px minmax(0, 1fr) auto; align-items: start; gap: 8px; padding: 6px 4px; border-top: 1px solid #10285b1a; }
+.reputation-event-icon { font-size: 15px; line-height: 1.3; }
+.reputation-event-text { display: grid; gap: 2px; color: #2b2a24; font: 400 13.5px/1.35 'Roboto Condensed', sans-serif; }
+.reputation-event-text small { color: #6b6553; font-size: 12px; }
+.reputation-events li.event-promise_broken .reputation-event-text, .reputation-events li.event-bankruptcy .reputation-event-text { color: #8a0018; font-weight: 600; }
+.reputation-events b { font: 600 13px/1.35 'Oswald', sans-serif; white-space: nowrap; color: #4d4839; }
+.reputation-events b.positive { color: #1c7a3e; }
+.reputation-events b.negative { color: #a90020; }
+@media (max-width: 560px) {
+  .reputation-row { grid-template-columns: 22px 24px minmax(0, 1fr) auto 12px; }
+  .reputation-tags { display: none; }
+}
