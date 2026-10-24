@@ -145,6 +145,7 @@ const ClubSystems = () => <>
       <li>La liga tiene un catálogo de estadios, reales y ficticios, ordenados en categorías <strong>S, A, B, C y D</strong> (de mayor a menor), cada uno con su capacidad y su precio en GP. Se ven todos en <strong>Equipos › Estadios</strong>, con su foto (la sube el club dueño o la administración).</li>
       <li>Cada estadio tiene un solo dueño y cada club puede tener uno. Comprarlo descuenta su precio del saldo; cambiar a otro reembolsa el actual a su precio de catálogo y se paga solo la diferencia; venderlo devuelve su precio de catálogo.</li>
       <li>El aforo es el techo de la taquilla: un club sin estadio del catálogo juega en su cancha propia, de <strong>12.000 personas</strong>. Un estadio más grande deja entrar a más gente en cada partido de local, recibe conciertos más grandes y es requisito para La Velada.</li>
+      <li><strong>Mantención del estadio:</strong> al cerrar cada torneo de liga, el club con estadio del catálogo paga su mantención según la categoría: <strong>S 8 M · A 5 M · B 3 M · C 2 M · D 1 M GP</strong>. La cancha propia no paga.</li>
     </ul>
   </section>
   <section className="rules-section">

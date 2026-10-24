@@ -113,7 +113,7 @@ export function VenueTab({ team, onTab: _onTab }) {
         <h2>{upper(fans.venue.name)}</h2>
         {fans.venue.owned && fans.venue.baseName && fans.venue.baseName !== fans.venue.name && <small className="venue-base-name">EN EL CATÁLOGO: {upper(fans.venue.baseName)}</small>}
         {fans.venue.owned && canEdit && <StadiumNameEditor team={team} venue={fans.venue} onChanged={query.retry}/>}
-        <p>{people(fans.venue.capacity)} ESPECTADORES</p>
+        <p>{people(fans.venue.capacity)} ESPECTADORES{fans.venue.owned && fans.venue.upkeep ? ` · MANTENCIÓN ${gp(fans.venue.upkeep)} POR TORNEO` : ''}</p>
         <a className="ui-btn ui-btn--primary ui-btn--sm" href="#/equipos/estadios"><Icon name="stadium" size={14}/>{canEdit ? (fans.venue.owned ? 'CAMBIAR DE ESTADIO' : 'COMPRAR ESTADIO') : 'VER TODOS LOS ESTADIOS'}</a>
       </div>
       <Stadium occupancy={average} matches={fans.gates.length} colors={team.colors}/>
