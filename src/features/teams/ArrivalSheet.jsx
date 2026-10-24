@@ -8,7 +8,7 @@ import { useApiQuery } from '../public/useApiQuery.js';
 import { gpLabel } from '../../utils/money.js';
 import { Button, HowItWorks } from '../../ui/index.js';
 
-const SEASONS = [2, 3, 4, 5, 6];
+const SEASONS = [2, 4, 6];
 const upper = text => String(text ?? '').toUpperCase();
 
 /** Cómo llegaría con lo que le das: la suma de lo que le mueve el ánimo y por qué. */

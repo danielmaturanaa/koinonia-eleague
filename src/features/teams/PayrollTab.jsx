@@ -14,7 +14,9 @@ import { SigningSheet } from './SigningSheet.jsx';
 import { ArrivalSheets } from './ArrivalSheet.jsx';
 import { Button, HowItWorks } from '../../ui/index.js';
 
-const SEASONS = [2, 3, 4, 5, 6];
+const SEASONS = [2, 4, 6];
+// En la simulación son los torneos que le quedan, que pueden ser impares.
+const SIM_YEARS = [1, 2, 3, 4, 5, 6];
 const upper = text => String(text ?? '').toUpperCase();
 const PLAYOFF_SHORT = { none: 'NADA', semifinal: 'SEMIFINAL', runnerUp: 'SUBCAMPEÓN', champion: 'CAMPEÓN' };
 const PLAYOFF_LABEL = { none: 'SIN PREMIO DE PLAYOFFS', semifinal: 'SEMIFINALISTA (SIN PREMIO)', runnerUp: 'SUBCAMPEÓN', champion: 'CAMPEÓN' };
@@ -112,8 +114,8 @@ function SeasonDots({ paid, total }) {
   return <span className="season-dots" aria-label={`${paid} de ${total} torneos pagados`}>{Array.from({ length: total }, (_, index) => <i key={index} className={index < paid ? 'paid' : ''}/>)}</span>;
 }
 
-function YearsChips({ value, onChange, disabled = false, label }) {
-  return <span className="chips years-chips" role="group" aria-label={label}>{SEASONS.map(n => <button type="button" key={n} disabled={disabled} className={value === n ? 'on' : ''} onClick={() => onChange(n)}>{n}</button>)}</span>;
+function YearsChips({ value, onChange, disabled = false, label, options = SEASONS }) {
+  return <span className="chips years-chips" role="group" aria-label={label}>{options.map(n => <button type="button" key={n} disabled={disabled} className={value === n ? 'on' : ''} onClick={() => onChange(n)}>{n}</button>)}</span>;
 }
 
 function TerminateButton({ team, contract, onDone }) {
@@ -169,7 +171,7 @@ const OUTCOME_LABEL = { accepted: ['✅', 'ACEPTÓ'], counter: ['🤝', 'CONTRAO
 
 /** Una misma propuesta para todos los jugadores con contrato vencido; cada uno responde por su cuenta. */
 function RenewAll({ team, expiredCount, onDone, marketOpen }) {
-  const [seasons, setSeasons] = useState(3);
+  const [seasons, setSeasons] = useState(2);
   const [raise, setRaise] = useState(15);
   const [results, setResults] = useState(null);
   const send = useApiMutation((body, signal) => endpoints.negotiateAllContracts(team.id, body, signal), { onSuccess: response => { setResults(response?.data ?? []); onDone(); } });
@@ -228,7 +230,7 @@ function RealView({ team, query, balance, marketOpen, canEdit, layout, refresh }
 
   return <div className="payroll-real">
     <div className="view-badge is-real">📄 NÓMINA REAL · CONTRATOS FIRMADOS</div>
-    <HowItWorks title="¿Cómo funcionan los contratos?"><p>Cada jugador tiene un contrato de 2 a 6 torneos. Su sueldo queda congelado y se cobra al terminar cada torneo de liga mientras siga en el club. Nadie puede cobrar más del 20% de su valor de mercado.{upcoming[0] ? ` Los sueldos se cobran desde el ${upcoming[0]}; el torneo en curso no se cobra.` : ''}</p><p>Cuando un contrato vence, se renueva en el período de renovaciones del mercado siguiente. Si no, el jugador queda libre cuando el mercado pasa a transacciones (sin costo ni castigo). Un jugador que llega por traspaso o trueque firma un contrato nuevo con tu club.</p></HowItWorks>
+    <HowItWorks title="¿Cómo funcionan los contratos?"><p>Cada jugador tiene un contrato de 2, 4 o 6 torneos. Su sueldo queda congelado y se cobra al terminar cada torneo de liga mientras siga en el club. Nadie puede cobrar más del 20% de su valor de mercado.{upcoming[0] ? ` Los sueldos se cobran desde el ${upcoming[0]}; el torneo en curso no se cobra.` : ''}</p><p>Cuando un contrato vence, se renueva en el período de renovaciones del mercado siguiente. Si no, el jugador queda libre cuando el mercado pasa a transacciones (sin costo ni castigo). Un jugador que llega por traspaso o trueque firma un contrato nuevo con tu club.</p></HowItWorks>
     {!enabled && <p className="payroll-empty">Los contratos todavía no están activos. Mientras tanto usa la simulación para planificar.</p>}
     {enabled && <>
       {canEdit && !marketOpen && <p className="payroll-empty">🔒 Mercado cerrado: años y renovaciones se cambian cuando abra. Rescindir se puede siempre.</p>}
@@ -309,7 +311,7 @@ function SimView({ team, projection, balance, canEdit, layout, currentPosition, 
     <RiskChip row={row}/>
     <label className="sell"><input type="checkbox" checked={row.sold} disabled={!canEdit} onChange={event => changePlayer(row.playerId, { sell: event.target.checked })}/> VENDER</label>
   </span>;
-  const yearsInput = row => (canEdit ? <YearsChips value={row.years} onChange={years => changePlayer(row.playerId, { years })} label={`Torneos simulados de ${row.playerName}`}/> : <span>{row.years} TORNEOS</span>);
+  const yearsInput = row => (canEdit ? <YearsChips value={row.years} options={SIM_YEARS} onChange={years => changePlayer(row.playerId, { years })} label={`Torneos simulados de ${row.playerName}`}/> : <span>{row.years} TORNEOS</span>);
 
   return <div className="payroll-sim">
     <div className="view-badge is-sim">🧪 Simulación · nada de esto es real ni se cobra</div>

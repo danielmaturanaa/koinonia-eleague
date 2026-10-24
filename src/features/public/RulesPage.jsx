@@ -76,7 +76,7 @@ const Contracts = ({ payrollCap }) => <section className="rules-section">
   <h2>6. Contratos y Nómina (desde el torneo v11)</h2>
   <h3>6.1 Duración</h3>
   <ul>
-    <li>Todo contrato inicial o renovación dura entre <strong>2 y 6 temporadas</strong>, según lo defina el Presidente al firmar. Una temporada es un torneo de liga terminado.</li>
+    <li>Todo contrato inicial o renovación dura <strong>2, 4 o 6 torneos</strong>, según lo defina el Presidente al firmar. Una temporada es un torneo de liga terminado.</li>
     <li>Un mánager puede renovar a un jugador las veces que quiera. Puedes cambiar los años de un contrato mientras no se haya cobrado su primera temporada.</li>
   </ul>
   <h3>6.2 Sueldo y cobro</h3>

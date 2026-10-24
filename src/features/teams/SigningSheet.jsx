@@ -8,7 +8,7 @@ import { Button } from '../../ui/index.js';
 
 export const ROLES = [['crucial', 'CRUCIAL'], ['importante', 'IMPORTANTE'], ['rotacion', 'ROTACIÓN'], ['esporadico', 'ESPORÁDICO']];
 export const roleLabel = role => ROLES.find(([key]) => key === role)?.[1] ?? '—';
-const SEASONS = [2, 3, 4, 5, 6];
+const SEASONS = [2, 4, 6];
 const SALARY_STEP = 10_000;
 const roundStep = amount => Math.max(SALARY_STEP, Math.round(amount / SALARY_STEP) * SALARY_STEP);
 const MOOD_FACE = { feliz: '😄', contento: '🙂', dudoso: '😐', molesto: '😠', furioso: '🤬' };
@@ -50,7 +50,7 @@ const upperText = text => String(text ?? '').toUpperCase();
 export function SigningSheet({ team, contract, args = [], maxRounds = 3, marketOpen = true, onDone, onAccepted }) {
   const info = contract.renewal;
   const talk = contract.talk;
-  const [seasons, setSeasons] = useState(3);
+  const [seasons, setSeasons] = useState(2);
   const [raise, setRaise] = useState(10);
   const [promisedRole, setPromisedRole] = useState('');
   const [argument, setArgument] = useState('');

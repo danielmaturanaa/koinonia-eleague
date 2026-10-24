@@ -6,6 +6,7 @@ import { GlobalSearch } from './GlobalSearch.jsx';
 import { MusicPlayer } from './MusicPlayer.jsx';
 import { Navigation } from './Navigation.jsx';
 import { TransparentLogo } from './TransparentLogo.jsx';
+import { UpdateNotice } from './UpdateNotice.jsx';
 
 export function SiteLayout({ route, navigate, children, sidebar, error, dismissError, playlist = [], teams = [] }) {
   // La radio no se monta en mobile (mismo corte que el resto del diseño responsive).
@@ -27,6 +28,7 @@ export function SiteLayout({ route, navigate, children, sidebar, error, dismissE
       {sidebar}
     </div>
     <footer className="site-footer"><span className="site-slogan">KOINONIA e-LEAGUE · FÚTBOL VIRTUAL. PASIÓN REAL.</span><nav className="site-footer-links" aria-label="Más"><a href="#/noticias">NOTICIAS</a><a href="#/reglas">REGLAMENTO</a></nav><ApiStatus/></footer>
+    <UpdateNotice/>
     {error && <div className="preview-notice" role="status">{error}<button onClick={dismissError} aria-label="Cerrar aviso">×</button></div>}
   </div>;
 }
