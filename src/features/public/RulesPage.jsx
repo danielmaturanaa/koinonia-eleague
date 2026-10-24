@@ -93,9 +93,9 @@ const Contracts = ({ payrollCap }) => <section className="rules-section">
     <li>No se puede soltar a un jugador antes de que termine su contrato sin consecuencias: rescindir cuesta una <strong>indemnización del 50% de las temporadas que faltan</strong>, sin reembolso, y el presidente sufre un castigo de reputación.</li>
     <li>Un jugador que acaba de renovar no se puede traspasar ni canjear hasta que se cobre su primer torneo.</li>
   </ul>
-  <h3>6.4 Contrato de llegada (traspaso o trueque)</h3>
+  <h3>6.4 Contrato de llegada (traspaso, trueque o agente libre)</h3>
   <ul>
-    <li>Cuando un jugador llega por traspaso o trueque, su contrato anterior se termina y firma uno <strong>nuevo</strong> con el club que lo recibe. Escribe al llegar con lo que pide: sueldo, mantener sus primas, su dorsal si otro lo usa, y la cinta de capitán solo si tiene recorrido (veterano o figura con carácter de líder) y sería de los tres más valiosos del plantel.</li>
+    <li>Cuando un jugador llega por traspaso, trueque o como agente libre (encuesta o subasta), firma un contrato <strong>nuevo</strong> con el club que lo recibe; si venía de otro club, el anterior se termina. Escribe al llegar con lo que pide: sueldo, mantener sus primas, su dorsal si otro lo usa, y la cinta de capitán solo si tiene recorrido (veterano o figura con carácter de líder) y sería de los tres más valiosos del plantel.</li>
     <li>Lo que pide toma como referencia lo que ganaba en su club anterior y nunca baja de eso, sin ser muy exigente. El sueldo va entre el 10% y el 20% de su valor. Las primas que tenía no se heredan: son solo una referencia.</li>
     <li>El presidente del club que lo recibe decide qué le da (en Nómina). Con menos de lo que pide <strong>llega igual, pero molesto</strong> (como mucho −15 de ánimo); con lo que pide, llega conforme. Si nadie firma antes de que cierre el mercado, queda firmado con lo que pidió.</li>
   </ul>

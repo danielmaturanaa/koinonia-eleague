@@ -23,7 +23,7 @@ function ArrivalMood({ preview }) {
 }
 
 /**
- * Hoja de firma de un jugador que llegó por traspaso o trueque: pide sueldo, primas, dorsal y a veces la capitanía.
+ * Hoja de firma de un jugador que llegó por traspaso, trueque o como agente libre: pide sueldo, primas, dorsal y a veces la capitanía.
  * El presi decide qué le da; con menos de lo que pide llega igual, pero molesto.
  */
 function ArrivalSheet({ team, arrival, onDone }) {
@@ -93,7 +93,7 @@ function ArrivalSheet({ team, arrival, onDone }) {
   </article>;
 }
 
-/** Los que llegaron por traspaso o trueque y esperan que el presi firme su contrato. */
+/** Los que llegaron (traspaso, trueque o agente libre) y esperan que el presi firme su contrato. */
 export function ArrivalSheets({ team, onDone }) {
   const query = useApiQuery(signal => endpoints.teamArrivals(team.id, signal).catch(() => ({ data: [] })), [team.id]);
   const [kept, setKept] = useState([]);
@@ -103,7 +103,7 @@ export function ArrivalSheets({ team, onDone }) {
   if (!shown.length) return null;
   return <section className="arrival-sheets">
     <header><h3>LLEGARON: CONTRATOS POR FIRMAR</h3><p>Cada uno llegó con lo que pide. Puedes darle menos: llega igual, pero molesto. Si no firmas antes de que cierre el mercado, queda firmado con lo que pidió.</p>
-      <HowItWorks><p>En un traspaso o trueque el contrato no viaja: el jugador firma uno nuevo con tu club. Lo que pide toma como referencia lo que ganaba antes y nunca baja de eso. El sueldo va entre el 10% y el 20% de su valor.</p></HowItWorks></header>
+      <HowItWorks><p>Todo el que llega (por traspaso, trueque o como agente libre) firma un contrato nuevo con tu club. Si venía de otro club, lo que pide toma como referencia lo que ganaba antes y nunca baja de eso. El sueldo va entre el 10% y el 20% de su valor. Si no lo firmas antes de que cierre el mercado, queda firmado con lo que pidió.</p></HowItWorks></header>
     {shown.map(arrival => <ArrivalSheet key={arrival.contractId} team={team} arrival={arrival} onDone={() => { setKept(items => [...items.filter(item => item.contractId !== arrival.contractId), arrival]); query.retry(); onDone?.(); }}/>)}
   </section>;
 }
