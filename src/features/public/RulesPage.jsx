@@ -169,10 +169,10 @@ const ClubSystems = () => <>
     <h2>13. Clásicos, Superclásicos y Derbis</h2>
     <ul>
       <li><strong>Clásico:</strong> cada club tiene un rival <strong>natural</strong>, que sale del historial (partidos, eliminatorias, finales, goleadas y traspasos entre ambos; vale más si la rivalidad es pareja), y uno que <strong>elige</strong> el Presidente (puede ser el mismo) y cambia cuando quiera. Los partidos contra cualquiera de los dos son clásico: la demanda de entradas sube 60% y ganar o perder mueve el doble de hinchas y ánimo.</li>
-      <li><strong>Superclásico:</strong> cuando los dos clubes se tienen de clásico. La demanda sube 90%, el estadio casi se llena y la noticia del partido sale con su etiqueta.</li>
-      <li><strong>Derbi:</strong> la rivalidad de vecinos. La elige el Presidente (se sugieren los clubes de su país y los que tienen la hinchada cerca) y la cambia cuando quiera. En un derbi viaja el triple de hinchada visitante, el estadio llena al menos el 85% y <strong>la visita se lleva el 20% de la taquilla</strong>. Un partido puede ser clásico y derbi a la vez.</li>
+      <li><strong>El Superclásico:</strong> uno solo en toda la liga, el que define la administración (hoy, Laloo Kura vs Real Potente). La demanda sube 90%, el estadio casi se llena y la noticia del partido sale con su etiqueta. Dos clubes que se tienen de clásico mutuamente siguen siendo un clásico.</li>
+      <li><strong>Derbis:</strong> las rivalidades de vecinos. El Presidente elige <strong>hasta 3</strong> (se sugieren los clubes de su país y los que tienen la hinchada cerca) y los cambia cuando quiera. En un derbi viaja el triple de hinchada visitante, el estadio llena al menos el 85% y <strong>la visita se lleva el 20% de la taquilla</strong>. Un partido puede ser clásico y derbi a la vez.</li>
       <li><strong>Nombre de la rivalidad:</strong> cualquiera de los dos presis propone un nombre ("El Clásico del Sur") y el otro lo acepta o lo rechaza. Aceptado, sale en los partidos y en las noticias.</li>
-      <li>En las tarjetas de partido cada rivalidad tiene su color (rojo el clásico, dorado el superclásico, azul el derbi) y muestra la racha cuando alguien lleva 3 o más partidos sin perder o sin ganar ante el otro.</li>
+      <li>En las tarjetas de partido cada rivalidad tiene su color (rojo el clásico, dorado el superclásico, azul el derbi) y muestra la racha cuando alguien lleva 3 o más partidos sin perder o sin ganar ante el otro (con el apodo del club, si tiene).</li>
     </ul>
   </section>
   <section className="rules-section">

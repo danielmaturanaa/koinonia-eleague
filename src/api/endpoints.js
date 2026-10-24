@@ -201,7 +201,8 @@ export const endpoints = {
   rivalries: signal => get('/rivalries', null, signal),
   teamRivalry: (teamId, signal) => get(`/teams/${teamId}/rivalry`, null, signal),
   setRival: (teamId, rivalTeamId, signal) => apiClient.put(`/teams/${teamId}/rival`, { rivalTeamId }, { actor: 'web', signal }),
-  setDerby: (teamId, rivalTeamId, signal) => apiClient.put(`/teams/${teamId}/derby`, { rivalTeamId }, { actor: 'web', signal }),
+  setDerby: (teamId, rivalTeamId, on, signal) => apiClient.put(`/teams/${teamId}/derby`, { rivalTeamId, on }, { actor: 'web', signal }),
+  setSuperclasico: (teamA, teamB, signal) => apiClient.put('/admin/superclasico', { teamA, teamB }, { actor: 'web', signal }),
   proposeRivalryName: (teamId, otherTeamId, name, signal) => apiClient.post(`/teams/${teamId}/rivalry-name`, { otherTeamId, name }, { actor: 'web', signal }),
   answerRivalryName: (teamId, otherTeamId, accept, signal) => apiClient.post(`/teams/${teamId}/rivalry-name/answer`, { otherTeamId, accept }, { actor: 'web', signal }),
   // Lo que pediría un jugador para firmar si llega a un club (traspaso o trueque).

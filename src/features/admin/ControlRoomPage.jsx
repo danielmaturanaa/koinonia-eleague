@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { useAuth } from '../../app/AuthGate.jsx';
-import { Card, EmptyState, Icon, Screen, Tabs } from '../../ui/index.js';
+import { Button, Card, EmptyState, Icon, Screen, Tabs } from '../../ui/index.js';
 import { DataState, PageHeader } from '../public/DataStates.jsx';
 import { MarketAdmin, loadAllPlayers } from '../public/MarketPage.jsx';
 import { AuctionSimulator } from '../public/market/AuctionSimulator.jsx';
 import { CreateTournamentForm } from '../public/TournamentsPage.jsx';
 import { useApiQuery } from '../public/useApiQuery.js';
+import { useApiMutation } from './useApiMutation.js';
 import { CreateTeamForm } from './CreateTeamForm.jsx';
 import { ClubLifeAdmin } from './ClubLifeAdmin.jsx';
 import { MarketWindowAdmin } from './MarketWindowAdmin.jsx';
@@ -67,6 +68,24 @@ function TournamentsSection({ teams, initialId }) {
   </div>;
 }
 
+/** El Superclásico de la liga: uno solo, lo fija la administración (los demás cruces de rivales son clásicos). */
+function SuperclasicoAdmin({ teams }) {
+  const clubs = teams.filter(team => team.kind !== 'national_team' && !team.hidden);
+  const [pair, setPair] = useState({ a: '', b: '' });
+  const save = useApiMutation((body, signal) => endpoints.setSuperclasico(body.a || null, body.b || null, signal));
+  return <Card title="EL SUPERCLÁSICO">
+    <p className="control-note">Uno solo en toda la liga. Sale en dorado, con corona, y llena más que cualquier clásico.</p>
+    <div className="admin-form compact-form">
+      {['a', 'b'].map(side => <label key={side}>{side === 'a' ? 'CLUB 1' : 'CLUB 2'}<select value={pair[side]} onChange={event => setPair(current => ({ ...current, [side]: event.target.value }))}>
+        <option value="">ELEGIR…</option>{clubs.map(team => <option key={team.id} value={team.id}>{team.name}</option>)}</select></label>)}
+      <Button type="button" disabled={save.loading || !pair.a || !pair.b || pair.a === pair.b} onClick={() => save.execute(pair)}>FIJAR SUPERCLÁSICO</Button>
+      <Button type="button" variant="ghost" disabled={save.loading} onClick={() => save.execute({ a: '', b: '' })}>QUITARLO</Button>
+    </div>
+    {save.error && <p className="form-feedback error">{save.error.message}</p>}
+    {save.success && <p className="form-feedback success">Listo.</p>}
+  </Card>;
+}
+
 /** Mercado: abrirlo (con o sin renovaciones), registrar a mano un traspaso o un trueque, y el simulador de subastas. */
 function MarketSection({ teams }) {
   const players = useApiQuery(signal => loadAllPlayers(signal), []);
@@ -96,7 +115,7 @@ export function ControlRoomPage({ teams = [], initialTab = 'personas', tournamen
     {tab === 'personas' && <PeoplePage teams={teams} embedded/>}
     {tab === 'torneos' && <TournamentsSection teams={teams} initialId={tournamentId}/>}
     {tab === 'mercado' && <MarketSection teams={teams}/>}
-    {tab === 'vida' && <ClubLifeAdmin/>}
+    {tab === 'vida' && <div className="control-section"><SuperclasicoAdmin teams={teams}/><ClubLifeAdmin/></div>}
     {tab === 'atajos' && <div className="control-section">
       <Card title="ATAJOS">
         <ShortcutCards items={[
