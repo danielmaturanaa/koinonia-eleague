@@ -45,17 +45,35 @@ function suggested(rows, places) {
   }));
 }
 
+/** Lo que ya se pagó en premios de este torneo: por club, con el detalle de cada abono. */
+function GrantedPrizes({ prizes }) {
+  const byTeam = new Map();
+  for (const row of prizes.rows) {
+    const entry = byTeam.get(row.teamId) ?? { name: row.teamName, total: 0, items: [] };
+    entry.total += row.amount; entry.items.push(row.reason.split(' · ').slice(1).join(' · ') || row.reason);
+    byTeam.set(row.teamId, entry);
+  }
+  const teams = [...byTeam.values()].sort((a, b) => b.total - a.total);
+  return <section className="tournament-awards">
+    <header><div><h3>Premios ya otorgados</h3><p>Este torneo ya pagó sus premios: no se pueden volver a otorgar. Para corregir un monto, haz un abono o descuento manual al club.</p></div><b>{gpText(prizes.total)}</b></header>
+    <div className="tournament-awards-table"><table>
+      <thead><tr><th>CLUB</th><th>POR QUÉ</th><th>TOTAL</th></tr></thead>
+      <tbody>{teams.map(team => <tr key={team.name}><td>{team.name}</td><td>{team.items.join(' + ')}</td><td><b>{gpText(team.total)}</b></td></tr>)}</tbody>
+    </table></div>
+  </section>;
+}
+
 export function TournamentAwardsPanel({ tournament, onChanged }) {
   const standings = useApiQuery(signal => endpoints.standings(tournament.id, {}, signal), [tournament.id]);
   const playoffs = useApiQuery(signal => endpoints.playoffs(tournament.id, signal).catch(() => ({ data: null })), [tournament.id]);
+  const prizes = useApiQuery(signal => endpoints.tournamentPrizes(tournament.id, signal), [tournament.id]);
   const rows = Array.isArray(standings.data) ? standings.data : [];
   const places = playoffPlaces(playoffs.data);
   const [values, setValues] = useState(null);
   const [confirming, setConfirming] = useState(false);
-  const [done, setDone] = useState(null);
   // Se pre-llena apenas llegan la tabla y los playoffs; después manda lo que edite el admin.
   const ready = !standings.loading && !playoffs.loading && rows.length > 0;
-  useEffect(() => { setValues(null); setDone(null); setConfirming(false); }, [tournament.id]);
+  useEffect(() => { setValues(null); setConfirming(false); }, [tournament.id]);
   useEffect(() => { if (ready && values === null) setValues(suggested(rows, places)); }, [ready, values]);
   const form = values ?? {};
   const set = (teamId, field, value) => setValues(current => ({ ...current, [teamId]: { ...current[teamId], [field]: value } }));
@@ -65,19 +83,16 @@ export function TournamentAwardsPanel({ tournament, onChanged }) {
       league: Number(entry.league || 0), playoff: Number(entry.playoff || 0) };
   }).filter(item => item.league > 0 || item.playoff > 0);
   const totalGp = grants.reduce((sum, item) => sum + item.league + item.playoff, 0);
-  const mutation = useApiMutation(async signal => {
-    for (const grant of grants) {
-      const teamId = grant.row.team_id;
-      const placeLabel = grant.place ? PLAYOFF_PRIZES[grant.place].label.toLowerCase() : null;
-      if (grant.league > 0) await endpoints.creditTeam(teamId, { amount: grant.league, reason: `Premio ${tournament.name} · ${grant.position}.º de la liga` }, signal);
-      if (grant.playoff > 0) await endpoints.creditTeam(teamId, { amount: grant.playoff, reason: `Premio ${tournament.name} · ${placeLabel ?? 'playoffs'}` }, signal);
-    }
-    return { data: { teams: grants.length, totalGp } };
-  }, { onSuccess: () => { setDone({ teams: grants.length, totalGp }); setConfirming(false); onChanged?.(); } });
+  // Un solo pedido al servidor: otorga todo junto y se niega si el torneo ya pagó sus premios.
+  const mutation = useApiMutation(signal => endpoints.grantTournamentPrizes(tournament.id, {
+    grants: grants.map(grant => ({ teamId: grant.row.team_id, position: grant.position, league: grant.league, playoff: grant.playoff,
+      placeLabel: grant.place ? PLAYOFF_PRIZES[grant.place].label.toLowerCase() : null })),
+  }, signal), { onSuccess: () => { setConfirming(false); prizes.retry(); onChanged?.(); } });
 
-  if (done) return <section className="tournament-awards"><p className="form-feedback success">✅ PREMIOS OTORGADOS: {gpText(done.totalGp)} A {done.teams} CLUBES.</p></section>;
+  if (!prizes.data) return <DataState query={prizes}/>;
+  if (prizes.data.granted) return <GrantedPrizes prizes={prizes.data}/>;
   return <section className="tournament-awards">
-    <header><div><h3>Clasificación final y premios</h3><p>Vienen pre-llenados (1.º de la liga 150 M GP y bajando de a 10 M; semifinalista 10 M; subcampeón 20 M; campeón 40 M). Revisa, ajusta y otorga todo con un solo guardado.</p></div><b>{gpText(totalGp)}</b></header>
+    <header><div><h3>Clasificación final y premios</h3><p>Vienen pre-llenados (1.º de la liga 150 M GP y bajando de a 10 M; semifinalista 10 M; subcampeón 20 M; campeón 40 M). Revisa, ajusta y otorga todo con un solo guardado: se paga una sola vez.</p></div><b>{gpText(totalGp)}</b></header>
     <DataState query={standings}/>
     {rows.length > 0 && <div className="tournament-awards-table"><table>
       <thead><tr><th>#</th><th>CLUB</th><th>PTS</th><th>GP LIGA</th><th>PLAYOFFS</th><th>GP PLAYOFFS</th></tr></thead>
@@ -95,7 +110,7 @@ export function TournamentAwardsPanel({ tournament, onChanged }) {
     {rows.length > 0 && !playoffs.data && <p className="poll-hint">Este torneo no tiene playoffs: solo se pre-llenan los premios de la liga.</p>}
     {confirming
       ? <div className="offer-confirm" role="group" aria-label="CONFIRMAR PREMIOS">
-        <span>¿OTORGAR {gpText(totalGp)}A {grants.length} CLUBES? SE ACREDITA AL TIRO Y NO SE DESHACE SOLO.</span>
+        <span>¿OTORGAR {gpText(totalGp)} A {grants.length} CLUBES? SE ACREDITA AL TIRO Y SE PAGA UNA SOLA VEZ.</span>
         <div className="mini-actions">
           <button type="button" disabled={mutation.loading} onClick={() => mutation.execute()}>{mutation.loading ? 'OTORGANDO…' : 'SÍ, OTORGAR'}</button>
           <button type="button" className="ghost" disabled={mutation.loading} onClick={() => setConfirming(false)}>VOLVER</button>
@@ -118,7 +133,7 @@ function StatusPanel({ tournament, onChanged, onDeleted }) {
   const save = () => { if (window.confirm(`¿Cambiar el estado de ${tournament.name} a ${status.toUpperCase()}?`)) update.execute(status); };
   const saveChampionPolicy = () => { if (window.confirm(championPolicy === 'playoffs' ? `¿Definir que el campeón de ${tournament.name} sea el ganador de los playoffs? Se retirará cualquier título y noticia de campeón de fase regular.` : `¿Definir que el campeón de ${tournament.name} sea el líder de la fase regular?`)) policy.execute(championPolicy); };
   const deleteTournament = () => { if (window.confirm(`¿Eliminar definitivamente ${tournament.name} y sus datos relacionados?`)) remove.execute(); };
-  return <section className="tournament-admin-section"><p>ESTADO ACTUAL: <b>{String(tournament.status).toUpperCase()}</b></p><div className="admin-form compact-form"><label>NUEVO ESTADO<select value={status} onChange={event => setStatus(event.target.value)}><option value="active">ACTIVO</option><option value="completed">COMPLETADO</option></select></label><Button type="submit" disabled={update.loading} onClick={save}>ACTUALIZAR ESTADO</Button>{tournament.format === 'league' && <><label>CAMPEONES DE LA LIGA<select value={championPolicy} onChange={event => setChampionPolicy(event.target.value)}><option value="regular_season">FASE REGULAR</option><option value="playoffs">PLAYOFFS</option><option value="both">AMBOS TÍTULOS</option></select></label><Button type="submit" disabled={policy.loading || championPolicy === tournament.championPolicy} onClick={saveChampionPolicy}>ACTUALIZAR REGLA</Button></>}<Button variant="danger" type="submit" disabled={remove.loading} onClick={deleteTournament}>ELIMINAR TORNEO</Button><FormFeedback mutation={update.error || update.success ? update : policy.error || policy.success ? policy : remove}/></div>{tournament.status === 'completed' && <TournamentAwardsPanel tournament={tournament} onChanged={onChanged}/>}</section>;
+  return <section className="tournament-admin-section"><p>ESTADO ACTUAL: <b>{String(tournament.status).toUpperCase()}</b></p><div className="admin-form compact-form"><label>NUEVO ESTADO<select value={status} onChange={event => setStatus(event.target.value)}><option value="active">ACTIVO</option><option value="completed">COMPLETADO</option></select></label><Button type="submit" disabled={update.loading} onClick={save}>ACTUALIZAR ESTADO</Button>{tournament.format === 'league' && <><label>CAMPEONES DE LA LIGA<select value={championPolicy} onChange={event => setChampionPolicy(event.target.value)}><option value="regular_season">FASE REGULAR</option><option value="playoffs">PLAYOFFS</option><option value="both">AMBOS TÍTULOS</option></select></label><Button type="submit" disabled={policy.loading || championPolicy === tournament.championPolicy} onClick={saveChampionPolicy}>ACTUALIZAR REGLA</Button></>}<Button variant="danger" type="submit" disabled={remove.loading} onClick={deleteTournament}>ELIMINAR TORNEO</Button><FormFeedback mutation={update.error || update.success ? update : policy.error || policy.success ? policy : remove}/></div></section>;
 }
 
 function ParticipationPanel({ tournament, teams, onChanged }) {
@@ -205,7 +220,28 @@ function DivisionsPanel({ tournament, teams, onChanged }) {
 }
 
 export function TournamentAdminPanel({ tournament, teams, onChanged, onDeleted }) {
-  const [tab, setTab] = useState('status');
-  const tabs = [['status','ESTADO'],['participants','PARTICIPANTES'],['draw','SORTEO'],['fixtures','CALENDARIO'],['bracket','LLAVES'],['playoffs','PLAYOFFS'], ...(tournament.divisionsReady ? [['divisions','DIVISIONES']] : [])];
-  return <section className="tournament-admin"><nav>{tabs.map(([value, label]) => <button className={tab === value ? 'active' : ''} key={value} onClick={() => setTab(value)}>{label}</button>)}</nav>{tab === 'status' && <StatusPanel tournament={tournament} onChanged={onChanged} onDeleted={onDeleted}/>} {tab === 'participants' && <ParticipationPanel tournament={tournament} teams={teams} onChanged={onChanged}/>} {tab === 'draw' && <DrawPanel tournament={tournament} onChanged={onChanged}/>} {tab === 'fixtures' && <FixturesPanel tournament={tournament} onChanged={onChanged}/>} {tab === 'bracket' && <BracketPanel tournament={tournament} onChanged={onChanged}/>} {tab === 'playoffs' && <PlayoffsPanel tournament={tournament} teams={teams} onChanged={onChanged}/>} {tab === 'divisions' && tournament.divisionsReady && <DivisionsPanel tournament={tournament} teams={teams} onChanged={onChanged}/>}</section>;
+  const completed = tournament.status === 'completed';
+  const league = tournament.format === 'league';
+  // Solo las pestañas que sirven para este torneo: premios en una sola parte; sorteo y calendario mientras no termine;
+  // llaves para las eliminatorias y playoffs para las ligas.
+  const tabs = [
+    ['status', 'ESTADO'],
+    ...(completed ? [['prizes', 'PREMIOS']] : []),
+    ['participants', 'PARTICIPANTES'],
+    ...(!completed ? [['draw', 'SORTEO'], ['fixtures', 'CALENDARIO']] : []),
+    ...(!league ? [['bracket', 'LLAVES']] : []),
+    ...(league ? [['playoffs', 'PLAYOFFS']] : []),
+    ...(tournament.divisionsReady ? [['divisions', 'DIVISIONES']] : []),
+  ];
+  const [tab, setTab] = useState(completed ? 'prizes' : 'status');
+  return <section className="tournament-admin"><nav>{tabs.map(([value, label]) => <button className={tab === value ? 'active' : ''} key={value} onClick={() => setTab(value)}>{label}</button>)}</nav>
+    {tab === 'status' && <StatusPanel tournament={tournament} onChanged={onChanged} onDeleted={onDeleted}/>}
+    {tab === 'prizes' && completed && <TournamentAwardsPanel tournament={tournament} onChanged={onChanged}/>}
+    {tab === 'participants' && <ParticipationPanel tournament={tournament} teams={teams} onChanged={onChanged}/>}
+    {tab === 'draw' && <DrawPanel tournament={tournament} onChanged={onChanged}/>}
+    {tab === 'fixtures' && <FixturesPanel tournament={tournament} onChanged={onChanged}/>}
+    {tab === 'bracket' && <BracketPanel tournament={tournament} onChanged={onChanged}/>}
+    {tab === 'playoffs' && <PlayoffsPanel tournament={tournament} teams={teams} onChanged={onChanged}/>}
+    {tab === 'divisions' && tournament.divisionsReady && <DivisionsPanel tournament={tournament} teams={teams} onChanged={onChanged}/>}
+  </section>;
 }

@@ -39,6 +39,8 @@ export const endpoints = {
   fixtures: (tournamentId, signal) => get(`/tournaments/${tournamentId}/fixtures`, null, signal),
   bracket: (tournamentId, signal) => get(`/tournaments/${tournamentId}/bracket`, null, signal),
   playoffs: (tournamentId, signal) => get(`/tournaments/${tournamentId}/playoffs`, null, signal),
+  tournamentPrizes: (tournamentId, signal) => get(`/tournaments/${tournamentId}/prizes`, null, signal),
+  grantTournamentPrizes: (tournamentId, body, signal) => apiClient.post(`/admin/tournaments/${tournamentId}/prizes`, body, { actor: 'web', signal }),
   scorers: (tournamentId, signal) => get(`/tournaments/${tournamentId}/scorers`, null, signal),
   // Proyección "de mentira": el POST no escribe nada, solo manda los resultados fijados del escenario.
   projection: (tournamentId, query, signal) => get(`/tournaments/${tournamentId}/projection`, query, signal),

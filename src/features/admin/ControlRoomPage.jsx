@@ -11,7 +11,7 @@ import { CreateTeamForm } from './CreateTeamForm.jsx';
 import { ClubLifeAdmin } from './ClubLifeAdmin.jsx';
 import { MarketWindowAdmin } from './MarketWindowAdmin.jsx';
 import { PeoplePage } from './PeoplePage.jsx';
-import { TournamentAdminPanel, TournamentAwardsPanel } from './TournamentAdminPanel.jsx';
+import { TournamentAdminPanel } from './TournamentAdminPanel.jsx';
 
 const SECTIONS = [
   { id: 'personas', label: 'PERSONAS Y PERMISOS' },
@@ -30,29 +30,40 @@ function ShortcutCards({ items }) {
   </a>)}</div>;
 }
 
-/** Torneos: crear uno nuevo y administrar (editar, cerrar, premios, borrar) el que elijas. */
+const STATUS_LABEL = { active: 'EN JUEGO', completed: 'TERMINADO', draft: 'EN PREPARACIÓN' };
+const createdTime = item => Date.parse(item.createdAt ?? '') || 0;
+
+/** Torneos: crear uno nuevo y administrar (editar, cerrar, premios, borrar) el que elijas. Abre en el último. */
 function TournamentsSection({ teams, initialId }) {
   const list = useApiQuery(signal => endpoints.tournaments({ page: 1, pageSize: 100 }, signal));
   const [selectedId, setSelectedId] = useState(initialId ?? '');
-  const detail = useApiQuery(signal => selectedId ? endpoints.tournament(selectedId, signal) : Promise.resolve({ data: null }), [selectedId]);
   const tournaments = Array.isArray(list.data) ? list.data : [];
+  // En juego arriba; los terminados, del más nuevo al más viejo (v10 antes que v9, no v1, v10, v2…).
+  const byNewest = (a, b) => createdTime(b) - createdTime(a) || String(b.name).localeCompare(String(a.name), 'es', { numeric: true });
+  const running = tournaments.filter(item => item.status !== 'completed').sort(byNewest);
+  const finished = tournaments.filter(item => item.status === 'completed').sort(byNewest);
+  // Sin uno elegido, abre el que está en juego o, si no hay, el último terminado.
+  useEffect(() => {
+    if (selectedId || !tournaments.length) return;
+    setSelectedId(running[0]?.id ?? finished[0]?.id ?? '');
+  }, [tournaments.length, selectedId]);
+  const detail = useApiQuery(signal => selectedId ? endpoints.tournament(selectedId, signal) : Promise.resolve({ data: null }), [selectedId]);
   const tournament = detail.data;
   const refresh = () => { list.retry(); detail.retry(); };
+  const option = item => <option key={item.id} value={item.id}>{item.name} · {STATUS_LABEL[item.status] ?? item.status}</option>;
   return <div className="control-section">
-    <Card title="CREAR TORNEO"><CreateTournamentForm teams={teams} onChanged={refresh}/></Card>
     <Card title="ADMINISTRAR UN TORNEO">
       <DataState query={list}/>
       <label className="control-picker">TORNEO
         <select value={selectedId} onChange={event => setSelectedId(event.target.value)}>
           <option value="">ELEGIR TORNEO…</option>
-          {tournaments.map(item => <option key={item.id} value={item.id}>{item.name} · {{ active: 'EN JUEGO', completed: 'TERMINADO', draft: 'EN PREPARACIÓN' }[item.status] ?? item.status}</option>)}
+          {running.length > 0 && <optgroup label="EN JUEGO">{running.map(option)}</optgroup>}
+          {finished.length > 0 && <optgroup label="TERMINADOS (DEL MÁS NUEVO AL MÁS VIEJO)">{finished.map(option)}</optgroup>}
         </select>
       </label>
-      {tournament && <>
-        <TournamentAdminPanel key={tournament.id} tournament={tournament} teams={teams} onChanged={refresh} onDeleted={() => { setSelectedId(''); list.retry(); }}/>
-        {tournament.status === 'completed' && <TournamentAwardsPanel tournament={tournament} onChanged={refresh}/>}
-      </>}
+      {tournament && <TournamentAdminPanel key={tournament.id} tournament={tournament} teams={teams} onChanged={refresh} onDeleted={() => { setSelectedId(''); list.retry(); }}/>}
     </Card>
+    <Card title="CREAR TORNEO"><CreateTournamentForm teams={teams} onChanged={refresh}/></Card>
   </div>;
 }
 
