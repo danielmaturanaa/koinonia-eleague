@@ -16,6 +16,9 @@
 .ui-card { display: grid; gap: var(--sp-3); padding: var(--sp-4); border: var(--border); background: var(--c-cream); box-shadow: var(--shadow-pixel); }
 .ui-card--paper { background: var(--c-cream); }
 .ui-card--navy { color: var(--c-white); background: var(--c-navy-900); border-color: var(--c-ice); }
+/* Sobre fondo oscuro, el botón fantasma va claro (si no, no se ve). */
+.ui-card--navy .ui-btn--ghost { color: var(--c-white); background: rgba(255, 255, 255, .06); border-color: rgba(255, 255, 255, .7); }
+.ui-card--navy .ui-btn--ghost:hover:not(:disabled) { color: var(--c-navy-900); background: var(--c-white); border-color: var(--c-white); }
 .ui-card--gold { background: var(--c-gold-bg); border-color: var(--c-gold-line); }
 .ui-card--alert { background: #f3c9c1; border-color: var(--c-red); }
 .ui-card--flat { box-shadow: none; }
