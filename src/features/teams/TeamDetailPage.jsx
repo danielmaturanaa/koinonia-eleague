@@ -928,7 +928,9 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
   if (loading || !team) return <main className="screen"><div className="arcade-state">Cargando el club…</div></main>;
   const hero = <div className="club-crest-wrap screen-crest" style={{ '--club-primary': colors.primary ?? '#062764' }}><TeamMark team={team} className="club-crest"/>{canEdit && <button type="button" className="club-crest-edit" onClick={() => setCrestEditorOpen(true)} aria-label="Editar escudo y nombre del club" title="Editar escudo y nombre">✎</button>}</div>;
   const isMine = isPresidentOf(team.id);
-  return <Screen className="club-screen" kicker={isMine ? 'Mi club' : team.kind === 'national_team' ? 'Selección' : 'Club'} title={team.name} hero={hero}
+  // La franja del banner va con los colores del club (si no los tiene, los de la liga).
+  const stripe = { '--stripe-a': colors.primary ?? 'var(--c-red)', '--stripe-b': colors.secondary && colors.secondary !== colors.primary ? colors.secondary : colors.tertiary ?? 'var(--c-yellow)' };
+  return <Screen className="club-screen" style={stripe} corner={canEdit ? <Button size="sm" variant="ghost" icon="camera" onClick={() => setCoversOpen(true)}>Portadas</Button> : null} kicker={isMine ? 'Mi club' : team.kind === 'national_team' ? 'Selección' : 'Club'} title={team.name} hero={hero}
     intro={[nicknameTitle((team.nicknames ?? []).find(item => item.primary)?.label), rank > 0 ? `${rank}.º en la liga${standing ? ` con ${standing.points} puntos` : ''}.` : null].filter(Boolean).join(' · ') || null}
     actions={<div className="club-strip">
       <div><small>Valor del plantel</small><b>{gp(team.squadValue)}</b></div>
@@ -971,7 +973,6 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
       <section id="ver-eventos"><EventsTab team={team} onChanged={onChanged}/></section>
     </div>}
     {activeTab === 'historia' && <div className="club-history-tab-content">
-      {canEdit && <div className="screen-toolbar"><Button size="sm" variant="ghost" icon="camera" onClick={() => setCoversOpen(true)}>Portadas del club</Button></div>}
       <HonoursList honours={honours} historyError={historyError}/>
       <ClubNicknames team={team} canEdit={canEdit} onChanged={onChanged}/>
       <ClubHistory team={team} onEdit={canEdit ? setHistoryEditor : undefined}/>

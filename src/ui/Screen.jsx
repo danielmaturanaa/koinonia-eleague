@@ -8,9 +8,9 @@ export const useEmbedded = () => useContext(EmbeddedContext);
 /**
  * Plantilla única de pantalla: como mucho una fila de pestañas pegada al contenido. La franja con título (y `actions`)
  * solo aparece si hay `hero` (escudo del club, cara del jugador), que es donde aporta información.
- * tabs: [{ id, label, badge }] · actions: botones a la derecha del título.
+ * tabs: [{ id, label, badge }] · actions: botones a la derecha del título · corner: acceso chico en la esquina de arriba a la derecha.
  */
-export function Screen({ kicker, title, intro, tabs = null, active = null, onTab, actions = null, hero = null, bare = false, className = '', children }) {
+export function Screen({ kicker, title, intro, tabs = null, active = null, onTab, actions = null, hero = null, corner = null, bare = false, className = '', style, children }) {
   const root = useRef(null);
   // Al cambiar de pestaña, si ya bajaste, la pantalla vuelve a mostrar las pestañas arriba.
   const changeTab = id => {
@@ -18,7 +18,7 @@ export function Screen({ kicker, title, intro, tabs = null, active = null, onTab
     const top = root.current?.getBoundingClientRect().top ?? 0;
     if (top < 0) root.current.scrollIntoView({ block: 'start' });
   };
-  return <main className={`screen ${className}`} ref={root}>
+  return <main className={`screen ${className}`} ref={root} style={style}>
     {/* La franja de título solo va donde trae información propia (club, jugador: llevan `hero`). Las áreas generales
         parten directo con sus pestañas: el menú ya dice dónde estás. */}
     {!bare && hero && <header className="screen-head">
@@ -29,6 +29,7 @@ export function Screen({ kicker, title, intro, tabs = null, active = null, onTab
         {intro && <p className="screen-intro">{intro}</p>}
       </div>
       {actions && <div className="screen-actions">{actions}</div>}
+      {corner && <div className="screen-corner">{corner}</div>}
     </header>}
     {/* Las pestañas van pegadas al contenido, como la parte de arriba de la misma hoja (no flotan ni se quedan fijas). */}
     <div className="screen-panel">
