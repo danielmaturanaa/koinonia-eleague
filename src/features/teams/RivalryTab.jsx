@@ -143,8 +143,8 @@ export function RivalryTab({ team, teams = [] }) {
         <dl className="h2h-facts">
           <div><dt>MAYOR GOLEADA A FAVOR</dt><dd>{h2h.biggestWin ? <EntityLink to="match" id={h2h.biggestWin.matchId}>{gameText(h2h.biggestWin)}</EntityLink> : '—'}</dd></div>
           <div><dt>MAYOR GOLEADA EN CONTRA</dt><dd>{h2h.biggestLoss ? <EntityLink to="match" id={h2h.biggestLoss.matchId}>{gameText(h2h.biggestLoss)}</EntityLink> : '—'}</dd></div>
-          <div><dt>ELIMINATORIAS</dt><dd>{h2h.knockouts.played ? `${h2h.knockouts.wins} GANADAS · ${h2h.knockouts.losses} PERDIDAS` : 'NUNCA SE CRUZARON'}</dd></div>
-          <div><dt>FINALES</dt><dd>{h2h.finals.played ? `${h2h.finals.played} (${h2h.finals.wins} GANADAS)` : 'NINGUNA'}</dd></div>
+          <div><dt>ELIMINATORIAS</dt><dd>{h2h.knockouts.played ? `${h2h.knockouts.played} SERIE${h2h.knockouts.played === 1 ? '' : 'S'} · ${h2h.knockouts.wins} GANADA${h2h.knockouts.wins === 1 ? '' : 'S'} · ${h2h.knockouts.losses} PERDIDA${h2h.knockouts.losses === 1 ? '' : 'S'}` : 'NUNCA SE CRUZARON'}</dd></div>
+          <div><dt>FINALES</dt><dd>{h2h.finals.played ? `${h2h.finals.played} (${h2h.finals.wins} GANADA${h2h.finals.wins === 1 ? '' : 'S'})` : 'NINGUNA'}</dd></div>
           <div><dt>CRUZARON LA VEREDA</dt><dd>{h2h.transfers ? `${h2h.transfers} TRASPASO${h2h.transfers === 1 ? '' : 'S'} ENTRE AMBOS` : 'NADIE'}</dd></div>
         </dl>
       </Card>
