@@ -4,7 +4,7 @@
 .screen { display: grid; gap: var(--sp-4); width: 100%; min-width: 0; }
 .screen-head { position: relative; display: flex; flex-wrap: wrap; align-items: flex-end; gap: var(--sp-3) var(--sp-5); padding: var(--sp-5) var(--sp-5) var(--sp-4);
   border: var(--border); color: var(--c-white); background: linear-gradient(120deg, var(--c-navy-900) 0%, var(--c-navy-700) 60%, #0b3f8d 100%); box-shadow: var(--shadow-pixel); overflow: hidden; }
-.screen-head::after { content: ''; position: absolute; inset: auto 0 0 0; height: 6px; background: repeating-linear-gradient(90deg, var(--stripe-a, var(--c-red)) 0 24px, var(--stripe-b, var(--c-yellow)) 24px 48px); }
+.screen-head::after { content: ''; position: absolute; inset: auto 0 0 0; height: 6px; background: repeating-linear-gradient(90deg, var(--stripe-a, var(--c-red)) 0 24px, var(--stripe-b, var(--c-yellow)) 24px 48px, var(--stripe-c, var(--c-red)) 48px 72px); }
 /* Acceso chico arriba a la derecha del banner (p. ej., las portadas del club). */
 .screen-corner { position: absolute; top: var(--sp-3); right: var(--sp-3); z-index: 2; }
 .screen-corner .ui-btn--ghost { color: #fff; background: rgba(0, 0, 0, .25); border-color: rgba(255, 255, 255, .7); }
