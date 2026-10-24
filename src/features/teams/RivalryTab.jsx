@@ -9,7 +9,8 @@ import { DataState } from '../public/DataStates.jsx';
 import { useApiQuery } from '../public/useApiQuery.js';
 
 const upper = text => String(text ?? '').toUpperCase();
-const SOURCE = { elegido: 'ELEGIDO POR EL PRESI', natural: 'RIVAL NATURAL (POR EL HISTORIAL)' };
+const KIND_LABEL = { natural: 'NATURAL (POR EL HISTORIAL)', elegido: 'ELEGIDO POR EL PRESI' };
+const kindsText = kinds => (kinds.length > 1 ? 'NATURAL Y ELEGIDO' : KIND_LABEL[kinds[0]] ?? '');
 
 function Record({ h2h }) {
   const total = Math.max(1, h2h.played);
@@ -28,35 +29,41 @@ function Record({ h2h }) {
 
 const gameText = game => `${game.goalsFor}-${game.goalsAgainst} · ${upper(game.tournament)}${game.stage !== 'league' ? (String(game.slot ?? '').startsWith('F') ? ' · FINAL' : ' · PLAYOFFS') : ''}`;
 
-/** El clásico del club: su rival, el cara a cara completo y, para el presi, elegir otro (una vez por temporada). */
+/** Los clásicos del club: el natural y el elegido (pueden ser el mismo), el cara a cara de cada uno y, para el presi, elegir cuando quiera. */
 export function RivalryTab({ team, teams = [] }) {
   const { canEditTeam } = useAuth();
   const canEdit = canEditTeam(team.id);
   const toast = useToast();
   const query = useApiQuery(signal => endpoints.teamRivalry(team.id, signal), [team.id]);
   const [picking, setPicking] = useState(null);
+  const [viewing, setViewing] = useState(null);
   const choose = useApiMutation((rivalTeamId, signal) => endpoints.setRival(team.id, rivalTeamId, signal), {
-    onSuccess: result => { setPicking(null); toast({ tone: 'success', title: result?.data?.rival ? `TU CLÁSICO AHORA ES ${upper(result.data.rival.name)}` : 'Volviste al rival natural' }); query.retry(); },
+    onSuccess: result => { setPicking(null); toast({ tone: 'success', title: result?.data?.chosen ? `ELEGISTE A ${upper(result.data.chosen.name)} COMO CLÁSICO` : 'Quitaste el clásico elegido: queda el natural' }); query.retry(); },
   });
   const data = query.data;
   if (!data) return <DataState query={query}/>;
   const byId = new Map(teams.map(item => [item.id, item]));
-  const rival = data.rival ? { ...data.rival, ...(byId.get(data.rival.id) ?? {}) } : null;
-  const h2h = data.headToHead;
+  const rivals = (data.rivals ?? []).map(item => ({ ...item, club: { ...item.club, ...(byId.get(item.club.id) ?? {}) } }));
+  // El cara a cara que se mira: el que tocó el presi, o el principal (el elegido, si hay).
+  const shown = rivals.find(item => item.club.id === viewing) ?? rivals.find(item => item.club.id === data.rival?.id) ?? rivals[0] ?? null;
+  const rival = shown?.club ?? null;
+  const h2h = shown?.headToHead ?? null;
   const streak = h2h?.streak ? `${h2h.streak.count} PARTIDO${h2h.streak.count === 1 ? '' : 'S'} ${h2h.streak.kind === 'sin_perder' ? 'SIN PERDER' : 'SIN GANAR'}` : null;
   return <section className="rivalry-tab">
-    {!rival ? <EmptyState icon="fire" title="SIN CLÁSICO TODAVÍA">FALTAN PARTIDOS PARA QUE NAZCA UNA RIVALIDAD. {canEdit ? 'Puedes elegir un rival abajo.' : ''}</EmptyState>
-      : <Card tone="navy" className={`rivalry-hero ${data.official ? 'is-official' : ''}`}>
+    {!rivals.length ? <EmptyState icon="fire" title="SIN CLÁSICO TODAVÍA">FALTAN PARTIDOS PARA QUE NAZCA UNA RIVALIDAD. {canEdit ? 'Puedes elegir un rival abajo.' : ''}</EmptyState>
+      : rivals.map(item => <Card key={item.club.id} tone="navy" className={`rivalry-hero ${item.official ? 'is-official' : ''} ${rivals.length > 1 && shown?.club.id === item.club.id ? 'is-shown' : ''}`}>
         <div className="rivalry-side"><TeamMark team={team} className="rivalry-crest"/><b>{upper(team.name)}</b></div>
         <div className="rivalry-vs">
           <Icon name="fire" size={28}/>
           <strong>VS</strong>
-          <Chip tone={data.official ? 'red' : 'yellow'}>{data.official ? 'CLÁSICO OFICIAL' : 'RIVALIDAD DE UN LADO'}</Chip>
-          <small>{SOURCE[data.source] ?? ''}</small>
+          <Chip tone={item.official ? 'red' : 'yellow'}>{item.official ? 'CLÁSICO OFICIAL' : 'RIVALIDAD DE UN LADO'}</Chip>
+          <small>{kindsText(item.kinds)}</small>
+          {rivals.length > 1 && shown?.club.id !== item.club.id && <Button size="sm" variant="ghost" onClick={() => setViewing(item.club.id)}>VER CARA A CARA</Button>}
         </div>
-        <div className="rivalry-side"><EntityLink to="team" id={rival.id}><TeamMark team={rival} className="rivalry-crest"/></EntityLink><b>{upper(rival.name)}</b></div>
-      </Card>}
-    {rival && !data.official && <p className="club-life-hint">{upper(rival.name)} TIENE OTRO RIVAL. SI LOS DOS SE ELIGEN, ES CLÁSICO OFICIAL: LA TAQUILLA Y LA HINCHADA SE MUEVEN TODAVÍA MÁS.</p>}
+        <div className="rivalry-side"><EntityLink to="team" id={item.club.id}><TeamMark team={item.club} className="rivalry-crest"/></EntityLink><b>{upper(item.club.name)}</b></div>
+      </Card>)}
+    {rivals.some(item => !item.official) && <p className="club-life-hint">SI LOS DOS CLUBES SE TIENEN DE RIVAL (NATURAL O ELEGIDO), ES CLÁSICO OFICIAL: LA TAQUILLA Y LA HINCHADA SE MUEVEN TODAVÍA MÁS.</p>}
+    {rivals.length > 1 && rival && <p className="club-life-hint">CARA A CARA CON {upper(rival.name)}.</p>}
     {h2h && h2h.played > 0 && <div className="rivalry-grid">
       <Card title="CARA A CARA"><Record h2h={h2h}/>
         {h2h.last.length > 0 && <div className="h2h-last" aria-label="Últimos cruces">{h2h.last.map(game => <EntityLink key={game.matchId} to="match" id={game.matchId} className={`club-form-pill form-${game.result}`} title={gameText(game)}>{game.result}</EntityLink>)}</div>}
@@ -80,22 +87,22 @@ export function RivalryTab({ team, teams = [] }) {
       </ul>
     </Card>
     {data.admirers?.length > 0 && <p className="club-life-hint"><Icon name="fire" size={12}/> TE TIENEN DE RIVAL: {data.admirers.map(club => upper(club.name)).join(' · ')}.</p>}
-    {canEdit && <Card title="ELEGIR CLÁSICO" aside={<Chip icon={data.canChange ? 'check' : 'lock'}>{data.canChange ? 'Puedes cambiarlo una vez esta temporada' : 'YA LO CAMBIASTE ESTA TEMPORADA'}</Chip>}>
-      <p className="club-life-hint">El puntaje sale del historial: partidos, eliminatorias, finales, goleadas y traspasos entre ambos (más alto si la rivalidad es pareja).</p>
+    {canEdit && <Card title="ELEGIR CLÁSICO" aside={<Chip icon="check">Lo cambias cuando quieras</Chip>}>
+      <p className="club-life-hint">Además del rival natural (que sale solo del historial), eliges uno: los dos partidos son clásico. Puede ser el mismo. El puntaje sale del historial: partidos, eliminatorias, finales, goleadas y traspasos entre ambos.</p>
       <ul className="rival-candidates">{data.candidates.map(candidate => {
         const max = Math.max(1, ...data.candidates.map(item => item.score));
-        const current = rival?.id === candidate.teamId;
+        const current = data.chosen?.id === candidate.teamId;
         return <li key={candidate.teamId} className={current ? 'is-current' : ''}>
           <TeamMark team={candidate}/>
-          <span><b>{upper(candidate.name)}</b><small>{candidate.matches} PARTIDOS{candidate.pointsAtUs ? ' · TE TIENE DE RIVAL' : ''}{data.natural?.id === candidate.teamId ? ' · NATURAL' : ''}</small></span>
+          <span><b>{upper(candidate.name)}</b><small>{candidate.matches} PARTIDOS{candidate.pointsAtUs ? ' · TE TIENE DE RIVAL' : ''}{data.natural?.id === candidate.teamId ? ' · TU NATURAL' : ''}</small></span>
           <span className="rival-score" aria-label={`Puntaje ${candidate.score}`}><span style={{ width: `${candidate.score / max * 100}%` }}/></span>
-          {current ? <Chip tone="red" icon="fire">TU CLÁSICO</Chip>
-            : data.canChange && (picking === candidate.teamId
-              ? <ConfirmStep message={`¿${upper(candidate.name)} es tu clásico? No podrás cambiarlo hasta la próxima temporada.`} confirmLabel="SÍ, ES MI CLÁSICO" busy={choose.loading} onConfirm={() => choose.execute(candidate.teamId)} onCancel={() => setPicking(null)}/>
-              : <Button size="sm" variant="ghost" onClick={() => setPicking(candidate.teamId)}>ELEGIR</Button>)}
+          {current ? <Chip tone="red" icon="fire">ELEGIDO</Chip>
+            : picking === candidate.teamId
+              ? <ConfirmStep message={`¿Elegir a ${upper(candidate.name)} como tu clásico? Lo puedes cambiar cuando quieras.`} confirmLabel="SÍ, ELEGIRLO" busy={choose.loading} onConfirm={() => choose.execute(candidate.teamId)} onCancel={() => setPicking(null)}/>
+              : <Button size="sm" variant="ghost" onClick={() => setPicking(candidate.teamId)}>ELEGIR</Button>}
         </li>;
       })}</ul>
-      {data.source === 'elegido' && data.canChange && data.natural && data.natural.id !== rival?.id && <Button variant="ghost" size="sm" disabled={choose.loading} onClick={() => choose.execute(null)}>VOLVER AL NATURAL ({upper(data.natural.name)})</Button>}
+      {data.chosen && <Button variant="ghost" size="sm" disabled={choose.loading} onClick={() => choose.execute(null)}>QUITAR EL ELEGIDO ({upper(data.chosen.name)}){data.natural ? ` · QUEDA EL NATURAL: ${upper(data.natural.name)}` : ''}</Button>}
       {choose.error && <Notice tone="error">{choose.error.message}</Notice>}
     </Card>}
   </section>;

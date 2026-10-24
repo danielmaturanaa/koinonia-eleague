@@ -168,7 +168,7 @@ const ClubSystems = () => <>
   <section className="rules-section">
     <h2>13. Clásicos</h2>
     <ul>
-      <li>Cada club tiene un clásico. El <strong>natural</strong> sale del historial: partidos, eliminatorias, finales, goleadas y traspasos entre ambos (vale más si la rivalidad es pareja). El Presidente puede <strong>elegir otro una vez por temporada</strong>.</li>
+      <li>Cada club puede tener dos clásicos. El <strong>natural</strong> sale del historial: partidos, eliminatorias, finales, goleadas y traspasos entre ambos (vale más si la rivalidad es pareja). Además, el Presidente <strong>elige uno</strong> (puede ser el mismo natural) y lo puede cambiar cuando quiera. Los partidos contra cualquiera de los dos son clásico; si los dos clubes se tienen de rival, es clásico oficial.</li>
       <li>Si los dos clubes se eligen, es <strong>clásico oficial</strong>. En un clásico la demanda de entradas sube 60% (90% si es oficial) y ganar o perder mueve el doble de hinchas y ánimo.</li>
     </ul>
   </section>
