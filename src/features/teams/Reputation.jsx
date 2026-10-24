@@ -24,7 +24,7 @@ const tone = score => score >= 70 ? 'high' : score >= 50 ? 'mid' : 'low';
 
 function partNote(key, stats) {
   if (key === 'stay') return `${stats.averageStay.toLocaleString('es-CL')} torneos en promedio`;
-  if (key === 'homegrown') return `${stats.homegrown} con 3+ torneos`;
+  if (key === 'homegrown') return `${stats.homegrown} con 5+ torneos seguidos`;
   if (key === 'cleanStreak') return `${stats.cleanStreak} torneos`;
   if (key === 'releases') return `${stats.releases} ${stats.releases === 1 ? 'liberado' : 'liberados'} · ${stats.countedReleases ?? stats.releases} cuentan · ${stats.recentReleases} recientes`;
   return `${stats.promisesKept} cumplidas · ${stats.promisesBroken} rotas`;
@@ -60,7 +60,7 @@ function ReputationDetail({ row }) {
       <button type="button" role="tab" aria-selected={view === 'current'} className={view === 'current' ? 'on' : ''} onClick={() => setView('current')}>CUENTA HOY{data ? ` (${data.current.length})` : ''}</button>
       <button type="button" role="tab" aria-selected={view === 'history'} className={view === 'history' ? 'on' : ''} onClick={() => setView('history')}>HISTORIA{data ? ` (${data.history.length})` : ''}</button>
     </div>
-    {view === 'history' && <p className="reputation-intro">Lo que pasó antes del corte{sinceLabel(data?.since) ? ` del ${sinceLabel(data.since)}` : ''}: los agentes libres lo recuerdan, pero ya no resta ni suma.</p>}
+    {view === 'history' && <p className="reputation-intro">Liberaciones de antes del cambio de modalidad{sinceLabel(data?.since) ? ` (${sinceLabel(data.since)})` : ''}: los agentes libres las recuerdan, pero ya no restan.</p>}
     {!data ? <p className="reputation-intro">{detail.error ? 'No se pudo cargar el detalle.' : 'CARGANDO…'}</p>
       : events.length ? <ul className="reputation-events">{events.map((event, index) => <li key={`${event.kind}-${event.at}-${index}`} className={`event-${event.kind}`}>
         <span className="reputation-event-icon" aria-hidden="true">{EVENT_ICON[event.kind] ?? '•'}</span>
@@ -85,11 +85,11 @@ export function ReputationModal({ teamId, onClose }) {
   return <div className="person-modal-backdrop" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) onClose(); }}>
     <section className="person-modal reputation-modal" role="dialog" aria-modal="true" aria-label="Reputación de los presidentes">
       <header><h2>Reputación de los presidentes</h2><button type="button" onClick={onClose} aria-label="Cerrar">×</button></header>
-      <p className="reputation-intro">Es lo que piensan los agentes libres de cada presi cuando eligen club en una subasta. Pesa poco al lado de la oferta y el proyecto, pero puede desempatar. Toca un club para ver de dónde sale su puntaje: <b>lo que cuenta hoy</b> y, aparte, <b>la historia</b> de antes{sinceLabel(rows[0]?.since) ? ` del ${sinceLabel(rows[0].since)}` : ''}.</p>
+      <p className="reputation-intro">Es lo que piensan los agentes libres de cada presi cuando eligen club en una subasta. Pesa poco al lado de la oferta y el proyecto, pero puede desempatar. Toca un club para ver de dónde sale su puntaje. Cuenta toda la historia del club, salvo las <b>liberaciones</b> de antes del cambio de modalidad{sinceLabel(rows[0]?.since) ? ` (${sinceLabel(rows[0].since)})` : ''}, que quedan aparte como historia.</p>
       <details className="reputation-how"><summary>¿Cómo se calcula?</summary><ul className="reputation-rules">
         <li><b>Base 50</b>, y el resultado queda entre {rules?.min ?? 5} y {rules?.max ?? 95}.</li>
         <li><b>Duración:</b> +{rules?.perStayTournament ?? 6} por cada torneo que duran en promedio sus jugadores en el club (también los que ya se fueron), hasta {rules?.stayCap ?? 6} torneos.</li>
-        <li><b>Formados en casa:</b> +{rules?.perHomegrown ?? 1} por cada jugador que llegó sin venir de otro club y lleva {rules?.homegrownMinTournaments ?? 3} o más torneos, hasta +{rules?.homegrownCap ?? 10}.</li>
+        <li><b>Formados en casa:</b> +{rules?.perHomegrown ?? 1} por cada jugador que lleva {rules?.homegrownMinTournaments ?? 5} o más torneos seguidos en el club (sin irse y volver), hasta +{rules?.homegrownCap ?? 10}.</li>
         <li><b>Racha sin liberar:</b> +{rules?.perCleanTournament ?? 2} por cada torneo desde su última liberación, hasta +{rules?.cleanCap ?? 10}.</li>
         <li><b>Liberaciones:</b> −{rules?.perRelease ?? 4} cada una, y pesan {Math.round((1 - (rules?.releaseDecay ?? 0.75)) * 100)}% menos por cada torneo que pasa. Liberar a quien duró {rules?.freeReleaseAfterStay ?? 4} torneos o más no resta; soltar a quien llevaba {rules?.quickReleaseMaxTournaments ?? 1} torneo o menos pesa ×{(rules?.quickReleaseFactor ?? 1.5).toLocaleString('es-CL')}. Tope −{rules?.releaseCap ?? 40}.</li>
         <li><b>Promesas:</b> +{rules?.perPromiseKept ?? 3} por cada una cumplida (hasta {rules?.promisesKeptCap ?? 5}) y −{rules?.perPromiseBroken ?? 15} por cada una rota. Arrancar un torneo en números rojos resta lo mismo que una rota.</li>

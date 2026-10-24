@@ -8,7 +8,7 @@ import { restingByRound } from '../../utils/roundRest.js';
 import { matchRoundLabel } from '../../utils/matchPresentation.js';
 import { DataState, PageHeader } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
-import { DerbyBadge } from '../../components/DerbyBadge.jsx';
+import { Icon } from '../../ui/index.js';
 
 const labels = { pending: 'PENDIENTE', live: 'EN VIVO', finished: 'FINALIZADO', cancelled: 'CANCELADO' };
 
@@ -38,10 +38,9 @@ function FixtureCard({ match, resolveTeam, onSelect, showRound }) {
       : match.status === 'cancelled'
         ? 'CANCELADO'
         : 'PENDIENTE';
-  return <button type="button" className={`fixture-card fixture-${match.status}${match.sanctioned ? ' fixture-sanctioned' : ''}${match.derby ? ' fixture-derby' : ''}`} onClick={() => onSelect(match.id)} aria-label={`${match.homeTeam?.name ?? 'Equipo local'} contra ${match.awayTeam?.name ?? 'Equipo visitante'}: ${state}`}>
-    <DerbyBadge match={match} corner/>
-    <span className="fixture-teams">{team('home', home)}{team('away', away)}</span>
-    <small className="fixture-footer"><span>{showRound ? matchRoundLabel(match) : 'FECHA POR DEFINIR'}</span><SanctionBadge match={match} compact/><SimulatedBadge match={match}/>{match.homeTeam?.stadium && <span className="match-venue" title={`Estadio de ${match.homeTeam.name}`}>🏟️ {match.homeTeam.stadium}</span>}</small>
+  return <button type="button" className={`fixture-card fixture-${match.status}${match.sanctioned ? ' fixture-sanctioned' : ''}${match.derby ? ' fixture-derby' : ''}${match.officialDerby ? ' fixture-derby-official' : ''}`} onClick={() => onSelect(match.id)} aria-label={`${match.homeTeam?.name ?? 'Equipo local'} contra ${match.awayTeam?.name ?? 'Equipo visitante'}: ${state}`}>
+    <span className="fixture-teams" data-derby={match.derby ? (match.officialDerby ? 'CLÁSICO OFICIAL' : 'CLÁSICO') : undefined}>{team('home', home)}{team('away', away)}</span>
+    <small className="fixture-footer"><span>{match.derby && <Icon name="fire" size={12} className="fixture-derby-flame"/>}{showRound ? matchRoundLabel(match) : 'FECHA POR DEFINIR'}</span><SanctionBadge match={match} compact/><SimulatedBadge match={match}/>{match.homeTeam?.stadium && <span className="match-venue" title={`Estadio de ${match.homeTeam.name}`}>🏟️ {match.homeTeam.stadium}</span>}</small>
   </button>;
 }
 

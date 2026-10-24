@@ -170,13 +170,25 @@ a.tile:focus-visible, button.tile:focus-visible { outline: 3px solid var(--c-yel
 @media (max-width: 560px) { .profile-actions .ui-btn { flex: 1 1 100%; } .screen-face { width: 72px; height: 72px; } }
 .derby-badge { display: inline-flex; flex: none; align-items: center; gap: 3px; padding: 2px 5px; color: #fff; background: var(--c-red); font: 700 10px/1 var(--font-ui); letter-spacing: .5px; text-transform: uppercase; }
 .derby-badge.official { color: var(--c-navy-900); background: var(--c-yellow); }
-/* Clásico: cinta diagonal en la esquina superior izquierda (la tarjeta la recorta). Sin borde rojo ni animación. */
+/* Clásico en la tarjeta de partido: barra de fuego arriba, marca de agua detrás de los equipos y llama en el pie.
+   Todo va por encima o por detrás del contenido: no mueve nada. Al pasar el mouse, el fuego corre. */
 .fixture-card { position: relative; }
-.derby-badge.corner { position: absolute; top: 11px; left: -26px; z-index: 1; justify-content: center; width: 92px; padding: 2px 0; gap: 3px; border-radius: 0;
-  font-size: 8px; letter-spacing: .7px; transform: rotate(-45deg); box-shadow: 0 1px 2px rgba(0, 0, 0, .3); pointer-events: none; }
-.derby-badge.corner svg { width: 9px; height: 9px; }
-/* Corre los equipos a la derecha para que la cinta no tape el escudo del local (sin quitar alto a la tarjeta). */
-.fixture-card.fixture-derby .fixture-teams { padding-left: 30px; }
+.fixture-card.fixture-derby { background: linear-gradient(160deg, #fff9e8 55%, #ffe6d6); }
+.fixture-card.fixture-derby::before { content: ''; position: absolute; inset: 0 0 auto; z-index: 2; height: 4px;
+  background: linear-gradient(90deg, #6e0014, #c8102e 25%, #ff6a1a 50%, #ffc21a 62%, #c8102e 80%, #6e0014); background-size: 200% 100%; }
+.fixture-card.fixture-derby .fixture-teams { position: relative; isolation: isolate; }
+.fixture-card.fixture-derby .fixture-teams::after { content: attr(data-derby); position: absolute; right: 10px; top: 50%; z-index: -1;
+  color: rgba(200, 16, 46, .09); font: 400 40px/1 'Anton', sans-serif; letter-spacing: 2px; white-space: nowrap;
+  transform: translateY(-50%) rotate(-7deg); transition: color .25s ease; pointer-events: none; }
+.fixture-card.fixture-derby .fixture-footer { background: linear-gradient(90deg, rgba(200, 16, 46, .16), transparent 65%); }
+.fixture-card.fixture-derby .fixture-footer > span:first-child { color: #a3001f; }
+.fixture-derby-flame { margin-right: 5px; vertical-align: -1px; color: #e0451c; }
+.fixture-card.fixture-derby:hover::before { animation: derby-fire 1.4s linear infinite; }
+.fixture-card.fixture-derby:hover .fixture-teams::after { color: rgba(200, 16, 46, .16); }
+.fixture-card.fixture-derby-official::before { background-image: linear-gradient(90deg, #7a5a00, #d4a017 25%, #fff2a8 50%, #ffcf33 62%, #d4a017 80%, #7a5a00); }
+.fixture-card.fixture-derby-official .fixture-teams::after { color: rgba(176, 125, 0, .12); font-size: 30px; }
+@keyframes derby-fire { from { background-position: 0 0; } to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .fixture-card.fixture-derby:hover::before { animation: none; } }
 /* El cuerpo de cada pantalla va sobre papel (como el resto del sitio), para que todo se lea igual. */
 .screen-body { padding: var(--sp-4); border: var(--border); background-color: var(--paper); background-image: url('/paper-grain.svg'); box-shadow: var(--shadow-pixel); }
 @media (max-width: 560px) { .screen-body { padding: var(--sp-3); } }
