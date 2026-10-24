@@ -9,6 +9,7 @@ import { matchRoundLabel } from '../../utils/matchPresentation.js';
 import { DataState, PageHeader } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
 import { Icon } from '../../ui/index.js';
+import { rivalryOf } from '../../utils/rivalry.js';
 
 const labels = { pending: 'PENDIENTE', live: 'EN VIVO', finished: 'FINALIZADO', cancelled: 'CANCELADO' };
 
@@ -27,6 +28,7 @@ function FixtureCard({ match, resolveTeam, onSelect, showRound }) {
   const finished = match.status === 'finished';
   const live = match.status === 'live';
   const hasScore = finished || live;
+  const rivalry = rivalryOf(match);
   const home = Number(match.homeScore ?? 0);
   const away = Number(match.awayScore ?? 0);
   const winner = finished ? (home > away ? 'home' : away > home ? 'away' : match.winnerTeamId ? (match.winnerTeamId === match.homeTeam?.id ? 'home' : 'away') : '') : '';
@@ -38,9 +40,9 @@ function FixtureCard({ match, resolveTeam, onSelect, showRound }) {
       : match.status === 'cancelled'
         ? 'CANCELADO'
         : 'PENDIENTE';
-  return <button type="button" className={`fixture-card fixture-${match.status}${match.sanctioned ? ' fixture-sanctioned' : ''}${match.derby ? ' fixture-derby' : ''}${match.officialDerby ? ' fixture-derby-official' : ''}`} onClick={() => onSelect(match.id)} aria-label={`${match.homeTeam?.name ?? 'Equipo local'} contra ${match.awayTeam?.name ?? 'Equipo visitante'}: ${state}`}>
-    <span className="fixture-teams" data-derby={match.derby ? (match.officialDerby ? 'CLÁSICO OFICIAL' : 'CLÁSICO') : undefined}>{team('home', home)}{team('away', away)}</span>
-    <small className="fixture-footer"><span>{match.derby && <Icon name="fire" size={12} className="fixture-derby-flame"/>}{showRound ? matchRoundLabel(match) : 'FECHA POR DEFINIR'}</span><SanctionBadge match={match} compact/><SimulatedBadge match={match}/>{match.homeTeam?.stadium && <span className="match-venue" title={`Estadio de ${match.homeTeam.name}`}>🏟️ {match.homeTeam.stadium}</span>}</small>
+  return <button type="button" className={`fixture-card fixture-${match.status}${match.sanctioned ? ' fixture-sanctioned' : ''}${match.derby ? ' fixture-derby' : ''}${rivalry ? ` rivalry-${rivalry.kind}${rivalry.both ? ' rivalry-both' : ''}` : ''}`} onClick={() => onSelect(match.id)} aria-label={`${match.homeTeam?.name ?? 'Equipo local'} contra ${match.awayTeam?.name ?? 'Equipo visitante'}: ${state}`}>
+    <span className="fixture-teams" data-derby={rivalry ? rivalry.label.toUpperCase() : undefined}>{team('home', home)}{team('away', away)}{rivalry?.streak && <em className="fixture-streak">{rivalry.streak.text}</em>}</span>
+    <small className="fixture-footer"><span>{rivalry && <Icon name={rivalry.icon} size={12} className="fixture-derby-flame" title={rivalry.label}/>}{showRound ? matchRoundLabel(match) : 'FECHA POR DEFINIR'}</span><SanctionBadge match={match} compact/><SimulatedBadge match={match}/>{match.homeTeam?.stadium && <span className="match-venue" title={`Estadio de ${match.homeTeam.name}`}>🏟️ {match.homeTeam.stadium}</span>}</small>
   </button>;
 }
 

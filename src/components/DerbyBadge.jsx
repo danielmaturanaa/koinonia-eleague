@@ -1,8 +1,9 @@
 import { Icon } from '../ui/index.js';
+import { rivalryOf } from '../utils/rivalry.js';
 
-/** Marca de clásico en cualquier tarjeta de partido (el servidor manda `derby` y `officialDerby`). */
+/** Marca de rivalidad en cualquier lista de partidos: clásico, superclásico, derbi o el nombre propio de la rivalidad. */
 export function DerbyBadge({ match }) {
-  if (!match?.derby) return null;
-  const title = match.officialDerby ? 'Clásico oficial: los dos clubes se tienen de rival' : 'Clásico';
-  return <span className={`derby-badge ${match.officialDerby ? 'official' : ''}`} title={title}><Icon name="fire" size={11}/>Clásico</span>;
+  const rivalry = rivalryOf(match);
+  if (!rivalry) return null;
+  return <span className={`derby-badge rivalry-${rivalry.kind}${rivalry.both ? ' rivalry-both' : ''}`} title={rivalry.streak?.text ?? rivalry.label}><Icon name={rivalry.icon} size={11}/>{rivalry.label}</span>;
 }

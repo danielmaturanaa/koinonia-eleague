@@ -169,24 +169,34 @@ a.tile:focus-visible, button.tile:focus-visible { outline: 3px solid var(--c-yel
 .player-screen .player-profile-card { margin: 0; }
 @media (max-width: 560px) { .profile-actions .ui-btn { flex: 1 1 100%; } .screen-face { width: 72px; height: 72px; } }
 .derby-badge { display: inline-flex; flex: none; align-items: center; gap: 3px; padding: 2px 5px; color: #fff; background: var(--c-red); font: 700 10px/1 var(--font-ui); letter-spacing: .5px; text-transform: uppercase; }
-.derby-badge.official { color: var(--c-navy-900); background: var(--c-yellow); }
-/* Clásico en la tarjeta de partido: barra de fuego arriba, marca de agua detrás de los equipos y llama en el pie.
-   Todo va por encima o por detrás del contenido: no mueve nada. Al pasar el mouse, el fuego corre. */
-.fixture-card { position: relative; }
-.fixture-card.fixture-derby { background: linear-gradient(160deg, #fff9e8 55%, #ffe6d6); }
-.fixture-card.fixture-derby::before { content: ''; position: absolute; inset: 0 0 auto; z-index: 2; height: 4px;
-  background: linear-gradient(90deg, #6e0014, #c8102e 25%, #ff6a1a 50%, #ffc21a 62%, #c8102e 80%, #6e0014); background-size: 200% 100%; }
+.derby-badge.official, .derby-badge.rivalry-superclasico { color: var(--c-navy-900); background: var(--c-yellow); }
+.derby-badge.rivalry-derbi { background: #1257d6; }
+.derby-badge.rivalry-both { background: linear-gradient(90deg, var(--c-red) 50%, #1257d6 50%); }
+/* Rivalidades en la tarjeta de partido. Cada tipo tiene su color: clásico rojo (fuego), superclásico dorado (corona), derbi azul
+   (rayo) y clásico y derbi a la vez, rojo y azul. Barra arriba, marca de agua detrás de los equipos (o el nombre propio) y el
+   ícono en el pie: no mueve nada. Al pasar el mouse, la barra corre. */
+.fixture-card { position: relative; --rv-ink: 200, 16, 46; --rv-wash: #ffe6d6;
+  --rv-bar: linear-gradient(90deg, #6e0014, #c8102e 25%, #ff6a1a 50%, #ffc21a 62%, #c8102e 80%, #6e0014); }
+.fixture-card.rivalry-superclasico { --rv-ink: 176, 125, 0; --rv-wash: #fff1c4;
+  --rv-bar: linear-gradient(90deg, #7a5a00, #d4a017 25%, #fff2a8 50%, #ffcf33 62%, #d4a017 80%, #7a5a00); }
+.fixture-card.rivalry-derbi { --rv-ink: 16, 92, 214; --rv-wash: #dfeaff;
+  --rv-bar: linear-gradient(90deg, #06235e, #1257d6 25%, #4fc3ff 45%, #ffffff 50%, #4fc3ff 55%, #1257d6 75%, #06235e); }
+.fixture-card.rivalry-both { --rv-wash: #f1e4f4;
+  --rv-bar: linear-gradient(90deg, #c8102e, #ff6a1a 25%, #c8102e 45%, #1257d6 55%, #4fc3ff 75%, #1257d6); }
+.fixture-card.fixture-derby { background: linear-gradient(160deg, #fff9e8 55%, var(--rv-wash)); }
+.fixture-card.fixture-derby::before { content: ''; position: absolute; inset: 0 0 auto; z-index: 2; height: 4px; background: var(--rv-bar); background-size: 200% 100%; }
 .fixture-card.fixture-derby .fixture-teams { position: relative; isolation: isolate; }
-.fixture-card.fixture-derby .fixture-teams::after { content: attr(data-derby); position: absolute; right: 10px; top: 50%; z-index: -1;
-  color: rgba(200, 16, 46, .09); font: 400 40px/1 'Anton', sans-serif; letter-spacing: 2px; white-space: nowrap;
+.fixture-card.fixture-derby .fixture-teams::after { content: attr(data-derby); position: absolute; right: 10px; top: 50%; z-index: -1; max-width: 70%; overflow: hidden;
+  color: rgba(var(--rv-ink), .09); font: 400 34px/1 'Anton', sans-serif; letter-spacing: 2px; white-space: nowrap; text-overflow: clip;
   transform: translateY(-50%) rotate(-7deg); transition: color .25s ease; pointer-events: none; }
-.fixture-card.fixture-derby .fixture-footer { background: linear-gradient(90deg, rgba(200, 16, 46, .16), transparent 65%); }
-.fixture-card.fixture-derby .fixture-footer > span:first-child { color: #a3001f; }
-.fixture-derby-flame { margin-right: 5px; vertical-align: -1px; color: #e0451c; }
+.fixture-card.rivalry-both .fixture-teams::after { color: rgba(200, 16, 46, .08); text-shadow: 3px 3px 0 rgba(16, 92, 214, .08); }
+.fixture-card.fixture-derby .fixture-footer { background: linear-gradient(90deg, rgba(var(--rv-ink), .16), transparent 65%); }
+.fixture-card.fixture-derby .fixture-footer > span:first-child { color: rgb(var(--rv-ink)); }
+.fixture-derby-flame { margin-right: 5px; vertical-align: -1px; color: rgb(var(--rv-ink)); }
+.fixture-card.rivalry-clasico .fixture-derby-flame { color: #e0451c; }
+.fixture-streak { display: block; margin-top: -2px; color: rgb(var(--rv-ink)); font: italic 600 11px/1.2 'Roboto Condensed', sans-serif; letter-spacing: .2px; }
 .fixture-card.fixture-derby:hover::before { animation: derby-fire 1.4s linear infinite; }
-.fixture-card.fixture-derby:hover .fixture-teams::after { color: rgba(200, 16, 46, .16); }
-.fixture-card.fixture-derby-official::before { background-image: linear-gradient(90deg, #7a5a00, #d4a017 25%, #fff2a8 50%, #ffcf33 62%, #d4a017 80%, #7a5a00); }
-.fixture-card.fixture-derby-official .fixture-teams::after { color: rgba(176, 125, 0, .12); font-size: 30px; }
+.fixture-card.fixture-derby:hover .fixture-teams::after { color: rgba(var(--rv-ink), .16); }
 @keyframes derby-fire { from { background-position: 0 0; } to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .fixture-card.fixture-derby:hover::before { animation: none; } }
 /* El cuerpo de cada pantalla va sobre papel (como el resto del sitio), para que todo se lea igual. */

@@ -119,6 +119,16 @@
 .rivalry-tab { display: grid; gap: var(--sp-4); }
 .rivalry-hero { grid-template-columns: 1fr auto 1fr; align-items: center; gap: var(--sp-4); background: radial-gradient(circle at 50% 50%, #3a0612, var(--c-navy-900) 70%); }
 .rivalry-hero.is-official { box-shadow: 0 0 0 3px var(--c-red), var(--shadow-pixel); }
+.rivalry-hero.is-super { background: radial-gradient(circle at 50% 50%, #4a3500, var(--c-navy-900) 72%); box-shadow: 0 0 0 3px #d4a017, 0 0 18px rgba(255, 207, 51, .35), var(--shadow-pixel); }
+.rivalry-hero.is-derbi { background: radial-gradient(circle at 50% 50%, #0b3a8f, var(--c-navy-900) 70%); box-shadow: 0 0 0 3px #1257d6, var(--shadow-pixel); }
+.rivalry-name { display: grid; justify-items: center; gap: 6px; max-width: 260px; text-align: center; }
+.rivalry-name-current { margin: 0; color: #ffd42a; font: 400 20px/1.1 'Anton', sans-serif; letter-spacing: .5px; text-wrap: balance; }
+.rivalry-name small { color: #ffffffcc; font: 500 11px/1.3 'Oswald', sans-serif; letter-spacing: .4px; }
+.rivalry-name-pending { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; }
+.rivalry-name-edit { padding: 3px 8px; border: 1px solid #ffffff66; background: transparent; color: #fff; font: 600 11px/1.2 'Oswald', sans-serif; letter-spacing: .4px; cursor: pointer; }
+.rivalry-name-edit:hover { background: #ffffff1f; }
+.rivalry-name-form { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.rivalry-name-form input { min-width: 0; flex: 1 1 160px; padding: 5px 8px; border: 2px solid #ffd42a; font: 500 13px/1.2 'Oswald', sans-serif; }
 .rivalry-side { display: grid; justify-items: center; gap: var(--sp-2); text-align: center; }
 .rivalry-side b { font: 400 var(--fs-xl)/1.05 var(--font-display); color: var(--c-white); letter-spacing: .4px; }
 .rivalry-crest { width: 84px; height: 84px; object-fit: contain; font-size: 56px; filter: drop-shadow(3px 3px 0 #000); }

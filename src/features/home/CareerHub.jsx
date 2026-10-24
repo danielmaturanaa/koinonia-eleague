@@ -110,7 +110,7 @@ export function CareerHub({ teamId, teams = [], standings = [], navigate }) {
     <div className="tile-grid">
       {next
         ? <Tile tone={derby ? 'red' : 'navy'} href={`#/partidos/${next.id}`} icon={<Icon name={derby ? 'fire' : 'ball'} size={18}/>}
-          title={next.status === 'live' ? 'Jugando ahora' : derby ? 'Próximo partido · ¡Clásico!' : 'Próximo partido'}
+          title={next.status === 'live' ? 'Jugando ahora' : derby ? `Próximo partido · ¡${next?.rivalry?.label ?? 'Clásico'}!` : 'Próximo partido'}
           value={`vs ${nextRival?.name ?? '—'}`} detail={`${matchRoundLabel(next)} · ${sideOf(next, teamId) === 'home' ? 'de local' : 'de visita'}`}/>
         : last && <Tile tone="navy" href={`#/partidos/${last.id}`} icon={<Icon name="ball" size={18}/>} title="Último partido"
           value={`${{ G: 'Ganaste', E: 'Empataste', P: 'Perdiste' }[resultOf(last, teamId)]} ${scoreFor(last, teamId)}`}
