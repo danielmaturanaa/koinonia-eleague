@@ -42,7 +42,7 @@ const Transfers = ({ squadValueLimit, payrollCap, contractsEnabled }) => <sectio
   </ul>
   <h3>4.2 Liberar a un jugador</h3>
   <ul>
-    <li>Sin contrato, liberar a un jugador deja una compensación baja (20% de su valor) y pasa a la agencia libre. Con contrato vigente liberar es <strong>rescindir</strong>: ver sección 6.3.</li>
+    <li>Liberar a un jugador es <strong>rescindir</strong> su contrato si está vigente (ver sección 6.3) o dejarlo ir gratis y sin castigo si ya venció. Rescindir resta reputación igual que una liberación: el castigo se diluye con los torneos, no hay castigo si el jugador cumplió 4 torneos o más en el club (solo se paga la indemnización), fichar y botar pesa ×1,5 y corta la racha sin liberar.</li>
     <li>Un despido baja el valor de mercado del jugador y la reputación del club.</li>
   </ul>
   <h3>4.3 Agentes libres: encuesta y subasta sellada</h3>

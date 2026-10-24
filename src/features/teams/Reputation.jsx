@@ -93,7 +93,7 @@ export function ReputationModal({ teamId, onClose }) {
         <li><b>Racha sin liberar:</b> +{rules?.perCleanTournament ?? 2} por cada torneo desde su última liberación (se cuenta desde el cambio de modalidad), hasta +{rules?.cleanCap ?? 10}.</li>
         <li><b>Liberaciones:</b> −{rules?.perRelease ?? 4} cada una, y pesan {Math.round((1 - (rules?.releaseDecay ?? 0.75)) * 100)}% menos por cada torneo que pasa. Liberar a quien duró {rules?.freeReleaseAfterStay ?? 4} torneos o más no resta; soltar a quien llevaba {rules?.quickReleaseMaxTournaments ?? 1} torneo o menos pesa ×{(rules?.quickReleaseFactor ?? 1.5).toLocaleString('es-CL')}. Tope −{rules?.releaseCap ?? 40}.</li>
         <li><b>Promesas:</b> +{rules?.perPromiseKept ?? 3} por cada una cumplida (hasta {rules?.promisesKeptCap ?? 5}) y −{rules?.perPromiseBroken ?? 15} por cada una rota. Arrancar un torneo en números rojos resta lo mismo que una rota.</li>
-        <li><b>Rescisiones:</b> −{rules?.perContractBreak ?? 12} cada una, y pesan menos con los torneos.</li>
+        <li><b>Rescisiones:</b> −{rules?.perContractBreak ?? 12} cada una, con las mismas reglas que las liberaciones: pesan menos con los torneos, no restan si el jugador llevaba {rules?.freeReleaseAfterStay ?? 4} torneos o más, fichar y botar pesa ×{(rules?.quickReleaseFactor ?? 1.5).toLocaleString('es-CL')} y cortan la racha.</li>
       </ul></details>
       {ranking.loading ? <p className="reputation-intro">CARGANDO RANKING…</p> : ranking.error ? <p className="reputation-intro">No se pudo cargar el ranking.</p>
         : <ol className="reputation-list">{rows.map(row => {

@@ -26,8 +26,7 @@ export function PlayerActions({ player, teams, onChanged }) {
     if (window.confirm(`¿Comprar a ${player.name} para ${team?.name ?? 'EL EQUIPO SELECCIONADO'} por su valor GP?`)) buy.execute(teamId);
   };
   const releasePlayer = () => {
-    const amount = Math.round(Number(player.gpValue ?? 0) * 0.2);
-    if (window.confirm(`¿Liberar a ${player.name}? El club recibe el 20% de su valor (${gpLabel(amount)}), el jugador queda libre y baja la reputación del club ante los agentes libres.`)) release.execute({ teamId: currentTeamId });
+    if (window.confirm(`¿Liberar a ${player.name}? Si su contrato está vigente es rescindir: pagas el 50% de los sueldos que le faltan y baja la reputación del club (salvo que lleve 4 torneos o más). Si ya venció, se va gratis.`)) release.execute({ teamId: currentTeamId });
   };
 
   return <section className="player-actions">

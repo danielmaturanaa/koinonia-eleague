@@ -10,7 +10,6 @@ import { GpInput } from '../../../components/GpInput.jsx';
 import { ArrivalPanel } from './ArrivalPanel.jsx';
 import { Button, HowItWorks } from '../../../ui/index.js';
 
-const RELEASE_SHARE = 0.2;
 // La misma banda que valida el servidor: todo precio queda entre 0,7× y 1,25× el valor de Transfermarkt del jugador.
 const PRICE_MIN = 0.7;
 const PRICE_MAX = 1.25;
@@ -285,22 +284,29 @@ function ReleaseForm({ myTeamId, onDone }) {
   const [playerId, setPlayerId] = useState('');
   const [confirming, setConfirming] = useState(false);
   const mySquad = useSquad(myTeamId);
-  const mutation = useApiMutation((body, signal) => endpoints.releasePlayer(playerId, body, signal), { onSuccess: () => { setPlayerId(''); setConfirming(false); onDone?.(); } });
+  const contracts = useApiQuery(signal => (myTeamId ? endpoints.teamContracts(myTeamId, signal) : Promise.resolve({ data: null })), [myTeamId]);
+  const mutation = useApiMutation((body, signal) => endpoints.releasePlayer(playerId, body, signal), { onSuccess: () => { setPlayerId(''); setConfirming(false); contracts.retry(); onDone?.(); } });
   const player = mySquad.squad.find(item => item.id === playerId);
-  const refund = player ? Math.round((player.gpValue ?? 0) * RELEASE_SHARE) : null;
-  return <form className="admin-form market-form offer-form" onSubmit={event => { event.preventDefault(); if (player) setConfirming(true); }}>
+  // Liberar es rescindir (contrato vigente: indemnización) o dejarlo ir (contrato vencido: gratis y sin castigo).
+  const contract = (contracts.data?.contracts ?? []).find(item => item.playerId === playerId) ?? null;
+  const expired = contract && (contract.status === 'expired' || contract.endsWith);
+  const cost = contract && !expired ? contract.terminationCost : 0;
+  const outcome = !player ? null : !contract ? 'NO TIENE CONTRATO CON TU CLUB: NO SE PUEDE LIBERAR.'
+    : expired ? 'SU CONTRATO VENCIÓ: SE VA GRATIS, SIN CASTIGO NI INDEMNIZACIÓN.'
+      : `ES RESCINDIR: PAGAS ${gp(cost)} DE INDEMNIZACIÓN (50% DE LOS SUELDOS QUE LE FALTAN), NO RECIBES NADA Y SU VALOR BAJA.`;
+  return <form className="admin-form market-form offer-form" onSubmit={event => { event.preventDefault(); if (player && contract) setConfirming(true); }}>
     <label>JUGADOR A LIBERAR<select value={playerId} required onChange={event => { setPlayerId(event.target.value); setConfirming(false); }}>{playerOptions(mySquad.squad)}</select></label>
-    <p className="poll-hint">RECIBES EL 20% DE SU VALOR{refund !== null ? `: ${gp(refund)}` : ''} Y QUEDA COMO AGENTE LIBRE. SU VALOR BAJA 0,15× SU VALOR DE TRANSFERMARKT (NUNCA BAJO 0,7×).</p>
-    <HowItWorks><p>Los agentes libres se acuerdan: cada liberación baja tu reputación en las subastas.</p><p>Si tiene contrato vigente es una rescisión: pagas el 50% de las temporadas que faltan y no recibes nada (más detalle en Contratos y nómina).</p><p>Un despido baja su valor de mercado. Si su contrato ya había vencido, sale sin castigo y su valor no cambia.</p></HowItWorks>
+    {outcome && <p className="poll-hint">{outcome}</p>}
+    <HowItWorks><p>Con contrato vigente, liberar es rescindir: pagas el 50% de los sueldos que le faltan, no recibes nada, su valor baja (0,15× su valor de Transfermarkt, nunca bajo 0,7×) y baja tu reputación ante los agentes libres. No resta reputación si llevaba 4 torneos o más en el club; si lo acababas de fichar, resta más.</p><p>Si su contrato ya venció, se va gratis y sin castigo.</p></HowItWorks>
     {confirming
       ? <div className="offer-confirm" role="group" aria-label="CONFIRMAR">
-        <span>¿LIBERAR A {upper(player?.name)}? RECIBES {gp(refund)} Y NO SE PUEDE DESHACER.</span>
+        <span>¿LIBERAR A {upper(player?.name)}? {expired ? 'SE VA GRATIS.' : `PAGAS ${gp(cost)}.`} NO SE PUEDE DESHACER.</span>
         <div className="mini-actions">
           <button type="button" className="danger" disabled={mutation.loading} onClick={() => mutation.execute({ teamId: myTeamId })}>SÍ, LIBERAR</button>
           <button type="button" className="ghost" disabled={mutation.loading} onClick={() => setConfirming(false)}>VOLVER</button>
         </div>
       </div>
-      : <Button variant="danger" type="submit" disabled={!playerId}>LIBERAR JUGADOR</Button>}
+      : <Button variant="danger" type="submit" disabled={!playerId || !contract}>LIBERAR JUGADOR</Button>}
     {mutation.error && <p className="form-feedback error" role="alert">{mutation.error.message}</p>}
   </form>;
 }
