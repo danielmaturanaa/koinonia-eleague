@@ -7,6 +7,7 @@ const MatchRules = () => <section className="rules-section">
   <ul>
     <li><strong>Creación de la Sala (Localía):</strong> El jugador que figure como equipo local en el calendario tiene la responsabilidad de crear la sala de juego.</li>
     <li><strong>Formato de Liga:</strong> El partido debe configurarse en <strong>10 minutos</strong> y con la condición de los jugadores en <strong>“Excelente Estado”</strong> para ambos equipos.</li>
+    <li><strong>Formato del torneo (10 clubes):</strong> fase regular todos contra todos a <strong>dos vueltas</strong>. Clasifican los <strong>8 primeros</strong> a los playoffs: cuartos de final <strong>1.º vs 8.º, 2.º vs 7.º, 3.º vs 6.º y 4.º vs 5.º</strong>; en semis se cruzan el ganador de 1-8 con el de 4-5 y el de 2-7 con el de 3-6. <strong>Todas las series son a ida y vuelta, la final también</strong>; la vuelta la juega de local el mejor ubicado en la tabla. Si el global queda empatado, se define por penales.</li>
     <li><strong>Formato de Copa (Eliminatorias):</strong> En los encuentros de eliminación directa deben estar activadas obligatoriamente las opciones de <strong>Prórroga y Penales</strong>.</li>
     <li><strong>Interrupciones y Caídas del Servidor:</strong> Se deberá crear una nueva sala y jugar un partido de <strong>5 minutos</strong> para simular el tiempo restante. Alternativamente, ambos jugadores pueden acordar un partido normal de 10 minutos disputando únicamente un tiempo.</li>
   </ul>
@@ -67,6 +68,7 @@ const Prizes = () => <>
       <li><strong>Campeón:</strong> 40 M GP.</li>
       <li><strong>Subcampeón:</strong> 20 M GP.</li>
       <li><strong>Semifinalista:</strong> 10 M GP.</li>
+      <li><strong>Cuartofinalista:</strong> sin premio extra (ya cobró su puesto en la tabla).</li>
     </ul>
     <p>Los premios de los playoffs se suman a los de la tabla.</p>
   </section>
@@ -117,7 +119,7 @@ const ClubSystems = () => <>
   <section className="rules-section">
     <h2>8. Primas</h2>
     <ul>
-      <li>Cada jugador puede tener tres primas, que paga el club: por <strong>gol</strong> (hasta el 1% de su valor por gol), por <strong>clasificar a playoffs</strong> (hasta el 5%, a los jugadores de los cuatro clasificados) y por <strong>título</strong> (hasta el 10%, al campeón de playoffs).</li>
+      <li>Cada jugador puede tener tres primas, que paga el club: por <strong>gol</strong> (hasta el 1% de su valor por gol), por <strong>clasificar a playoffs</strong> (hasta el 5%, a los jugadores de los clubes clasificados) y por <strong>título</strong> (hasta el 10%, al campeón de playoffs).</li>
       <li>Las primas se fijan solo con el <strong>mercado abierto</strong>. Se pagan al cerrar la temporada (goles), al comenzar los playoffs (clasificación) y al coronarse el campeón (título).</li>
       <li>La prima por gol cuenta para el tope del 20% del valor: se suman los goles que se esperan de su posición. Al renovar las primas se mantienen (recortadas si ya no caben con el nuevo sueldo); si el jugador cambia de club llega sin primas.</li>
     </ul>
@@ -165,7 +167,7 @@ const ClubSystems = () => <>
     <h2>14. Hinchada y Taquilla</h2>
     <ul>
       <li>Cada club tiene <strong>hinchas</strong>: personas que se declaran hinchas del club (no seguidores de redes). Cuántos tiene depende de su grandeza (historial de títulos, finales y playoffs, y valor del plantel). Una parte vive en Chile, que se reparten entre todos los clubes, y el resto en el país del club. En la ficha del club hay un mapa con dónde viven. Desde ahí crecen o bajan con resultados, clásicos, títulos y eventos. También hay un <strong>ánimo de la hinchada</strong> que cambia partido a partido.</li>
-      <li>Al terminar cada partido de clubes, el local cobra las entradas: la asistencia depende de sus hinchas que viven cerca (los de su país y unos pocos de afuera que viajan), el rival, si es clásico o playoffs, el ánimo de la gente y el precio que fijó el Presidente (popular 35 €, normal 60 €, premium 95 €). El aforo es el techo. Los partidos importantes tienen piso: una <strong>semifinal de playoffs casi se llena</strong> (95% o más) y <strong>una final se llena</strong>; en la liga, un clásico, la visita de un grande o un partido decisivo del tramo final (dos de arriba de la tabla) llenan casi todo el estadio aunque el local tenga poca hinchada. La final a partido único se juega en el estadio más grande de los dos y la taquilla se reparte mitad y mitad.</li>
+      <li>Al terminar cada partido de clubes, el local cobra las entradas: la asistencia depende de sus hinchas que viven cerca (los de su país y unos pocos de afuera que viajan), el rival, si es clásico o playoffs, el ánimo de la gente y el precio que fijó el Presidente (popular 35 €, normal 60 €, premium 95 €). El aforo es el techo. Los partidos importantes tienen piso: unos <strong>cuartos de final llenan el 90%</strong>, una <strong>semifinal casi se llena</strong> (95% o más) y <strong>una final se llena</strong>; en la liga, un clásico, la visita de un grande o un partido decisivo del tramo final (dos de arriba de la tabla) llenan casi todo el estadio aunque el local tenga poca hinchada. La final a partido único se juega en el estadio más grande de los dos y la taquilla se reparte mitad y mitad.</li>
       <li>La taquilla cobra <strong>desde el v11</strong>. En el v10 se registra el público y los hinchas se mueven con los resultados, pero sin plata (lo que se alcanzó a cobrar se devolvió).</li>
       <li>Un castigo (W.O.) se juega a puertas cerradas: no hay taquilla. Si un partido se reabre o se anula, la taquilla y los hinchas se devuelven.</li>
       <li><strong>El marcador no cambia</strong>: la hinchada y el estadio mueven plata, hinchas y ánimo, nunca el resultado del partido.</li>

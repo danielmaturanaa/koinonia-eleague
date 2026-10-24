@@ -18,8 +18,8 @@ const SEASONS = [2, 4, 6];
 // En la simulación son los torneos que le quedan, que pueden ser impares.
 const SIM_YEARS = [1, 2, 3, 4, 5, 6];
 const upper = text => String(text ?? '').toUpperCase();
-const PLAYOFF_SHORT = { none: 'NADA', semifinal: 'SEMIFINAL', runnerUp: 'SUBCAMPEÓN', champion: 'CAMPEÓN' };
-const PLAYOFF_LABEL = { none: 'SIN PREMIO DE PLAYOFFS', semifinal: 'SEMIFINALISTA (SIN PREMIO)', runnerUp: 'SUBCAMPEÓN', champion: 'CAMPEÓN' };
+const PLAYOFF_SHORT = { none: 'NADA', quarterfinal: 'CUARTOS', semifinal: 'SEMIFINAL', runnerUp: 'SUBCAMPEÓN', champion: 'CAMPEÓN' };
+const PLAYOFF_LABEL = { none: 'NO CLASIFICA', quarterfinal: 'CUARTOFINALISTA (SIN PREMIO)', semifinal: 'SEMIFINALISTA', runnerUp: 'SUBCAMPEÓN', champion: 'CAMPEÓN' };
 
 // ---------- almacenamiento local (la simulación y la forma de verla son solo de este navegador) ----------
 const readJson = (key, fallback) => { try { return JSON.parse(window.localStorage.getItem(key) ?? 'null') ?? fallback; } catch { return fallback; } };

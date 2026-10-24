@@ -36,7 +36,7 @@ function PlayoffPenalties({ series, home, away, onChanged }) {
 }
 
 function PlayoffSeriesCard({ series, resolveTeam, showWinner = true, onChanged }) {
-  const stage = series.round === 'semifinal' ? `SEMIFINAL ${series.slot}` : 'FINAL';
+  const stage = series.round === 'final' ? 'FINAL' : `${series.round === 'quarterfinal' ? 'CUARTOS' : 'SEMIFINAL'} ${series.slot}`;
   const home = resolveTeam(series.homeTeam); const away = resolveTeam(series.awayTeam);
   const twoLegs = series.matches.length > 1;
   const firstLeg = series.matches.find(match => Number(match.leg) === 1) ?? series.matches[0];
@@ -104,14 +104,33 @@ function ScorersPanel({ query }) {
   </section>;
 }
 
+// Rondas de los playoffs: con 8 clasificados parte en cuartos. Los cuartos se muestran en orden de cuadro
+// (1.º-8.º y 4.º-5.º alimentan la semi 1; 2.º-7.º y 3.º-6.º, la semi 2).
+const PLAYOFF_ROUNDS = { quarterfinal: { label: 'CUARTOS DE FINAL', slots: [1, 4, 2, 3] }, semifinal: { label: 'SEMIFINALES', slots: [1, 2] }, final: { label: 'FINAL', slots: [1] } };
+const legsText = legs => (Number(legs) === 1 ? 'PARTIDO ÚNICO' : 'IDA Y VUELTA');
+
 function PlayoffsSection({ tournamentId, resolveTeam }) {
   const playoffs = useApiQuery(signal => endpoints.playoffs(tournamentId, signal), [tournamentId]);
   const data = playoffs.data;
   if (playoffs.loading || playoffs.error || !data) return null;
-  const semis = data.series?.filter(series => series.round === 'semifinal') ?? [];
+  const eight = Number(data.qualifiedCount) === 8;
+  const rounds = eight ? ['quarterfinal', 'semifinal', 'final'] : ['semifinal', 'final'];
+  const legs = { quarterfinal: data.quarterfinalLegs, semifinal: data.semifinalLegs, final: data.finalLegs };
   const final = data.series?.find(series => series.round === 'final');
   const champion = final?.winnerTeamId ? [resolveTeam(final.homeTeam), resolveTeam(final.awayTeam)].find(team => String(team.id) === String(final.winnerTeamId)) : null;
-  return <section className="workspace-panel playoff-workspace"><h3>PLAYOFFS <small>TOP 4 · SEMIFINALES {data.semifinalLegs === 1 ? 'A PARTIDO ÚNICO' : 'IDA Y VUELTA'} · FINAL {data.finalLegs === 1 ? 'A PARTIDO ÚNICO' : 'IDA Y VUELTA'}</small></h3><div className="playoff-bracket"><div className="playoff-semi-rounds">{semis.map(series => <section className="playoff-round" key={series.id}><h4>SEMIFINAL {series.slot}</h4><PlayoffSeriesCard series={series} resolveTeam={resolveTeam} onChanged={() => playoffs.retry()}/></section>)}</div><div className="playoff-connector" aria-hidden="true"/><section className="playoff-round playoff-final-round"><h4>FINAL</h4>{final ? <PlayoffSeriesCard series={final} resolveTeam={resolveTeam} showWinner={false} onChanged={() => playoffs.retry()}/> : <p className="playoff-awaiting">ESPERANDO FINALISTAS</p>}</section></div>{champion && <div className="playoff-champion" role="status"><span aria-hidden="true">🏆</span><strong>CAMPEÓN: {champion.name}</strong></div>}</section>;
+  const summary = rounds.map(round => `${PLAYOFF_ROUNDS[round].label} ${legsText(legs[round])}`).join(' · ');
+  return <section className="workspace-panel playoff-workspace"><h3>PLAYOFFS <small>TOP {eight ? 8 : 4} · {summary}</small></h3>
+    <div className={`playoff-tree rounds-${rounds.length}`}>{rounds.map(round => <section className={`playoff-col playoff-col-${round}`} key={round}>
+      <h4>{PLAYOFF_ROUNDS[round].label}</h4>
+      {PLAYOFF_ROUNDS[round].slots.map(slot => {
+        const series = data.series?.find(item => item.round === round && Number(item.slot) === slot);
+        return series
+          ? <PlayoffSeriesCard key={slot} series={series} resolveTeam={resolveTeam} showWinner={round !== 'final'} onChanged={() => playoffs.retry()}/>
+          : <p key={slot} className="playoff-awaiting">{round === 'final' ? 'ESPERANDO FINALISTAS' : 'POR DEFINIR'}</p>;
+      })}
+    </section>)}</div>
+    {champion && <div className="playoff-champion" role="status"><span aria-hidden="true">🏆</span><strong>CAMPEÓN: {champion.name}</strong></div>}
+  </section>;
 }
 
 /** Una gira se ve como su cuadro (no tiene tabla ni goleadores propios). */
