@@ -15,6 +15,10 @@ export function ClubInvestments({ team, onChanged }) {
   const toast = useToast();
   const query = useApiQuery(signal => endpoints.teamInvestments(team.id, signal), [team.id]);
   const [confirm, setConfirm] = useState(false);
+  const [confirmBack, setConfirmBack] = useState(false);
+  const back = useApiMutation(signal => endpoints.downgradeTraining(team.id, signal), {
+    onSuccess: () => { setConfirmBack(false); toast({ tone: 'money', title: 'NIVEL DEVUELTO' }); query.retry(); onChanged?.(); },
+  });
   const build = useApiMutation(signal => endpoints.invest(team.id, 'training', {}, signal), {
     onSuccess: () => { setConfirm(false); toast({ tone: 'money', title: 'CENTRO DE ENTRENAMIENTO LISTO' }); query.retry(); onChanged?.(); },
   });
@@ -31,8 +35,11 @@ export function ClubInvestments({ team, onChanged }) {
             ? <ConfirmStep message={`¿Construir ${training.next.label.toLowerCase()} por ${gp(training.next.cost)}? Después paga ${gp(training.next.upkeep)} de mantención cada torneo.`} confirmLabel="SÍ, CONSTRUIR" busy={build.loading} onConfirm={() => build.execute()} onCancel={() => setConfirm(false)}/>
             : <Button size="sm" icon="ball" disabled={build.loading || data.balance < training.next.cost} onClick={() => setConfirm(true)}>{training.level ? 'MEJORAR' : 'CONSTRUIR'}</Button>)}</>
         : <p className="investment-gain">Ya tienes la mejor ciudad deportiva.</p>}
+      {canEdit && training.level > 0 && (confirmBack
+        ? <ConfirmStep message={`¿Devolver ${training.label.toLowerCase()}? Te reembolsan ${gp(training.refund)} (el 70% de lo que costó ese nivel) y el plantel pierde el ánimo extra de ese nivel.`} confirmLabel="SÍ, DEVOLVER" busy={back.loading} onConfirm={() => back.execute()} onCancel={() => setConfirmBack(false)}/>
+        : <Button size="sm" variant="ghost" disabled={back.loading} onClick={() => setConfirmBack(true)}>DEVOLVER NIVEL {training.level} (+{gp(training.refund)})</Button>)}
     </article>
-    {build.error && <Notice tone="error">{build.error.message}</Notice>}
-    <HowItWorks><p>No compra partidos: les sirve a tus jugadores. Mientras lo tengas, todo el plantel anda de mejor ánimo (renuevan más barato y piden menos), pero cuesta mantención cada torneo de liga. Para las giras, arma una en la página de Torneos.</p></HowItWorks>
+    {(build.error || back.error) && <Notice tone="error">{(build.error ?? back.error).message}</Notice>}
+    <HowItWorks><p>No compra partidos: les sirve a tus jugadores. Mientras lo tengas, todo el plantel anda de mejor ánimo (renuevan más barato y piden menos), pero cuesta mantención cada torneo de liga. Lo puedes devolver de a un nivel: te reembolsan el 70% de lo que costó ese nivel. Para las giras, arma una en la página de Torneos.</p></HowItWorks>
   </Card>;
 }

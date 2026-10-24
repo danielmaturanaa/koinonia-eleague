@@ -249,6 +249,7 @@ export const endpoints = {
   createPreseason: (body, signal) => apiClient.post('/preseason', body, { actor: 'web', signal }),
   cancelPreseason: (tournamentId, signal) => apiClient.delete(`/preseason/${tournamentId}`, {}, { actor: 'web', signal }),
   invest: (teamId, kind, body, signal) => apiClient.post(`/teams/${teamId}/investments/${kind}`, body ?? {}, { actor: 'web', signal }),
+  downgradeTraining: (teamId, signal) => apiClient.post(`/teams/${teamId}/investments/training/downgrade`, {}, { actor: 'web', signal }),
   teamKit: (teamId, signal) => get(`/teams/${teamId}/kit`, null, signal),
   setTeamKit: (teamId, body, signal) => apiClient.put(`/teams/${teamId}/kit`, body, { actor: 'web', signal }),
   tournamentAwards: (tournamentId, signal) => get(`/tournaments/${tournamentId}/awards`, null, signal),
