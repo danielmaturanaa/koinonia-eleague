@@ -55,11 +55,12 @@ function GrantedPrizes({ prizes }) {
   }
   const teams = [...byTeam.values()].sort((a, b) => b.total - a.total);
   return <section className="tournament-awards">
-    <header><div><h3>Premios ya otorgados</h3><p>Este torneo ya pagó sus premios: no se pueden volver a otorgar. Para corregir un monto, haz un abono o descuento manual al club.</p></div><b>{gpText(prizes.total)}</b></header>
-    <div className="tournament-awards-table"><table>
+    <header><div><h3>Premios ya otorgados</h3><p>Este torneo ya pagó sus premios: no se pueden volver a otorgar. Para corregir un monto, haz un abono o descuento manual al club.</p></div>{prizes.total > 0 && <b>{gpText(prizes.total)}</b>}</header>
+    {prizes.manualNote && <p className="poll-hint">{prizes.manualNote}</p>}
+    {teams.length > 0 && <div className="tournament-awards-table"><table>
       <thead><tr><th>CLUB</th><th>POR QUÉ</th><th>TOTAL</th></tr></thead>
       <tbody>{teams.map(team => <tr key={team.name}><td>{team.name}</td><td>{team.items.join(' + ')}</td><td><b>{gpText(team.total)}</b></td></tr>)}</tbody>
-    </table></div>
+    </table></div>}
   </section>;
 }
 
