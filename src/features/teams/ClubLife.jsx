@@ -322,7 +322,7 @@ export function TvRightsTab({ team, onChanged }) {
       <div>
         <small>TRANSMITE TUS PARTIDOS{sponsor.reach ? ` · ${upper(sponsor.reach)}` : ''} · CONTRATO {upper(sponsor.styleLabel)}</small>
         <h2>{upper(sponsor.brand)}</h2>
-        <p>TEMPORADA {Math.min(sponsor.seasonsPaid + 1, sponsor.seasons)} DE {sponsor.seasons} · YA PAGÓ {gp(sponsor.paid)}</p>
+        <p>TORNEO {Math.min(sponsor.seasonsPaid + 1, sponsor.seasons)} DE {sponsor.seasons} · YA PAGÓ {gp(sponsor.paid)}</p>
         <dl className="sponsor-terms"><div><dt>FIJO POR TORNEO</dt><dd>{gp(sponsor.fixed)}</dd></div>{sponsor.playoffBonus > 0 && <div><dt>SI LLEGAS A PLAYOFFS</dt><dd>+{gp(sponsor.playoffBonus)}</dd></div>}{sponsor.titleBonus > 0 && <div><dt>SI SALES CAMPEÓN</dt><dd>+{gp(sponsor.titleBonus)}</dd></div>}</dl>
       </div>
     </Card> : <Card title="DERECHOS DE TV" aside={<Chip icon="handshake">3 canales te quieren transmitir</Chip>}>

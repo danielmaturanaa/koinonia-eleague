@@ -16,14 +16,14 @@ function MutationAction({ action, label, confirmText, onChanged, danger = false 
 }
 
 // Premios sugeridos (se pre-llenan y el admin los puede cambiar antes de otorgar):
-// liga: 1.º 150 M y bajando de a 10 M (el 10.º recibe 60 M); playoffs: semifinalista 10 M, subcampeón 20 M y campeón 40 M (1 GP = 1 €).
+// liga: 1.º 150 M y bajando de a 10 M (el 10.º recibe 60 M); playoffs: cuartofinalista 5 M, semifinalista 10 M, subcampeón 20 M y campeón 40 M (1 GP = 1 €).
 const LEAGUE_FIRST = 150_000_000;
 const LEAGUE_STEP = 10_000_000;
 const PLAYOFF_PRIZES = {
   champion: { label: 'CAMPEÓN', gp: 40_000_000 },
   runnerUp: { label: 'SUBCAMPEÓN', gp: 20_000_000 },
   semifinal: { label: 'SEMIFINALISTA', gp: 10_000_000 },
-  quarterfinal: { label: 'CUARTOFINALISTA', gp: 0 },
+  quarterfinal: { label: 'CUARTOFINALISTA', gp: 5_000_000 },
 };
 const gpText = value => gpLabel(Number(value || 0));
 
@@ -94,7 +94,7 @@ export function TournamentAwardsPanel({ tournament, onChanged }) {
   if (!prizes.data) return <DataState query={prizes}/>;
   if (prizes.data.granted) return <GrantedPrizes prizes={prizes.data}/>;
   return <section className="tournament-awards">
-    <header><div><h3>Clasificación final y premios</h3><p>Vienen pre-llenados (1.º de la liga 150 M GP y bajando de a 10 M; semifinalista 10 M; subcampeón 20 M; campeón 40 M). Revisa, ajusta y otorga todo con un solo guardado: se paga una sola vez.</p></div><b>{gpText(totalGp)}</b></header>
+    <header><div><h3>Clasificación final y premios</h3><p>Vienen pre-llenados (1.º de la liga 150 M GP y bajando de a 10 M; cuartofinalista 5 M; semifinalista 10 M; subcampeón 20 M; campeón 40 M). Revisa, ajusta y otorga todo con un solo guardado: se paga una sola vez.</p></div><b>{gpText(totalGp)}</b></header>
     <DataState query={standings}/>
     {rows.length > 0 && <div className="tournament-awards-table"><table>
       <thead><tr><th>#</th><th>CLUB</th><th>PTS</th><th>GP LIGA</th><th>PLAYOFFS</th><th>GP PLAYOFFS</th></tr></thead>

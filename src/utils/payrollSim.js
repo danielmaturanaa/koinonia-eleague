@@ -6,7 +6,7 @@ export const MAX_SALARY_SHARE = 0.2;
 export const HORIZON = 6;
 export const LEAGUE_FIRST_PRIZE = 200_000_000;
 export const LEAGUE_PRIZE_STEP = 20_000_000;
-export const PLAYOFF_PRIZES = { none: 0, quarterfinal: 0, semifinal: 10_000_000, runnerUp: 20_000_000, champion: 40_000_000 };
+export const PLAYOFF_PRIZES = { none: 0, quarterfinal: 5_000_000, semifinal: 10_000_000, runnerUp: 20_000_000, champion: 40_000_000 };
 
 export const roundStep = amount => Math.max(SALARY_STEP, Math.round(amount / SALARY_STEP) * SALARY_STEP);
 export const maxSalaryFor = value => Math.max(SALARY_STEP, Math.floor(Number(value) * MAX_SALARY_SHARE / SALARY_STEP) * SALARY_STEP);

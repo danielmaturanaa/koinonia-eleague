@@ -68,7 +68,7 @@ const Prizes = () => <>
       <li><strong>Campeón:</strong> 40 M GP.</li>
       <li><strong>Subcampeón:</strong> 20 M GP.</li>
       <li><strong>Semifinalista:</strong> 10 M GP.</li>
-      <li><strong>Cuartofinalista:</strong> sin premio extra (ya cobró su puesto en la tabla).</li>
+      <li><strong>Cuartofinalista:</strong> 5 M GP.</li>
     </ul>
     <p>Los premios de los playoffs se suman a los de la tabla.</p>
   </section>
@@ -127,7 +127,15 @@ const ClubSystems = () => <>
   <section className="rules-section">
     <h2>9. Directiva y Objetivos</h2>
     <ul>
-      <li>Al comenzar cada torneo de liga la directiva le fija a cada club tres objetivos según lo que vale su plantel: terminar en el puesto que le corresponde por valor (<strong>de 5 a 30 M GP</strong>: cuanto más alta la meta, más paga; pedirle el 1.º vale 30 M y terminar último, 5 M), clasificar a playoffs (<strong>de 5 a 15 M GP</strong>, más cuanto más abajo está el club en valor) y no pasar el tope de nómina (<strong>5 M GP</strong>).</li>
+      <li>Al comenzar cada torneo de liga la directiva le fija a cada club una meta de <strong>tabla</strong> y una de <strong>playoffs</strong>, según lo que se espera de él por sus resultados recientes y su historia (no por el valor del plantel):
+        <ul>
+          <li><strong>Candidato al título:</strong> terminar entre los 2 primeros (15 M GP) y llegar a la final de los playoffs (30 M GP).</li>
+          <li><strong>Alto:</strong> terminar entre los 4 primeros (10 M GP) y llegar al menos a semifinales (20 M GP).</li>
+          <li><strong>Medio:</strong> terminar en la mitad de arriba (5 M GP) y clasificar a playoffs (10 M GP).</li>
+          <li><strong>Bajo:</strong> clasificar a playoffs (5 M GP).</li>
+        </ul>
+      </li>
+      <li><strong>Salir campeón no se le exige a nadie:</strong> el que lo logra cobra un bono de 10 M GP, tenga la meta que tenga. Superar la meta de tabla por dos puestos o más paga 5 M GP por cada puesto de más.</li>
       <li>Se evalúan al terminar el torneo. Cada objetivo cumplido da su premio en GP y sube el ánimo de la plantilla (+5); uno fallado baja el ánimo (−5), sin multa.</li>
     </ul>
   </section>
@@ -178,7 +186,7 @@ const ClubSystems = () => <>
     <ul>
       <li><strong>Conciertos:</strong> el Presidente contrata a un artista de la cartelera, le paga por adelantado lo que cobra por tocar y el show se hace en su próxima fecha de local. Al club le quedan 60 € por persona. Cada artista pide un aforo mínimo. La convocatoria tiene azar: un estadio lleno deja ganancia e hinchas y un show flojo puede dar pérdida. Máximo dos por temporada; cancelar devuelve la mitad de lo pagado. La cartelera es solo de <strong>música cristiana</strong>: Marcos Witt, Phil Wickham, Tauren Wells, Marcos Barrientos, Redimi2, Marcos Vidal, Alex Zurdo, Juan Carlos Alvarado, Funky, Majo y Dan, Eli Soares y ResQ Band. La mayoría cabe en una cancha de 12.000 personas.</li>
       <li><strong>La Velada del Año:</strong> una vez por temporada Ibai busca estadio para su evento de boxeo (la búsqueda la abre la administración y a cada club le llega un aviso). Funciona como una subasta a sobre cerrado: cada club que quiere el evento le ofrece plata a Ibai, y nadie ve lo que ofrecen los demás. Solo pueden ofrecer los clubes con un estadio de 50.000 personas o más y 100 millones de hinchas. Al cierre, Ibai elige uno mirando la plata (50%), el tamaño del estadio (30%) y los hinchas (20%). El elegido paga lo que ofreció y cobra las entradas a estadio lleno (80 € cada una) más 3 M de transmisión; los demás no pagan nada.</li>
-      <li><strong>Derechos de TV:</strong> cada temporada tres canales (TNT Sports, ESPN, DSports, DAZN, Prime Video y otros) ofrecen transmitir los partidos del club: fija, mixta o arriesgada. Cada canal paga según su tamaño y los hinchas del club en todo el mundo; los gigantes (Prime Video, DAZN, ESPN) pagan más pero solo llaman a clubes con mucha hinchada, y la TV abierta paga menos y le transmite a cualquiera. Se cobran al cerrar cada torneo de liga, con bonos por playoffs y por título según la oferta. Todos los contratos, los ya firmados y los que vengan, cuentan <strong>desde el v11</strong>: el v10 no paga ni gasta temporadas. Cuando un contrato termina, llegan tres ofertas nuevas, calculadas con los hinchas, los resultados, la historia y el estadio del club en ese momento. No van en la camiseta, porque en el juego se usan camisetas reales con su propia marca.</li>
+      <li><strong>Derechos de TV:</strong> cada temporada tres canales (TNT Sports, ESPN, DSports, DAZN, Prime Video y otros) ofrecen transmitir los partidos del club: fija (2 torneos), mixta (4 torneos) o arriesgada (6 torneos), para que calcen con las ventanas de mercado. Cada canal paga según su tamaño y los hinchas del club en todo el mundo; los gigantes (Prime Video, DAZN, ESPN) pagan más pero solo llaman a clubes con mucha hinchada, y la TV abierta paga menos y le transmite a cualquiera. Se cobran al cerrar cada torneo de liga, con bonos por playoffs y por título según la oferta. Todos los contratos, los ya firmados y los que vengan, cuentan <strong>desde el v11</strong>: el v10 no paga ni gasta temporadas. Cuando un contrato termina, llegan tres ofertas nuevas, calculadas con los hinchas, los resultados, la historia y el estadio del club en ese momento. No van en la camiseta, porque en el juego se usan camisetas reales con su propia marca.</li>
     </ul>
   </section>
   <section className="rules-section">
