@@ -144,8 +144,12 @@ export function FansTab({ team }) {
       <Card><Stat label="HINCHAS" value={compact(fans.followers)} hint={`${compact(fans.homeFans)} EN ${upper(fans.countryName)}${fans.rank ? ` · ${fans.rank}.º DE ${fans.clubs}` : ''}`}/></Card>
       <Card><Stat label="LA HINCHADA ESTÁ" value={upper(fans.moodLabel)} hint={`ÁNIMO ${fans.mood} / 100`} tone={MOOD_TONE(fans.mood)}/><span className={`mood-meter-bar ${fans.mood >= 70 ? 'good' : fans.mood >= 50 ? 'mid' : 'bad'}`} aria-hidden="true"><i style={{ width: `${fans.mood}%` }}/></span></Card>
     </div>
-    <ClubCountry team={team} fans={fans} onChanged={query.retry}/>
-    <FanMap fans={fans} onChanged={query.retry}/>
+    {/* El mapa es grande: queda plegado. Adentro va también el país del club y los lugares marcados. */}
+    <details className="fan-map-details">
+      <summary><Icon name="people" size={14}/> MAPA DE HINCHAS{fans.homes?.length ? ` · ${fans.homes.length} LUGARES MARCADOS` : ''}</summary>
+      <ClubCountry team={team} fans={fans} onChanged={query.retry}/>
+      <FanMap fans={fans} onChanged={query.retry}/>
+    </details>
     {fans.log.length > 0 && <Card title="LO QUE MOVIÓ A LA HINCHADA">
       <ul className="fan-log">{fans.log.slice(0, 5).map((row, index) => <FanLogRow key={index} row={row}/>)}</ul>
       {fans.log.length > 5 && <details className="fan-log-more"><summary>VER {fans.log.length - 5} MÁS</summary><ul className="fan-log">{fans.log.slice(5).map((row, index) => <FanLogRow key={index} row={row}/>)}</ul></details>}

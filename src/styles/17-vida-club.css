@@ -578,3 +578,12 @@
 .venue-rename-form input { min-width: 0; flex: 1 1 200px; padding: 6px 8px; border: 2px solid #ffd42a; font: 500 14px/1.2 'Oswald', sans-serif; }
 .venue-rename-form .form-feedback { flex-basis: 100%; }
 .stadium-base-name { display: block; color: #6b6553; font: 500 11px/1.2 'Oswald', sans-serif; letter-spacing: .3px; }
+
+/* Mapa de hinchas plegado dentro del Estadio. */
+.fan-map-details { border: 2px solid var(--c-navy-900); background: var(--c-paper, #fff9e8); }
+.fan-map-details > summary { display: flex; align-items: center; gap: 8px; padding: 10px 14px; color: var(--c-navy-900); font: 600 14px/1.2 'Oswald', sans-serif; letter-spacing: .5px; cursor: pointer; list-style: none; }
+.fan-map-details > summary::-webkit-details-marker { display: none; }
+.fan-map-details > summary::after { content: '▾'; margin-left: auto; }
+.fan-map-details[open] > summary::after { content: '▴'; }
+.fan-map-details[open] { display: grid; gap: 12px; padding-bottom: 12px; }
+.fan-map-details[open] > :not(summary) { margin: 0 12px; }

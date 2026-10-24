@@ -678,23 +678,25 @@ function SquadValueSimulator({ team, squad, balance }) {
 // Dos fichas con la misma forma (sin subpestañas): la del presidente (Mi club) y la pública de otro club. Cada cosa en la
 // pestaña donde uno la buscaría: la plata en Nómina y Caja, el recinto en Estadio, la gente en Hinchada (con el clásico) y
 // lo que se vende (TV, conciertos, La Velada) en Negocios.
+// Pestañas por importancia: lo del día a día primero (plantel, mensajes, directiva, plata), después rivales, estadio con su
+// hinchada, negocios e historia. Nómina y caja van juntas en Finanzas; el clásico y el cara a cara, en Rivales.
 const OWNER_TABS = [
   { id: 'plantel', label: 'Plantel' }, { id: 'mensajes', label: 'Mensajes' }, { id: 'directiva', label: 'Directiva' },
-  { id: 'nomina', label: 'Nómina' }, { id: 'caja', label: 'Caja' }, { id: 'estadio', label: 'Estadio' },
-  { id: 'hinchada', label: 'Hinchada' }, { id: 'negocios', label: 'Negocios' }, { id: 'historia', label: 'Historia' },
+  { id: 'nomina', label: 'Finanzas' }, { id: 'rivales', label: 'Rivales' }, { id: 'estadio', label: 'Estadio' },
+  { id: 'negocios', label: 'Negocios' }, { id: 'historia', label: 'Historia' },
 ];
 const VISITOR_TABS = [
-  { id: 'plantel', label: 'Plantel' }, { id: 'partidos', label: 'Partidos' }, { id: 'nomina', label: 'Nómina' },
-  { id: 'estadio', label: 'Estadio' }, { id: 'hinchada', label: 'Hinchada' }, { id: 'historia', label: 'Historia' },
+  { id: 'plantel', label: 'Plantel' }, { id: 'partidos', label: 'Partidos' }, { id: 'rivales', label: 'Rivales' },
+  { id: 'estadio', label: 'Estadio' }, { id: 'nomina', label: 'Nómina' }, { id: 'historia', label: 'Historia' },
 ];
 // Enlaces viejos (avisos, marcadores): a qué pestaña (y a qué parte de ella) caen ahora.
 const BUSINESS = new Set(['eventos', 'velada', 'tv', 'conciertos']);
-const OWNER_MOVED = { resumen: ['plantel'], bandeja: ['mensajes'], central: ['directiva'], movimientos: ['caja'], eventos: ['negocios', 'eventos'], tv: ['negocios', 'tv'], auspicio: ['negocios', 'tv'], catalogo: ['estadio'], fichajes: ['historia'], clasico: ['hinchada', 'clasico'] };
+const OWNER_MOVED = { resumen: ['plantel'], bandeja: ['mensajes'], central: ['directiva'], movimientos: ['nomina', 'caja'], caja: ['nomina', 'caja'], eventos: ['negocios', 'eventos'], tv: ['negocios', 'tv'], auspicio: ['negocios', 'tv'], catalogo: ['estadio'], fichajes: ['historia'], clasico: ['rivales'], hinchada: ['estadio', 'hinchada'] };
 const OWNER_ELSEWHERE = { seguimiento: '/transferencias?tab=seguidos', partidos: '/partidos', tabla: '/torneos' };
-const VISITOR_MOVED = { resumen: ['plantel'], tabla: ['partidos'], finanzas: ['nomina'], movimientos: ['nomina'], caja: ['nomina'], directiva: ['plantel'], negocios: ['estadio'], eventos: ['estadio'], tv: ['estadio'], auspicio: ['estadio'], catalogo: ['estadio'], fichajes: ['historia'], clasico: ['hinchada', 'clasico'] };
+const VISITOR_MOVED = { resumen: ['plantel'], tabla: ['partidos'], finanzas: ['nomina'], movimientos: ['nomina'], caja: ['nomina'], directiva: ['plantel'], negocios: ['estadio'], eventos: ['estadio'], tv: ['estadio'], auspicio: ['estadio'], catalogo: ['estadio'], fichajes: ['historia'], clasico: ['rivales'], hinchada: ['estadio', 'hinchada'] };
 /** Pestaña (y sección) a la que cae un enlace, contando los que dependen de `ver` (finanzas y estadio se partieron). */
 function movedFor(tab, ver, ownerMode) {
-  if (ownerMode && tab === 'finanzas') return ver === 'nomina' || ver === 'simulador' ? ['nomina', ver === 'nomina' ? null : ver] : ['caja', ver === 'caja' ? null : ver];
+  if (ownerMode && tab === 'finanzas') return ['nomina', ver === 'simulador' || ver === 'caja' ? ver : null];
   if (ownerMode && tab === 'estadio' && BUSINESS.has(ver)) return ['negocios', ver];
   return (ownerMode ? OWNER_MOVED : VISITOR_MOVED)[tab] ?? [tab, null];
 }
@@ -886,7 +888,8 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
   const [personRevision, setPersonRevision] = useState(0);
   const [crestEditorOpen, setCrestEditorOpen] = useState(false);
   const [coversOpen, setCoversOpen] = useState(false);
-  const [simulatorOpen, setSimulatorOpen] = useState(false);
+  // Finanzas: contratos (nómina), caja (movimientos) o simulador.
+  const [financeView, setFinanceView] = useState('contratos');
   const inbox = useApiQuery(signal => ownerMode && team?.id ? endpoints.teamInbox(team.id, signal).catch(() => ({ data: null })) : Promise.resolve({ data: null }), [team?.id, ownerMode]);
   const { version: notificationsVersion } = useNotifications();
   const firstVersion = useRef(notificationsVersion);
@@ -898,8 +901,8 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
   const activeTab = tabs.some(item => item.id === movedTab) ? movedTab : tabs[0].id;
   const anchor = movedAnchor ?? (movedTab === tab ? ver : null);
   useEffect(() => { if (elsewhere && navigate) navigate(elsewhere); }, [elsewhere]);
-  useEffect(() => { if (ownerMode && activeTab === 'nomina' && ver === 'simulador') setSimulatorOpen(true); }, [activeTab, ver, ownerMode]);
-  useEffect(() => { if (activeTab !== 'nomina') setSimulatorOpen(false); }, [activeTab]);
+  useEffect(() => { if (ownerMode && activeTab === 'nomina' && ['simulador', 'caja'].includes(anchor)) setFinanceView(anchor); }, [activeTab, anchor, ownerMode]);
+  useEffect(() => { if (activeTab !== 'nomina') setFinanceView('contratos'); }, [activeTab]);
   useScrollTo(anchor, !loading && Boolean(team));
   const liveStandings = useLiveStandings(standingsTournamentId);
   const displayStandings = Array.isArray(liveStandings.data) && liveStandings.data.length ? liveStandings.data : standings;
@@ -943,22 +946,23 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
     {activeTab === 'directiva' && <DirectivaTab team={team} balance={balance} onReputation={() => setPersonEditor('reputation')}/>}
     {activeTab === 'nomina' && (!ownerMode
       ? <PayrollTab team={team} balance={balance} onChanged={onChanged} onTab={onTab} forcedView="actual" currentPosition={position}/>
-      : simulatorOpen
-      // El simulador va a todo el ancho, en vez de los contratos (con un botón para volver).
-      ? <div className="finance-page finance-sim-page">
-        <div className="screen-subhead"><Button variant="ghost" size="sm" icon="back" onClick={() => setSimulatorOpen(false)}>Nómina</Button><h2>Simulador</h2></div>
-        <FinanceSimulator team={team} squad={squad} balance={balance} onChanged={onChanged} onTab={onTab} currentPosition={position}/>
-      </div>
       : <div className="finance-page">
-        <div className="screen-toolbar"><Button icon="table" onClick={() => setSimulatorOpen(true)}>Simular fichajes y contratos</Button></div>
-        <PayrollTab team={team} balance={balance} onChanged={onChanged} onTab={id => (id === 'finanzas' ? setSimulatorOpen(true) : onTab?.(id))} forcedView="actual" currentPosition={position}/>
+        <div className="screen-toolbar finance-views" role="tablist" aria-label="Finanzas">
+          {[['contratos', 'Contratos'], ['caja', 'Caja'], ['simulador', 'Simulador']].map(([id, label]) => <Button key={id} size="sm" variant={financeView === id ? 'primary' : 'ghost'} role="tab" aria-selected={financeView === id} onClick={() => setFinanceView(id)}>{label}</Button>)}
+        </div>
+        {financeView === 'contratos' && <PayrollTab team={team} balance={balance} onChanged={onChanged} onTab={id => (id === 'finanzas' ? setFinanceView('simulador') : onTab?.(id))} forcedView="actual" currentPosition={position}/>}
+        {financeView === 'caja' && <LedgerTab team={team} balance={balance}/>}
+        {financeView === 'simulador' && <FinanceSimulator team={team} squad={squad} balance={balance} onChanged={onChanged} onTab={onTab} currentPosition={position}/>}
       </div>)}
-    {activeTab === 'caja' && <LedgerTab team={team} balance={balance}/>}
     {activeTab === 'partidos' && <div className="club-matches-page"><ClubStandingSnippet standings={displayStandings} teamId={team.id} teams={teams} onMore={() => navigate?.('/torneos')}/><ClubMatches matches={matches} teams={teams} teamId={team.id}/></div>}
-    {activeTab === 'estadio' && <><VenueTab team={team}/>{!ownerMode && <ClubKit team={team}/>}</>}
-    {activeTab === 'hinchada' && <div className="stadium-page">
-      <FansTab team={team}/>
-      <section id="ver-clasico"><RivalryTab team={team} teams={teams}/></section>
+    {activeTab === 'estadio' && <div className="stadium-page">
+      <VenueTab team={team}/>
+      <section id="ver-hinchada"><FansTab team={team}/></section>
+      {!ownerMode && <ClubKit team={team}/>}
+    </div>}
+    {activeTab === 'rivales' && <div className="stadium-page">
+      <RivalryTab team={team} teams={teams}/>
+      <HeadToHeadTable team={team} teams={teams}/>
     </div>}
     {activeTab === 'negocios' && <div className="stadium-page">
       <section id="ver-camiseta"><ClubKit team={team} onChanged={onChanged}/></section>
@@ -971,7 +975,6 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
       <HonoursList honours={honours} historyError={historyError}/>
       <ClubNicknames team={team} canEdit={canEdit} onChanged={onChanged}/>
       <ClubHistory team={team} onEdit={canEdit ? setHistoryEditor : undefined}/>
-      <HeadToHeadTable team={team} teams={teams}/>
       <ClubTransfers teamId={team.id}/>
     </div>}
 

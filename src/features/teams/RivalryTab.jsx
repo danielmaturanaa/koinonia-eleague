@@ -3,7 +3,7 @@ import { endpoints } from '../../api/endpoints.js';
 import { useAuth } from '../../app/AuthGate.jsx';
 import { EntityLink } from '../../components/EntityLink.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
-import { Button, Card, Chip, ConfirmStep, EmptyState, Icon, Notice, useToast } from '../../ui/index.js';
+import { Button, Card, Chip, ConfirmStep, EmptyState, HowItWorks, Icon, Notice, useToast } from '../../ui/index.js';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { DataState } from '../public/DataStates.jsx';
 import { useApiQuery } from '../public/useApiQuery.js';
@@ -52,7 +52,7 @@ function RivalryName({ team, other, naming, canEdit, onChanged }) {
       : <div className="rivalry-name-actions">
         {!naming?.proposedByMe && <button type="button" className="rivalry-name-edit" onClick={() => setEditing(true)}>✎ {naming?.name ? 'PROPONER OTRO NOMBRE' : 'PONERLE NOMBRE A LA RIVALIDAD'}</button>}
         {naming?.name && (removing
-          ? <ConfirmStep message={`¿Quitarle el nombre «${naming.name}»? Al otro presi le llega un aviso.`} confirmLabel="SÍ, QUITARLO" busy={remove.loading} onConfirm={() => remove.execute(false)} onCancel={() => setRemoving(false)}/>
+          ? <ConfirmStep message={`¿Quitarle el nombre «${naming.name}»?`} confirmLabel="SÍ, QUITARLO" busy={remove.loading} onConfirm={() => remove.execute(false)} onCancel={() => setRemoving(false)}/>
           : <button type="button" className="rivalry-name-edit" onClick={() => setRemoving(true)}>✕ QUITAR EL NOMBRE</button>)}
         {naming?.proposedByMe && <button type="button" className="rivalry-name-edit" disabled={remove.loading} onClick={() => remove.execute(true)}>✕ RETIRAR MI PROPUESTA</button>}
       </div>)}
@@ -149,14 +149,14 @@ export function RivalryTab({ team, teams = [] }) {
         </dl>
       </Card>
     </div>}
-    <Card title="QUÉ MUEVE CADA RIVALIDAD">
+    <HowItWorks title="¿Qué mueve cada rivalidad?">
       <ul className="rivalry-effects">
         <li><Icon name="fire" size={16}/> <b>Clásico</b> (lo elige cada presi): la demanda de entradas sube 60%; ganarlo suma hinchas y ánimo más que cualquier partido y perderlo duele el doble. Un jugador duda antes de irse al clásico rival.</li>
         <li><Icon name="crown" size={16}/> <b>El Superclásico:</b> uno solo en toda la liga, el que define la administración. La demanda sube 90%, el estadio casi se llena y la noticia sale con su etiqueta.</li>
         <li><Icon name="bolt" size={16}/> <b>Derbis</b> (hasta 3 por club): viaja el triple de hinchada visitante, el estadio llena al menos el 85% y la visita se lleva el 20% de la taquilla. Ganarlo o perderlo mueve a la hinchada casi como un clásico.</li>
         <li><Icon name="star" size={16}/> <b>Clásico y derbi a la vez:</b> el partido del año. Todo un poco más fuerte.</li>
       </ul>
-    </Card>
+    </HowItWorks>
     {canEdit && <Card title="ELEGIR CLÁSICO" aside={<Chip icon="check">Lo cambias cuando quieras</Chip>}>
       <p className="club-life-hint">Eliges un clásico y lo cambias cuando quieras. Si el otro club también te elige, es clásico de los dos. La barra es el puntaje del historial (partidos, eliminatorias, finales, goleadas y traspasos entre ambos): sirve para elegir, pero no hace clásico a nadie solo.</p>
       <ul className="rival-candidates">{data.candidates.map(candidate => {

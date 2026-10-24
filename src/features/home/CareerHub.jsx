@@ -115,7 +115,7 @@ export function CareerHub({ teamId, teams = [], standings = [], navigate }) {
         : last && <Tile tone="navy" href={`#/partidos/${last.id}`} icon={<Icon name="ball" size={18}/>} title="Último partido"
           value={`${{ G: 'Ganaste', E: 'Empataste', P: 'Perdiste' }[resultOf(last, teamId)]} ${scoreFor(last, teamId)}`}
           detail={`${sideOf(last, teamId) === 'home' ? 'Contra' : 'En casa de'} ${rivalOf(last, teamId)?.name ?? '—'}. No tienes partidos por jugar.`}/>}
-      <Tile href={`#/equipos/${teamId}?tab=finanzas`} icon={<Icon name="coin" size={18}/>} title="Caja" value={balance === null ? '—' : gp(balance)} detail="Sueldos, ingresos y gastos."/>
+      <Tile href={`#/equipos/${teamId}?tab=finanzas&ver=caja`} icon={<Icon name="coin" size={18}/>} title="Caja" value={balance === null ? '—' : gp(balance)} detail="Sueldos, ingresos y gastos."/>
       <Tile tone={market.data?.open ? 'gold' : 'paper'} href="#/transferencias" icon={<Icon name="handshake" size={18}/>} title="Mercado"
         value={market.data?.open ? 'Abierto' : 'Cerrado'} detail={market.data?.open ? `Cierra el ${when(market.data.closesAt) ?? 'pronto'}.` : 'Igual puedes buscar jugadores y hablarles.'}/>
       <Tile href={`#/equipos/${teamId}`} icon={<Icon name="shirt" size={18}/>} title="Mi club" badge={unread} value={club?.name ?? 'Tu club'}
