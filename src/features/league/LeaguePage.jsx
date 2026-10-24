@@ -32,18 +32,19 @@ export function MatchesScreen({ tab, teams = [], navigate, matchesMode = 'all' }
 }
 
 const TOURNAMENT_TABS = [
-  { id: 'tabla', label: 'Tabla' }, { id: 'goleadores', label: 'Goleadores' }, { id: 'playoffs', label: 'Playoffs' },
+  { id: 'tabla', label: 'Tabla' }, { id: 'goleadores', label: 'Goleadores' }, { id: 'playoffs', label: 'Playoffs' }, { id: 'premios', label: 'Premios' },
   { id: 'calculadora', label: 'Calculadora' }, { id: 'rankings', label: 'Rankings' },
 ];
 const TOURNAMENT_INTRO = {
   tabla: 'Cómo va cada club. Arriba eliges otro torneo o uno ya jugado.',
   goleadores: 'Quién lleva más goles en el torneo.',
   playoffs: 'Los cruces de semifinal y final.',
+  premios: 'Balón de Oro, Bota, Guante, Golden Boy, DT y portadas. Aquí votan los presis.',
   calculadora: 'Qué necesita cada club para clasificar.',
   rankings: 'Los planteles más caros y las divisiones.',
 };
 
-/** Torneos: tabla, goleadores, playoffs, calculadora y rankings. */
+/** Torneos: tabla, goleadores, playoffs, premios, calculadora y rankings. */
 export function TournamentsScreen({ tab, teams = [], navigate, query = {}, tournament = null }) {
   const active = TOURNAMENT_TABS.some(item => item.id === tab) ? tab : 'tabla';
   const go = id => {
@@ -55,7 +56,7 @@ export function TournamentsScreen({ tab, teams = [], navigate, query = {}, tourn
     return navigate(`/torneos${params.size ? `?${params}` : ''}`);
   };
   return <Screen kicker="Koinonia e-League" title="Torneos" intro={TOURNAMENT_INTRO[active]} tabs={TOURNAMENT_TABS} active={active} onTab={go}>
-    {['tabla', 'goleadores', 'playoffs'].includes(active) && <TournamentsPage teams={teams} initialId={query.torneo ?? null} initialView={active}/>}
+    {['tabla', 'goleadores', 'playoffs', 'premios'].includes(active) && <TournamentsPage teams={teams} initialId={query.torneo ?? null} initialView={active}/>}
     {active === 'calculadora' && <CalculatorPage tournament={tournament} teams={teams} initialTeamId={query.equipo ?? null}/>}
     {active === 'rankings' && <RankingsPage teams={teams} navigate={navigate}/>}
   </Screen>;

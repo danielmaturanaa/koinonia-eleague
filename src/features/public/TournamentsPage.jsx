@@ -145,7 +145,7 @@ function TournamentWorkspace({ tournamentId, teams, onChanged, onDeleted, initia
     if (window.confirm(`¿Eliminar ${detail.data?.name ?? 'este torneo'} para siempre?${warning} Esto no se puede deshacer.`)) remove.execute();
   };
   useEffect(() => { setWorkspaceTab(initialTab); }, [tournamentId]);
-  useEffect(() => { if (embedded) setWorkspaceTabState(['standings', 'scorers', 'playoffs'].includes(initialTab) ? initialTab : 'standings'); }, [initialTab, embedded]);
+  useEffect(() => { if (embedded) setWorkspaceTabState(['standings', 'scorers', 'playoffs', 'awards'].includes(initialTab) ? initialTab : 'standings'); }, [initialTab, embedded]);
   const data = detail.data;
   const statusLabel = { active: 'EN JUEGO', completed: 'TERMINADO', draft: 'EN PREPARACIÓN' }[data?.status] ?? data?.status;
   const regularChampionId = data?.championTeamId ?? data?.champion_team_id;
@@ -171,7 +171,9 @@ function TournamentWorkspace({ tournamentId, teams, onChanged, onDeleted, initia
           : <section className="workspace-panel standings-workspace-panel"><h3>TABLA DE POSICIONES</h3><DataState query={standings}/>{standingRows.length > 0 && <StandingsTable rows={standingRows} resolveTeam={resolveTeam}/>} {regularChampion && <div className="playoff-champion" role="status"><span aria-hidden="true">🏆</span><TeamMark team={regularChampion}/><strong>CAMPEÓN: {regularChampion.name}</strong></div>}</section>)}
         {workspaceTab === 'scorers' && <ScorersPanel query={scorers}/>}
         {workspaceTab === 'playoffs' && data.format === 'league' && <PlayoffsSection tournamentId={tournamentId} resolveTeam={resolveTeam}/>}
-        {workspaceTab === 'awards' && <AwardsPanel tournament={data} resolveTeam={resolveTeam}/>}
+        {workspaceTab === 'awards' && (data.format === 'league' && data.competitorKind !== 'national_team'
+          ? <AwardsPanel tournament={data} resolveTeam={resolveTeam}/>
+          : <p className="empty-copy">ESTE TORNEO NO TIENE PREMIOS INDIVIDUALES: SOLO LAS LIGAS DE CLUBES.</p>)}
       </div>
     </>}
   </>}</section>;
