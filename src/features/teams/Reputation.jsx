@@ -37,7 +37,7 @@ export function ReputationSummary({ reputation, clubCount }) {
     <p className="reputation-summary-title"><span><b>REPUTACIÓN</b><small>#{reputation.rank}{clubCount ? ` DE ${clubCount}` : ''} DE LA LIGA</small></span><strong className={`reputation-score ${tone(reputation.score)}`}>{reputation.score}</strong></p>
     <ul className="reputation-parts">{PARTS.map(([key, label]) => <li key={key}><span>{label}<small>{partNote(key, reputation.stats)}</small></span><em className={reputation.parts[key] < 0 ? 'negative' : reputation.parts[key] > 0 ? 'positive' : ''}>{signed(reputation.parts[key])}</em></li>)}</ul>
     {historyNote(reputation.history) && <p className="reputation-summary-hint">HISTORIA COMPLETA: {historyNote(reputation.history).toUpperCase()}</p>}
-    <p className="reputation-summary-hint">BASE 50 · ENTRE 5 Y 95</p>
+    <p className="reputation-summary-hint">BASE 50 · ENTRE 5 Y 100</p>
   </div>;
 }
 
@@ -87,10 +87,10 @@ export function ReputationModal({ teamId, onClose }) {
       <header><h2>Reputación de los presidentes</h2><button type="button" onClick={onClose} aria-label="Cerrar">×</button></header>
       <p className="reputation-intro">Es lo que piensan los agentes libres de cada presi cuando eligen club en una subasta. Pesa poco al lado de la oferta y el proyecto, pero puede desempatar. Toca un club para ver de dónde sale su puntaje. Cuenta toda la historia del club, salvo las <b>liberaciones</b> de antes del cambio de modalidad{sinceLabel(rows[0]?.since) ? ` (${sinceLabel(rows[0].since)})` : ''}, que quedan aparte como historia.</p>
       <details className="reputation-how"><summary>¿Cómo se calcula?</summary><ul className="reputation-rules">
-        <li><b>Base 50</b>, y el resultado queda entre {rules?.min ?? 5} y {rules?.max ?? 95}.</li>
-        <li><b>Duración:</b> +{rules?.perStayTournament ?? 6} por cada torneo que duran en promedio sus jugadores en el club (también los que ya se fueron), hasta {rules?.stayCap ?? 6} torneos.</li>
+        <li><b>Base 50</b>, y el resultado queda entre {rules?.min ?? 5} y {rules?.max ?? 100}.</li>
+        <li><b>Duración:</b> +{rules?.perStayTournament ?? 3} por cada torneo que duran en promedio sus jugadores en el club (también los que ya se fueron), hasta {rules?.stayCap ?? 6} torneos.</li>
         <li><b>Formados en casa:</b> +{rules?.perHomegrown ?? 1} por cada jugador que lleva {rules?.homegrownMinTournaments ?? 5} o más torneos seguidos en el club (sin irse y volver), hasta +{rules?.homegrownCap ?? 10}.</li>
-        <li><b>Racha sin liberar:</b> +{rules?.perCleanTournament ?? 2} por cada torneo desde su última liberación, hasta +{rules?.cleanCap ?? 10}.</li>
+        <li><b>Racha sin liberar:</b> +{rules?.perCleanTournament ?? 2} por cada torneo desde su última liberación (se cuenta desde el cambio de modalidad), hasta +{rules?.cleanCap ?? 10}.</li>
         <li><b>Liberaciones:</b> −{rules?.perRelease ?? 4} cada una, y pesan {Math.round((1 - (rules?.releaseDecay ?? 0.75)) * 100)}% menos por cada torneo que pasa. Liberar a quien duró {rules?.freeReleaseAfterStay ?? 4} torneos o más no resta; soltar a quien llevaba {rules?.quickReleaseMaxTournaments ?? 1} torneo o menos pesa ×{(rules?.quickReleaseFactor ?? 1.5).toLocaleString('es-CL')}. Tope −{rules?.releaseCap ?? 40}.</li>
         <li><b>Promesas:</b> +{rules?.perPromiseKept ?? 3} por cada una cumplida (hasta {rules?.promisesKeptCap ?? 5}) y −{rules?.perPromiseBroken ?? 15} por cada una rota. Arrancar un torneo en números rojos resta lo mismo que una rota.</li>
         <li><b>Rescisiones:</b> −{rules?.perContractBreak ?? 12} cada una, y pesan menos con los torneos.</li>
