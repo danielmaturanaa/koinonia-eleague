@@ -131,8 +131,8 @@ const ClubSystems = () => <>
         <ul>
           <li><strong>Candidato al título:</strong> terminar entre los 2 primeros (15 M GP) y llegar a la final de los playoffs (30 M GP).</li>
           <li><strong>Alto:</strong> terminar entre los 4 primeros (10 M GP) y llegar al menos a semifinales (20 M GP).</li>
-          <li><strong>Medio:</strong> terminar en la mitad de arriba (5 M GP) y clasificar a playoffs (10 M GP).</li>
-          <li><strong>Bajo:</strong> clasificar a playoffs (5 M GP).</li>
+          <li><strong>Medio:</strong> terminar entre los 6 primeros (5 M GP) y clasificar a playoffs (10 M GP).</li>
+          <li><strong>Bajo:</strong> clasificar a playoffs (5 M GP). Un club recién llegado a la liga parte siempre acá.</li>
         </ul>
       </li>
       <li><strong>Salir campeón no se le exige a nadie:</strong> el que lo logra cobra un bono de 10 M GP, tenga la meta que tenga. Superar la meta de tabla por dos puestos o más paga 5 M GP por cada puesto de más.</li>
