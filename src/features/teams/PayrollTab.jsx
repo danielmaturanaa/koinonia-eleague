@@ -221,7 +221,8 @@ function RealView({ team, query, balance, marketOpen, canEdit, layout, refresh }
     return names.length ? `VIGENTE HASTA EL ${names[names.length - 1]}` : `${contract.seasonsLeft} TORNEO(S) POR PAGAR`;
   };
   const chargeNote = contract => { const names = contract.status === 'active' && !contract.endsWith ? pending(contract) : []; return names.length ? `SE COBRA AL TERMINAR: ${chargeText(names)}` : null; };
-  const editable = contract => canEdit && marketOpen && contract.status === 'active' && contract.seasonsPaid === 0;
+  // Solo los firmados en este mercado (llegadas y renovaciones): un contrato de antes ya está cerrado.
+  const editable = contract => canEdit && marketOpen && contract.status === 'active' && contract.seasonsPaid === 0 && contract.seasonsEditable === true;
   const actions = contract => <>
     {editable(contract) && <ContractYears team={team} contract={contract} onDone={refresh}/>}
     <BonusEditor team={team} contract={contract} editable={canEdit && marketOpen} onDone={refresh}/>
