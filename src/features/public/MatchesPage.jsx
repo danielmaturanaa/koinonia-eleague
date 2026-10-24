@@ -39,8 +39,9 @@ function FixtureCard({ match, resolveTeam, onSelect, showRound }) {
         ? 'CANCELADO'
         : 'PENDIENTE';
   return <button type="button" className={`fixture-card fixture-${match.status}${match.sanctioned ? ' fixture-sanctioned' : ''}${match.derby ? ' fixture-derby' : ''}`} onClick={() => onSelect(match.id)} aria-label={`${match.homeTeam?.name ?? 'Equipo local'} contra ${match.awayTeam?.name ?? 'Equipo visitante'}: ${state}`}>
+    <DerbyBadge match={match} corner/>
     <span className="fixture-teams">{team('home', home)}{team('away', away)}</span>
-    <small className="fixture-footer"><span>{showRound ? matchRoundLabel(match) : 'FECHA POR DEFINIR'}</span><DerbyBadge match={match} compact/><SanctionBadge match={match} compact/><SimulatedBadge match={match}/>{match.homeTeam?.stadium && <span className="match-venue" title={`Estadio de ${match.homeTeam.name}`}>🏟️ {match.homeTeam.stadium}</span>}</small>
+    <small className="fixture-footer"><span>{showRound ? matchRoundLabel(match) : 'FECHA POR DEFINIR'}</span><SanctionBadge match={match} compact/><SimulatedBadge match={match}/>{match.homeTeam?.stadium && <span className="match-venue" title={`Estadio de ${match.homeTeam.name}`}>🏟️ {match.homeTeam.stadium}</span>}</small>
   </button>;
 }
 
