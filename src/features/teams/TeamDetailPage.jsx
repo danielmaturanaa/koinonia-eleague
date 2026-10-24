@@ -928,8 +928,11 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
   if (loading || !team) return <main className="screen"><div className="arcade-state">Cargando el club…</div></main>;
   const hero = <div className="club-crest-wrap screen-crest" style={{ '--club-primary': colors.primary ?? '#062764' }}><TeamMark team={team} className="club-crest"/>{canEdit && <button type="button" className="club-crest-edit" onClick={() => setCrestEditorOpen(true)} aria-label="Editar escudo y nombre del club" title="Editar escudo y nombre">✎</button>}</div>;
   const isMine = isPresidentOf(team.id);
-  // La franja del banner va con los colores del club (si no los tiene, los de la liga).
-  const stripe = { '--stripe-a': colors.primary ?? 'var(--c-red)', '--stripe-b': colors.secondary && colors.secondary !== colors.primary ? colors.secondary : colors.tertiary ?? 'var(--c-yellow)' };
+  // La franja del banner va con los colores del club: el principal y, de los otros dos, el que más contrasta con él.
+  const rgb = hex => { const value = /^#?([0-9a-f]{6})$/i.exec(hex ?? '')?.[1]; return value ? [0, 2, 4].map(at => parseInt(value.slice(at, at + 2), 16)) : null; };
+  const distance = (a, b) => (rgb(a) && rgb(b) ? Math.hypot(...rgb(a).map((channel, index) => channel - rgb(b)[index])) : -1);
+  const accent = [colors.secondary, colors.tertiary].filter(Boolean).sort((a, b) => distance(colors.primary, b) - distance(colors.primary, a))[0];
+  const stripe = { '--stripe-a': colors.primary ?? 'var(--c-red)', '--stripe-b': accent ?? 'var(--c-yellow)' };
   return <Screen className="club-screen" style={stripe} corner={canEdit ? <Button size="sm" variant="ghost" icon="camera" onClick={() => setCoversOpen(true)}>Portadas</Button> : null} kicker={isMine ? 'Mi club' : team.kind === 'national_team' ? 'Selección' : 'Club'} title={team.name} hero={hero}
     intro={[nicknameTitle((team.nicknames ?? []).find(item => item.primary)?.label), rank > 0 ? `${rank}.º en la liga${standing ? ` con ${standing.points} puntos` : ''}.` : null].filter(Boolean).join(' · ') || null}
     actions={<div className="club-strip">
