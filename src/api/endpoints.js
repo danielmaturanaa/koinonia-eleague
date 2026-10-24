@@ -205,6 +205,7 @@ export const endpoints = {
   setSuperclasico: (teamA, teamB, signal) => apiClient.put('/admin/superclasico', { teamA, teamB }, { actor: 'web', signal }),
   proposeRivalryName: (teamId, otherTeamId, name, signal) => apiClient.post(`/teams/${teamId}/rivalry-name`, { otherTeamId, name }, { actor: 'web', signal }),
   answerRivalryName: (teamId, otherTeamId, accept, signal) => apiClient.post(`/teams/${teamId}/rivalry-name/answer`, { otherTeamId, accept }, { actor: 'web', signal }),
+  removeRivalryName: (teamId, otherTeamId, proposalOnly, signal) => apiClient.post(`/teams/${teamId}/rivalry-name/remove`, { otherTeamId, proposalOnly }, { actor: 'web', signal }),
   // Lo que pediría un jugador para firmar si llega a un club (traspaso o trueque).
   arrivalPreview: (playerId, query, signal) => get(`/players/${playerId}/arrival-preview`, query, signal),
   // Contratos de llegada por firmar de un club.

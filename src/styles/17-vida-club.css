@@ -127,6 +127,7 @@
 .rivalry-name-pending { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; }
 .rivalry-name-edit { padding: 3px 8px; border: 1px solid #ffffff66; background: transparent; color: #fff; font: 600 11px/1.2 'Oswald', sans-serif; letter-spacing: .4px; cursor: pointer; }
 .rivalry-name-edit:hover { background: #ffffff1f; }
+.rivalry-name-actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
 .rivalry-name-form { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
 .rivalry-name-form input { min-width: 0; flex: 1 1 160px; padding: 5px 8px; border: 2px solid #ffd42a; font: 500 13px/1.2 'Oswald', sans-serif; }
 .rivalry-side { display: grid; justify-items: center; gap: var(--sp-2); text-align: center; }

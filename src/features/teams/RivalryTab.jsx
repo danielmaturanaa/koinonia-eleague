@@ -35,7 +35,9 @@ function RivalryName({ team, other, naming, canEdit, onChanged }) {
   const [value, setValue] = useState('');
   const propose = useApiMutation((name, signal) => endpoints.proposeRivalryName(team.id, other.id, name, signal), { onSuccess: () => { setEditing(false); setValue(''); onChanged(); } });
   const answer = useApiMutation((accept, signal) => endpoints.answerRivalryName(team.id, other.id, accept, signal), { onSuccess: onChanged });
-  const error = propose.error ?? answer.error;
+  const [removing, setRemoving] = useState(false);
+  const remove = useApiMutation((proposalOnly, signal) => endpoints.removeRivalryName(team.id, other.id, proposalOnly, signal), { onSuccess: () => { setRemoving(false); onChanged(); } });
+  const error = propose.error ?? answer.error ?? remove.error;
   return <div className="rivalry-name">
     {naming?.name && <p className="rivalry-name-current">«{naming.name}»</p>}
     {naming?.proposed && (naming.proposedByMe
@@ -47,7 +49,13 @@ function RivalryName({ team, other, naming, canEdit, onChanged }) {
         <input value={value} maxLength={40} placeholder="El Clásico del Sur" aria-label="Nombre de la rivalidad" onChange={event => setValue(event.target.value)} autoFocus/>
         <Button type="submit" size="sm" disabled={propose.loading}>PROPONER</Button><Button type="button" size="sm" variant="ghost" onClick={() => setEditing(false)}>CANCELAR</Button>
       </form>
-      : !naming?.proposedByMe && <button type="button" className="rivalry-name-edit" onClick={() => setEditing(true)}>✎ {naming?.name ? 'PROPONER OTRO NOMBRE' : 'PONERLE NOMBRE A LA RIVALIDAD'}</button>)}
+      : <div className="rivalry-name-actions">
+        {!naming?.proposedByMe && <button type="button" className="rivalry-name-edit" onClick={() => setEditing(true)}>✎ {naming?.name ? 'PROPONER OTRO NOMBRE' : 'PONERLE NOMBRE A LA RIVALIDAD'}</button>}
+        {naming?.name && (removing
+          ? <ConfirmStep message={`¿Quitarle el nombre «${naming.name}»? Al otro presi le llega un aviso.`} confirmLabel="SÍ, QUITARLO" busy={remove.loading} onConfirm={() => remove.execute(false)} onCancel={() => setRemoving(false)}/>
+          : <button type="button" className="rivalry-name-edit" onClick={() => setRemoving(true)}>✕ QUITAR EL NOMBRE</button>)}
+        {naming?.proposedByMe && <button type="button" className="rivalry-name-edit" disabled={remove.loading} onClick={() => remove.execute(true)}>✕ RETIRAR MI PROPUESTA</button>}
+      </div>)}
     {error && <Notice tone="error">{error.message}</Notice>}
   </div>;
 }
