@@ -110,7 +110,7 @@ export function InboxTab({ team, onTab, onRead, highlightId = null }) {
           {['expired', 'expiring', 'arrival'].includes(message.kind) && <Button onClick={() => onTab?.('nomina')}>{message.kind === 'expiring' ? 'Ver contrato' : 'Ir a la hoja de firma'}</Button>}
           {message.request && <RequestActions team={team} request={message.request} locked={marketOpen} onDone={() => { query.retry(); rolesQuery.retry(); }}/>}
           {message.kind === 'unhappy' && nowRow && <div className="inbox-role">
-            <span>ROL AHORA:</span><RoleSelect team={team} row={nowRow} locked={marketOpen} showWanted onDone={() => { rolesQuery.retry(); }}/>
+            <span>ROL AHORA:</span><RoleSelect team={team} row={nowRow} locked={nowRow.roleLocked ?? marketOpen} showWanted onDone={() => { rolesQuery.retry(); }}/>
             <small>{marketOpen ? '🔒 Mercado abierto: los roles están bloqueados.' : `ÁNIMO HOY: ${String(nowRow.moodLabel).toUpperCase()} (${nowRow.mood}/100)`}</small>
           </div>}
         </div>
