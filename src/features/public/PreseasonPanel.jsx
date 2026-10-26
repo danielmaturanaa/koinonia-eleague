@@ -8,18 +8,20 @@ import { DataState, gp } from './DataStates.jsx';
 import { useApiQuery } from './useApiQuery.js';
 
 const upper = text => String(text ?? '').toUpperCase();
-const ROUND_LABEL = { QF: 'CUARTOS DE FINAL', SF: 'SEMIFINALES', F: 'FINAL', '3P': 'TERCER LUGAR' };
-const roundOf = slot => (slot.startsWith('QF') ? 'QF' : slot.startsWith('SF') ? 'SF' : slot);
+const ROUND_LABEL = { GA: 'GRUPO A', GB: 'GRUPO B', QF: 'CUARTOS DE FINAL', SF: 'SEMIFINALES', F: 'FINAL', '3P': 'TERCER LUGAR' };
+const roundOf = slot => (/^G[AB]/.test(slot) ? slot.slice(0, 2) : slot.startsWith('QF') ? 'QF' : slot.startsWith('SF') ? 'SF' : slot);
 const PLACE = ['CAMPEÓN', '2.º', '3.º', '4.º'];
 
 /** Cuadro de una gira: rondas, resultados y el ganador por penales cuando hubo empate. */
 export function PreseasonBracket({ bracket, onChanged }) {
   const { canOperateMatches } = useAuth();
   const winner = useApiMutation(({ matchId, teamId }, signal) => endpoints.setMatchWinner(matchId, { kind: 'preseason', winnerTeamId: teamId }, signal), { onSuccess: onChanged });
-  const rounds = ['QF', 'SF', 'F', '3P'].map(key => [key, bracket.matches.filter(match => roundOf(match.slot) === key)]).filter(([, list]) => list.length);
+  const groupOf = key => bracket.groups?.find(group => `G${group.name}` === key);
+  const rounds = ['GA', 'GB', 'QF', 'SF', 'F', '3P'].map(key => [key, bracket.matches.filter(match => roundOf(match.slot) === key)]).filter(([, list]) => list.length);
   return <div className="preseason-bracket">
     <div className="preseason-rounds">{rounds.map(([key, list]) => <section key={key} className={`preseason-round round-${key}`}>
       <h4>{ROUND_LABEL[key]}</h4>
+      {groupOf(key) && <GroupTable group={groupOf(key)} names={bracket.teamNames}/>}
       {list.map(match => {
         const side = (teamId, name, score) => <div className={`preseason-side ${match.winnerTeamId === teamId ? 'is-winner' : ''}`}>
           <EntityLink to="team" id={teamId}>{upper(name)}</EntityLink><b>{match.status === 'finished' ? score : '–'}</b>
@@ -38,12 +40,23 @@ export function PreseasonBracket({ bracket, onChanged }) {
     </section>)}</div>
     {winner.error && <Notice tone="error">{winner.error.message}</Notice>}
     {bracket.standings && <ol className="preseason-standings">{bracket.standings.map((row, index) => <li key={row.teamId}>
-      <span>{index < 4 ? PLACE[index] : 'CUARTOS'}</span><EntityLink to="team" id={row.teamId}>{upper(bracket.teamNames?.[row.teamId] ?? '')}</EntityLink><b>{gp(row.prize)}</b>
+      <span>{index < 4 ? PLACE[index] : bracket.groups ? 'GRUPOS' : 'CUARTOS'}</span><EntityLink to="team" id={row.teamId}>{upper(bracket.teamNames?.[row.teamId] ?? '')}</EntityLink><b>{gp(row.prize)}</b>
     </li>)}</ol>}
   </div>;
 }
 
-/** Giras: torneos amistosos que se arman cuando sea (4 u 8 clubes, cruces a mano) y el formulario para organizar una. */
+/** Tabla de un grupo de la gira de 6: pasan los dos primeros; «sorteo» marca un desempate que no se pudo resolver por resultados. */
+function GroupTable({ group, names = {} }) {
+  return <table className="preseason-group">
+    <thead><tr><th/><th>PJ</th><th>DG</th><th>PTS</th></tr></thead>
+    <tbody>{group.rows.map(row => <tr key={row.teamId} className={row.qualified ? 'is-qualified' : ''}>
+      <td><EntityLink to="team" id={row.teamId}>{upper(names[row.teamId] ?? '')}</EntityLink>{row.byLot && row.played === 2 && <small title="Empate total: lo definió un sorteo"> · SORTEO</small>}</td>
+      <td>{row.played}</td><td>{row.goalDiff > 0 ? `+${row.goalDiff}` : row.goalDiff}</td><td><b>{row.points}</b></td>
+    </tr>)}</tbody>
+  </table>;
+}
+
+/** Giras: torneos amistosos que se arman cuando sea (4, 6 u 8 clubes, cruces a mano) y el formulario para organizar una. */
 export function PreseasonPanel({ teams = [], myTeamId = null }) {
   const { isAdmin, canEditTeam } = useAuth();
   const query = useApiQuery(signal => endpoints.preseasons(signal), []);
@@ -61,8 +74,8 @@ export function PreseasonPanel({ teams = [], myTeamId = null }) {
         {item.paidTeamIds.length < item.size && <p className="club-life-hint">Sin plata en esta gira (ya cobraron sus {data.paidPerSeason} giras de la temporada): {item.matches.flatMap(match => [match.homeTeamId, match.awayTeamId]).filter((teamId, index, list) => list.indexOf(teamId) === index && !item.paidTeamIds.includes(teamId)).map(teamId => names[teamId]).join(', ')}.</p>}
         <PreseasonBracket bracket={{ ...item, teamNames: names }} onChanged={query.retry}/>
       </section>)
-      : !creating && <p className="club-life-hint">Todavía no hay giras. Si se juntan 4 u 8 en Discord, armen una acá.</p>}
-    <HowItWorks><p>Cuando se junten 4 u 8 clubes (por ejemplo en Discord), un presi arma la gira y elige los cruces. Es a partido único (si empatan, se define por penales), con final y partido por el 3.er lugar, y se juega en el eFootball como cualquier partido. Todos recaudan: el local reparte la taquilla con la visita y la organización paga premios por puesto.</p><p>Se puede jugar cuando sea, pero cada club cobra (premios, taquilla y ánimo) solo en sus primeras {data.paidPerSeason} giras de cada temporada; las demás se juegan igual, sin plata. Un club no puede estar en dos giras a la vez. Es un amistoso: no cuenta para la forma, el cara a cara, las suspensiones, los sueldos ni la directiva.</p></HowItWorks>
+      : !creating && <p className="club-life-hint">Todavía no hay giras. Si se juntan 4, 6 u 8 en Discord, armen una acá.</p>}
+    <HowItWorks><p>Cuando se junten 4, 6 u 8 clubes (por ejemplo en Discord), un presi arma la gira y elige los cruces. Es a partido único (si empatan, se define por penales), con final y partido por el 3.er lugar, y se juega en el eFootball como cualquier partido. La de 6 son dos grupos de 3 (todos contra todos, un partido cada par; el empate vale un punto): pasan los dos mejores y las semis son 1.º A–2.º B y 1.º B–2.º A. Todos recaudan: el local reparte la taquilla con la visita y la organización paga premios por puesto.</p><p>Se puede jugar cuando sea, pero cada club cobra (premios, taquilla y ánimo) solo en sus primeras {data.paidPerSeason} giras de cada temporada; las demás se juegan igual, sin plata. Un club no puede estar en dos giras a la vez. Es un amistoso: no cuenta para la forma, el cara a cara, las suspensiones, los sueldos ni la directiva.</p></HowItWorks>
   </Card>;
 }
 
@@ -78,19 +91,23 @@ function PreseasonForm({ teams, busy, paidLeft = {}, prizes, myTeamId, onDone, o
   const ready = chosen.every(Boolean) && new Set(chosen).size === size && (isAdmin || chosen.includes(myTeamId));
   const setSlot = (index, value) => setSlots(current => current.map((item, position) => (position === index ? value : item)));
   const prizeList = prizes?.[size] ?? [];
+  // Casilleros: pares para 4 y 8; dos grupos de 3 para 6.
+  const groupsLayout = size === 6
+    ? [{ label: 'GRUPO A', indexes: [0, 1, 2] }, { label: 'GRUPO B', indexes: [3, 4, 5] }]
+    : Array.from({ length: size / 2 }, (_, pair) => ({ label: size === 8 ? `CUARTOS ${pair + 1}` : `SEMI ${pair + 1}`, indexes: [pair * 2, pair * 2 + 1] }));
   return <div className="preseason-form">
     <div className="preseason-form-row">
       <label className="club-kit-field"><span>NOMBRE</span><input value={name} maxLength={60} placeholder="Gira por Asia" onChange={event => setName(event.target.value)}/></label>
-      <div className="preseason-size" role="group" aria-label="Cantidad de clubes">{[4, 8].map(value => <Button key={value} size="sm" variant={size === value ? 'primary' : 'ghost'} onClick={() => setSize(value)}>{value} CLUBES</Button>)}</div>
+      <div className="preseason-size" role="group" aria-label="Cantidad de clubes">{[4, 6, 8].map(value => <Button key={value} size="sm" variant={size === value ? 'primary' : 'ghost'} onClick={() => setSize(value)}>{value} CLUBES</Button>)}</div>
     </div>
-    <div className="preseason-slots">{Array.from({ length: size / 2 }, (_, pair) => <div key={pair} className="preseason-pair">
-      <small>{size === 8 ? `CUARTOS ${pair + 1}` : `SEMI ${pair + 1}`}</small>
-      {[pair * 2, pair * 2 + 1].map(index => <select key={index} value={slots[index]} aria-label={`Club ${index + 1}`} onChange={event => setSlot(index, event.target.value)}>
-        <option value="">{index % 2 === 0 ? 'Local…' : 'Visita…'}</option>
+    <div className="preseason-slots">{groupsLayout.map((group, pair) => <div key={pair} className="preseason-pair">
+      <small>{group.label}</small>
+      {group.indexes.map((index, position) => <select key={index} value={slots[index]} aria-label={`Club ${index + 1}`} onChange={event => setSlot(index, event.target.value)}>
+        <option value="">{size === 6 ? `Club ${position + 1}…` : position % 2 === 0 ? 'Local…' : 'Visita…'}</option>
         {clubs.map(team => <option key={team.id} value={team.id} disabled={chosen.includes(team.id) && slots[index] !== team.id}>{team.name}{paidLeft[team.id] === 0 ? ' (sin plata)' : ''}</option>)}
       </select>)}
     </div>)}</div>
-    <p className="club-life-hint">Premios por puesto: {prizeList.slice(0, 4).map((amount, index) => `${PLACE[index].toLowerCase()} ${gp(amount)}`).join(' · ')}{size === 8 ? ` · eliminados en cuartos ${gp(prizeList[4])}` : ''}. Además, cada partido reparte la taquilla mitad y mitad.</p>
+    <p className="club-life-hint">Premios por puesto: {prizeList.slice(0, 4).map((amount, index) => `${PLACE[index].toLowerCase()} ${gp(amount)}`).join(' · ')}{size === 8 ? ` · eliminados en cuartos ${gp(prizeList[4])}` : size === 6 ? ` · eliminados en grupos ${gp(prizeList[4])}` : ''}. Además, cada partido reparte la taquilla mitad y mitad.</p>
     {!isAdmin && myTeamId && !chosen.includes(myTeamId) && <p className="club-life-hint">Tu club tiene que estar en el cuadro.</p>}
     <div className="club-nickname-actions">
       <Button type="button" size="sm" variant="ghost" onClick={onCancel} disabled={create.loading}>Cancelar</Button>

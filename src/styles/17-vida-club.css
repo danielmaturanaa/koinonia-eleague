@@ -536,6 +536,12 @@
 .preseason-round { display: grid; gap: var(--sp-2); }
 .preseason-round h4 { margin: 0; font: 600 var(--fs-xs)/1 var(--font-ui); letter-spacing: .6px; color: var(--c-ink-muted); }
 .preseason-round.round-F h4 { color: var(--c-red); }
+.preseason-group { width: 100%; border-collapse: collapse; font: 600 var(--fs-sm)/1.2 var(--font-ui); color: var(--c-navy-900); }
+.preseason-group th { padding: 3px 6px; text-align: right; font-size: var(--fs-xs); letter-spacing: .5px; color: var(--c-ink-muted); border-bottom: 2px solid var(--c-navy-800); }
+.preseason-group td { padding: 4px 6px; text-align: right; }
+.preseason-group td:first-child { text-align: left; overflow-wrap: anywhere; }
+.preseason-group tr.is-qualified td:first-child { box-shadow: inset 3px 0 0 var(--c-green); }
+.preseason-group small { color: var(--c-ink-muted); }
 .preseason-match { display: grid; gap: 2px; padding: 6px; background: var(--c-white); border: var(--border); box-shadow: var(--shadow-pixel); }
 .preseason-side { display: flex; justify-content: space-between; gap: var(--sp-2); padding: 4px 6px; font: 600 var(--fs-sm)/1.2 var(--font-ui); color: var(--c-navy-900); }
 .preseason-side a { color: inherit; overflow-wrap: anywhere; }

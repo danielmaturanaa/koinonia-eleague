@@ -138,7 +138,7 @@ function PreseasonWorkspace({ tournamentId, teams, onChanged }) {
   const bracket = useApiQuery(signal => endpoints.preseasonBracket(tournamentId, signal), [tournamentId]);
   const names = Object.fromEntries(teams.map(team => [team.id, team.name]));
   if (!bracket.data) return <DataState query={bracket}/>;
-  return <section className="workspace-panel"><h3>CUADRO DE LA GIRA <small>{bracket.data.size} CLUBES · PARTIDO ÚNICO · FINAL Y 3.ER LUGAR</small></h3>
+  return <section className="workspace-panel"><h3>CUADRO DE LA GIRA <small>{bracket.data.size} CLUBES · {bracket.data.size === 6 ? '2 GRUPOS DE 3 · ' : ''}PARTIDO ÚNICO · FINAL Y 3.ER LUGAR</small></h3>
     <PreseasonBracket bracket={{ ...bracket.data, teamNames: names }} onChanged={() => { bracket.retry(); onChanged?.(); }}/></section>;
 }
 
