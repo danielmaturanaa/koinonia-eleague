@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { NewsArtwork } from '../../components/NewsArtwork.jsx';
 import { formatDate } from '../public/DataStates.jsx';
 import { cachedNews, findNews, newsPath } from './newsCache.js';
-import { newsContext } from './newsContext.js';
 
 const newsDate = item => item?.publishedAt ?? item?.date;
 
@@ -52,7 +51,7 @@ export function NewsModal({ item, loading, teams = [], onClose }) {
           <p className="news-reader-meta"><b>{item.label}</b>{newsDate(item) && <time>{formatDate(newsDate(item))}</time>}</p>
           <h2>{item.headline}</h2>
           {item.subtitle && <h3>{item.subtitle}</h3>}
-          <div className="news-reader-body">{newsContext(item) && <p className={`news-context ${newsContext(item).tour ? 'is-tour' : ''}`}>{newsContext(item).text}</p>}{item.body && <p>{item.body}</p>}{item.body2 && <p className="news-story-angle">{item.body2}</p>}</div>
+          <div className="news-reader-body">{item.body && <p>{item.body}</p>}{item.body2 && <p className="news-story-angle">{item.body2}</p>}</div>
           <button type="button" className="news-reader-share" onClick={share}>{copied ? '✓ ENLACE COPIADO' : '↗ COMPARTIR'}</button>
         </div>
       </>}
