@@ -505,3 +505,13 @@
 .trophy-star svg { display: block; width: 20px; height: 19px; overflow: visible; }
 .trophy-star polygon { fill: #f2b705; stroke: #7a5400; stroke-width: 7; stroke-linejoin: round; }
 .trophy-star small { color: #062764; font: 600 10px/1 'Oswald', sans-serif; letter-spacing: .2px; }
+
+/* Vitrina: pestañas Ligas | Giras */
+.trophy-tabs { display: inline-flex; margin: 0 0 0 auto; gap: 4px; }
+.trophy-tabs button { min-height: 28px; padding: 0 10px; border: 2px solid #b8d8f0; color: #b8d8f0; background: transparent; font: 600 13px/1 'Oswald', sans-serif; letter-spacing: .5px; cursor: pointer; }
+.trophy-tabs button:hover { color: #fff; border-color: #fff; }
+.trophy-tabs button.active { color: #062764; border-color: #f2b705; background: #f2b705; }
+.trophy-empty { margin: 0; padding: 14px 4px; color: #625d4e; font: 600 13px/1.2 'Oswald', sans-serif; letter-spacing: .4px; text-align: center; }
+.trophy-cup svg { width: 18px; height: 18px; fill: none; stroke: #7a5400; stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+.trophy-cup svg path { fill: #f2b705; }
+.trophy-cup small { max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

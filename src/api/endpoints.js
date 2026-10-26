@@ -245,6 +245,7 @@ export const endpoints = {
   countryPreview: (teamId, country, signal) => get(`/teams/${teamId}/country-preview`, { country }, signal),
   teamInvestments: (teamId, signal) => get(`/teams/${teamId}/investments`, null, signal),
   preseasons: signal => get('/preseason', null, signal),
+  tourTitles: signal => get('/preseason/titles', null, signal),
   preseasonBracket: (tournamentId, signal) => get(`/preseason/${tournamentId}`, null, signal),
   createPreseason: (body, signal) => apiClient.post('/preseason', body, { actor: 'web', signal }),
   cancelPreseason: (tournamentId, signal) => apiClient.delete(`/preseason/${tournamentId}`, {}, { actor: 'web', signal }),

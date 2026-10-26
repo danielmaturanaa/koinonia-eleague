@@ -3,7 +3,6 @@ import { endpoints } from '../../api/endpoints.js';
 import { useAuth } from '../../app/AuthGate.jsx';
 import { EntityLink } from '../../components/EntityLink.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
-import { ShootoutForm } from '../../components/ShootoutForm.jsx';
 import { Button, Card, Chip, ConfirmStep, HowItWorks, Notice } from '../../ui/index.js';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { DataState, gp } from './DataStates.jsx';
@@ -22,7 +21,7 @@ function MatchSide({ match, teamId, name, score, teamIndex }) {
   </div>;
 }
 
-function MatchCard({ match, teamIndex, canOperateMatches, winner }) {
+function MatchCard({ match, teamIndex, canOperateMatches }) {
   const live = match.status === 'live';
   return <article className={`preseason-match ${live ? 'is-live' : ''}`}>
     <MatchSide match={match} teamId={match.homeTeamId} name={match.homeName} score={match.homeScore} teamIndex={teamIndex}/>
@@ -30,8 +29,8 @@ function MatchCard({ match, teamIndex, canOperateMatches, winner }) {
     {match.penaltiesHome != null && <small className="preseason-pens">PENALES {match.penaltiesHome}–{match.penaltiesAway}</small>}
     {match.status !== 'finished' && <EntityLink to="match" id={match.id} className="preseason-play">{live ? 'EN VIVO →' : 'JUGAR →'}</EntityLink>}
     {match.needsWinner && (canOperateMatches
-      ? <div className="preseason-penalties"><ShootoutForm loading={winner.loading} onSubmit={body => winner.execute({ matchId: match.id, ...body })}
-          home={teamIndex?.[match.homeTeamId] ?? { id: match.homeTeamId, name: match.homeName }} away={teamIndex?.[match.awayTeamId] ?? { id: match.awayTeamId, name: match.awayName }}/></div>
+      ? <div className="preseason-penalties"><small>EMPATE: FALTA ANOTAR QUIÉN PASÓ POR PENALES</small>
+        <EntityLink to="match" id={match.id} className="preseason-play">ANOTAR EN LA FICHA →</EntityLink></div>
       : <small className="preseason-penalties">EMPATE: FALTA ANOTAR QUIÉN GANÓ POR PENALES</small>)}
   </article>;
 }
@@ -56,9 +55,8 @@ function GroupPanel({ group, matches, teamIndex, names, renderMatch }) {
 /** Cuadro de una gira: grupos (si los hay), rondas, resultados y el ganador por penales cuando hubo empate. */
 export function PreseasonBracket({ bracket, onChanged }) {
   const { canOperateMatches } = useAuth();
-  const winner = useApiMutation(({ matchId, winnerTeamId, penalties }, signal) => endpoints.setMatchWinner(matchId, { kind: 'preseason', winnerTeamId, penalties }, signal), { onSuccess: onChanged });
   const teamIndex = bracket.teamIndex;
-  const renderMatch = match => <MatchCard key={match.id} match={match} teamIndex={teamIndex} canOperateMatches={canOperateMatches} winner={winner}/>;
+  const renderMatch = match => <MatchCard key={match.id} match={match} teamIndex={teamIndex} canOperateMatches={canOperateMatches}/>;
   const rounds = ['QF', 'SF', 'F', '3P'].map(key => [key, bracket.matches.filter(match => roundOf(match.slot) === key)]).filter(([, list]) => list.length);
   return <div className="preseason-bracket">
     {bracket.groups && <div className="preseason-groups">{bracket.groups.map(group => <GroupPanel key={group.name} group={group} names={bracket.teamNames} teamIndex={teamIndex}
@@ -67,7 +65,6 @@ export function PreseasonBracket({ bracket, onChanged }) {
       <h4>{ROUND_LABEL[key]}</h4>
       {list.map(renderMatch)}
     </section>)}</div>
-    {winner.error && <Notice tone="error">{winner.error.message}</Notice>}
     {bracket.standings && <ol className="preseason-standings">{bracket.standings.map((row, index) => <li key={row.teamId}>
       <span>{index < 4 ? PLACE[index] : bracket.groups ? 'GRUPOS' : 'CUARTOS'}</span>
       <EntityLink to="team" id={row.teamId} className="table-team-link"><TeamMark team={teamIndex?.[row.teamId] ?? { id: row.teamId, name: bracket.teamNames?.[row.teamId] }}/>{upper(bracket.teamNames?.[row.teamId] ?? '')}</EntityLink><b>{gp(row.prize)}</b>

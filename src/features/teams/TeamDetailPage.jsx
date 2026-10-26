@@ -1,6 +1,7 @@
 import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { TeamMark } from '../../components/TeamMark.jsx';
+import { seasonTag } from '../../components/TrophyCase.jsx';
 import { Button, Screen } from '../../ui/index.js';
 import { SanctionBadge } from '../../components/SanctionBadge.jsx';
 import { SimulatedBadge } from '../../components/SimulatedBadge.jsx';
@@ -783,8 +784,10 @@ function ClubScorers({ teamId, limit = 5, tournaments = [] }) {
   </section>;
 }
 
-function HonoursList({ honours, historyError }) {
-  return <section className="club-card"><h3>PALMARÉS <small>{honours.length} TÍTULO{honours.length === 1 ? '' : 'S'}</small></h3>{honours.length ? <div className="honours-list">{honours.map(item => <article key={item.id}><span aria-hidden="true">★</span><b>{item.name}</b>{item.season && <small>{item.season}</small>}</article>)}</div> : <p className="empty-copy">Aún no hay títulos registrados.</p>}{historyError && <p className="honours-api-note">No fue posible consultar el historial del club.</p>}</section>;
+function HonoursList({ honours, tours = [], historyError }) {
+  return <section className="club-card"><h3>PALMARÉS <small>{honours.length} TÍTULO{honours.length === 1 ? '' : 'S'}</small></h3>{honours.length ? <div className="honours-list">{honours.map(item => <article key={item.id}><span aria-hidden="true">★</span><b>{item.name}</b>{item.season && <small>{item.season}</small>}</article>)}</div> : !tours.length && <p className="empty-copy">Aún no hay títulos registrados.</p>}
+    {tours.length > 0 && <><h4 className="honours-subtitle">GIRAS <small>{tours.length}</small></h4>
+      <div className="honours-list honours-list-tours">{tours.map(tour => <article key={tour.id}><span aria-hidden="true">🏆</span><b>{tour.name}</b>{tour.season && <small title={tour.season}>EN {seasonTag(tour.season).toUpperCase()}</small>}</article>)}</div></>}{historyError && <p className="honours-api-note">No fue posible consultar el historial del club.</p>}</section>;
 }
 
 const ovrAverage = value => value === null ? '—' : value.toLocaleString('es-CL', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
@@ -973,7 +976,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
       <section id="ver-eventos"><EventsTab team={team} onChanged={onChanged}/></section>
     </div>}
     {activeTab === 'historia' && <div className="club-history-tab-content">
-      <HonoursList honours={honours} historyError={historyError}/>
+      <HonoursList honours={honours} tours={team?.tourTitles ?? []} historyError={historyError}/>
       <ClubNicknames team={team} canEdit={canEdit} onChanged={onChanged}/>
       <ClubHistory team={team} onEdit={canEdit ? setHistoryEditor : undefined}/>
       <ClubTransfers teamId={team.id}/>

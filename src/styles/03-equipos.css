@@ -540,3 +540,11 @@
 .honours-api-note { margin-top: 10px; color: #8c0019; font: 600 13px/1.2 'Oswald', sans-serif; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 .club-history-tools { display: flex; justify-content: flex-end; }
+
+/* Palmarés: las giras van aparte y con menos peso que los títulos de liga */
+.honours-subtitle { display: flex; align-items: baseline; gap: 6px; margin: 12px 0 4px; color: #625d4e; font: 600 13px/1 'Oswald', sans-serif; letter-spacing: .6px; }
+.honours-subtitle small { color: #a90020; }
+.honours-list-tours article { grid-template-columns: 20px 1fr auto; padding: 3px 7px; opacity: .92; }
+.honours-list-tours article span { color: #8a7a4a; font-size: 14px; }
+.honours-list-tours article b { font-size: 13px; font-weight: 500; }
+.honours-list-tours article small { padding: 2px 5px; border: 1px solid #a90020; font-size: 11px; letter-spacing: .4px; }

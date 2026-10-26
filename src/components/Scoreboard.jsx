@@ -7,6 +7,7 @@ import { TeamMark } from './TeamMark.jsx';
 import { useAuth } from '../app/AuthGate.jsx';
 import { matchRoundLabel } from '../utils/matchPresentation.js';
 import { MinutePromises } from './MinutePromises.jsx';
+import { PenaltiesModal } from './PenaltiesModal.jsx';
 
 const STATUS_LABEL = { pending: 'POR JUGAR', live: 'EN VIVO', finished: 'FINAL', cancelled: 'CANCELADO' };
 const LIVE_POLL_MS = 12000;
@@ -143,9 +144,11 @@ function ScoreboardControls({ match, onChanged, compact }) {
   const [popover, setPopover] = useState(null);
   // Justo después de iniciar o finalizar se abren solas las promesas de minutos (recordatorio y confirmación).
   const [moment, setMoment] = useState(null);
+  // Al finalizar un partido que necesita clasificado (copa, gira, promoción, global de playoffs) se pide quién pasó por penales.
+  const [askPenalties, setAskPenalties] = useState(false);
   const lastOperation = useRef(null);
   const status = useApiMutation((operation, signal) => { lastOperation.current = operation; return endpoints[`${operation}Match`](match.id, signal); }, {
-    onSuccess: () => { setMoment(lastOperation.current === 'start' ? 'start' : lastOperation.current === 'finish' ? 'finish' : null); onChanged(); },
+    onSuccess: () => { setMoment(lastOperation.current === 'start' ? 'start' : lastOperation.current === 'finish' ? 'finish' : null); setAskPenalties(lastOperation.current === 'finish'); onChanged(); },
   });
   const promises = <MinutePromises match={match} moment={moment} onMomentSeen={() => setMoment(null)}/>;
   const runStatus = (operation, label, confirmMessage) => { if (window.confirm(confirmMessage ?? `¿${label} ESTE PARTIDO?`)) status.execute(operation); };
@@ -163,6 +166,8 @@ function ScoreboardControls({ match, onChanged, compact }) {
 
   if (match.status === 'finished') return <div className="scoreboard-controls scoreboard-controls-closed">
     {promises}
+    {match.needsShootout && askPenalties && moment !== 'finish' && <PenaltiesModal match={match} onClose={() => setAskPenalties(false)} onDone={onChanged}/>}
+    {match.needsShootout && <button className="scoreboard-btn scoreboard-btn-penalties" onClick={() => setAskPenalties(true)}>🥅 ANOTAR PENALES · FALTA QUIÉN PASÓ</button>}
     <button className="scoreboard-btn-text" disabled={status.loading} onClick={() => runStatus('reopen', 'REABRIR')}>↺ Reabrir partido (vuelve a en vivo)</button>
   </div>;
 
