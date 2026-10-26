@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { useAuth } from '../../app/AuthGate.jsx';
 import { EntityLink } from '../../components/EntityLink.jsx';
+import { TeamMark } from '../../components/TeamMark.jsx';
 import { Button, Card, Chip, ConfirmStep, HowItWorks, Notice } from '../../ui/index.js';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { DataState, gp } from './DataStates.jsx';
@@ -12,51 +13,70 @@ const ROUND_LABEL = { GA: 'GRUPO A', GB: 'GRUPO B', QF: 'CUARTOS DE FINAL', SF: 
 const roundOf = slot => (/^G[AB]/.test(slot) ? slot.slice(0, 2) : slot.startsWith('QF') ? 'QF' : slot.startsWith('SF') ? 'SF' : slot);
 const PLACE = ['CAMPEÓN', '2.º', '3.º', '4.º'];
 
-/** Cuadro de una gira: rondas, resultados y el ganador por penales cuando hubo empate. */
+/** Un lado de un partido de gira: escudo, nombre y goles. */
+function MatchSide({ match, teamId, name, score, teamIndex }) {
+  return <div className={`preseason-side ${match.winnerTeamId === teamId ? 'is-winner' : ''}`}>
+    <EntityLink to="team" id={teamId} className="table-team-link"><TeamMark team={teamIndex?.[teamId] ?? { id: teamId, name }}/>{upper(name)}</EntityLink>
+    <b>{match.status === 'finished' ? score : '–'}</b>
+  </div>;
+}
+
+function MatchCard({ match, teamIndex, canOperateMatches, winner }) {
+  const live = match.status === 'live';
+  return <article className={`preseason-match ${live ? 'is-live' : ''}`}>
+    <MatchSide match={match} teamId={match.homeTeamId} name={match.homeName} score={match.homeScore} teamIndex={teamIndex}/>
+    <MatchSide match={match} teamId={match.awayTeamId} name={match.awayName} score={match.awayScore} teamIndex={teamIndex}/>
+    {match.status !== 'finished' && <EntityLink to="match" id={match.id} className="preseason-play">{live ? 'EN VIVO →' : 'JUGAR →'}</EntityLink>}
+    {match.needsWinner && (canOperateMatches
+      ? <div className="preseason-penalties"><small>EMPATE: ¿QUIÉN GANÓ POR PENALES?</small>
+        <Button size="sm" variant="ghost" disabled={winner.loading} onClick={() => winner.execute({ matchId: match.id, teamId: match.homeTeamId })}>{upper(match.homeName)}</Button>
+        <Button size="sm" variant="ghost" disabled={winner.loading} onClick={() => winner.execute({ matchId: match.id, teamId: match.awayTeamId })}>{upper(match.awayName)}</Button></div>
+      : <small className="preseason-penalties">EMPATE: FALTA ANOTAR QUIÉN GANÓ POR PENALES</small>)}
+  </article>;
+}
+
+/** Grupo de la gira de 6: tabla con la misma estética que la de liga (pasan los dos primeros) y sus tres partidos. */
+function GroupPanel({ group, matches, teamIndex, names, renderMatch }) {
+  return <section className="workspace-panel preseason-group-panel">
+    <h3>GRUPO {group.name}<small>PASAN 2</small></h3>
+    <div className="table-scroll"><table className="league-table preseason-group-table">
+      <colgroup><col className="rank-column"/><col className="team-column"/><col className="stat-column" span="6"/></colgroup>
+      <thead><tr><th>#</th><th>EQUIPO</th><th>PJ</th><th>G</th><th>E</th><th>P</th><th>DG</th><th>PTS</th></tr></thead>
+      <tbody>{group.rows.map(row => <tr key={row.teamId} className={row.qualified ? 'is-qualified' : ''}>
+        <td>{row.position}</td>
+        <td><EntityLink to="team" id={row.teamId} className="table-team-link"><TeamMark team={teamIndex?.[row.teamId] ?? { id: row.teamId, name: names?.[row.teamId] }}/>{names?.[row.teamId] ?? ''}{row.byLot && row.played === 2 && <em className="live-team-tag" title="Empate total: lo definió un sorteo">SORTEO</em>}</EntityLink></td>
+        <td>{row.played}</td><td>{row.won}</td><td>{row.drawn}</td><td>{row.lost}</td><td>{row.goalDiff > 0 ? `+${row.goalDiff}` : row.goalDiff}</td><td><b>{row.points}</b></td>
+      </tr>)}</tbody>
+    </table></div>
+    <div className="preseason-group-matches">{matches.map(renderMatch)}</div>
+  </section>;
+}
+
+/** Cuadro de una gira: grupos (si los hay), rondas, resultados y el ganador por penales cuando hubo empate. */
 export function PreseasonBracket({ bracket, onChanged }) {
   const { canOperateMatches } = useAuth();
   const winner = useApiMutation(({ matchId, teamId }, signal) => endpoints.setMatchWinner(matchId, { kind: 'preseason', winnerTeamId: teamId }, signal), { onSuccess: onChanged });
-  const groupOf = key => bracket.groups?.find(group => `G${group.name}` === key);
-  const rounds = ['GA', 'GB', 'QF', 'SF', 'F', '3P'].map(key => [key, bracket.matches.filter(match => roundOf(match.slot) === key)]).filter(([, list]) => list.length);
+  const teamIndex = bracket.teamIndex;
+  const renderMatch = match => <MatchCard key={match.id} match={match} teamIndex={teamIndex} canOperateMatches={canOperateMatches} winner={winner}/>;
+  const rounds = ['QF', 'SF', 'F', '3P'].map(key => [key, bracket.matches.filter(match => roundOf(match.slot) === key)]).filter(([, list]) => list.length);
   return <div className="preseason-bracket">
+    {bracket.groups && <div className="preseason-groups">{bracket.groups.map(group => <GroupPanel key={group.name} group={group} names={bracket.teamNames} teamIndex={teamIndex}
+      matches={bracket.matches.filter(match => roundOf(match.slot) === `G${group.name}`)} renderMatch={renderMatch}/>)}</div>}
     <div className="preseason-rounds">{rounds.map(([key, list]) => <section key={key} className={`preseason-round round-${key}`}>
       <h4>{ROUND_LABEL[key]}</h4>
-      {groupOf(key) && <GroupTable group={groupOf(key)} names={bracket.teamNames}/>}
-      {list.map(match => {
-        const side = (teamId, name, score) => <div className={`preseason-side ${match.winnerTeamId === teamId ? 'is-winner' : ''}`}>
-          <EntityLink to="team" id={teamId}>{upper(name)}</EntityLink><b>{match.status === 'finished' ? score : '–'}</b>
-        </div>;
-        return <article key={match.id} className="preseason-match">
-          {side(match.homeTeamId, match.homeName, match.homeScore)}
-          {side(match.awayTeamId, match.awayName, match.awayScore)}
-          {match.status !== 'finished' && <EntityLink to="match" id={match.id} className="preseason-play">{match.status === 'live' ? 'EN VIVO →' : 'JUGAR →'}</EntityLink>}
-          {match.needsWinner && (canOperateMatches
-            ? <div className="preseason-penalties"><small>EMPATE: ¿QUIÉN GANÓ POR PENALES?</small>
-              <Button size="sm" variant="ghost" disabled={winner.loading} onClick={() => winner.execute({ matchId: match.id, teamId: match.homeTeamId })}>{upper(match.homeName)}</Button>
-              <Button size="sm" variant="ghost" disabled={winner.loading} onClick={() => winner.execute({ matchId: match.id, teamId: match.awayTeamId })}>{upper(match.awayName)}</Button></div>
-            : <small className="preseason-penalties">EMPATE: FALTA ANOTAR QUIÉN GANÓ POR PENALES</small>)}
-        </article>;
-      })}
+      {list.map(renderMatch)}
     </section>)}</div>
     {winner.error && <Notice tone="error">{winner.error.message}</Notice>}
     {bracket.standings && <ol className="preseason-standings">{bracket.standings.map((row, index) => <li key={row.teamId}>
-      <span>{index < 4 ? PLACE[index] : bracket.groups ? 'GRUPOS' : 'CUARTOS'}</span><EntityLink to="team" id={row.teamId}>{upper(bracket.teamNames?.[row.teamId] ?? '')}</EntityLink><b>{gp(row.prize)}</b>
+      <span>{index < 4 ? PLACE[index] : bracket.groups ? 'GRUPOS' : 'CUARTOS'}</span>
+      <EntityLink to="team" id={row.teamId} className="table-team-link"><TeamMark team={teamIndex?.[row.teamId] ?? { id: row.teamId, name: bracket.teamNames?.[row.teamId] }}/>{upper(bracket.teamNames?.[row.teamId] ?? '')}</EntityLink><b>{gp(row.prize)}</b>
     </li>)}</ol>}
   </div>;
 }
 
-/** Tabla de un grupo de la gira de 6: pasan los dos primeros; «sorteo» marca un desempate que no se pudo resolver por resultados. */
-function GroupTable({ group, names = {} }) {
-  return <table className="preseason-group">
-    <thead><tr><th/><th>PJ</th><th>DG</th><th>PTS</th></tr></thead>
-    <tbody>{group.rows.map(row => <tr key={row.teamId} className={row.qualified ? 'is-qualified' : ''}>
-      <td><EntityLink to="team" id={row.teamId}>{upper(names[row.teamId] ?? '')}</EntityLink>{row.byLot && row.played === 2 && <small title="Empate total: lo definió un sorteo"> · SORTEO</small>}</td>
-      <td>{row.played}</td><td>{row.goalDiff > 0 ? `+${row.goalDiff}` : row.goalDiff}</td><td><b>{row.points}</b></td>
-    </tr>)}</tbody>
-  </table>;
-}
+const CHAMPION = item => item.standings?.[0]?.teamId ?? null;
 
-/** Giras: torneos amistosos que se arman cuando sea (4, 6 u 8 clubes, cruces a mano) y el formulario para organizar una. */
+/** Giras: torneos amistosos que se arman cuando sea (4, 6 u 8 clubes, cruces a mano) y el formulario para organizar una. Aquí viven todas las giras (no se repiten en el selector de torneos). */
 export function PreseasonPanel({ teams = [], myTeamId = null }) {
   const { isAdmin, canEditTeam } = useAuth();
   const query = useApiQuery(signal => endpoints.preseasons(signal), []);
@@ -65,16 +85,26 @@ export function PreseasonPanel({ teams = [], myTeamId = null }) {
   if (!data) return <DataState query={query}/>;
   const canOrganize = isAdmin || (myTeamId && canEditTeam(myTeamId) && !data.busyTeamIds.includes(myTeamId));
   const names = Object.fromEntries(teams.map(team => [team.id, team.name]));
+  const teamIndex = Object.fromEntries(teams.map(team => [team.id, team]));
+  const playing = data.tournaments.filter(item => item.status !== 'completed');
+  const finished = data.tournaments.filter(item => item.status === 'completed');
+  const showTour = item => <section key={item.id} className="preseason-item">
+    <header><b>{upper(item.name)}</b><Chip tone={item.status === 'completed' ? 'green' : 'yellow'}>{item.status === 'completed' ? 'TERMINADA' : `${item.size} CLUBES · EN JUEGO`}</Chip></header>
+    {item.paidTeamIds.length < item.size && <p className="club-life-hint">Sin plata en esta gira (ya cobraron sus {data.paidPerSeason} giras de la temporada): {item.matches.flatMap(match => [match.homeTeamId, match.awayTeamId]).filter((teamId, index, list) => list.indexOf(teamId) === index && !item.paidTeamIds.includes(teamId)).map(teamId => names[teamId]).join(', ')}.</p>}
+    <PreseasonBracket bracket={{ ...item, teamNames: names, teamIndex }} onChanged={query.retry}/>
+  </section>;
   return <Card title="GIRAS" className="preseason-panel"
     aside={canOrganize && !creating ? <Button size="sm" icon="trophy" onClick={() => setCreating(true)}>ORGANIZAR GIRA</Button> : null}>
     {creating && <PreseasonForm teams={teams} busy={data.busyTeamIds} paidLeft={data.paidLeft} prizes={data.prizes} myTeamId={myTeamId} onDone={() => { setCreating(false); query.retry(); }} onCancel={() => setCreating(false)}/>}
-    {data.tournaments.length
-      ? data.tournaments.map(item => <section key={item.id} className="preseason-item">
-        <header><a href={`#/torneos?torneo=${item.id}`}><b>{upper(item.name)}</b></a><Chip tone={item.status === 'completed' ? 'green' : 'yellow'}>{item.status === 'completed' ? 'TERMINADO' : `${item.size} CLUBES · EN JUEGO`}</Chip></header>
-        {item.paidTeamIds.length < item.size && <p className="club-life-hint">Sin plata en esta gira (ya cobraron sus {data.paidPerSeason} giras de la temporada): {item.matches.flatMap(match => [match.homeTeamId, match.awayTeamId]).filter((teamId, index, list) => list.indexOf(teamId) === index && !item.paidTeamIds.includes(teamId)).map(teamId => names[teamId]).join(', ')}.</p>}
-        <PreseasonBracket bracket={{ ...item, teamNames: names }} onChanged={query.retry}/>
-      </section>)
-      : !creating && <p className="club-life-hint">Todavía no hay giras. Si se juntan 4, 6 u 8 en Discord, armen una acá.</p>}
+    {playing.map(showTour)}
+    {finished.length > 0 && <details className="preseason-finished">
+      <summary>GIRAS TERMINADAS ({finished.length})</summary>
+      {finished.map(item => <details key={item.id} className="preseason-finished-item">
+        <summary><b>{upper(item.name)}</b>{CHAMPION(item) && <span className="preseason-champion"><TeamMark team={teamIndex[CHAMPION(item)] ?? { name: names[CHAMPION(item)] }}/>CAMPEÓN: {upper(names[CHAMPION(item)] ?? '')}</span>}</summary>
+        {showTour(item)}
+      </details>)}
+    </details>}
+    {!data.tournaments.length && !creating && <p className="club-life-hint">Todavía no hay giras. Si se juntan 4, 6 u 8 en Discord, armen una acá.</p>}
     <HowItWorks><p>Cuando se junten 4, 6 u 8 clubes (por ejemplo en Discord), un presi arma la gira y elige los cruces. Es a partido único (si empatan, se define por penales), con final y partido por el 3.er lugar, y se juega en el eFootball como cualquier partido. La de 6 son dos grupos de 3 (todos contra todos, un partido cada par; el empate vale un punto): pasan los dos mejores y las semis son 1.º A–2.º B y 1.º B–2.º A. Todos recaudan: el local reparte la taquilla con la visita y la organización paga premios por puesto.</p><p>Se puede jugar cuando sea, pero cada club cobra (premios, taquilla y ánimo) solo en sus primeras {data.paidPerSeason} giras de cada temporada; las demás se juegan igual, sin plata. Un club no puede estar en dos giras a la vez. Es un amistoso: no cuenta para la forma, el cara a cara, las suspensiones, los sueldos ni la directiva.</p></HowItWorks>
   </Card>;
 }

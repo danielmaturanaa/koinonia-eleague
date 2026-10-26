@@ -137,12 +137,13 @@ function PlayoffsSection({ tournamentId, resolveTeam }) {
 function PreseasonWorkspace({ tournamentId, teams, onChanged }) {
   const bracket = useApiQuery(signal => endpoints.preseasonBracket(tournamentId, signal), [tournamentId]);
   const names = Object.fromEntries(teams.map(team => [team.id, team.name]));
+  const teamIndex = Object.fromEntries(teams.map(team => [team.id, team]));
   if (!bracket.data) return <DataState query={bracket}/>;
   return <section className="workspace-panel"><h3>CUADRO DE LA GIRA <small>{bracket.data.size} CLUBES · {bracket.data.size === 6 ? '2 GRUPOS DE 3 · ' : ''}PARTIDO ÚNICO · FINAL Y 3.ER LUGAR</small></h3>
-    <PreseasonBracket bracket={{ ...bracket.data, teamNames: names }} onChanged={() => { bracket.retry(); onChanged?.(); }}/></section>;
+    <PreseasonBracket bracket={{ ...bracket.data, teamNames: names, teamIndex }} onChanged={() => { bracket.retry(); onChanged?.(); }}/></section>;
 }
 
-function TournamentWorkspace({ tournamentId, teams, onChanged, onDeleted, initialTab = 'standings', onTab = null }) {
+function TournamentWorkspace({ tournamentId, teams, onChanged, onDeleted, hideName = false, initialTab = 'standings', onTab = null }) {
   const { isAdmin } = useAuth();
   // Dentro de Liga, la tabla, los goleadores y los playoffs son pestañas de la pantalla: el torneo no repite las suyas.
   const embedded = useEmbedded();
@@ -176,7 +177,7 @@ function TournamentWorkspace({ tournamentId, teams, onChanged, onDeleted, initia
     : null;
 
   return <section className="tournament-workspace"><DataState query={detail}/>{data && <>
-    <header className="tournament-header"><div><small>{data.format === 'league' ? 'LIGA' : data.format === 'knockout' ? 'ELIMINACIÓN DIRECTA' : 'GRUPOS + ELIMINACIÓN'}{data.format === 'league' ? ` · CAMPEONES: ${data.championPolicy === 'both' ? 'LIGA REGULAR + PLAYOFFS' : data.championPolicy === 'playoffs' ? 'PLAYOFFS' : 'TABLA'}` : ''}</small><h2>{data.name}</h2></div><b className={`status status-${data.status}`}>{statusLabel}</b>{isAdmin && <a className="tournament-manage-button" href={`#/admin?tab=torneos&id=${data.id}`}>⚙ Gestionar en la sala de control</a>}{isAdmin && <Button variant="danger" type="button" disabled={remove.loading} onClick={deleteTournament}>ELIMINAR TORNEO</Button>}</header>{isAdmin && (remove.error || remove.success) && <FormFeedback mutation={remove}/>}
+    <header className="tournament-header"><div><small>{data.format === 'league' ? 'LIGA' : data.format === 'knockout' ? 'ELIMINACIÓN DIRECTA' : 'GRUPOS + ELIMINACIÓN'}{data.format === 'league' ? ` · CAMPEONES: ${data.championPolicy === 'both' ? 'LIGA REGULAR + PLAYOFFS' : data.championPolicy === 'playoffs' ? 'PLAYOFFS' : 'TABLA'}` : ''}</small>{hideName ? null : <h2>{data.name}</h2>}</div><b className={`status status-${data.status}`}>{statusLabel}</b>{isAdmin && <a className="tournament-manage-button" href={`#/admin?tab=torneos&id=${data.id}`}>⚙ Gestionar en la sala de control</a>}{isAdmin && <Button variant="danger" type="button" disabled={remove.loading} onClick={deleteTournament}>ELIMINAR TORNEO</Button>}</header>{isAdmin && (remove.error || remove.success) && <FormFeedback mutation={remove}/>}
     {data.rules?.kind === 'preseason' ? <PreseasonWorkspace tournamentId={tournamentId} teams={teams} onChanged={refresh}/> : <>
       {!embedded && <nav className="tournament-subtabs" aria-label="Secciones del torneo" role="tablist">
         <button type="button" role="tab" aria-selected={workspaceTab === 'standings'} className={workspaceTab === 'standings' ? 'active' : ''} onClick={() => setWorkspaceTab('standings')}>TABLA DE POSICIONES</button>
@@ -213,7 +214,8 @@ export function TournamentsPage({ teams = [], initialId = null, initialView = nu
   const [selectedId, setSelectedId] = useState(initialId);
   const [view, setView] = useState(VIEW_FROM_PARAM[initialView] ?? 'standings');
   const { isAdmin, teamId: myTeamId } = useAuth();
-  const all = Array.isArray(tournaments.data) ? tournaments.data : [];
+  // Las giras viven en su tarjeta (GIRAS): no se repiten aquí como un torneo más.
+  const all = (Array.isArray(tournaments.data) ? tournaments.data : []).filter(item => item.rules?.kind !== 'preseason');
   const priority = tournament => tournament.format === 'league' || /liga/i.test(tournament.name ?? '') ? 0 : 1;
   const active = useMemo(() => all.filter(item => item.status !== 'completed').sort((a, b) => priority(a) - priority(b) || (a.name ?? '').localeCompare(b.name ?? '', 'es')), [all]);
   const completed = useMemo(() => all
@@ -232,6 +234,8 @@ export function TournamentsPage({ teams = [], initialId = null, initialView = nu
   const changeView = value => { setView(value); writeUrl(selectedId, value); };
   const deleted = () => { setSelectedId(null); tournaments.retry(); };
   const selectedCompletedId = completed.some(item => item.id === selectedId) ? selectedId : '';
+  // Con selector de torneos en curso, el botón activo ya dice el nombre: el encabezado no lo repite.
+  const nameInPicker = active.length > 1 && active.some(item => item.id === selectedId);
   return <main className="newspaper data-page"><section className="data-paper">
     <PageHeader kicker="COMPETICIONES OFICIALES" title="TORNEOS">{isAdmin && <a className="page-action" href="#/admin?tab=torneos">⚙ ADMINISTRAR TORNEOS</a>}</PageHeader>
     <DataState query={tournaments} empty={null}/>
@@ -241,7 +245,7 @@ export function TournamentsPage({ teams = [], initialId = null, initialView = nu
       {active.length > 1 && <div className="tournament-picker" role="group" aria-label="Torneos en curso">
         {active.map(item => <button type="button" key={item.id} className={selectedId === item.id ? 'active' : ''} aria-pressed={selectedId === item.id} onClick={() => choose(item.id)}>{item.name}</button>)}
       </div>}
-      {active.length === 1 && <span className="tournament-live-label"><i aria-hidden="true"/>EN CURSO: <b>{active[0].name}</b>{selectedId !== active[0].id && <button type="button" onClick={() => choose(active[0].id)}>VOLVER</button>}</span>}
+      {active.length === 1 && selectedId !== active[0].id && <span className="tournament-live-label"><i aria-hidden="true"/>EN CURSO: <b>{active[0].name}</b><button type="button" onClick={() => choose(active[0].id)}>VOLVER</button></span>}
       {completed.length > 0 && <label className="tournament-history-select">ANTERIORES
         <select value={selectedCompletedId} onChange={event => event.target.value && choose(event.target.value)}>
           <option value="">{selectedCompletedId ? 'ELEGIR…' : 'VER UN TORNEO JUGADO…'}</option>
@@ -250,7 +254,7 @@ export function TournamentsPage({ teams = [], initialId = null, initialView = nu
       </label>}
     </div>}
     {!tournaments.loading && !all.length && <p className="empty-copy">AÚN NO HAY TORNEOS.</p>}
-    {selectedId && <TournamentWorkspace key={selectedId} tournamentId={selectedId} teams={teams} initialTab={view} onTab={changeView} onChanged={() => tournaments.retry()} onDeleted={deleted}/>}
+    {selectedId && <TournamentWorkspace key={selectedId} tournamentId={selectedId} teams={teams} hideName={nameInPicker} initialTab={view} onTab={changeView} onChanged={() => tournaments.retry()} onDeleted={deleted}/>}
   </section></main>;
 }
 
