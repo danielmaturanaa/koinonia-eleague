@@ -83,7 +83,7 @@ function ClubMatchRow({ match, resolveTeam, teamId }) {
   const finished = match.status === 'finished';
   const result = resultFor(match, teamId);
   return <EntityLink to="match" id={match.id} className={`club-match-row ${{ G: 'won', P: 'lost', E: 'drawn' }[result] ?? ''}`}>
-    <small><DerbyBadge match={match}/><SanctionBadge match={match} compact/><SimulatedBadge match={match}/>{match.tournament?.name ?? 'TORNEO'} · {matchRoundLabel(match, { leagueRound: 'JORNADA' })}{match.homeTeam?.stadium ? <span className="match-venue compact"> · 🏟️ {match.homeTeam.stadium}</span> : null}</small>
+    <small><DerbyBadge match={match}/><SanctionBadge match={match} compact/><SimulatedBadge match={match}/>{match.stage === 'preseason' && <em className="tour-tag">GIRA</em>}{match.tournament?.name ?? 'TORNEO'} · {matchRoundLabel(match, { leagueRound: match.stage === 'preseason' ? 'RONDA' : 'JORNADA' })}{match.homeTeam?.stadium ? <span className="match-venue compact"> · 🏟️ {match.homeTeam.stadium}</span> : null}</small>
     <div><span><TeamMark team={resolveTeam(match.homeTeam)}/><b>{match.homeTeam?.name ?? 'LOCAL'}</b></span><strong>{finished ? `${match.homeScore ?? 0} - ${match.awayScore ?? 0}` : 'VS'}</strong><span><b>{match.awayTeam?.name ?? 'VISITA'}</b><TeamMark team={resolveTeam(match.awayTeam)}/></span></div>
   </EntityLink>;
 }
@@ -716,12 +716,12 @@ function FinanceSimulator({ team, squad, balance, onChanged, onTab, currentPosit
   </section>;
 }
 
-const finishedMatches = (matches, teamId) => matches
-  .filter(match => match.status === 'finished' && (match.homeTeam?.id === teamId || match.awayTeam?.id === teamId))
+const finishedMatches = (matches, teamId, { leagueOnly = false } = {}) => matches
+  .filter(match => match.status === 'finished' && !(leagueOnly && match.stage === 'preseason') && (match.homeTeam?.id === teamId || match.awayTeam?.id === teamId))
   .sort((left, right) => String(right.finishedAt ?? '').localeCompare(String(left.finishedAt ?? '')));
 
 function FormPills({ matches, teamId }) {
-  const recent = finishedMatches(matches, teamId).slice(0, 5).reverse();
+  const recent = finishedMatches(matches, teamId, { leagueOnly: true }).slice(0, 5).reverse();
   if (!recent.length) return null;
   return <div className="club-form" aria-label="Racha de los últimos partidos">{recent.map(match => {
     const result = resultFor(match, teamId);
@@ -938,7 +938,7 @@ export function TeamDetailPage({ team, teams = [], tournaments = [], squad, stan
     actions={<div className="club-strip">
       <div><small>Valor del plantel</small><b>{gp(team.squadValue)}</b></div>
       {ownerMode && <div><small>En caja</small><b>{balance === null ? '—' : gp(balance)}</b></div>}
-      <FormPills matches={recentMatches} teamId={team.id}/>
+      <FormPills matches={matches} teamId={team.id}/>
       {onProjection && <Button size="sm" variant="ghost" className="club-projection-button" onClick={onProjection}>¿Qué necesita para clasificar?</Button>}
     </div>}
     tabs={tabs} active={activeTab} onTab={id => onTab?.(id)}>
