@@ -42,7 +42,7 @@ function FixtureCard({ match, resolveTeam, onSelect, showRound }) {
         : 'PENDIENTE';
   return <button type="button" className={`fixture-card fixture-${match.status}${match.sanctioned ? ' fixture-sanctioned' : ''}${match.derby ? ' fixture-derby' : ''}${rivalry ? ` rivalry-${rivalry.kind}${rivalry.both ? ' rivalry-both' : ''}` : ''}`} onClick={() => onSelect(match.id)} aria-label={`${match.homeTeam?.name ?? 'Equipo local'} contra ${match.awayTeam?.name ?? 'Equipo visitante'}: ${state}`}>
     <span className="fixture-teams" data-derby={rivalry ? rivalry.label.toUpperCase() : undefined}>{team('home', home)}{team('away', away)}{rivalry?.streak && <em className="fixture-streak">{rivalry.streak.text}</em>}</span>
-    <small className="fixture-footer"><span>{rivalry && <Icon name={rivalry.icon} size={12} className="fixture-derby-flame" title={rivalry.label}/>}{showRound ? matchRoundLabel(match) : 'FECHA POR DEFINIR'}</span><SanctionBadge match={match} compact/><SimulatedBadge match={match}/>{match.homeTeam?.stadium && <span className="match-venue" title={`Estadio de ${match.homeTeam.name}`}>🏟️ {match.homeTeam.stadium}</span>}</small>
+    <small className="fixture-footer"><span>{rivalry && <Icon name={rivalry.icon} size={12} className="fixture-derby-flame" title={rivalry.label}/>}{showRound ? matchRoundLabel(match) : 'FECHA POR DEFINIR'}</span>{match.penaltiesHome != null && <span className="fixture-pens" title="Se definió por penales">PEN. {match.penaltiesHome}–{match.penaltiesAway}</span>}<SanctionBadge match={match} compact/><SimulatedBadge match={match}/>{match.homeTeam?.stadium && <span className="match-venue" title={`Estadio de ${match.homeTeam.name}`}>🏟️ {match.homeTeam.stadium}</span>}</small>
   </button>;
 }
 

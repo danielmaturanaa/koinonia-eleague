@@ -271,6 +271,7 @@ export function Scoreboard({ matchId, mode: requestedMode = 'view', density = 't
       </div>
       <div className="scoreboard-team scoreboard-team-away"><TeamMark team={resolveTeam(match.awayTeam)}/><b>{match.awayTeam?.name}</b><Nickname team={match.awayTeam}/></div>
     </div>
+    {match.penaltiesHome != null && match.penaltiesAway != null && <p className="scoreboard-pens">PENALES {match.penaltiesHome}–{match.penaltiesAway} · GANA {String(match.winnerTeamId === match.homeTeam?.id ? match.homeTeam?.name : match.awayTeam?.name ?? '').toUpperCase()}</p>}
     {showActa && <ScoreboardActa match={match}/>}
     {mode === 'manage' && <ScoreboardControls match={match} onChanged={() => { detail.retry(); onChanged?.(); }} compact={density === 'tile'}/>}
   </article>;

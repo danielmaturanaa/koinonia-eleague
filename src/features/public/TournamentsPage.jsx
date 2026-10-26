@@ -5,6 +5,7 @@ import { endpoints } from '../../api/endpoints.js';
 import { EntityLink } from '../../components/EntityLink.jsx';
 import { LiveMovement, LivePosition, LiveTableStatus, liveRowClass } from '../../components/LiveStandings.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
+import { ShootoutForm } from '../../components/ShootoutForm.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useAuth } from '../../app/AuthGate.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
@@ -26,11 +27,10 @@ function GroupStandings({ tournamentId, groupLabel, resolveTeam }) {
 /** Serie empatada en el global: se define por penales. La anota quien opera los partidos. */
 function PlayoffPenalties({ series, home, away, onChanged }) {
   const { canOperateMatches } = useAuth();
-  const resolve = useApiMutation((winnerTeamId, signal) => endpoints.resolvePlayoffTiebreak(series.id, winnerTeamId, signal), { onSuccess: () => onChanged?.() });
+  const resolve = useApiMutation(({ winnerTeamId, penalties }, signal) => endpoints.resolvePlayoffTiebreak(series.id, winnerTeamId, penalties, signal), { onSuccess: () => onChanged?.() });
   if (!canOperateMatches) return <em>Empate en el global: falta anotar quién ganó por penales</em>;
-  return <div className="playoff-tiebreak"><span>EMPATE EN EL GLOBAL · ¿QUIÉN GANÓ POR PENALES?</span>
-    {[home, away].map(team => <Button key={team.id} size="sm" variant="ghost" disabled={resolve.loading}
-      onClick={() => window.confirm(`¿${team.name} ganó la serie por penales?`) && resolve.execute(team.id)}>{team.name}</Button>)}
+  return <div className="playoff-tiebreak">
+    <ShootoutForm home={home} away={away} loading={resolve.loading} label="EMPATE EN EL GLOBAL · ANOTA LA TANDA DE PENALES" onSubmit={resolve.execute}/>
     {resolve.error && <Notice tone="error">{resolve.error.message}</Notice>}
   </div>;
 }
@@ -56,8 +56,11 @@ function PlayoffSeriesCard({ series, resolveTeam, showWinner = true, onChanged }
     return scores.every(Number.isFinite) ? scores.reduce((total, score) => total + score, 0) : '–';
   };
   const aggregate = { home: aggregateFor(home, 'home'), away: aggregateFor(away, 'away') };
+  // La tanda de penales vive en el partido que definió la serie (la última vuelta); se muestra por equipo.
+  const shootout = [...series.matches].reverse().find(match => match.penaltiesHome != null && match.penaltiesAway != null);
+  const penaltiesFor = team => (sameTeam(matchTeamId(shootout, 'home'), team.id) ? shootout.penaltiesHome : shootout.penaltiesAway);
   const legLink = (match, label) => match ? <EntityLink to="match" id={match.id} className="playoff-leg-link">{label}</EntityLink> : <span>{label}</span>;
-  return <article className={`playoff-series status-${series.status}`}><header className="playoff-series-head"><small>{stage}</small><span>{twoLegs ? 'IDA Y VUELTA' : 'PARTIDO ÚNICO'}</span></header><div className="playoff-score-table"><div className="playoff-score-heading"><span>CLUB</span>{legLink(firstLeg, twoLegs ? 'IDA' : 'ÚNICO')}{twoLegs ? legLink(secondLeg, 'VUELTA') : <span>—</span>}<span>GLOBAL</span></div>{[[home, 'home'], [away, 'away']].map(([team, side]) => <div className="playoff-score-row" key={team.id}><EntityLink to="team" id={team.id}><TeamMark team={team}/><span>{team.name}</span></EntityLink><b>{scoreFor(firstLeg, team, side)}</b><b>{scoreFor(secondLeg, team, side)}</b><b>{aggregate[side]}</b></div>)}</div>{series.status === 'awaiting_tiebreak' && <PlayoffPenalties series={series} home={home} away={away} onChanged={onChanged}/>}{showWinner && series.winnerTeamId && <strong>CLASIFICA {series.winnerTeamId === home.id ? home.name : away.name}</strong>}</article>;
+  return <article className={`playoff-series status-${series.status}`}><header className="playoff-series-head"><small>{stage}</small><span>{twoLegs ? 'IDA Y VUELTA' : 'PARTIDO ÚNICO'}</span></header><div className="playoff-score-table"><div className="playoff-score-heading"><span>CLUB</span>{legLink(firstLeg, twoLegs ? 'IDA' : 'ÚNICO')}{twoLegs ? legLink(secondLeg, 'VUELTA') : <span>—</span>}<span>GLOBAL</span></div>{[[home, 'home'], [away, 'away']].map(([team, side]) => <div className="playoff-score-row" key={team.id}><EntityLink to="team" id={team.id}><TeamMark team={team}/><span>{team.name}</span></EntityLink><b>{scoreFor(firstLeg, team, side)}</b><b>{scoreFor(secondLeg, team, side)}</b><b>{aggregate[side]}</b></div>)}</div>{shootout && <p className="playoff-penalties-result">PENALES · <b>{home.name} {penaltiesFor(home)}–{penaltiesFor(away)} {away.name}</b></p>}{series.status === 'awaiting_tiebreak' && <PlayoffPenalties series={series} home={home} away={away} onChanged={onChanged}/>}{showWinner && series.winnerTeamId && <strong>CLASIFICA {series.winnerTeamId === home.id ? home.name : away.name}</strong>}</article>;
 }
 
 export function CreateTournamentForm({ teams, onChanged }) {

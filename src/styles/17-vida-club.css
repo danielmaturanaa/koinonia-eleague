@@ -606,3 +606,20 @@
 .fan-map-details[open] > summary::after { content: '▴'; }
 .fan-map-details[open] { display: grid; gap: 12px; padding-bottom: 12px; }
 .fan-map-details[open] > :not(summary) { margin: 0 12px; }
+
+/* Tanda de penales: un marcador por equipo (gana el que convirtió más) */
+.shootout-form { display: grid; gap: var(--sp-2); width: 100%; }
+.shootout-form > small { font: 600 var(--fs-xs)/1.2 var(--font-ui); letter-spacing: .5px; color: var(--c-red); }
+.shootout-inputs { display: grid; gap: 6px; }
+.shootout-inputs label { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-2); font: 600 var(--fs-sm)/1.2 var(--font-ui); color: var(--c-navy-900); }
+.shootout-inputs label > span { display: flex; align-items: center; gap: 6px; min-width: 0; overflow-wrap: anywhere; }
+.shootout-inputs .team-mark { width: 22px; height: 22px; flex: 0 0 22px; }
+.shootout-inputs input { width: 64px; min-height: var(--tap, 40px); padding: 4px 8px; border: var(--border); background: var(--c-white); text-align: center; font: 400 var(--fs-lg)/1 var(--font-display); }
+.shootout-hint { margin: 0; font: 600 var(--fs-xs)/1.2 var(--font-ui); color: var(--c-ink-muted); }
+.preseason-pens, .playoff-penalties-result, .fixture-pens, .scoreboard-pens { font: 600 var(--fs-xs)/1.2 var(--font-ui); letter-spacing: .4px; color: var(--c-red, #a90020); }
+.preseason-pens { justify-self: end; }
+.playoff-penalties-result { margin: 6px 0 0; }
+.playoff-penalties-result b { color: #062764; }
+.scoreboard-pens { margin: 4px 0 0; text-align: center; color: #ffd42a; }
+.playoff-tiebreak .shootout-form span, .preseason-penalties .shootout-form span { width: auto; color: inherit; }
+.playoff-tiebreak .shootout-form > small, .preseason-penalties .shootout-form > small { width: 100%; color: var(--c-red, #a90020); }
