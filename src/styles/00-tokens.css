@@ -1,5 +1,7 @@
 /* Tokens de diseño: todo valor nuevo sale de aquí. Breakpoints (no admiten variables): 560 · 900 · 1180. */
 :root {
+  /* Alto visible real en el celular (la barra del navegador no lo recorta); 100vh de respaldo. */
+  --vh-full: 100vh;
   --c-navy-900: #062764;
   --c-navy-800: #10285b;
   --c-navy-700: #092e77;
@@ -40,3 +42,5 @@
   --shadow-pixel: 4px 4px 0 rgba(0, 0, 0, .2);
   --tap: 40px;
 }
+
+@supports (height: 100dvh) { :root { --vh-full: 100dvh; } }

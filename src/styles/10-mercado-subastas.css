@@ -552,7 +552,7 @@
 
 /* ===== Sin scroll: la revelación cabe en la pantalla y los sobres van en una sola fila ===== */
 .reveal { padding: 12px 16px; overflow: hidden; }
-.reveal-inner { gap: clamp(8px, 1.6vh, 16px); max-height: 100vh; }
+.reveal-inner { gap: clamp(8px, 1.6vh, 16px); max-height: var(--vh-full); }
 .reveal-ring { width: clamp(80px, 13vh, 120px); height: clamp(80px, 13vh, 120px); }
 .reveal-player { gap: 4px; }
 .reveal-player b { font-size: clamp(28px, 5.5vh, 52px); }
