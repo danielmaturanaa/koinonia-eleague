@@ -126,6 +126,6 @@ export function App() {
     page = <SectionPage path={route.path}/>;
   }
 
-  const sidebar = route.name === 'home' || route.name === 'newsArticle' ? <MatchSidebar tournament={tournament} standings={league.standings} teams={league.teams} resolveTeam={resolveTeam} loading={state.loading} navigate={navigate}/> : null;
+  const sidebar = route.name === 'home' || route.name === 'newsArticle' ? <MatchSidebar tournament={tournament} activeTournaments={activeTournaments} standings={league.standings} teams={league.teams} resolveTeam={resolveTeam} loading={state.loading} navigate={navigate}/> : null;
   return <SiteLayout route={route} navigate={navigate} sidebar={sidebar} error={state.error} dismissError={dismissError} playlist={playlist} teams={league.teams}>{page}</SiteLayout>;
 }

@@ -29,16 +29,18 @@ function StandingsPanel({ tournament, standings, resolveTeam, loading, navigate 
   </section>;
 }
 
-export function MatchSidebar({ tournament, standings = [], teams = [], resolveTeam, loading, navigate }) {
+export function MatchSidebar({ tournament, standings = [], teams = [], activeTournaments = [], resolveTeam, loading, navigate }) {
   const live = useApiQuery(signal => endpoints.matches({ status: 'live', activeOnly: 1, page: 1, pageSize: 20 }, signal));
   useEffect(() => {
     const timer = window.setInterval(live.retry, LIVE_REFRESH_MS);
     return () => window.clearInterval(timer);
   }, [live.retry]);
   const liveMatches = (Array.isArray(live.data) ? live.data : []).filter(match => match.status === 'live');
-  // Si hay un encuentro activo, su torneo manda: no tiene sentido mostrar una
-  // tabla de otra edición mientras el marcador anuncia la actual.
-  const liveTournament = liveMatches.find(match => match.tournament?.id)?.tournament ?? tournament;
+  // Si hay un encuentro de liga en vivo, su torneo manda (otra edición de la liga).
+  // Una gira nunca desplaza a la tabla de la liga.
+  const leagueIds = new Set(activeTournaments.filter(item => item.format === 'league').map(item => String(item.id)));
+  const liveLeague = liveMatches.find(match => match.tournament?.id && leagueIds.has(String(match.tournament.id)))?.tournament;
+  const liveTournament = liveLeague ?? tournament;
   const fallbackStandings = String(liveTournament?.id) === String(tournament?.id) ? standings : [];
   return <aside className="match-sidebar">
     <LiveMatches rows={liveMatches} resolveTeam={resolveTeam}/>
