@@ -2,8 +2,8 @@ const BAND_Y = { att: 14, mid: 42, def: 68, gk: 90 };
 
 export const bandFor = position => {
   if (['DC', 'SD', 'ED', 'EI'].includes(position)) return 'att';
-  if (['MP', 'MC', 'MCD', 'II', 'ID'].includes(position)) return 'mid';
-  if (['LD', 'CT', 'LI'].includes(position)) return 'def';
+  if (['MO', 'MC', 'MCD', 'MDI', 'MDD'].includes(position)) return 'mid';
+  if (['LD', 'DEC', 'LI'].includes(position)) return 'def';
   return position === 'PT' ? 'gk' : 'mid';
 };
 
@@ -30,14 +30,14 @@ const GK_SLOT = ['PT', 50, 90];
 const line = (y, ...slots) => slots.map(([position, x, yOverride]) => [position, x, yOverride ?? y]);
 
 export const FORMATIONS = [
-  { key: '4-4-2', slots: [GK_SLOT, ...line(68, ['LI', 15], ['CT', 38], ['CT', 62], ['LD', 85]), ...line(42, ['II', 15], ['MC', 38], ['MC', 62], ['ID', 85]), ...line(14, ['DC', 36], ['DC', 64])] },
-  { key: '4-3-3', slots: [GK_SLOT, ...line(68, ['LI', 15], ['CT', 38], ['CT', 62], ['LD', 85]), ...line(42, ['MC', 28], ['MP', 50], ['MC', 72]), ['EI', 18, 16], ['DC', 50, 12], ['ED', 82, 16]] },
-  { key: '4-2-3-1', slots: [GK_SLOT, ...line(68, ['LI', 15], ['CT', 38], ['CT', 62], ['LD', 85]), ...line(50, ['MCD', 36], ['MCD', 64]), ['EI', 18, 30], ['MP', 50, 30], ['ED', 82, 30], ['DC', 50, 12]] },
-  { key: '4-1-4-1', slots: [GK_SLOT, ...line(68, ['LI', 15], ['CT', 38], ['CT', 62], ['LD', 85]), ['MCD', 50, 54], ...line(34, ['II', 14], ['MC', 38], ['MC', 62], ['ID', 86]), ['DC', 50, 12]] },
-  { key: '4-5-1', slots: [GK_SLOT, ...line(68, ['LI', 15], ['CT', 38], ['CT', 62], ['LD', 85]), ...line(40, ['II', 12], ['MC', 32], ['MP', 50], ['MC', 68], ['ID', 88]), ['DC', 50, 12]] },
-  { key: '3-5-2', slots: [GK_SLOT, ...line(70, ['CT', 25], ['CT', 50], ['CT', 75]), ['LI', 9, 46], ['MC', 32, 42], ['MP', 50, 38], ['MC', 68, 42], ['LD', 91, 46], ...line(14, ['DC', 36], ['DC', 64])] },
-  { key: '3-4-3', slots: [GK_SLOT, ...line(70, ['CT', 25], ['CT', 50], ['CT', 75]), ['LI', 12, 46], ['MC', 38, 44], ['MC', 62, 44], ['LD', 88, 46], ['EI', 18, 16], ['DC', 50, 12], ['ED', 82, 16]] },
-  { key: '5-3-2', slots: [GK_SLOT, ['LI', 10, 62], ['CT', 30, 70], ['CT', 50, 72], ['CT', 70, 70], ['LD', 90, 62], ...line(42, ['MC', 28], ['MP', 50], ['MC', 72]), ...line(14, ['DC', 36], ['DC', 64])] },
+  { key: '4-4-2', slots: [GK_SLOT, ...line(68, ['LI', 15], ['DEC', 38], ['DEC', 62], ['LD', 85]), ...line(42, ['MDI', 15], ['MC', 38], ['MC', 62], ['MDD', 85]), ...line(14, ['DC', 36], ['DC', 64])] },
+  { key: '4-3-3', slots: [GK_SLOT, ...line(68, ['LI', 15], ['DEC', 38], ['DEC', 62], ['LD', 85]), ...line(42, ['MC', 28], ['MO', 50], ['MC', 72]), ['EI', 18, 16], ['DC', 50, 12], ['ED', 82, 16]] },
+  { key: '4-2-3-1', slots: [GK_SLOT, ...line(68, ['LI', 15], ['DEC', 38], ['DEC', 62], ['LD', 85]), ...line(50, ['MCD', 36], ['MCD', 64]), ['EI', 18, 30], ['MO', 50, 30], ['ED', 82, 30], ['DC', 50, 12]] },
+  { key: '4-1-4-1', slots: [GK_SLOT, ...line(68, ['LI', 15], ['DEC', 38], ['DEC', 62], ['LD', 85]), ['MCD', 50, 54], ...line(34, ['MDI', 14], ['MC', 38], ['MC', 62], ['MDD', 86]), ['DC', 50, 12]] },
+  { key: '4-5-1', slots: [GK_SLOT, ...line(68, ['LI', 15], ['DEC', 38], ['DEC', 62], ['LD', 85]), ...line(40, ['MDI', 12], ['MC', 32], ['MO', 50], ['MC', 68], ['MDD', 88]), ['DC', 50, 12]] },
+  { key: '3-5-2', slots: [GK_SLOT, ...line(70, ['DEC', 25], ['DEC', 50], ['DEC', 75]), ['LI', 9, 46], ['MC', 32, 42], ['MO', 50, 38], ['MC', 68, 42], ['LD', 91, 46], ...line(14, ['DC', 36], ['DC', 64])] },
+  { key: '3-4-3', slots: [GK_SLOT, ...line(70, ['DEC', 25], ['DEC', 50], ['DEC', 75]), ['LI', 12, 46], ['MC', 38, 44], ['MC', 62, 44], ['LD', 88, 46], ['EI', 18, 16], ['DC', 50, 12], ['ED', 82, 16]] },
+  { key: '5-3-2', slots: [GK_SLOT, ['LI', 10, 62], ['DEC', 30, 70], ['DEC', 50, 72], ['DEC', 70, 70], ['LD', 90, 62], ...line(42, ['MC', 28], ['MO', 50], ['MC', 72]), ...line(14, ['DC', 36], ['DC', 64])] },
 ];
 
 // Reparte los titulares en los huecos de la formación: primero por puesto exacto, luego por
