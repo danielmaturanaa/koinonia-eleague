@@ -51,7 +51,7 @@ export function MarketPhaseBanner({ status, onChanged }) {
   if (!status?.open || status.phase !== 'renewals') return null;
   return <div className="market-phase-banner" role="status">
     <b>🔁 PERÍODO DE RENOVACIONES</b>
-    <p>Ahora solo se renuevan contratos (en Nómina de tu club). Fichajes, traspasos y trueques se abren cuando un admin pase el mercado a transacciones; ahí los vencidos que nadie renovó quedan libres.{status.expiredContracts ? ` Quedan ${status.expiredContracts} contrato${status.expiredContracts === 1 ? '' : 's'} vencido${status.expiredContracts === 1 ? '' : 's'} sin renovar en la liga.` : ''}</p>
+    <p>Ahora solo se renuevan contratos (en Nómina de tu club). Fichajes, traspasos y trueques se abren cuando un admin pase el mercado a transacciones; ahí los vencidos que nadie renovó quedan libres. Única excepción: quien se negó a renovar o pidió salir se puede traspasar a otro club desde ya, en vez de perderlo gratis.{status.expiredContracts ? ` Quedan ${status.expiredContracts} contrato${status.expiredContracts === 1 ? '' : 's'} vencido${status.expiredContracts === 1 ? '' : 's'} sin renovar en la liga.` : ''}</p>
     {isAdmin && <StartTransactionsButton expired={status.expiredContracts} onDone={onChanged}/>}
   </div>;
 }

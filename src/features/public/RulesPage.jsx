@@ -151,7 +151,7 @@ const ClubSystems = () => <>
   <section className="rules-section">
     <h2>11. Ventanas del Mercado</h2>
     <ul>
-      <li>El mercado puede tener <strong>dos etapas</strong>. Al abrirlo, un admin decide si empieza con el <strong>período de renovaciones</strong>: ahí solo se renuevan contratos vencidos. Cuando el admin pasa a <strong>transacciones</strong>, los vencidos que nadie renovó quedan libres y se abren fichajes, encuestas, subastas, traspasos y trueques. Si el mercado abre sin renovaciones, los vencidos quedan libres al abrir.</li>
+      <li>El mercado puede tener <strong>dos etapas</strong>. Al abrirlo, un admin decide si empieza con el <strong>período de renovaciones</strong>: ahí solo se renuevan contratos vencidos. Cuando el admin pasa a <strong>transacciones</strong>, los vencidos que nadie renovó quedan libres y se abren fichajes, encuestas, subastas, traspasos y trueques. Una excepción: el jugador que se <strong>negó a renovar</strong>, está tan molesto que no quiere renovar (ánimo bajo 35) o <strong>pidió salir</strong> se puede traspasar a otro club durante las renovaciones; si nadie lo compra, queda libre como los demás y se va sin compensación. Si el mercado abre sin renovaciones, los vencidos quedan libres al abrir.</li>
       <li>Si el mercado cierra sin haber pasado a transacciones, los vencidos sin renovar quedan libres al cierre, para el mercado siguiente.</li>
       <li>Con el mercado <strong>abierto</strong>: contratos, renovaciones, negociaciones, contraofertas y primas.</li>
       <li>Con el mercado <strong>cerrado</strong>: roles y respuestas a las peticiones de los jugadores, para que nadie los use para manipular las transacciones.</li>
