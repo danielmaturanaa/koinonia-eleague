@@ -29,7 +29,7 @@ const normalizeSkillKey = key => String(key ?? '').trim().toLowerCase().replace(
 export const skillLabel = key => SKILLS[key] ?? SKILLS[normalizeSkillKey(key)] ?? String(key ?? '').replaceAll('_', ' ');
 
 // Campo de posiciones: 2 = posición principal, 1 = puede jugar ahí.
-const PITCH_POSITIONS = [['cf', 'DC', 50, 10], ['ss', 'SD', 50, 24], ['lwf', 'EI', 16, 16], ['rwf', 'ED', 84, 16], ['amf', 'MO', 50, 38], ['lmf', 'MDI', 16, 44], ['rmf', 'MDD', 84, 44], ['cmf', 'MC', 50, 52], ['dmf', 'MCD', 50, 66], ['lb', 'LI', 16, 74], ['rb', 'LD', 84, 74], ['cb', 'DEC', 50, 80], ['gk', 'PT', 50, 93]];
+const PITCH_POSITIONS = [['cf', 'DC', 50, 10], ['ss', 'SD', 50, 24], ['lwf', 'EXI', 16, 16], ['rwf', 'EXD', 84, 16], ['amf', 'MO', 50, 38], ['lmf', 'MDI', 16, 44], ['rmf', 'MDD', 84, 44], ['cmf', 'MC', 50, 52], ['dmf', 'MCD', 50, 66], ['lb', 'LI', 16, 74], ['rb', 'LD', 84, 74], ['cb', 'DEC', 50, 80], ['gk', 'PT', 50, 93]];
 
 const statTier = value => value >= 90 ? 'elite' : value >= 80 ? 'great' : value >= 70 ? 'good' : 'low';
 

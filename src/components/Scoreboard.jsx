@@ -11,7 +11,7 @@ import { PenaltiesModal } from './PenaltiesModal.jsx';
 
 const STATUS_LABEL = { pending: 'POR JUGAR', live: 'EN VIVO', finished: 'FINAL', cancelled: 'CANCELADO' };
 const LIVE_POLL_MS = 12000;
-const positionOrder = ['DC', 'SD', 'EI', 'ED', 'MO', 'MDI', 'MDD', 'MC', 'MCD', 'LI', 'LD', 'DEC', 'PT'];
+const positionOrder = ['DC', 'SD', 'EXI', 'EXD', 'MO', 'MDI', 'MDD', 'MC', 'MCD', 'LI', 'LD', 'DEC', 'PT'];
 
 const isStarter = player => {
   if (typeof player?.isStarter === 'boolean') return player.isStarter;

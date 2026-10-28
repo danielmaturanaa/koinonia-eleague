@@ -1,7 +1,7 @@
 const BAND_Y = { att: 14, mid: 42, def: 68, gk: 90 };
 
 export const bandFor = position => {
-  if (['DC', 'SD', 'ED', 'EI'].includes(position)) return 'att';
+  if (['DC', 'SD', 'EXD', 'EXI'].includes(position)) return 'att';
   if (['MO', 'MC', 'MCD', 'MDI', 'MDD'].includes(position)) return 'mid';
   if (['LD', 'DEC', 'LI'].includes(position)) return 'def';
   return position === 'PT' ? 'gk' : 'mid';
@@ -31,12 +31,12 @@ const line = (y, ...slots) => slots.map(([position, x, yOverride]) => [position,
 
 export const FORMATIONS = [
   { key: '4-4-2', slots: [GK_SLOT, ...line(68, ['LI', 15], ['DEC', 38], ['DEC', 62], ['LD', 85]), ...line(42, ['MDI', 15], ['MC', 38], ['MC', 62], ['MDD', 85]), ...line(14, ['DC', 36], ['DC', 64])] },
-  { key: '4-3-3', slots: [GK_SLOT, ...line(68, ['LI', 15], ['DEC', 38], ['DEC', 62], ['LD', 85]), ...line(42, ['MC', 28], ['MO', 50], ['MC', 72]), ['EI', 18, 16], ['DC', 50, 12], ['ED', 82, 16]] },
-  { key: '4-2-3-1', slots: [GK_SLOT, ...line(68, ['LI', 15], ['DEC', 38], ['DEC', 62], ['LD', 85]), ...line(50, ['MCD', 36], ['MCD', 64]), ['EI', 18, 30], ['MO', 50, 30], ['ED', 82, 30], ['DC', 50, 12]] },
+  { key: '4-3-3', slots: [GK_SLOT, ...line(68, ['LI', 15], ['DEC', 38], ['DEC', 62], ['LD', 85]), ...line(42, ['MC', 28], ['MO', 50], ['MC', 72]), ['EXI', 18, 16], ['DC', 50, 12], ['EXD', 82, 16]] },
+  { key: '4-2-3-1', slots: [GK_SLOT, ...line(68, ['LI', 15], ['DEC', 38], ['DEC', 62], ['LD', 85]), ...line(50, ['MCD', 36], ['MCD', 64]), ['EXI', 18, 30], ['MO', 50, 30], ['EXD', 82, 30], ['DC', 50, 12]] },
   { key: '4-1-4-1', slots: [GK_SLOT, ...line(68, ['LI', 15], ['DEC', 38], ['DEC', 62], ['LD', 85]), ['MCD', 50, 54], ...line(34, ['MDI', 14], ['MC', 38], ['MC', 62], ['MDD', 86]), ['DC', 50, 12]] },
   { key: '4-5-1', slots: [GK_SLOT, ...line(68, ['LI', 15], ['DEC', 38], ['DEC', 62], ['LD', 85]), ...line(40, ['MDI', 12], ['MC', 32], ['MO', 50], ['MC', 68], ['MDD', 88]), ['DC', 50, 12]] },
   { key: '3-5-2', slots: [GK_SLOT, ...line(70, ['DEC', 25], ['DEC', 50], ['DEC', 75]), ['LI', 9, 46], ['MC', 32, 42], ['MO', 50, 38], ['MC', 68, 42], ['LD', 91, 46], ...line(14, ['DC', 36], ['DC', 64])] },
-  { key: '3-4-3', slots: [GK_SLOT, ...line(70, ['DEC', 25], ['DEC', 50], ['DEC', 75]), ['LI', 12, 46], ['MC', 38, 44], ['MC', 62, 44], ['LD', 88, 46], ['EI', 18, 16], ['DC', 50, 12], ['ED', 82, 16]] },
+  { key: '3-4-3', slots: [GK_SLOT, ...line(70, ['DEC', 25], ['DEC', 50], ['DEC', 75]), ['LI', 12, 46], ['MC', 38, 44], ['MC', 62, 44], ['LD', 88, 46], ['EXI', 18, 16], ['DC', 50, 12], ['EXD', 82, 16]] },
   { key: '5-3-2', slots: [GK_SLOT, ['LI', 10, 62], ['DEC', 30, 70], ['DEC', 50, 72], ['DEC', 70, 70], ['LD', 90, 62], ...line(42, ['MC', 28], ['MO', 50], ['MC', 72]), ...line(14, ['DC', 36], ['DC', 64])] },
 ];
 
@@ -86,3 +86,9 @@ export function playerAtPosition(player, point) {
   if (overall == null) return { ...player, fieldPosition: player.position, naturalPosition: player.position };
   return { ...player, fieldPosition: slot, naturalPosition: player.position, position: slot, overall, overallWithCoach: player.overallWithCoachByPosition?.[slot] ?? overall };
 }
+
+// Dónde se pinta cada puesto cuando se arrastra un jugador (coordenadas de cancha 0–100, y chica = ataque).
+export const ZONE_SPOTS = [
+  ['DC', 50, 9], ['SD', 50, 21], ['EXI', 17, 16], ['EXD', 83, 16], ['MO', 50, 33], ['MDI', 13, 42], ['MDD', 87, 42],
+  ['MC', 50, 46], ['MCD', 50, 58], ['LI', 14, 70], ['LD', 86, 70], ['DEC', 50, 72], ['PT', 50, 90],
+];

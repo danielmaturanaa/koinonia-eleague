@@ -11,7 +11,7 @@ import { gpLabel, gpNumber } from '../../utils/money.js';
 import { GpInput } from '../../components/GpInput.jsx';
 import { Button } from '../../ui/index.js';
 
-const positions = ['PT','LD','DEC','LI','MCD','MC','MDI','MDD','MO','ED','EI','SD','DC'];
+const positions = ['PT','LD','DEC','LI','MCD','MC','MDI','MDD','MO','EXD','EXI','SD','DC'];
 
 export function PlayerActions({ player, teams, onChanged }) {
   const [teamId, setTeamId] = useState('');
@@ -48,7 +48,7 @@ export function PlayerAdmin({ player, onChanged }) {
 
 const STATUS_OPTIONS = [['', 'Todos'], ['registered', 'En la liga'], ['owned', 'Con equipo'], ['free', 'Agentes libres']];
 const SORT_OPTIONS = [['price_desc', 'Precio: mayor a menor'], ['price_asc', 'Precio: menor a mayor'], ['overall_desc', 'Media: mayor a menor'], ['overall_asc', 'Media: menor a mayor'],['name', 'Nombre A-Z'], ['age_asc', 'Más jóvenes'], ['age_desc', 'Más veteranos']];
-const POSITION_LINES = [['PORTERO', ['PT']], ['DEFENSA', ['DEC', 'LI', 'LD']], ['MEDIOCAMPO', ['MCD', 'MC', 'MDI', 'MDD', 'MO']], ['ATAQUE', ['EI', 'ED', 'SD', 'DC']]];
+const POSITION_LINES = [['PORTERO', ['PT']], ['DEFENSA', ['DEC', 'LI', 'LD']], ['MEDIOCAMPO', ['MCD', 'MC', 'MDI', 'MDD', 'MO']], ['ATAQUE', ['EXI', 'EXD', 'SD', 'DC']]];
 const PRICE_RANGES = [['', '', 'Cualquier precio'], ['', '50000000', 'Hasta 50 M'], ['50000000', '100000000', '50 M – 100 M'], ['100000000', '200000000', '100 M – 200 M'], ['200000000', '', 'Más de 200 M']];
 const EMPTY_FILTERS = { q: '', positions: [], status: '', teamId: '', minGp: '', maxGp: '', nationality: '', sort: 'price_desc', page: 1 };
 const filtersFromQuery = query => ({

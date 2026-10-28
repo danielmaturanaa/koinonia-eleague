@@ -3,7 +3,7 @@ import { hasCoachBoost } from '../../utils/managerBoosters.js';
 import { endpoints } from '../../api/endpoints.js';
 import { PlayerFace } from '../../components/PlayerFace.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
-import { applyFormation, defaultFormationPositions, detectFormation, FORMATIONS, pitchPositionFor, playerAtPosition } from '../../utils/formationPositions.js';
+import { applyFormation, defaultFormationPositions, detectFormation, FORMATIONS, pitchPositionFor, playerAtPosition, fieldPositionAt, ZONE_SPOTS } from '../../utils/formationPositions.js';
 import { shortPlayerName } from '../../utils/playerNames.js';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
@@ -62,13 +62,25 @@ function PitchLines({ projection }) {
   </svg>;
 }
 
+// Mientras se arrastra un titular, la cancha marca dónde rinde: cada puesto con su aptitud (natural / semi / ninguna)
+// y la media que tendría ahí, como el mapa de la ficha del jugador. El puesto donde está parado se resalta.
+function PitchZones({ player, at, projection }) {
+  const current = fieldPositionAt(at, player.position);
+  return <div className="pitch-zones" aria-hidden="true">{ZONE_SPOTS.map(([code, x, y]) => {
+    const screen = projection.project(x, y);
+    const level = player.positionLevels?.[code] ?? (code === player.position ? 2 : 0);
+    const overall = player.overallByPosition?.[code];
+    return <span key={code} className={`pitch-zone level-${level} ${code === current ? 'current' : ''}`} style={{ left: `${screen.x}%`, top: `${screen.y}%` }}>{code}{overall != null && <b>{overall}</b>}</span>;
+  })}</div>;
+}
+
 const openPlayer = player => { window.location.hash = `/jugadores/${encodeURIComponent(player.id)}`; };
 
 // Carta al estilo eFootballDB: media y posición a la izquierda, foto a la derecha
 // sobre los colores del club y el nombre en una franja inferior.
 function PitchCard({ player, selected, swappable, editing, style, onPointerDown, onPointerMove, onPointerUp, onClick, bench, isNew, highlighted }) {
   const offPosition = player.fieldPosition && player.fieldPosition !== player.naturalPosition;
-  return <button type="button" className={`pitch-card ${bench ? 'bench' : ''} ${offPosition ? 'off-position' : ''} ${selected ? 'selected' : ''} ${swappable ? 'swappable' : ''} ${editing ? 'editing' : ''} ${isNew ? 'sim-new' : ''} ${highlighted ? 'just-added' : ''}`} style={style} draggable={false} onDragStart={event => event.preventDefault()} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onClick={onClick} aria-pressed={editing ? selected : undefined} aria-label={`${player.name}${editing ? (selected ? ', seleccionado' : '') : ', ver ficha'}`}>
+  return <button type="button" className={`pitch-card ${bench ? 'bench' : ''} ${offPosition ? 'off-position' : ''} ${selected ? 'selected' : ''} ${swappable ? 'swappable' : ''} ${editing ? 'editing' : ''} ${isNew ? 'sim-new' : ''} ${highlighted ? 'just-added' : ''}`} style={style} draggable={false} onDragStart={event => event.preventDefault()} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} onClick={onClick} aria-pressed={editing ? selected : undefined} aria-label={`${player.name}${editing ? (selected ? ', seleccionado' : '') : ', ver ficha'}`}>
     <span className="pitch-card-stats">{hasCoachBoost(player)
       ? <><b className="pitch-card-ovr coach" title={`Media con DT: ${player.overallWithCoach} (base ${player.overall})`}>{player.overallWithCoach}</b><em className="pitch-card-base" title="Media base">{player.overall}</em></>
       : <b>{player.overall ?? '—'}</b>}<small title={offPosition ? `Juega de ${player.fieldPosition}; su puesto es ${player.naturalPosition}` : undefined}>{player.position ?? '—'}</small></span>
@@ -87,6 +99,7 @@ export function PitchBoard({ team, starters, substitutes = [], onChanged, readOn
   const editing = !readOnly;
   const [selectedId, setSelectedId] = useState(null);
   const [localPositions, setLocalPositions] = useState({});
+  const [draggingId, setDraggingId] = useState(null);
   const pitchRef = useRef(null);
   const drag = useRef(null);
   const justDragged = useRef(false);
@@ -108,6 +121,7 @@ export function PitchBoard({ team, starters, substitutes = [], onChanged, readOn
   const reorder = simulation ? local(simulation.onReorder) : apiReorder;
   const move = simulation ? local(simulation.onMove) : apiMove;
   const busy = swap.loading || move.loading || reorder.loading;
+  const dragged = starters.find(player => player.id === draggingId);
   const selected = starters.find(player => player.id === selectedId) ?? substitutes.find(player => player.id === selectedId);
   const selectedIsBench = substitutes.some(player => player.id === selectedId);
   const colors = team?.colors ?? {};
@@ -128,11 +142,13 @@ export function PitchBoard({ team, starters, substitutes = [], onChanged, readOn
     if (!current || current.id !== player.id) return;
     if (!current.moved && Math.hypot(event.clientX - current.startX, event.clientY - current.startY) < 6) return;
     current.moved = true;
+    setDraggingId(player.id);
     setLocalPositions(positions => ({ ...positions, [player.id]: pointFor(event) }));
   };
   const onPointerUp = player => event => {
     const current = drag.current;
     drag.current = null;
+    setDraggingId(null);
     if (!current?.moved) return;
     justDragged.current = true;
     const { x, y } = pointFor(event);
@@ -193,6 +209,7 @@ export function PitchBoard({ team, starters, substitutes = [], onChanged, readOn
   const field = starters.length ? <div className={`pitch-board-field ${projection.flat ? '' : 'in-perspective'}`} ref={pitchRef}>
     <PitchLines projection={projection}/>
     {team && <span className="pitch-watermark" style={{ top: `${center.y}%` }} aria-hidden="true"><TeamMark team={team}/></span>}
+    {dragged && <PitchZones player={dragged} at={positionOf(dragged)} projection={projection}/>}
     {starters.map(player => {
       const position = positionOf(player);
       const shown = playerAtPosition(player, position);
