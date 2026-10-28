@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { AwardsPanel } from './AwardsPanel.jsx';
-import { PreseasonBracket, PreseasonPanel } from './PreseasonPanel.jsx';
+import { PreseasonBracket } from './PreseasonPanel.jsx';
 import { endpoints } from '../../api/endpoints.js';
 import { EntityLink } from '../../components/EntityLink.jsx';
 import { LiveMovement, LivePosition, LiveTableStatus, liveRowClass } from '../../components/LiveStandings.jsx';
@@ -212,8 +212,8 @@ export function TournamentsPage({ teams = [], initialId = null, initialView = nu
   const tournaments = useApiQuery(signal => endpoints.tournaments({ page: 1, pageSize: 100 }, signal));
   const [selectedId, setSelectedId] = useState(initialId);
   const [view, setView] = useState(VIEW_FROM_PARAM[initialView] ?? 'standings');
-  const { isAdmin, teamId: myTeamId } = useAuth();
-  // Las giras viven en su tarjeta (GIRAS): no se repiten aquí como un torneo más.
+  const { isAdmin } = useAuth();
+  // Las giras viven en su pestaña (GIRAS): no se repiten aquí como un torneo más.
   const all = (Array.isArray(tournaments.data) ? tournaments.data : []).filter(item => item.rules?.kind !== 'preseason');
   const priority = tournament => tournament.format === 'league' || /liga/i.test(tournament.name ?? '') ? 0 : 1;
   const active = useMemo(() => all.filter(item => item.status !== 'completed').sort((a, b) => priority(a) - priority(b) || (a.name ?? '').localeCompare(b.name ?? '', 'es')), [all]);
@@ -238,7 +238,6 @@ export function TournamentsPage({ teams = [], initialId = null, initialView = nu
   return <main className="newspaper data-page"><section className="data-paper">
     <PageHeader kicker="COMPETICIONES OFICIALES" title="TORNEOS">{isAdmin && <a className="page-action" href="#/admin?tab=torneos">⚙ ADMINISTRAR TORNEOS</a>}</PageHeader>
     <DataState query={tournaments} empty={null}/>
-    <PreseasonPanel teams={teams} myTeamId={myTeamId}/>
     {all.length > 0 && <div className="tournament-chooser">
       {/* Con un solo torneo en curso no hace falta elegir: los botones aparecen desde dos. */}
       {active.length > 1 && <div className="tournament-picker" role="group" aria-label="Torneos en curso">

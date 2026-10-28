@@ -10,6 +10,8 @@ import { RulesPage } from '../public/RulesPage.jsx';
 import { StadiumsPage } from '../teams/StadiumsPage.jsx';
 import { PlayersPage } from '../public/PlayersPage.jsx';
 import { ClubsGrid } from './ClubsGrid.jsx';
+import { PreseasonPanel } from '../public/PreseasonPanel.jsx';
+import { useAuth } from '../../app/AuthGate.jsx';
 
 // Tres áreas del menú, cada una con una sola fila de pestañas: Partidos, Torneos y Equipos.
 
@@ -32,7 +34,7 @@ export function MatchesScreen({ tab, teams = [], navigate, matchesMode = 'all' }
 }
 
 const TOURNAMENT_TABS = [
-  { id: 'tabla', label: 'Tabla' }, { id: 'goleadores', label: 'Goleadores' }, { id: 'playoffs', label: 'Playoffs' }, { id: 'premios', label: 'Premios' },
+  { id: 'tabla', label: 'Tabla' }, { id: 'goleadores', label: 'Goleadores' }, { id: 'playoffs', label: 'Playoffs' }, { id: 'premios', label: 'Premios' }, { id: 'giras', label: 'Giras' },
   { id: 'calculadora', label: 'Calculadora' }, { id: 'rankings', label: 'Rankings' },
 ];
 const TOURNAMENT_INTRO = {
@@ -40,6 +42,7 @@ const TOURNAMENT_INTRO = {
   goleadores: 'Quién lleva más goles en el torneo.',
   playoffs: 'Los cruces de cuartos, semifinal y final.',
   premios: 'Balón de Oro, Bota, Guante, Golden Boy, DT y portadas. Aquí votan los presis.',
+  giras: 'Torneos de pretemporada entre clubes: se arman, se juegan y se cierran aparte de la liga.',
   calculadora: 'Qué necesita cada club para clasificar.',
   rankings: 'Los planteles más caros y las divisiones.',
 };
@@ -47,6 +50,7 @@ const TOURNAMENT_INTRO = {
 /** Torneos: tabla, goleadores, playoffs, premios, calculadora y rankings. */
 export function TournamentsScreen({ tab, teams = [], navigate, query = {}, tournament = null }) {
   const active = TOURNAMENT_TABS.some(item => item.id === tab) ? tab : 'tabla';
+  const { teamId: myTeamId } = useAuth();
   const go = id => {
     if (id === 'calculadora') return navigate('/calculadora');
     if (id === 'rankings') return navigate('/equipos/rankings');
@@ -57,6 +61,7 @@ export function TournamentsScreen({ tab, teams = [], navigate, query = {}, tourn
   };
   return <Screen kicker="Koinonia e-League" title="Torneos" intro={TOURNAMENT_INTRO[active]} tabs={TOURNAMENT_TABS} active={active} onTab={go}>
     {['tabla', 'goleadores', 'playoffs', 'premios'].includes(active) && <TournamentsPage teams={teams} initialId={query.torneo ?? null} initialView={active}/>}
+    {active === 'giras' && <PreseasonPanel teams={teams} myTeamId={myTeamId}/>}
     {active === 'calculadora' && <CalculatorPage tournament={tournament} teams={teams} initialTeamId={query.equipo ?? null}/>}
     {active === 'rankings' && <RankingsPage teams={teams} navigate={navigate}/>}
   </Screen>;
