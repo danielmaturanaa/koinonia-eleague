@@ -548,3 +548,4 @@
 .honours-list-tours article span { color: #8a7a4a; font-size: 14px; }
 .honours-list-tours article b { font-size: 13px; font-weight: 500; }
 .honours-list-tours article small { padding: 2px 5px; border: 1px solid #a90020; font-size: 11px; letter-spacing: .4px; }
+.team-covers-grid .cover-hat-trick { display: flex; align-items: center; gap: 4px; font-size: 11px; }
