@@ -3,7 +3,7 @@ import { hasCoachBoost } from '../../utils/managerBoosters.js';
 import { endpoints } from '../../api/endpoints.js';
 import { PlayerFace } from '../../components/PlayerFace.jsx';
 import { TeamMark } from '../../components/TeamMark.jsx';
-import { applyFormation, defaultFormationPositions, detectFormation, FORMATIONS, pitchPositionFor } from '../../utils/formationPositions.js';
+import { applyFormation, defaultFormationPositions, detectFormation, FORMATIONS, pitchPositionFor, playerAtPosition } from '../../utils/formationPositions.js';
 import { shortPlayerName } from '../../utils/playerNames.js';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
@@ -67,10 +67,11 @@ const openPlayer = player => { window.location.hash = `/jugadores/${encodeURICom
 // Carta al estilo eFootballDB: media y posición a la izquierda, foto a la derecha
 // sobre los colores del club y el nombre en una franja inferior.
 function PitchCard({ player, selected, swappable, editing, style, onPointerDown, onPointerMove, onPointerUp, onClick, bench, isNew, highlighted }) {
-  return <button type="button" className={`pitch-card ${bench ? 'bench' : ''} ${selected ? 'selected' : ''} ${swappable ? 'swappable' : ''} ${editing ? 'editing' : ''} ${isNew ? 'sim-new' : ''} ${highlighted ? 'just-added' : ''}`} style={style} draggable={false} onDragStart={event => event.preventDefault()} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onClick={onClick} aria-pressed={editing ? selected : undefined} aria-label={`${player.name}${editing ? (selected ? ', seleccionado' : '') : ', ver ficha'}`}>
+  const offPosition = player.fieldPosition && player.fieldPosition !== player.naturalPosition;
+  return <button type="button" className={`pitch-card ${bench ? 'bench' : ''} ${offPosition ? 'off-position' : ''} ${selected ? 'selected' : ''} ${swappable ? 'swappable' : ''} ${editing ? 'editing' : ''} ${isNew ? 'sim-new' : ''} ${highlighted ? 'just-added' : ''}`} style={style} draggable={false} onDragStart={event => event.preventDefault()} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onClick={onClick} aria-pressed={editing ? selected : undefined} aria-label={`${player.name}${editing ? (selected ? ', seleccionado' : '') : ', ver ficha'}`}>
     <span className="pitch-card-stats">{hasCoachBoost(player)
       ? <><b className="pitch-card-ovr coach" title={`Media con DT: ${player.overallWithCoach} (base ${player.overall})`}>{player.overallWithCoach}</b><em className="pitch-card-base" title="Media base">{player.overall}</em></>
-      : <b>{player.overall ?? '—'}</b>}<small>{player.position ?? '—'}</small></span>
+      : <b>{player.overall ?? '—'}</b>}<small title={offPosition ? `Juega de ${player.fieldPosition}; su puesto es ${player.naturalPosition}` : undefined}>{player.position ?? '—'}</small></span>
     <span className="pitch-card-photo"><PlayerFace src={player.faceUrl} name={player.name} className="pitch-card-face"/></span>
     <span className="pitch-card-name"><i>{player.jerseyNumber ?? '–'}</i>{shortPlayerName(player)}</span>
   </button>;
@@ -194,9 +195,10 @@ export function PitchBoard({ team, starters, substitutes = [], onChanged, readOn
     {team && <span className="pitch-watermark" style={{ top: `${center.y}%` }} aria-hidden="true"><TeamMark team={team}/></span>}
     {starters.map(player => {
       const position = positionOf(player);
+      const shown = playerAtPosition(player, position);
       const screen = projection.project(position.x, position.y);
       const style = { left: `${screen.x}%`, top: `${screen.y}%`, '--depth-scale': screen.scale, zIndex: selectedId === player.id ? 30 : 1 + Math.round(position.y / 10) };
-      const card = <PitchCard player={player} editing={editing} selected={selectedId === player.id} style={simulation ? undefined : style} isNew={simulation?.isNew(player)} highlighted={simulation?.isHighlighted(player)} onPointerDown={onPointerDown(player)} onPointerMove={onPointerMove(player)} onPointerUp={onPointerUp(player)} onClick={onStarterClick(player)}/>;
+      const card = <PitchCard player={shown} editing={editing} selected={selectedId === player.id} style={simulation ? undefined : style} isNew={simulation?.isNew(player)} highlighted={simulation?.isHighlighted(player)} onPointerDown={onPointerDown(player)} onPointerMove={onPointerMove(player)} onPointerUp={onPointerUp(player)} onClick={onStarterClick(player)}/>;
       return simulation ? <div className="pitch-slot" key={player.id} style={style}>{card}{tools(player)}</div> : <Fragment key={player.id}>{card}</Fragment>;
     })}
   </div> : <p className="empty-copy">NO HAY TITULARES DEFINIDOS.</p>;

@@ -29,7 +29,7 @@ const normalizeSkillKey = key => String(key ?? '').trim().toLowerCase().replace(
 export const skillLabel = key => SKILLS[key] ?? SKILLS[normalizeSkillKey(key)] ?? String(key ?? '').replaceAll('_', ' ');
 
 // Campo de posiciones: 2 = posición principal, 1 = puede jugar ahí.
-const PITCH_POSITIONS = [['cf', 'DC', 50, 10], ['ss', 'SD', 50, 24], ['lwf', 'EI', 16, 16], ['rwf', 'ED', 84, 16], ['amf', 'MO', 50, 38], ['lmf', 'MI', 16, 44], ['rmf', 'MD', 84, 44], ['cmf', 'MC', 50, 52], ['dmf', 'MCD', 50, 66], ['lb', 'LI', 16, 74], ['rb', 'LD', 84, 74], ['cb', 'DEC', 50, 80], ['gk', 'PT', 50, 93]];
+const PITCH_POSITIONS = [['cf', 'DC', 50, 10], ['ss', 'SD', 50, 24], ['lwf', 'EI', 16, 16], ['rwf', 'ED', 84, 16], ['amf', 'MP', 50, 38], ['lmf', 'II', 16, 44], ['rmf', 'ID', 84, 44], ['cmf', 'MC', 50, 52], ['dmf', 'MCD', 50, 66], ['lb', 'LI', 16, 74], ['rb', 'LD', 84, 74], ['cb', 'CT', 50, 80], ['gk', 'PT', 50, 93]];
 
 const statTier = value => value >= 90 ? 'elite' : value >= 80 ? 'great' : value >= 70 ? 'good' : 'low';
 
@@ -44,7 +44,7 @@ export function EfootballCardDetails({ card }) {
     {statCount < 10 && <p className="card-partial-note">FICHA RESUMIDA: EL ADMINISTRADOR DEBE CORRER <code>/efootball sync</code> Para cargar todas las medias y habilidades.</p>}
     <div className="card-stat-groups">{groups.map(([title, rows]) => <section className="card-stat-group" key={title}><h3>{title}</h3>{rows.map(([key, label]) => <div className="card-stat" key={key}><span>{label}</span><i><em className={`tier-${statTier(stats[key])}`} style={{ width: `${Math.min(100, stats[key])}%` }}/></i><b className={`tier-${statTier(stats[key])}`}>{stats[key]}</b></div>)}</section>)}</div>
     <div className="card-side">
-      {profile.positions && <section className="card-positions"><h3>POSICIONES</h3><div className="card-mini-pitch">{PITCH_POSITIONS.map(([key, label, x, y]) => <span key={key} className={`card-pos level-${profile.positions[key] ?? 0}`} style={{ left: `${x}%`, top: `${y}%` }}>{label}</span>)}</div></section>}
+      {profile.positions && <section className="card-positions"><h3>POSICIONES</h3><div className="card-mini-pitch">{PITCH_POSITIONS.map(([key, label, x, y]) => <span key={key} className={`card-pos level-${profile.positions[key] ?? 0}`} style={{ left: `${x}%`, top: `${y}%` }} title={card.overallByPosition?.[label] != null ? `Media de ${label}: ${card.overallByPosition[label]}` : undefined}>{label}{card.overallByPosition?.[label] != null && <b>{card.overallByPosition[label]}</b>}</span>)}</div></section>}
       <section className="card-profile"><h3>PERFIL</h3><dl>
         <div><dt>ESTILO DE JUEGO</dt><dd>{PLAYING_STYLES[card.playingStyle] ?? '—'}</dd></div>
         <div><dt>PIE HÁBIL</dt><dd>{card.strongFoot === 1 ? 'Izquierdo' : card.strongFoot === 0 ? 'Derecho' : '—'}</dd></div>
