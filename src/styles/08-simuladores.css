@@ -295,16 +295,16 @@ a.news-read-more { display: inline-block; text-decoration: none; }
 .standings-home-table td { padding: 5px 4px; border-top: 1px solid #b8b199; font-size: 15px; text-align: center; }
 .standings-home-table td:first-child { width: 26px; color: #4d4839; font-weight: 700; }
 .standings-home-table tr.is-qualified td:first-child { color: #fff; background: #1c7a3e; }
-.standings-home-table tr.is-playin td:first-child { color: #3a2a00; background: #ffb628; }
-/* Zonas de playoffs en las tablas de liga: verde = semifinal directa (o playoffs), ámbar = play-in. */
+.standings-home-table tr.is-playin td:first-child { color: #fff; background: #1f6fc4; }
+/* Zonas de playoffs en las tablas de liga: verde = semifinal directa (o playoffs), azul = play-in. */
 .league-table tr.is-qualified td:first-child { color: #fff; background: #1c7a3e; box-shadow: inset 4px 0 0 #0f5a2b; }
-.league-table tr.is-playin td:first-child { color: #3a2a00; background: #ffb628; box-shadow: inset 4px 0 0 #c98400; }
+.league-table tr.is-playin td:first-child { color: #fff; background: #1f6fc4; box-shadow: inset 4px 0 0 #134f91; }
 .standings-home-table tr.is-playin + tr:not(.is-playin) td, .league-table tr.is-playin + tr:not(.is-playin) td { border-top: 2px solid #8d816a; }
 .playoff-legend { display: flex; flex-wrap: wrap; gap: 8px 14px; margin: 8px 0 0; font: 600 12px/1 'Oswald', sans-serif; letter-spacing: .5px; }
 .playoff-legend span { display: inline-flex; align-items: center; gap: 6px; }
 .playoff-legend span::before { content: ''; width: 12px; height: 12px; border: 1px solid #0003; }
 .playoff-legend .legend-qualified::before { background: #1c7a3e; }
-.playoff-legend .legend-playin::before { background: #ffb628; }
+.playoff-legend .legend-playin::before { background: #1f6fc4; }
 .playoff-note { margin: 0; color: #4d4839; font-size: 12px; }
 .standings-home-table td:nth-child(2) { text-align: left; }
 .standings-home-table .table-team-link { display: flex; align-items: center; gap: 7px; min-width: 0; color: inherit; font-weight: 600; text-decoration: none; }
