@@ -274,6 +274,10 @@
 .playoff-champion .team-mark { width: 34px; height: 34px; flex: 0 0 34px; }
 .playoff-champion > strong { color: #ffd42a; font: 700 clamp(20px, 2.2vw, 30px)/1 'Oswald', sans-serif; letter-spacing: .8px; }
 .playoff-series { display: grid; gap: 5px; padding: 10px; border: 3px solid #092e77; background: #f8f1de; box-shadow: 3px 3px 0 #b4a990; transition: transform .15s ease, box-shadow .15s ease; }
+.playoff-series.is-provisional { border-style: dashed; border-color: #5b7fb5; background: #f1f4fa; }
+.playoff-series.is-provisional.is-confirmed { border-style: solid; border-color: #1c7a3e; }
+.playoff-series.is-provisional > div small { color: #625d4e; font: 600 12px/1 'Oswald', sans-serif; }
+.playoff-pending-side { color: #625d4e; font: 600 13px/1.2 'Oswald', sans-serif; letter-spacing: .3px; }
 .playoff-series:hover { transform: translate(-1px, -1px); box-shadow: 4px 4px 0 #8d816a; }
 .playoff-series.status-completed { border-color: #1c7a3e; }
 .playoff-series.status-awaiting_tiebreak { border-color: #a90020; background: #fff3c4; }

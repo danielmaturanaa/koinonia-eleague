@@ -108,25 +108,56 @@ function ScorersPanel({ query }) {
 const PLAYOFF_ROUNDS = { playin: { label: 'PLAY-IN', slots: [1, 2, 3] }, quarterfinal: { label: 'CUARTOS DE FINAL', slots: [1, 4, 2, 3] }, semifinal: { label: 'SEMIFINALES', slots: [1, 2] }, final: { label: 'FINAL', slots: [1] } };
 const legsText = legs => (Number(legs) === 1 ? 'PARTIDO ÚNICO' : 'IDA Y VUELTA');
 
-function PlayoffsSection({ tournamentId, resolveTeam }) {
+/** Un cruce que todavía no es una serie: sale de la tabla de hoy (CONFIRMADO cuando los dos puestos ya están asegurados) o espera a un ganador. */
+function ProvisionalTie({ stage, home, away, confirmed = false, hint = null, resolveTeam }) {
+  const side = entry => entry?.name
+    ? <div><EntityLink to="team" id={entry.teamId} className="table-team-link"><TeamMark team={resolveTeam({ id: entry.teamId, name: entry.name })}/>{entry.rank}.º {entry.name}</EntityLink><small>{entry.points} PTS</small></div>
+    : <div><span className="playoff-pending-side">{entry?.label ?? 'POR DEFINIR'}</span></div>;
+  return <article className={`playoff-series is-provisional${confirmed ? ' is-confirmed' : ''}`}><header className="playoff-series-head"><small>{stage}</small><span>{confirmed ? 'CONFIRMADO' : 'PROVISIONAL'}</span></header>
+    {side(home)}{side(away)}{hint && <p className="playoff-note">{hint}</p>}</article>;
+}
+
+function PlayoffsSection({ tournamentId, resolveTeam, playoffsEnabled = true }) {
   const playoffs = useApiQuery(signal => endpoints.playoffs(tournamentId, signal), [tournamentId]);
+  const preview = useApiQuery(signal => endpoints.playoffsPreview(tournamentId, signal), [tournamentId]);
   const data = playoffs.data;
-  if (playoffs.loading || playoffs.error || !data) return null;
-  const count = Number(data.qualifiedCount);
+  const view = preview.data;
+  if (playoffs.loading || playoffs.error) return null;
+  const count = Number(data?.qualifiedCount ?? view?.qualifiedCount ?? 0);
+  const done = data?.status === 'completed';
+  // Sin playoffs creados todavía, o con parte del cuadro por jugar: se muestra cómo irían los cruces con la tabla de hoy.
+  const pairs = !done && playoffsEnabled ? (view?.pairs ?? []) : [];
+  if (!data && !pairs.length) return <section className="workspace-panel playoff-workspace"><h3>PLAYOFFS</h3><p className="league-note">TODAVÍA NO HAY TABLA SUFICIENTE PARA PROYECTAR LOS CRUCES.</p></section>;
   const rounds = count === 8 ? ['quarterfinal', 'semifinal', 'final'] : count === 6 ? ['playin', 'semifinal', 'final'] : ['semifinal', 'final'];
-  const legs = { playin: 1, quarterfinal: data.quarterfinalLegs, semifinal: data.semifinalLegs, final: data.finalLegs };
-  const final = data.series?.find(series => series.round === 'final');
+  const legs = { playin: 1, quarterfinal: data?.quarterfinalLegs ?? 2, semifinal: data?.semifinalLegs ?? (count === 6 ? 1 : 2), final: data?.finalLegs ?? (count === 6 ? 1 : 2) };
+  const final = data?.series?.find(series => series.round === 'final');
   const champion = final?.winnerTeamId ? [resolveTeam(final.homeTeam), resolveTeam(final.awayTeam)].find(team => String(team.id) === String(final.winnerTeamId)) : null;
   const summary = rounds.map(round => `${PLAYOFF_ROUNDS[round].label} ${legsText(legs[round])}`).join(' · ');
+  const real = (round, slot) => data?.series?.find(item => item.round === round && Number(item.slot) === slot);
+  const firstRound = rounds[0];
+  const pairAt = slot => pairs.find(pair => Number(pair.slot) === slot);
+  const byes = view?.byes ?? [];
+  const nameOf = pair => pair ? `${pair.home.rank}.º-${pair.away.rank}.º` : '';
+  // Lo que se puede decir hoy de un cruce que todavía no es serie.
+  const provisional = (round, slot) => {
+    const label = `${PLAYOFF_ROUNDS[round].label} ${round === 'final' ? '' : slot}`.trim();
+    if (round === firstRound) { const pair = pairAt(slot); return pair ? <ProvisionalTie key={slot} stage={label} home={{ ...pair.home }} away={{ ...pair.away }} confirmed={pair.confirmed} resolveTeam={resolveTeam}/> : null; }
+    if (count === 6 && round === 'playin') return <ProvisionalTie key={slot} stage={label} home={{ label: `PERDEDOR DEL ${nameOf(pairAt(1))}` }} away={{ label: `GANADOR DEL ${nameOf(pairAt(2))}` }} resolveTeam={resolveTeam}/>;
+    if (count === 6 && round === 'semifinal') {
+      const bye = byes[slot === 1 ? 0 : 1];
+      return <ProvisionalTie key={slot} stage={label} home={bye ? { ...bye } : { label: 'POR DEFINIR' }} away={{ label: slot === 1 ? 'GANADOR DEL PLAY-IN 3' : `GANADOR DEL ${nameOf(pairAt(1))}` }} hint={bye && !bye.locked ? `EL ${bye.rank}.º TODAVÍA PUEDE CAMBIAR` : null} resolveTeam={resolveTeam}/>;
+    }
+    return null;
+  };
   return <section className="workspace-panel playoff-workspace"><h3>PLAYOFFS <small>TOP {count} · {summary}</small></h3>
+    {!done && pairs.length > 0 && <p className="playoff-note">LOS CRUCES SE ARMAN CON LA TABLA DE HOY Y SE CONFIRMAN CUANDO LOS DOS PUESTOS QUEDAN ASEGURADOS.</p>}
     <div className={`playoff-tree rounds-${rounds.length}`}>{rounds.map(round => <section className={`playoff-col playoff-col-${round}`} key={round}>
       <h4>{PLAYOFF_ROUNDS[round].label}</h4>
       {round === 'playin' && <p className="playoff-note">3.º VS 4.º Y 5.º VS 6.º. EL 1.º Y EL 2.º ESPERAN EN SEMIS; EL PERDEDOR DEL 5.º-6.º QUEDA ELIMINADO.</p>}
       {PLAYOFF_ROUNDS[round].slots.map(slot => {
-        const series = data.series?.find(item => item.round === round && Number(item.slot) === slot);
-        return series
-          ? <PlayoffSeriesCard key={slot} series={series} resolveTeam={resolveTeam} showWinner={round !== 'final'} onChanged={() => playoffs.retry()}/>
-          : <p key={slot} className="playoff-awaiting">{round === 'final' ? 'ESPERANDO FINALISTAS' : 'POR DEFINIR'}</p>;
+        const series = real(round, slot);
+        if (series) return <PlayoffSeriesCard key={slot} series={series} resolveTeam={resolveTeam} showWinner={round !== 'final'} onChanged={() => { playoffs.retry(); preview.retry(); }}/>;
+        return (!done && provisional(round, slot)) || <p key={slot} className="playoff-awaiting">{round === 'final' ? 'ESPERANDO FINALISTAS' : 'POR DEFINIR'}</p>;
       })}
     </section>)}</div>
     {champion && <div className="playoff-champion" role="status"><span aria-hidden="true">🏆</span><strong>CAMPEÓN: {champion.name}</strong></div>}
@@ -190,7 +221,7 @@ function TournamentWorkspace({ tournamentId, teams, onChanged, onDeleted, hideNa
           ? <section className="workspace-panel standings-workspace-panel"><h3>CLASIFICACIÓN POR GRUPOS</h3><div className="tournament-groups">{groupLabels.map(groupLabel => <GroupStandings key={groupLabel} tournamentId={tournamentId} groupLabel={groupLabel} resolveTeam={resolveTeam}/>)}</div></section>
           : <section className="workspace-panel standings-workspace-panel"><h3>TABLA DE POSICIONES</h3><DataState query={standings}/>{standingRows.length > 0 && <StandingsTable rows={standingRows} resolveTeam={resolveTeam} zones={data?.format === 'league' && data?.championPolicy !== 'regular_season'}/>} {regularChampion && <div className="playoff-champion" role="status"><span aria-hidden="true">🏆</span><TeamMark team={regularChampion}/><strong>CAMPEÓN: {regularChampion.name}</strong></div>}</section>)}
         {workspaceTab === 'scorers' && <ScorersPanel query={scorers}/>}
-        {workspaceTab === 'playoffs' && data.format === 'league' && <PlayoffsSection tournamentId={tournamentId} resolveTeam={resolveTeam}/>}
+        {workspaceTab === 'playoffs' && data.format === 'league' && <PlayoffsSection tournamentId={tournamentId} resolveTeam={resolveTeam} playoffsEnabled={data.championPolicy !== 'regular_season'}/>}
         {workspaceTab === 'awards' && (data.format === 'league' && data.competitorKind !== 'national_team'
           ? <AwardsPanel tournament={data} resolveTeam={resolveTeam}/>
           : <p className="empty-copy">ESTE TORNEO NO TIENE PREMIOS INDIVIDUALES: SOLO LAS LIGAS DE CLUBES.</p>)}

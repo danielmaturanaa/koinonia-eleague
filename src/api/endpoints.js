@@ -40,6 +40,7 @@ export const endpoints = {
   fixtures: (tournamentId, signal) => get(`/tournaments/${tournamentId}/fixtures`, null, signal),
   bracket: (tournamentId, signal) => get(`/tournaments/${tournamentId}/bracket`, null, signal),
   playoffs: (tournamentId, signal) => get(`/tournaments/${tournamentId}/playoffs`, null, signal),
+  playoffsPreview: (tournamentId, signal) => get(`/tournaments/${tournamentId}/playoffs/preview`, null, signal),
   tournamentPrizes: (tournamentId, signal) => get(`/tournaments/${tournamentId}/prizes`, null, signal),
   grantTournamentPrizes: (tournamentId, body, signal) => apiClient.post(`/admin/tournaments/${tournamentId}/prizes`, body, { actor: 'web', signal }),
   scorers: (tournamentId, signal) => get(`/tournaments/${tournamentId}/scorers`, null, signal),
