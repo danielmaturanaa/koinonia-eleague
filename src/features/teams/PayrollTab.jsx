@@ -18,8 +18,8 @@ const SEASONS = [2, 4, 6];
 // En la simulación son los torneos que le quedan, que pueden ser impares.
 const SIM_YEARS = [1, 2, 3, 4, 5, 6];
 const upper = text => String(text ?? '').toUpperCase();
-const PLAYOFF_SHORT = { none: 'NADA', quarterfinal: 'CUARTOS', semifinal: 'SEMIFINAL', runnerUp: 'SUBCAMPEÓN', champion: 'CAMPEÓN' };
-const PLAYOFF_LABEL = { none: 'NO CLASIFICA', quarterfinal: 'CUARTOFINALISTA', semifinal: 'SEMIFINALISTA', runnerUp: 'SUBCAMPEÓN', champion: 'CAMPEÓN' };
+const PLAYOFF_SHORT = { none: 'NADA', playin: 'PLAY-IN', semifinal: 'SEMIFINAL', runnerUp: 'SUBCAMPEÓN', champion: 'CAMPEÓN' };
+const PLAYOFF_LABEL = { none: 'NO CLASIFICA', playin: 'JUEGA EL PLAY-IN', semifinal: 'SEMIFINALISTA', runnerUp: 'SUBCAMPEÓN', champion: 'CAMPEÓN' };
 
 // ---------- almacenamiento local (la simulación y la forma de verla son solo de este navegador) ----------
 const readJson = (key, fallback) => { try { return JSON.parse(window.localStorage.getItem(key) ?? 'null') ?? fallback; } catch { return fallback; } };
@@ -322,7 +322,7 @@ function SimView({ team, projection, balance, canEdit, layout, currentPosition, 
     <section className="sim-controls">
       <label>AUMENTO AL RENOVAR (POR DEFECTO)<span className="sheet-slider"><input type="range" min="0" max="100" value={sim.raise} onChange={event => applyToAll({ raise: Number(event.target.value) })} aria-label="Aumento al renovar en porcentaje"/><b>+{sim.raise}%</b></span><small className="sim-hint">Se aplica a todos los jugadores; después cambias a los que quieras distintos.</small></label>
       <label className="sim-check"><input type="checkbox" checked={sim.renew} onChange={event => applyToAll({ renew: event.target.checked })}/> Renovar a quien le venza el contrato (por defecto)</label>
-      <label>PUESTO POR DEFECTO{sim.position === null && currentPosition ? ' (TU PUESTO HOY)' : ''}<select value={defaultPosition} onChange={event => change({ position: Number(event.target.value) })}>{Array.from({ length: 8 }, (_, i) => i + 1).map(n => <option key={n} value={n}>{n}.º · {gp(leaguePrize(n))}</option>)}</select></label>
+      <label>PUESTO POR DEFECTO{sim.position === null && currentPosition ? ' (TU PUESTO HOY)' : ''}<select value={defaultPosition} onChange={event => change({ position: Number(event.target.value) })}>{Array.from({ length: 10 }, (_, i) => i + 1).map(n => <option key={n} value={n}>{n}.º · {gp(leaguePrize(n))}</option>)}</select></label>
       <label>PLAYOFFS POR DEFECTO<select value={sim.playoff} onChange={event => change({ playoff: event.target.value })}>{Object.keys(PLAYOFF_PRIZES).map(key => <option key={key} value={key}>{PLAYOFF_LABEL[key]}{PLAYOFF_PRIZES[key] ? ` · ${gp(PLAYOFF_PRIZES[key])}` : ''}</option>)}</select></label>
       {canEdit && <button type="button" className="ghost" onClick={reset}>RESTABLECER</button>}
     </section>
@@ -369,7 +369,7 @@ function SimView({ team, projection, balance, canEdit, layout, currentPosition, 
         <thead><tr><th>TORNEO</th><th>PUESTO</th><th>PLAYOFFS</th><th>NÓMINA</th><th>PREMIOS</th><th>NETO</th><th>SALDO</th><th>CONTRATOS QUE VENCEN</th></tr></thead>
         <tbody>{timeline.map(row => <tr key={row.torneo} className={row.overCap || row.balance < 0 ? 'over' : ''}>
           <td><b>{labelOf(row.torneo - 1)}</b></td>
-          <td><select aria-label={`Puesto en el torneo ${row.torneo}`} value={row.position} disabled={!canEdit} onChange={event => setTorneo('positions', row.torneo - 1, Number(event.target.value))}>{Array.from({ length: 8 }, (_, i) => i + 1).map(n => <option key={n} value={n}>{n}.º</option>)}</select></td>
+          <td><select aria-label={`Puesto en el torneo ${row.torneo}`} value={row.position} disabled={!canEdit} onChange={event => setTorneo('positions', row.torneo - 1, Number(event.target.value))}>{Array.from({ length: 10 }, (_, i) => i + 1).map(n => <option key={n} value={n}>{n}.º</option>)}</select></td>
           <td><select aria-label={`Playoffs del torneo ${row.torneo}`} value={row.playoff} disabled={!canEdit} onChange={event => setTorneo('playoffs', row.torneo - 1, event.target.value)}>{Object.keys(PLAYOFF_PRIZES).map(key => <option key={key} value={key}>{PLAYOFF_SHORT[key]}</option>)}</select></td>
           <td>{gp(row.payroll)}{row.overCap ? ' ⚠️' : ''}</td><td>{gp(row.prize)}</td>
           <td className={row.net < 0 ? 'neg' : ''}>{row.net >= 0 ? '+' : '−'}{gp(Math.abs(row.net))}</td><td className={row.balance < 0 ? 'neg' : ''}>{gp(row.balance)}</td>

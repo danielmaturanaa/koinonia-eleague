@@ -32,7 +32,7 @@ function PlayoffPenalties({ decisiveMatch }) {
 }
 
 function PlayoffSeriesCard({ series, resolveTeam, showWinner = true, onChanged }) {
-  const stage = series.round === 'final' ? 'FINAL' : `${series.round === 'quarterfinal' ? 'CUARTOS' : 'SEMIFINAL'} ${series.slot}`;
+  const stage = series.round === 'final' ? 'FINAL' : `${{ playin: 'PLAY-IN', quarterfinal: 'CUARTOS' }[series.round] ?? 'SEMIFINAL'} ${series.slot}`;
   const home = resolveTeam(series.homeTeam); const away = resolveTeam(series.awayTeam);
   const twoLegs = series.matches.length > 1;
   const firstLeg = series.matches.find(match => Number(match.leg) === 1) ?? series.matches[0];

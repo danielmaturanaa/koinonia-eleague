@@ -6,7 +6,7 @@ export const MAX_SALARY_SHARE = 0.2;
 export const HORIZON = 6;
 export const LEAGUE_FIRST_PRIZE = 200_000_000;
 export const LEAGUE_PRIZE_STEP = 20_000_000;
-export const PLAYOFF_PRIZES = { none: 0, quarterfinal: 5_000_000, semifinal: 10_000_000, runnerUp: 20_000_000, champion: 40_000_000 };
+export const PLAYOFF_PRIZES = { none: 0, playin: 5_000_000, semifinal: 10_000_000, runnerUp: 20_000_000, champion: 40_000_000 };
 
 export const roundStep = amount => Math.max(SALARY_STEP, Math.round(amount / SALARY_STEP) * SALARY_STEP);
 export const maxSalaryFor = value => Math.max(SALARY_STEP, Math.floor(Number(value) * MAX_SALARY_SHARE / SALARY_STEP) * SALARY_STEP);
@@ -27,7 +27,9 @@ export function simulate(players, { raise = 15, renew = true, position = 4, play
   let running = balance;
   for (let torneo = 1; torneo <= HORIZON; torneo += 1) {
     const place = positions[torneo - 1] ?? position;
-    const bonus = playoffs[torneo - 1] ?? playoff;
+    // 'quarterfinal' es el nombre viejo de 'playin' en simulaciones guardadas.
+    const raw = playoffs[torneo - 1] ?? playoff;
+    const bonus = raw === 'quarterfinal' ? 'playin' : raw;
     const prize = leaguePrize(place) + (PLAYOFF_PRIZES[bonus] ?? 0);
     let payroll = 0; let expiring = 0; let renewed = 0; let leaving = 0;
     for (const item of state) {

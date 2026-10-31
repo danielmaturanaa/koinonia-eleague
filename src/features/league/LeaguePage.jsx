@@ -40,7 +40,7 @@ const TOURNAMENT_TABS = [
 const TOURNAMENT_INTRO = {
   tabla: 'Cómo va cada club. Arriba eliges otro torneo o uno ya jugado.',
   goleadores: 'Quién lleva más goles en el torneo.',
-  playoffs: 'Los cruces de cuartos, semifinal y final.',
+  playoffs: 'Los cruces del play-in, semifinal y final.',
   premios: 'Balón de Oro, Bota, Guante, Golden Boy, DT y portadas. Aquí votan los presis.',
   giras: 'Torneos de pretemporada entre clubes: se arman, se juegan y se cierran aparte de la liga.',
   calculadora: 'Qué necesita cada club para clasificar.',

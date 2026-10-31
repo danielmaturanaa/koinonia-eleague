@@ -16,7 +16,7 @@ function MutationAction({ action, label, confirmText, onChanged, danger = false 
 }
 
 // Premios sugeridos (se pre-llenan y el admin los puede cambiar antes de otorgar):
-// liga: 1.º 150 M y bajando de a 10 M (el 10.º recibe 60 M); playoffs: cuartofinalista 5 M, semifinalista 10 M, subcampeón 20 M y campeón 40 M (1 GP = 1 €).
+// liga: 1.º 150 M y bajando de a 10 M (el 10.º recibe 60 M); playoffs: play-in (o cuartos) 5 M, semifinalista 10 M, subcampeón 20 M y campeón 40 M (1 GP = 1 €).
 const LEAGUE_FIRST = 150_000_000;
 const LEAGUE_STEP = 10_000_000;
 const PLAYOFF_PRIZES = {
@@ -24,7 +24,9 @@ const PLAYOFF_PRIZES = {
   runnerUp: { label: 'SUBCAMPEÓN', gp: 20_000_000 },
   semifinal: { label: 'SEMIFINALISTA', gp: 10_000_000 },
   quarterfinal: { label: 'CUARTOFINALISTA', gp: 5_000_000 },
+  playin: { label: 'PLAY-IN', gp: 5_000_000 },
 };
+const PLACE_DEPTH = { playin: 1, quarterfinal: 1, semifinal: 2 };
 const gpText = value => gpLabel(Number(value || 0));
 
 /** Cómo terminó cada club en los playoffs del torneo (si los hubo y ya se jugaron). */
@@ -34,7 +36,7 @@ function playoffPlaces(playoffs) {
     if (!series.winnerTeamId) continue;
     const loser = series.homeTeam.id === series.winnerTeamId ? series.awayTeam.id : series.homeTeam.id;
     if (series.round === 'final') { places[series.winnerTeamId] = 'champion'; places[loser] = 'runnerUp'; }
-    else if (!places[loser]) places[loser] = series.round;
+    else if ((PLACE_DEPTH[series.round] ?? 0) > (PLACE_DEPTH[places[loser]] ?? 0)) places[loser] = series.round;
   }
   return places;
 }
