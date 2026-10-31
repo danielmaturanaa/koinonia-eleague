@@ -162,7 +162,7 @@ function PlayoffsSection({ tournamentId, resolveTeam, playoffsEnabled = true }) 
   };
   return <section className="workspace-panel playoff-workspace"><h3>PLAYOFFS <small>TOP {count} · {summary}</small></h3>
     {!done && pairs.length > 0 && <p className="playoff-note">LOS CRUCES SE ARMAN CON LA TABLA DE HOY Y SE CONFIRMAN CUANDO LOS DOS PUESTOS QUEDAN ASEGURADOS.</p>}
-    {count === 6 && <details className="playoff-howto-box" open><summary>CÓMO FUNCIONAN LOS PLAYOFFS</summary><ol>
+    {count === 6 && <details className="playoff-howto-box"><summary>CÓMO FUNCIONAN LOS PLAYOFFS</summary><ol>
       <li><b>Clasifican los 6 primeros de la tabla.</b> Todos los partidos son únicos: no hay vuelta.</li>
       <li><b>El 1.º y el 2.º pasan directo a las semifinales</b> y esperan descansados.</li>
       <li><b>Del 3.º al 6.º juegan el play-in:</b> el 3.º contra el 4.º (Play-in 1) y el 5.º contra el 6.º (Play-in 2).</li>
