@@ -556,3 +556,10 @@
 .honours-list-tours article b { font-size: 13px; font-weight: 500; }
 .honours-list-tours article small { padding: 2px 5px; border: 1px solid #a90020; font-size: 11px; letter-spacing: .4px; }
 .team-covers-grid .cover-hat-trick { display: flex; align-items: center; gap: 4px; font-size: 11px; }
+
+.playoff-slot { display: grid; gap: 6px; }
+.playoff-help { margin: 0; color: #4d4839; font: 500 13px/1.35 'Roboto Condensed', sans-serif; }
+.playoff-howto-box { margin: 8px 0 12px; padding: 10px 14px; border: 2px solid #5b7fb5; background: #f1f4fa; }
+.playoff-howto-box summary { cursor: pointer; font: 600 14px/1 'Oswald', sans-serif; letter-spacing: .5px; }
+.playoff-howto-box ol { margin: 8px 0 0; padding-left: 20px; font: 500 14px/1.4 'Roboto Condensed', sans-serif; }
+.playoff-howto-box li + li { margin-top: 4px; }

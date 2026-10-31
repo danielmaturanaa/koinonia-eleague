@@ -117,6 +117,16 @@ function ProvisionalTie({ stage, home, away, confirmed = false, hint = null, res
     {side(home)}{side(away)}{hint && <p className="playoff-note">{hint}</p>}</article>;
 }
 
+// Explicación en palabras simples de cada cruce del cuadro de 6.
+const PLAYOFF_HELP = {
+  'playin:1': 'El 3.º contra el 4.º. Quien gane pasa a semifinales; quien pierda juega el Play-in 3.',
+  'playin:2': 'El 5.º contra el 6.º. Quien gane juega el Play-in 3; quien pierda queda eliminado.',
+  'playin:3': 'Segunda oportunidad: el perdedor del Play-in 1 contra el ganador del Play-in 2. Quien gane pasa a semifinales; quien pierda queda eliminado.',
+  'semifinal:1': 'El 1.º de la tabla contra el ganador del Play-in 3.',
+  'semifinal:2': 'El 2.º de la tabla contra el ganador del Play-in 1.',
+  'final:1': 'Se enfrentan los ganadores de las dos semifinales. Quien gane es el campeón.',
+};
+
 function PlayoffsSection({ tournamentId, resolveTeam, playoffsEnabled = true }) {
   const playoffs = useApiQuery(signal => endpoints.playoffs(tournamentId, signal), [tournamentId]);
   const preview = useApiQuery(signal => endpoints.playoffsPreview(tournamentId, signal), [tournamentId]);
@@ -140,24 +150,35 @@ function PlayoffsSection({ tournamentId, resolveTeam, playoffsEnabled = true }) 
   const nameOf = pair => pair ? `${pair.home.rank}.º-${pair.away.rank}.º` : '';
   // Lo que se puede decir hoy de un cruce que todavía no es serie.
   const provisional = (round, slot) => {
-    const label = `${PLAYOFF_ROUNDS[round].label} ${round === 'final' ? '' : slot}`.trim();
+    const label = `${PLAYOFF_ROUNDS[round].label}${round === 'final' ? '' : ` ${slot}`}`;
+    if (count === 6 && round === 'playin' && slot === 3) return <ProvisionalTie key={slot} stage={label} home={{ label: `PERDEDOR DEL PLAY-IN 1 (${nameOf(pairAt(1))})` }} away={{ label: `GANADOR DEL PLAY-IN 2 (${nameOf(pairAt(2))})` }} resolveTeam={resolveTeam}/>;
     if (round === firstRound) { const pair = pairAt(slot); return pair ? <ProvisionalTie key={slot} stage={label} home={{ ...pair.home }} away={{ ...pair.away }} confirmed={pair.confirmed} resolveTeam={resolveTeam}/> : null; }
-    if (count === 6 && round === 'playin') return <ProvisionalTie key={slot} stage={label} home={{ label: `PERDEDOR DEL ${nameOf(pairAt(1))}` }} away={{ label: `GANADOR DEL ${nameOf(pairAt(2))}` }} resolveTeam={resolveTeam}/>;
     if (count === 6 && round === 'semifinal') {
       const bye = byes[slot === 1 ? 0 : 1];
-      return <ProvisionalTie key={slot} stage={label} home={bye ? { ...bye } : { label: 'POR DEFINIR' }} away={{ label: slot === 1 ? 'GANADOR DEL PLAY-IN 3' : `GANADOR DEL ${nameOf(pairAt(1))}` }} hint={bye && !bye.locked ? `EL ${bye.rank}.º TODAVÍA PUEDE CAMBIAR` : null} resolveTeam={resolveTeam}/>;
+      return <ProvisionalTie key={slot} stage={label} home={bye ? { ...bye } : { label: 'POR DEFINIR' }} away={{ label: slot === 1 ? 'GANADOR DEL PLAY-IN 3' : `GANADOR DEL PLAY-IN 1 (${nameOf(pairAt(1))})` }} hint={bye && !bye.locked ? `EL ${bye.rank}.º TODAVÍA PUEDE CAMBIAR` : null} resolveTeam={resolveTeam}/>;
     }
+    if (round === 'final') return <ProvisionalTie key={slot} stage={label} home={{ label: 'GANADOR DE LA SEMIFINAL 1' }} away={{ label: 'GANADOR DE LA SEMIFINAL 2' }} resolveTeam={resolveTeam}/>;
     return null;
   };
   return <section className="workspace-panel playoff-workspace"><h3>PLAYOFFS <small>TOP {count} · {summary}</small></h3>
     {!done && pairs.length > 0 && <p className="playoff-note">LOS CRUCES SE ARMAN CON LA TABLA DE HOY Y SE CONFIRMAN CUANDO LOS DOS PUESTOS QUEDAN ASEGURADOS.</p>}
+    {count === 6 && <details className="playoff-howto-box" open><summary>CÓMO FUNCIONAN LOS PLAYOFFS</summary><ol>
+      <li><b>Clasifican los 6 primeros de la tabla.</b> Todos los partidos son únicos: no hay vuelta.</li>
+      <li><b>El 1.º y el 2.º pasan directo a las semifinales</b> y esperan descansados.</li>
+      <li><b>Del 3.º al 6.º juegan el play-in:</b> el 3.º contra el 4.º (Play-in 1) y el 5.º contra el 6.º (Play-in 2).</li>
+      <li><b>Play-in 1:</b> el que gana pasa a semifinales; el que pierde tiene una segunda oportunidad.</li>
+      <li><b>Play-in 2:</b> el que gana sigue vivo; el que pierde queda eliminado.</li>
+      <li><b>Play-in 3 (segunda oportunidad):</b> el perdedor del Play-in 1 contra el ganador del Play-in 2. El que gana pasa a semifinales; el que pierde queda eliminado.</li>
+      <li><b>Semifinales:</b> el 1.º contra el ganador del Play-in 3, y el 2.º contra el ganador del Play-in 1. Los dos ganadores juegan la <b>final</b>.</li></ol></details>}
     <div className={`playoff-tree rounds-${rounds.length}`}>{rounds.map(round => <section className={`playoff-col playoff-col-${round}`} key={round}>
       <h4>{PLAYOFF_ROUNDS[round].label}</h4>
-      {round === 'playin' && <p className="playoff-note">3.º VS 4.º Y 5.º VS 6.º. EL 1.º Y EL 2.º ESPERAN EN SEMIS; EL PERDEDOR DEL 5.º-6.º QUEDA ELIMINADO.</p>}
       {PLAYOFF_ROUNDS[round].slots.map(slot => {
         const series = real(round, slot);
-        if (series) return <PlayoffSeriesCard key={slot} series={series} resolveTeam={resolveTeam} showWinner={round !== 'final'} onChanged={() => { playoffs.retry(); preview.retry(); }}/>;
-        return (!done && provisional(round, slot)) || <p key={slot} className="playoff-awaiting">{round === 'final' ? 'ESPERANDO FINALISTAS' : 'POR DEFINIR'}</p>;
+        const help = count === 6 ? PLAYOFF_HELP[`${round}:${slot}`] : null;
+        const card = series
+          ? <PlayoffSeriesCard key={slot} series={series} resolveTeam={resolveTeam} showWinner={round !== 'final'} onChanged={() => { playoffs.retry(); preview.retry(); }}/>
+          : (!done && provisional(round, slot)) || <p key={slot} className="playoff-awaiting">{round === 'final' ? 'ESPERANDO FINALISTAS' : 'POR DEFINIR'}</p>;
+        return <div className="playoff-slot" key={slot}>{help && <p className="playoff-help">{help}</p>}{card}</div>;
       })}
     </section>)}</div>
     {champion && <div className="playoff-champion" role="status"><span aria-hidden="true">🏆</span><strong>CAMPEÓN: {champion.name}</strong></div>}
