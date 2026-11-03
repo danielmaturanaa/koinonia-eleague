@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { endpoints } from '../../api/endpoints.js';
 import { PlayerFace } from '../../components/PlayerFace.jsx';
+import { OverallBadge } from '../public/DataStates.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
 import { gpLabel } from '../../utils/money.js';
@@ -46,6 +47,19 @@ function InterestMeter({ level, label, overCap, cap }) {
 }
 const upperText = text => String(text ?? '').toUpperCase();
 
+// Qué motivos del ánimo puede mover el presi antes de que cierre el mercado y cuáles no (resultados, fama y objetivos ya pasaron).
+const FIXABLE = new Set(['rol', 'titular', 'sueldo', 'incentivo', 'promesa', 'salida', 'instalaciones']);
+function refusalHint(info, contract) {
+  const down = (info.reasons ?? []).filter(reason => reason.delta < 0).sort((a, b) => a.delta - b.delta);
+  const worst = down[0];
+  const fixable = down.filter(reason => FIXABLE.has(reason.key));
+  const why = info.ambitious ? 'Es ganador y su club viene perdiendo: quiere irse a uno que gane.' : info.tempted ? 'Lo cortejan otros clubes y no está conforme.' : `Su ánimo es ${info.mood}/100 y por debajo de 35 no se sienta a negociar.`;
+  const reversible = 'No es definitivo: si su ánimo sube, vuelve a negociar.';
+  const lever = fixable.length ? `Lo que sí puedes mover: ${fixable.slice(0, 2).map(reason => reason.text.toLowerCase()).join('; ')}.` : worst ? `Lo que más lo hunde (${worst.text.toLowerCase()}) no se arregla antes de que cierre el mercado.` : '';
+  const exit = contract.exitReason ? 'Puedes traspasarlo desde ya, o dejar que salga libre cuando venza.' : '';
+  return [why, reversible, lever, exit].filter(Boolean).join(' ');
+}
+
 /** La hoja de firma de una renovación: se negocia hasta en 3 propuestas y, si hay acuerdo, se firma. */
 export function SigningSheet({ team, contract, args = [], maxRounds = 3, marketOpen = true, onDone, onAccepted }) {
   const info = contract.renewal;
@@ -69,7 +83,9 @@ export function SigningSheet({ team, contract, args = [], maxRounds = 3, marketO
   });
   const outcome = last?.outcome ?? (talk?.status === 'refused' ? 'refused' : null);
   const round = last?.round ?? talk?.rounds ?? 0;
-  const closed = outcome === 'accepted' || outcome === 'refused' || info?.refuses;
+  // Un "no" por ánimo bajo no cuenta como definitivo: solo lo es el de quien se negó tras agotar las propuestas.
+  const finalRefusal = outcome === 'refused' && (last ? last.final === true : talk?.status === 'refused');
+  const closed = outcome === 'accepted' || finalRefusal || info?.refuses;
   const locked = !marketOpen && !closed;
   const offered = roundStep(contract.salary * (1 + Number(raise || 0) / 100));
   const send = (override = {}) => negotiate.execute({
@@ -96,6 +112,7 @@ export function SigningSheet({ team, contract, args = [], maxRounds = 3, marketO
       <div className="sheet-player">
         <PlayerFace src={contract.faceUrl} name={contract.playerName}/>
         <div><h3>{contract.playerName}</h3><span>{contract.position} · VALE {gpLabel(contract.marketValue)} · GANA {gpLabel(contract.salary)}/AÑO</span></div>
+        <OverallBadge value={contract.overall}/>
         {info && <MoodMeter mood={info.mood} label={info.moodLabel}/>}
       </div>
     </header>
@@ -112,10 +129,10 @@ export function SigningSheet({ team, contract, args = [], maxRounds = 3, marketO
       <Signatures playerName={contract.playerName}/>
       <div className="sheet-stamp good" role="status">FIRMADO ✔</div>
     </>}
-    {outcome === 'refused' && <div className="sheet-stamp bad" role="status">NO RENUEVA ✖</div>}
+    {finalRefusal && <div className="sheet-stamp bad" role="status">NO RENUEVA ✖</div>}
+    {finalRefusal && <p className="poll-hint">Se negó tras escuchar tus propuestas: con este contrato no hay vuelta atrás. Puedes traspasarlo desde ya a otro club, o dejar que salga libre cuando venza.</p>}
     {info?.suitors > 0 && !info?.refuses && <p className="poll-hint">Otros clubes lo andan cortejando ({info.suitors}): pide más por quedarse.</p>}
-    {info?.tempted && !last && <p className="poll-hint">Lo cortejan otros clubes y no está conforme: prefiere irse. Mejora su situación o véndelo.</p>}
-    {info?.refuses && !last && <p className="poll-hint">Está demasiado molesto para sentarse a negociar: arregla lo que lo tiene así (rol, sueldo, promesas) y vuelve.</p>}
+    {info?.refuses && !finalRefusal && <p className="poll-hint">{refusalHint(info, contract)}</p>}
 
     {locked && <p className="poll-hint">🔒 Sin mercado abierto: la renovación se negocia en el próximo periodo de mercado.</p>}
     {!closed && !locked && <div className="sheet-form">

@@ -5,7 +5,7 @@ import { GpInput } from '../../components/GpInput.jsx';
 import { PlayerFace } from '../../components/PlayerFace.jsx';
 import { FormFeedback } from '../admin/FormFeedback.jsx';
 import { useApiMutation } from '../admin/useApiMutation.js';
-import { DataState, gp } from '../public/DataStates.jsx';
+import { DataState, OverallBadge, gp } from '../public/DataStates.jsx';
 import { gpNumber } from '../../utils/money.js';
 import { useApiQuery } from '../public/useApiQuery.js';
 import { HORIZON, PLAYOFF_PRIZES, leaguePrize, maxSalaryFor, roundStep, simulate } from '../../utils/payrollSim.js';
@@ -199,7 +199,8 @@ const covered = (payroll, balance) => (payroll > 0 && typeof balance === 'number
 function RealView({ team, query, balance, marketOpen, canEdit, layout, refresh }) {
   const upcoming = query.data?.upcoming ?? [];
   const projection = query.data?.projection;
-  const contracts = query.data?.contracts ?? [];
+  // De mayor a menor media (sin media al final): así se ve de un vistazo a quién se le juega el plantel.
+  const contracts = [...(query.data?.contracts ?? [])].sort((a, b) => (b.overall ?? -1) - (a.overall ?? -1) || b.salary - a.salary);
   const enabled = Boolean(projection?.enabled);
   const cap = projection?.cap ?? null;
   const livePayroll = projection?.payroll ?? 0;
@@ -249,7 +250,7 @@ function RealView({ team, query, balance, marketOpen, canEdit, layout, refresh }
       {canEdit && sheets.map(contract => <SigningSheet key={contract.id} team={team} contract={contract} args={query.data?.arguments ?? []} maxRounds={query.data?.maxRounds ?? 3} marketOpen={marketOpen} onDone={refresh} onAccepted={() => keepSigned(contract)}/>)}
       {layout === 'cards'
         ? <div className="payroll-grid">{contracts.map(contract => <article key={contract.id} className={`payroll-card ${contract.status}`}>
-          <header><PlayerFace src={contract.faceUrl} name={contract.playerName}/><div><b>{contract.playerName}</b><small>{contract.position} · VALE {gp(contract.marketValue)}</small></div></header>
+          <header><PlayerFace src={contract.faceUrl} name={contract.playerName}/><div><b>{contract.playerName}</b><small>{contract.position} · VALE {gp(contract.marketValue)}</small></div><OverallBadge value={contract.overall}/></header>
           <div className="payroll-card-salary"><b>{gp(contract.salary)}</b><small>POR TORNEO</small></div>
           <ShareBar salary={contract.salary} value={contract.marketValue}/>
           <div className="payroll-card-years">
@@ -260,9 +261,10 @@ function RealView({ team, query, balance, marketOpen, canEdit, layout, refresh }
           {actions(contract)}
         </article>)}</div>
         : <div className="ptable-wrap"><table className="ptable">
-          <thead><tr><th>JUGADOR</th><th>VALOR</th><th>SUELDO / TORNEO</th><th>% DEL VALOR</th><th>CONTRATO</th>{canEdit && <th></th>}</tr></thead>
+          <thead><tr><th>JUGADOR</th><th>MEDIA</th><th>VALOR</th><th>SUELDO / TORNEO</th><th>% DEL VALOR</th><th>CONTRATO</th>{canEdit && <th></th>}</tr></thead>
           <tbody>{contracts.map(contract => <tr key={contract.id} className={contract.status}>
             <td><span className="ptable-player"><PlayerFace src={contract.faceUrl} name={contract.playerName}/><span><b>{contract.playerName}</b> <small>{contract.position}</small></span></span></td>
+            <td><OverallBadge value={contract.overall}/></td>
             <td>{gp(contract.marketValue)}</td>
             <td><b>{gp(contract.salary)}</b></td>
             <td><ShareBar salary={contract.salary} value={contract.marketValue} compact/></td>
