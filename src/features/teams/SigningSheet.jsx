@@ -51,7 +51,9 @@ export function SigningSheet({ team, contract, args = [], maxRounds = 3, marketO
   const info = contract.renewal;
   const talk = contract.talk;
   const [seasons, setSeasons] = useState(2);
-  const [raise, setRaise] = useState(10);
+  // Si ya hubo una contraoferta, el control parte en lo mínimo que el jugador acepta.
+  const lastCounter = [...(talk?.log ?? [])].reverse().find(entry => entry.counter)?.counter;
+  const [raise, setRaise] = useState(lastCounter?.raisePercent ?? 10);
   const [promisedRole, setPromisedRole] = useState('');
   const [argument, setArgument] = useState('');
   const [last, setLast] = useState(null);
@@ -59,6 +61,7 @@ export function SigningSheet({ team, contract, args = [], maxRounds = 3, marketO
     onSuccess: response => {
       const result = response?.data ?? null;
       setLast(result);
+      if (result?.counter?.raisePercent) setRaise(result.counter.raisePercent);
       // La hoja firmada tiene que seguir a la vista para ver la firma: el padre la mantiene aunque el contrato ya no esté vencido.
       if (result?.outcome === 'accepted') onAccepted?.(contract.id);
       onDone?.();
