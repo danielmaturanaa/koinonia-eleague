@@ -32,11 +32,14 @@
 .sheet-reasons .up b { color: #167a45; }
 .sheet-reasons .down b { color: #a90020; }
 .sheet-chat { display: grid; gap: 8px; }
-.bubble { margin: 0; max-width: 88%; padding: 8px 12px; font: 500 13px/1.4 'Roboto Condensed', sans-serif; border: 2px solid #062764; }
-.bubble.you { justify-self: end; background: #e8eefc; color: #062764; }
-.bubble.them { display: flex; align-items: center; gap: 8px; background: #fff; }
-.bubble.them.accepted { border-color: #167a45; background: #e4f4ea; }
-.bubble.them.refused { border-color: #a90020; background: #fbe9e7; }
+/* Cada ronda es un solo bloque: lo que ofreció el presi arriba y lo que respondió el jugador abajo. */
+.sheet-turn { border: 2px solid #062764; background: #fff; }
+.sheet-turn.accepted { border-color: #167a45; }
+.sheet-turn.refused { border-color: #a90020; }
+.turn-offer { margin: 0; padding: 6px 12px; border-bottom: 1px solid #b8c4e6; color: #062764; background: #e8eefc; font: 500 13px/1.3 'Oswald', sans-serif; letter-spacing: .3px; overflow-wrap: anywhere; }
+.turn-reply { display: flex; align-items: center; gap: 8px; margin: 0; padding: 8px 12px; font: 500 14px/1.4 'Roboto Condensed', sans-serif; }
+.sheet-turn.accepted .turn-reply { background: #e4f4ea; }
+.sheet-turn.refused .turn-reply { background: #fbe9e7; }
 .bubble-face.player-photo { width: 30px; height: 30px; flex: none; }
 .sheet-form { display: grid; gap: 10px; }
 .sheet-row { display: grid; gap: 4px; }

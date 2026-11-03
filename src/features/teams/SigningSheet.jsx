@@ -99,9 +99,9 @@ export function SigningSheet({ team, contract, args = [], maxRounds = 3, marketO
 
     {info?.reasons?.length > 0 && <ul className="sheet-reasons">{info.reasons.slice(0, 3).map(reason => <li key={reason.key} className={reason.delta < 0 ? 'down' : 'up'}><b>{reason.delta > 0 ? '+' : '−'}{Math.abs(reason.delta)}</b> {reason.text}</li>)}</ul>}
 
-    {log.length > 0 && <div className="sheet-chat" aria-label="Conversación">{log.map(entry => <div key={entry.round}>
-      <p className="bubble you">PROPUESTA {entry.round}: {entry.seasons} TEMPORADAS, +{entry.raisePercent}% ({gpLabel(entry.offered)}/AÑO){entry.promisedRole ? ` · ROL ${roleLabel(entry.promisedRole)}` : ''}</p>
-      <p className={`bubble them ${entry.outcome}`}><PlayerFace src={contract.faceUrl} name={contract.playerName} className="bubble-face"/><span>{entry.reply}</span></p>
+    {log.length > 0 && <div className="sheet-chat" aria-label="Conversación">{log.map(entry => <div key={entry.round} className={`sheet-turn ${entry.outcome}`}>
+      <p className="turn-offer"><b>PROPUESTA {entry.round}</b> · {entry.seasons} TEMPORADAS · +{entry.raisePercent}% · {gpLabel(entry.offered)}/AÑO{entry.promisedRole ? ` · ROL ${roleLabel(entry.promisedRole)}` : ''}</p>
+      <p className="turn-reply"><PlayerFace src={contract.faceUrl} name={contract.playerName} className="bubble-face"/><span>{entry.reply}</span></p>
     </div>)}</div>}
 
     {outcome === 'accepted' && <>
