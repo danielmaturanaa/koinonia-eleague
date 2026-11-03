@@ -177,7 +177,7 @@ function RenewAll({ team, expiredCount, onDone, marketOpen }) {
   const send = useApiMutation((body, signal) => endpoints.negotiateAllContracts(team.id, body, signal), { onSuccess: response => { setResults(response?.data ?? []); onDone(); } });
   if (!expiredCount && !results) return null;
   return <section className="renew-all">
-    <header><h3>RENOVAR A TODOS</h3><p>{expiredCount} JUGADOR(ES) CON CONTRATO VENCIDO O POR TERMINAR: UNA PROPUESTA PARA TODOS.</p><HowItWorks><p>Cada uno acepta, contraoferta o se niega según su ánimo y personalidad. A los que no acepten los negocias uno a uno en su hoja (hasta 3 propuestas en total).</p></HowItWorks></header>
+    <header><h3>RENOVAR A TODOS</h3><p>{expiredCount} JUGADOR(ES) CON CONTRATO VENCIDO O POR TERMINAR: UNA PROPUESTA PARA TODOS.</p><HowItWorks><p>Cada uno acepta, contraoferta o se niega según su ánimo y personalidad. Una propuesta masiva no se conversa: cada jugador pide un 10% más que si hablas con él. A los que no acepten los negocias uno a uno en su hoja (hasta 3 propuestas en total). Al firmar, el club paga una prima de renovación: el 25% del sueldo nuevo de un torneo.</p></HowItWorks></header>
     {expiredCount > 0 && !marketOpen && <p className="payroll-empty">🔒 Sin mercado abierto: las renovaciones solo se hacen en periodos de mercado.</p>}
     {expiredCount > 0 && marketOpen && <div className="renew-all-form">
       <span className="chips">{SEASONS.map(n => <button type="button" key={n} className={seasons === n ? 'on' : ''} onClick={() => setSeasons(n)}>{n} TORNEOS</button>)}</span>

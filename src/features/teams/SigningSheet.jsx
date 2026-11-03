@@ -110,6 +110,8 @@ export function SigningSheet({ team, contract, args = [], maxRounds = 3, marketO
       <div className="sheet-stamp good" role="status">FIRMADO ✔</div>
     </>}
     {outcome === 'refused' && <div className="sheet-stamp bad" role="status">NO RENUEVA ✖</div>}
+    {info?.suitors > 0 && !info?.refuses && <p className="poll-hint">Otros clubes lo andan cortejando ({info.suitors}): pide más por quedarse.</p>}
+    {info?.tempted && !last && <p className="poll-hint">Lo cortejan otros clubes y no está conforme: prefiere irse. Mejora su situación o véndelo.</p>}
     {info?.refuses && !last && <p className="poll-hint">Está demasiado molesto para sentarse a negociar: arregla lo que lo tiene así (rol, sueldo, promesas) y vuelve.</p>}
 
     {locked && <p className="poll-hint">🔒 Sin mercado abierto: la renovación se negocia en el próximo periodo de mercado.</p>}
