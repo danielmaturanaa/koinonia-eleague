@@ -86,7 +86,7 @@ a.table-team-link:hover { text-decoration: underline; text-underline-offset: 3px
 .roster-row .player-flag { margin-right: 6px; }
 
 /* Jugadores: vista de la liga e importación separadas. */
-.player-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 8px; }
+.player-card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 290px), 1fr)); gap: 8px; }
 .player-card { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 8px 10px; border: 2px solid #10285b; background: #fff9e8; }
 .player-card:hover { color: inherit; border-color: #a90020; background: #fff3c4; }
 .player-card-face { width: 64px; height: 64px; border: 2px solid #062764; background: #d9cfb8; object-fit: cover; font-size: 26px; }
@@ -107,7 +107,7 @@ a.table-team-link:hover { text-decoration: underline; text-underline-offset: 3px
 .player-management { margin-top: 12px; border: 2px solid #10285b; background: #e4d9c0; }
 .player-management summary { padding: 10px 12px; cursor: pointer; color: #fff; background: #0b3f8d; font: 500 16px/1 'Oswald', sans-serif; letter-spacing: .5px; }
 .player-management[open] summary { background: #a90020; }
-.player-management > div { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); align-items: start; gap: 12px; padding: 0 12px 12px; }
+.player-management > div { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); align-items: start; gap: 12px; padding: 0 12px 12px; }
 @media (max-width: 560px) {
   .player-card-grid { grid-template-columns: 1fr; }
 }

@@ -79,7 +79,7 @@
 .control-note { font: 600 var(--fs-sm)/1.4 var(--font-body); color: var(--c-ink-muted); }
 .control-picker { display: grid; gap: 4px; font: 500 var(--fs-sm)/1 var(--font-ui); letter-spacing: .4px; }
 .control-picker select { min-height: 40px; padding: 0 8px; }
-.control-shortcuts { display: grid; gap: var(--sp-3); grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.control-shortcuts { display: grid; gap: var(--sp-3); grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); }
 .control-shortcut { display: grid; gap: 6px; padding: var(--sp-4); border: var(--border); background: var(--c-cream); color: var(--c-navy-900); text-decoration: none; box-shadow: var(--shadow-pixel); }
 .control-shortcut b { font: 400 var(--fs-xl)/1.1 var(--font-display); }
 .control-shortcut span { font: 600 var(--fs-sm)/1.3 var(--font-body); color: var(--c-ink-muted); }
@@ -92,12 +92,12 @@ a.page-action, a.admin-toggle, a.tournament-manage-button { display: inline-flex
 .club-subtabs button.on, .finance-sim-modes button.on { color: var(--c-white); background: var(--c-navy-900); }
 .club-actas-banner { margin: var(--sp-3) 0; padding: var(--sp-2) var(--sp-3); border: 2px solid var(--c-red); background: #f3c9c1; color: #7a0014; font: 600 var(--fs-sm)/1.4 var(--font-body); }
 .club-central { display: grid; gap: var(--sp-4); }
-.central-stats { display: grid; gap: var(--sp-3); grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); }
+.central-stats { display: grid; gap: var(--sp-3); grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); }
 .central-todo { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .central-todo a { display: grid; grid-template-columns: auto 1fr auto; gap: var(--sp-3); align-items: center; padding: 10px 12px; border: 2px solid var(--c-paper-line); border-left: 6px solid var(--c-red); background: var(--c-white); color: var(--c-navy-900); text-decoration: none; }
 .central-todo a:hover { border-color: var(--c-navy-800); border-left-color: var(--c-red); }
 .central-todo b { font: 500 var(--fs-md)/1.2 var(--font-ui); letter-spacing: .3px; }
 .central-note { font: 600 var(--fs-sm)/1.3 var(--font-body); color: var(--c-ink-muted); }
-.central-columns { display: grid; gap: var(--sp-4); grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); align-items: start; }
+.central-columns { display: grid; gap: var(--sp-4); grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); align-items: start; }
 .central-links { display: flex; flex-wrap: wrap; gap: var(--sp-3); }
 .central-links button, .central-links a { padding: 0; border: 0; color: var(--c-navy-900); background: transparent; font: 500 var(--fs-sm)/1 var(--font-ui); letter-spacing: .5px; text-decoration: underline; cursor: pointer; }

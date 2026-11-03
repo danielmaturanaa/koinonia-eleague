@@ -365,6 +365,7 @@
 /* Mapa de calor sobrio: un solo azul cuya intensidad es la probabilidad. */
 .projection-heat { min-width: 34px; color: #062764; background: rgb(6 49 114 / calc(var(--heat) * .85)); }
 .projection-heat.is-dark { color: #fff9e8; }
+/* Hasta ~75 % el azul sigue siendo claro: ahí contrasta el texto oscuro (el claro solo desde 75 %). */
 .scenario-layout { grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); align-items: start; }
 .scenario-layout > h4 { grid-column: 1 / -1; }
 .scenario-table { position: sticky; top: calc(var(--site-header-height) + 8px); display: grid; gap: 6px; min-width: 0; }
@@ -428,7 +429,9 @@
   .scenario-table { position: static; }
 }
 @media (max-width: 560px) {
-  .projection-team-picker { align-items: stretch; flex-direction: column; gap: 6px; }
+  .projection-team-picker, .needs-picker { align-items: stretch; flex-direction: column; gap: 6px; }
+  /* En columna el flex-basis es alto: sin esto el select medía 260px de alto. */
+  .projection-team-picker select, .needs-picker select { flex: 0 0 auto; width: 100%; }
   .needs-facts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .needs-headline h4 { font-size: 20px; }
   .needs-headline strong b { font-size: 30px; }

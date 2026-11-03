@@ -9,7 +9,7 @@ const LIVE_REFRESH_MS = 12000;
 export function useLiveStandings(tournamentId, groupLabel = null) {
   const query = useApiQuery(signal => tournamentId ? endpoints.standings(tournamentId, {
     ...(groupLabel ? { group: groupLabel } : {}), live: 1,
-  }, signal) : Promise.resolve({ data: [] }), [tournamentId, groupLabel]);
+  }, signal) : Promise.resolve({ data: [] }), [tournamentId, groupLabel], { silentRefresh: true });
 
   useEffect(() => {
     const refresh = () => {

@@ -216,6 +216,8 @@ function RealView({ team, query, balance, marketOpen, canEdit, layout, refresh }
   const contractText = contract => {
     if (contract.arrivalPending) return 'RECIÉN LLEGADO: CONTRATO POR FIRMAR';
     if (contract.status === 'expired') return 'VENCIDO: RENOVAR';
+    if (contract.startsAfter) return `RENOVADO: EL SUELDO NUEVO RIGE DESPUÉS DEL ${upper(contract.startsAfter.name ?? 'TORNEO EN CURSO')}`;
+    if (contract.renewable && !contract.endsWith) return 'ÚLTIMA TEMPORADA: SE PUEDE RENOVAR YA';
     if (contract.endsWith) return `VIGENTE: TERMINA CON EL ${upper(contract.endsWith.name)}`;
     const names = pending(contract);
     return names.length ? `VIGENTE HASTA EL ${names[names.length - 1]}` : `${contract.seasonsLeft} TORNEO(S) POR PAGAR`;

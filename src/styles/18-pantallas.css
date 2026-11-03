@@ -33,7 +33,7 @@
 .screen-lead { margin: 0; font: 400 17px/1.45 var(--font-body); color: var(--c-ink); }
 
 /* Tarjetas grandes */
-.tile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: var(--sp-3); }
+.tile-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 230px), 1fr)); gap: var(--sp-3); }
 .tile { position: relative; display: grid; align-content: start; gap: 6px; min-height: 128px; padding: var(--sp-4) var(--sp-5) var(--sp-4) var(--sp-4); border: var(--border);
   color: var(--c-navy-900); background: var(--c-cream); box-shadow: var(--shadow-pixel); text-align: left; text-decoration: none; font: inherit; }
 button.tile { cursor: pointer; width: 100%; }
@@ -84,7 +84,7 @@ a.tile:focus-visible, button.tile:focus-visible { outline: 3px solid var(--c-yel
 .screen-body .team-list-paper { padding: 0; border: 0; background: none; }
 
 /* Clubes de la liga */
-.clubs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: var(--sp-3); }
+.clubs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr)); gap: var(--sp-3); }
 .club-tile { position: relative; display: grid; justify-items: center; gap: 6px; padding: var(--sp-5) var(--sp-3) var(--sp-4); border: var(--border); color: #fff; text-align: center; text-decoration: none;
   background: linear-gradient(160deg, var(--club-primary) 0%, var(--club-secondary) 100%); box-shadow: var(--shadow-pixel); }
 .club-tile:hover { transform: translate(-2px, -2px); box-shadow: 6px 6px 0 rgba(0, 0, 0, .25); }
@@ -270,7 +270,7 @@ a.tile:focus-visible, button.tile:focus-visible { outline: 3px solid var(--c-yel
 @media (max-width: 560px) { .squad-leaders .club-person-card { height: 190px; } }
 
 /* Roles y ánimo: tarjetas por jugador */
-.role-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: var(--sp-3); }
+.role-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: var(--sp-3); }
 .role-card { display: grid; gap: 8px; align-content: start; padding: var(--sp-3); border: var(--border); border-left-width: 6px; background: #fff; box-shadow: var(--shadow-pixel); }
 .role-card.mood-good { border-left-color: var(--c-green-bright); }
 .role-card.mood-mid { border-left-color: #c79a12; }
@@ -352,7 +352,7 @@ a.tile:focus-visible, button.tile:focus-visible { outline: 3px solid var(--c-yel
 /* Simulador a todo el ancho; su resumen ya no queda pegado arriba tapando la cancha. */
 .squad-sim-summary { position: static; margin: 0; }
 .finance-sim-page .finance-sim { display: grid; gap: var(--sp-4); }
-.finance-sim-page .squad-sim-meters { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.finance-sim-page .squad-sim-meters { grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); }
 .finance-sim-page .squad-sim-meters > :first-child { grid-column: auto; }
 
 /* El estadio en 8 bits (ficha del partido) */

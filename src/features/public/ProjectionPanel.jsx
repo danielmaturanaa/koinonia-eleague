@@ -43,7 +43,7 @@ function ProbabilityTable({ group, resolveTeam, focusTeamId, onPick, scenario = 
       <td className="projection-team-col"><button type="button" onClick={() => onPick?.(row.teamId)} title={`¿Qué necesita ${row.name}?`}><TeamMark team={resolveTeam({ id: row.teamId, name: row.name, emoji: row.emoji })}/><span>{row.name}</span></button></td>
       <td className={scenario && row.scenarioPoints !== row.points ? 'projection-scenario-points' : ''} title={scenario ? 'Puntos considerando los resultados fijados' : 'Puntos oficiales'}>{scenario ? row.scenarioPoints : row.points}</td><td><b>{row.expectedPoints.toFixed(1)}</b></td><td className="projection-range">{row.minPoints}–{row.maxPoints}</td>
       {group.zones.map(zone => <td key={zone.key} className="projection-zone-cell"><b>{pct(row.zones[zone.key])}</b></td>)}
-      {row.positions.map((value, index) => <td key={index} className={`projection-heat ${value >= 0.5 ? 'is-dark' : ''}`} style={heat(value)}>{value > 0 ? pct(value) : '·'}</td>)}
+      {row.positions.map((value, index) => <td key={index} className={`projection-heat ${value >= 0.75 ? 'is-dark' : ''}`} style={heat(value)}>{value > 0 ? pct(value) : '·'}</td>)}
     </tr>)}</tbody>
   </table></div>;
 }
