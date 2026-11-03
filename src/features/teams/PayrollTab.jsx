@@ -132,9 +132,9 @@ function TerminateButton({ team, contract, onDone }) {
   </span>;
 }
 
-function ContractYears({ team, contract, onDone }) {
+function ContractYears({ team, contract, onDone, options }) {
   const change = useApiMutation((body, signal) => endpoints.setContractSeasons(team.id, contract.id, body, signal), { onSuccess: onDone });
-  return <><YearsChips value={contract.seasons} disabled={change.loading} onChange={seasons => change.execute({ seasons })} label={`Torneos de ${contract.playerName}`}/><FormFeedback mutation={change}/></>;
+  return <><YearsChips value={contract.seasons} disabled={change.loading} onChange={seasons => change.execute({ seasons })} options={options} label={`Torneos de ${contract.playerName}`}/><FormFeedback mutation={change}/></>;
 }
 
 /** Primas pactadas: por gol (máx. 1% del valor), por llegar a playoffs (5%) y por ser campeón (10%). Solo se cambian con el mercado abierto. */
@@ -170,8 +170,8 @@ function BonusEditor({ team, contract, editable, onDone }) {
 const OUTCOME_LABEL = { accepted: ['✅', 'ACEPTÓ'], counter: ['🤝', 'CONTRAOFERTA'], refused: ['❌', 'SE NEGÓ'], error: ['⚠️', 'NO SE PUDO'] };
 
 /** Una misma propuesta para todos los jugadores con contrato vencido; cada uno responde por su cuenta. */
-function RenewAll({ team, expiredCount, onDone, marketOpen }) {
-  const [seasons, setSeasons] = useState(2);
+function RenewAll({ team, expiredCount, onDone, marketOpen, seasonOptions = SEASONS }) {
+  const [seasons, setSeasons] = useState(seasonOptions[0]);
   const [raise, setRaise] = useState(15);
   const [results, setResults] = useState(null);
   const send = useApiMutation((body, signal) => endpoints.negotiateAllContracts(team.id, body, signal), { onSuccess: response => { setResults(response?.data ?? []); onDone(); } });
@@ -180,7 +180,7 @@ function RenewAll({ team, expiredCount, onDone, marketOpen }) {
     <header><h3>RENOVAR A TODOS</h3><p>{expiredCount} JUGADOR(ES) CON CONTRATO VENCIDO O POR TERMINAR: UNA PROPUESTA PARA TODOS.</p><HowItWorks><p>Cada uno acepta, contraoferta o se niega según su ánimo y personalidad. Una propuesta masiva no se conversa: cada jugador pide un 10% más que si hablas con él. A los que no acepten los negocias uno a uno en su hoja (hasta 3 propuestas en total). Al firmar, el club paga una prima de renovación: el 25% del sueldo nuevo de un torneo.</p></HowItWorks></header>
     {expiredCount > 0 && !marketOpen && <p className="payroll-empty">🔒 Sin mercado abierto: las renovaciones solo se hacen en periodos de mercado.</p>}
     {expiredCount > 0 && marketOpen && <div className="renew-all-form">
-      <span className="chips">{SEASONS.map(n => <button type="button" key={n} className={seasons === n ? 'on' : ''} onClick={() => setSeasons(n)}>{n} TORNEOS</button>)}</span>
+      <span className="chips">{seasonOptions.map(n => <button type="button" key={n} className={seasons === n ? 'on' : ''} onClick={() => setSeasons(n)}>{n} TORNEOS</button>)}</span>
       <span className="sheet-slider"><input type="range" min="1" max="100" value={raise} onChange={event => setRaise(Number(event.target.value))} aria-label="Aumento de sueldo en porcentaje"/><b>+{raise}%</b></span>
       <Button variant="positive" disabled={send.loading} onClick={() => send.execute({ seasons, raisePercent: raise })}>{send.loading ? 'ENVIANDO…' : 'ENVIAR A TODOS'}</Button>
     </div>}
@@ -199,6 +199,8 @@ const covered = (payroll, balance) => (payroll > 0 && typeof balance === 'number
 function RealView({ team, query, balance, marketOpen, canEdit, layout, refresh }) {
   const upcoming = query.data?.upcoming ?? [];
   const projection = query.data?.projection;
+  // Duraciones que se pueden firmar hoy (el admin fija un máximo al abrir el mercado).
+  const seasonOptions = query.data?.seasonOptions?.length ? query.data.seasonOptions : SEASONS;
   // De mayor a menor media (sin media al final): así se ve de un vistazo a quién se le juega el plantel.
   const contracts = [...(query.data?.contracts ?? [])].sort((a, b) => (b.overall ?? -1) - (a.overall ?? -1) || b.salary - a.salary);
   const enabled = Boolean(projection?.enabled);
@@ -227,7 +229,7 @@ function RealView({ team, query, balance, marketOpen, canEdit, layout, refresh }
   // Solo los firmados en este mercado (llegadas y renovaciones): un contrato de antes ya está cerrado.
   const editable = contract => canEdit && marketOpen && contract.status === 'active' && contract.seasonsPaid === 0 && contract.seasonsEditable === true;
   const actions = contract => <>
-    {editable(contract) && <ContractYears team={team} contract={contract} onDone={refresh}/>}
+    {editable(contract) && <ContractYears team={team} contract={contract} onDone={refresh} options={seasonOptions}/>}
     <BonusEditor team={team} contract={contract} editable={canEdit && marketOpen} onDone={refresh}/>
     {canEdit && contract.status === 'active' && <TerminateButton team={team} contract={contract} onDone={refresh}/>}
   </>;
@@ -245,9 +247,9 @@ function RealView({ team, query, balance, marketOpen, canEdit, layout, refresh }
         ['ALCANZA PARA', covered(livePayroll, balance)],
         ['POR PAGAR EN CONTRATOS', gp(remainingCost)],
       ]}/>
-      {canEdit && <ArrivalSheets team={team} onDone={refresh}/>}
-      {canEdit && <RenewAll team={team} expiredCount={renewables.length} onDone={refresh} marketOpen={marketOpen}/>}
-      {canEdit && sheets.map(contract => <SigningSheet key={contract.id} team={team} contract={contract} args={query.data?.arguments ?? []} maxRounds={query.data?.maxRounds ?? 3} marketOpen={marketOpen} onDone={refresh} onAccepted={() => keepSigned(contract)}/>)}
+      {canEdit && <ArrivalSheets team={team} onDone={refresh} seasonOptions={seasonOptions}/>}
+      {canEdit && <RenewAll team={team} expiredCount={renewables.length} onDone={refresh} marketOpen={marketOpen} seasonOptions={seasonOptions}/>}
+      {canEdit && sheets.map(contract => <SigningSheet key={contract.id} team={team} contract={contract} args={query.data?.arguments ?? []} maxRounds={query.data?.maxRounds ?? 3} marketOpen={marketOpen} seasonOptions={seasonOptions} onDone={refresh} onAccepted={() => keepSigned(contract)}/>)}
       {layout === 'cards'
         ? <div className="payroll-grid">{contracts.map(contract => <article key={contract.id} className={`payroll-card ${contract.status}`}>
           <header><PlayerFace src={contract.faceUrl} name={contract.playerName}/><div><b>{contract.playerName}</b><small>{contract.position} · VALE {gp(contract.marketValue)}</small></div><OverallBadge value={contract.overall}/></header>

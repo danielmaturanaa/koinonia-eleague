@@ -215,6 +215,7 @@ export const endpoints = {
   signArrival: (teamId, contractId, body, signal) => apiClient.post(`/teams/${teamId}/arrivals/${contractId}/sign`, body, { actor: 'web', signal }),
   // Mercado en dos etapas (admin): abrir con o sin renovaciones y pasar a transacciones.
   openMarket: (body, signal) => apiClient.post('/market/open', body, { actor: 'web', signal }),
+  setContractLimit: (body, signal) => apiClient.post('/market/contract-limit', body, { actor: 'web', signal }),
   startTransactions: signal => apiClient.post('/market/start-transactions', {}, { actor: 'web', signal }),
   // Promesas de minutos de un partido: recordatorio al iniciar y confirmación al terminar.
   matchMinutePromises: (matchId, signal) => get(`/matches/${matchId}/minute-promises`, null, signal),

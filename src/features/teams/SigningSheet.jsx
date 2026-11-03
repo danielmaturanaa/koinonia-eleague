@@ -61,10 +61,10 @@ function refusalHint(info, contract) {
 }
 
 /** La hoja de firma de una renovación: se negocia hasta en 3 propuestas y, si hay acuerdo, se firma. */
-export function SigningSheet({ team, contract, args = [], maxRounds = 3, marketOpen = true, onDone, onAccepted }) {
+export function SigningSheet({ team, contract, args = [], maxRounds = 3, marketOpen = true, seasonOptions = SEASONS, onDone, onAccepted }) {
   const info = contract.renewal;
   const talk = contract.talk;
-  const [seasons, setSeasons] = useState(2);
+  const [seasons, setSeasons] = useState(seasonOptions[0]);
   // Si ya hubo una contraoferta, el control parte en lo mínimo que el jugador acepta.
   const lastCounter = [...(talk?.log ?? [])].reverse().find(entry => entry.counter)?.counter;
   const [raise, setRaise] = useState(lastCounter?.raisePercent ?? 10);
@@ -137,7 +137,7 @@ export function SigningSheet({ team, contract, args = [], maxRounds = 3, marketO
 
     {locked && <p className="poll-hint">🔒 Sin mercado abierto: la renovación se negocia en el próximo periodo de mercado.</p>}
     {!closed && !locked && <div className="sheet-form">
-      <div className="sheet-row"><span>TEMPORADAS</span><div className="chips">{SEASONS.map(n => <button type="button" key={n} className={seasons === n ? 'on' : ''} onClick={() => setSeasons(n)}>{n}</button>)}</div></div>
+      <div className="sheet-row"><span>TEMPORADAS</span><div className="chips">{seasonOptions.map(n => <button type="button" key={n} className={seasons === n ? 'on' : ''} onClick={() => setSeasons(n)}>{n}</button>)}</div></div>
       <div className="sheet-row"><span>AUMENTO</span><div className="sheet-slider"><input type="range" min="1" max="100" value={raise} onChange={event => setRaise(Number(event.target.value))} aria-label="Aumento de sueldo en porcentaje"/><b>+{raise}%</b><em>{gpLabel(offered)} AL AÑO</em></div></div>
       {info?.roleWanted && <div className="sheet-row"><span>PROMETER ROL</span><div className="chips"><button type="button" className={!promisedRole ? 'on' : ''} onClick={() => setPromisedRole('')}>SIN PROMESA</button>{ROLES.map(([key, label]) => <button type="button" key={key} className={promisedRole === key ? 'on' : ''} onClick={() => setPromisedRole(key)}>{label}</button>)}</div></div>}
       <div className="sheet-row"><span>ARGUMENTO</span><div className="chips"><button type="button" className={!argument ? 'on' : ''} onClick={() => setArgument('')}>NINGUNO</button>{args.map(item => <button type="button" key={item.key} className={argument === item.key ? 'on' : ''} onClick={() => setArgument(item.key)}>{item.label.toUpperCase()}</button>)}</div></div>

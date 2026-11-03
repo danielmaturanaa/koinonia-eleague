@@ -26,10 +26,10 @@ function ArrivalMood({ preview }) {
  * Hoja de firma de un jugador que llegó por traspaso, trueque o como agente libre: pide sueldo, primas, dorsal y a veces la capitanía.
  * El presi decide qué le da; con menos de lo que pide llega igual, pero molesto.
  */
-function ArrivalSheet({ team, arrival, onDone }) {
+function ArrivalSheet({ team, arrival, onDone, seasonOptions = SEASONS }) {
   const { ask } = arrival;
   const askedBonus = ask.goalBonus + ask.playoffBonus + ask.titleBonus > 0;
-  const [seasons, setSeasons] = useState(2);
+  const [seasons, setSeasons] = useState(seasonOptions[0]);
   const [salary, setSalary] = useState(String(ask.salary));
   const [keepBonus, setKeepBonus] = useState(askedBonus);
   const [giveShirt, setGiveShirt] = useState(ask.asksShirt);
@@ -75,7 +75,7 @@ function ArrivalSheet({ team, arrival, onDone }) {
     {signed
       ? <><p className="sheet-terms">CONTRATO FIRMADO: <b>{seasons} TORNEOS</b> · <b>{gpLabel(terms.salary)} POR TORNEO</b></p><div className="sheet-stamp good" role="status">FIRMADO ✔</div></>
       : <div className="sheet-form">
-        <div className="sheet-row"><span>TORNEOS</span><div className="chips">{SEASONS.map(n => <button type="button" key={n} className={seasons === n ? 'on' : ''} onClick={() => setSeasons(n)}>{n}</button>)}</div></div>
+        <div className="sheet-row"><span>TORNEOS</span><div className="chips">{seasonOptions.map(n => <button type="button" key={n} className={seasons === n ? 'on' : ''} onClick={() => setSeasons(n)}>{n}</button>)}</div></div>
         <div className="sheet-row"><span>SUELDO POR TORNEO</span><div className="arrival-salary">
           <GpInput value={salary} min={ask.floor} max={ask.cap} onChange={event => setSalary(event.target.value)} aria-label="Sueldo por torneo"/>
           <small>ENTRE {gpLabel(ask.floor)} (10% DE SU VALOR) Y {gpLabel(ask.cap)} (20%)</small>
@@ -94,7 +94,7 @@ function ArrivalSheet({ team, arrival, onDone }) {
 }
 
 /** Los que llegaron (traspaso, trueque o agente libre) y esperan que el presi firme su contrato. */
-export function ArrivalSheets({ team, onDone }) {
+export function ArrivalSheets({ team, onDone, seasonOptions = SEASONS }) {
   const query = useApiQuery(signal => endpoints.teamArrivals(team.id, signal).catch(() => ({ data: [] })), [team.id]);
   const [kept, setKept] = useState([]);
   const pending = Array.isArray(query.data) ? query.data : [];
@@ -104,6 +104,6 @@ export function ArrivalSheets({ team, onDone }) {
   return <section className="arrival-sheets">
     <header><h3>LLEGARON: CONTRATOS POR FIRMAR</h3><p>Cada uno llegó con lo que pide. Puedes darle menos: llega igual, pero molesto. Si no firmas antes de que cierre el mercado, queda firmado con lo que pidió.</p>
       <HowItWorks><p>Todo el que llega (por traspaso, trueque o como agente libre) firma un contrato nuevo con tu club. Si venía de otro club, lo que pide toma como referencia lo que ganaba antes y nunca baja de eso. El sueldo va entre el 10% y el 20% de su valor. Si no lo firmas antes de que cierre el mercado, queda firmado con lo que pidió.</p></HowItWorks></header>
-    {shown.map(arrival => <ArrivalSheet key={arrival.contractId} team={team} arrival={arrival} onDone={() => { setKept(items => [...items.filter(item => item.contractId !== arrival.contractId), arrival]); query.retry(); onDone?.(); }}/>)}
+    {shown.map(arrival => <ArrivalSheet key={arrival.contractId} team={team} arrival={arrival} seasonOptions={seasonOptions} onDone={() => { setKept(items => [...items.filter(item => item.contractId !== arrival.contractId), arrival]); query.retry(); onDone?.(); }}/>)}
   </section>;
 }

@@ -62,23 +62,30 @@ export function MarketWindowAdmin() {
   const [closesAt, setClosesAt] = useState(defaultClose);
   const [minimum, setMinimum] = useState(2);
   const [renewals, setRenewals] = useState(true);
+  // Duración máxima de los contratos de este mercado (por ahora 2: es la primera vez y es experimental).
+  const [maxSeasons, setMaxSeasons] = useState(2);
   const open = useApiMutation((body, signal) => endpoints.openMarket(body, signal), { onSuccess: () => status.retry() });
+  const limit = useApiMutation((body, signal) => endpoints.setContractLimit(body, signal), { onSuccess: () => status.retry() });
   const data = status.data;
   if (!data) return null;
   if (data.open) {
     return <div className="market-window-admin">
       <p><b>{data.phase === 'renewals' ? '🔁 ABIERTO · PERÍODO DE RENOVACIONES' : '🟢 ABIERTO · TRANSACCIONES'}</b> · cierra el {when(data.closesAt)}. El cierre y los cambios de hora siguen en Discord (<code>/mercado editar</code>, <code>/mercado cerrar</code>).</p>
       {data.phase === 'renewals' && <StartTransactionsButton expired={data.expiredContracts} onDone={() => status.retry()}/>}
+      <label>DURACIÓN MÁXIMA DE LOS CONTRATOS<select value={Math.max(...(data.contractSeasonOptions ?? [2]))} disabled={limit.loading} onChange={event => limit.execute({ seasons: Number(event.target.value) })}>{[2, 4, 6].map(n => <option key={n} value={n}>{n} TORNEOS</option>)}</select></label>
+      <small className="control-note">Rige para lo que se firme o se extienda desde ahora. Los contratos vigentes con más años no se tocan.</small>
+      <FormFeedback mutation={limit}/>
     </div>;
   }
   const submit = event => {
     event.preventDefault();
-    open.execute({ closesAt: chileToIso(closesAt), minConfirmations: Number(minimum), renewals });
+    open.execute({ closesAt: chileToIso(closesAt), minConfirmations: Number(minimum), renewals, maxContractSeasons: Number(maxSeasons) });
   };
   return <form className="admin-form market-window-admin" onSubmit={submit}>
     <p>🔒 El mercado está cerrado.</p>
     <label>CIERRA (HORA DE CHILE)<input type="datetime-local" required value={closesAt} onChange={event => setClosesAt(event.target.value)}/></label>
     <label>CONFIRMACIONES PARA COMPRAR UN LIBRE<input type="number" min="1" required value={minimum} onChange={event => setMinimum(event.target.value)}/></label>
+    <label>DURACIÓN MÁXIMA DE LOS CONTRATOS<select value={maxSeasons} onChange={event => setMaxSeasons(Number(event.target.value))}>{[2, 4, 6].map(n => <option key={n} value={n}>{n} TORNEOS{n === 2 ? ' (RECOMENDADO POR AHORA)' : ''}</option>)}</select></label>
     <label className="arrival-check"><input type="checkbox" checked={renewals} onChange={event => setRenewals(event.target.checked)}/> EMPEZAR CON PERÍODO DE RENOVACIONES</label>
     <small className="control-note">{renewals
       ? 'Primero solo se renueva. Cuando quieras, pasas a transacciones: los vencidos sin renovar quedan libres y se abren fichajes y traspasos.'
