@@ -4,9 +4,10 @@ import { HORIZON, leaguePrize, maxSalaryFor, roundStep, simulate } from '../src/
 assert.equal(maxSalaryFor(200_000_000), 40_000_000);
 assert.equal(maxSalaryFor(5_000), 10_000, 'nunca menos de un paso');
 assert.equal(roundStep(12_345_678), 12_350_000);
-assert.equal(leaguePrize(1), 200_000_000);
-assert.equal(leaguePrize(8), 60_000_000);
-assert.equal(leaguePrize(15), 0, 'el premio no baja de cero');
+assert.equal(leaguePrize(1), 150_000_000, 'el 1.º cobra 150 M');
+assert.equal(leaguePrize(8), 80_000_000);
+assert.equal(leaguePrize(10), 60_000_000, 'con 10 clubes el último cobra 60 M');
+assert.equal(leaguePrize(25), 0, 'el premio no baja de cero');
 
 const base = [{ value: 200_000_000, salary: 20_000_000, years: 2 }, { value: 100_000_000, salary: 10_000_000, years: 3 }];
 
@@ -19,7 +20,7 @@ assert.deepEqual(without.map(row => row.leaving), [0, 1, 1, 0, 0, 0]);
 // Renovando con +15%: al vencer sube el sueldo y renueva por 2 torneos.
 const renewed = simulate(base, { raise: 15, renew: true, position: 4, balance: 100_000_000 });
 assert.deepEqual(renewed.slice(0, 3).map(row => row.payroll), [30_000_000, 30_000_000, 33_000_000]);
-assert.equal(renewed[0].balance, 100_000_000 + 140_000_000 - 30_000_000);
+assert.equal(renewed[0].balance, 100_000_000 + 120_000_000 - 30_000_000, '4.º puesto: 120 M de premio de liga');
 
 // El tope del 20%: un aumento enorme no pasa del 20% del valor.
 const capped = simulate([{ value: 100_000_000, salary: 18_000_000, years: 1 }], { raise: 100, renew: true });
@@ -45,8 +46,8 @@ assert.deepEqual(flagged.map(row => row.overCap), [true, true, false, false, fal
 const perTorneo = simulate([{ value: 100_000_000, salary: 10_000_000, years: 6 }], {
   position: 4, playoff: 'none', positions: [1, null, 8], playoffs: ['champion', null, 'runnerUp'], balance: 0,
 });
-assert.deepEqual(perTorneo.slice(0, 4).map(row => row.prize), [240_000_000, 140_000_000, 80_000_000, 140_000_000]);
+assert.deepEqual(perTorneo.slice(0, 4).map(row => row.prize), [190_000_000, 120_000_000, 100_000_000, 120_000_000]);
 assert.deepEqual(perTorneo.slice(0, 3).map(row => row.position), [1, 4, 8]);
-assert.equal(perTorneo[2].balance, (240e6 - 10e6) + (140e6 - 10e6) + (80e6 - 10e6));
+assert.equal(perTorneo[2].balance, (190e6 - 10e6) + (120e6 - 10e6) + (100e6 - 10e6));
 
 console.log('simulación de nómina: ok');

@@ -6,6 +6,7 @@ import { FormFeedback } from './FormFeedback.jsx';
 import { useApiMutation } from './useApiMutation.js';
 import { TeamMark } from '../../components/TeamMark.jsx';
 import { gpLabel } from '../../utils/money.js';
+import { LEAGUE_FIRST_PRIZE, LEAGUE_PRIZE_STEP } from '../../utils/payrollSim.js';
 import { GpInput } from '../../components/GpInput.jsx';
 import { Button } from '../../ui/index.js';
 
@@ -17,8 +18,8 @@ function MutationAction({ action, label, confirmText, onChanged, danger = false 
 
 // Premios sugeridos (se pre-llenan y el admin los puede cambiar antes de otorgar):
 // liga: 1.º 150 M y bajando de a 10 M (el 10.º recibe 60 M); playoffs: play-in (o cuartos) 5 M, semifinalista 10 M, subcampeón 20 M y campeón 40 M (1 GP = 1 €).
-const LEAGUE_FIRST = 150_000_000;
-const LEAGUE_STEP = 10_000_000;
+const LEAGUE_FIRST = LEAGUE_FIRST_PRIZE;
+const LEAGUE_STEP = LEAGUE_PRIZE_STEP;
 const PLAYOFF_PRIZES = {
   champion: { label: 'CAMPEÓN', gp: 40_000_000 },
   runnerUp: { label: 'SUBCAMPEÓN', gp: 20_000_000 },
