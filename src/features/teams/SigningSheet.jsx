@@ -53,8 +53,8 @@ function refusalHint(info, contract) {
   const down = (info.reasons ?? []).filter(reason => reason.delta < 0).sort((a, b) => a.delta - b.delta);
   const worst = down[0];
   const fixable = down.filter(reason => FIXABLE.has(reason.key));
-  const why = info.ambitious ? 'Es ganador y su club viene perdiendo: quiere irse a uno que gane.' : info.tempted ? 'Lo cortejan otros clubes y no está conforme.' : `Su ánimo es ${info.mood}/100 y por debajo de 35 no se sienta a negociar.`;
-  const reversible = 'No es definitivo: si su ánimo sube, vuelve a negociar.';
+  const why = info.leave ? `Se quiere ir: ${info.leave.text}.` : `Su ánimo es ${info.mood}/100 y por debajo de 35 no se sienta a negociar.`;
+  const reversible = info.leave?.reversible === false ? 'Es una decisión personal: no hay cómo convencerlo.' : 'No es definitivo: si su situación mejora, vuelve a negociar.';
   const lever = fixable.length ? `Lo que sí puedes mover: ${fixable.slice(0, 2).map(reason => reason.text.toLowerCase()).join('; ')}.` : worst ? `Lo que más lo hunde (${worst.text.toLowerCase()}) no se arregla antes de que cierre el mercado.` : '';
   const exit = contract.exitReason ? 'Puedes traspasarlo desde ya, o dejar que salga libre cuando venza.' : '';
   return [why, reversible, lever, exit].filter(Boolean).join(' ');
@@ -133,6 +133,7 @@ export function SigningSheet({ team, contract, args = [], maxRounds = 3, marketO
     {finalRefusal && <p className="poll-hint">Se negó tras escuchar tus propuestas: con este contrato no hay vuelta atrás. Puedes traspasarlo desde ya a otro club, o dejar que salga libre cuando venza.</p>}
     {info?.suitors > 0 && !info?.refuses && <p className="poll-hint">Otros clubes lo andan cortejando ({info.suitors}): pide más por quedarse.</p>}
     {info?.refuses && !finalRefusal && <p className="poll-hint">{refusalHint(info, contract)}</p>}
+    {info?.grudging && !info?.refuses && <p className="poll-hint">Está muy molesto, pero afuera no lo espera nadie: renueva a regañadientes, pidiendo bastante más.</p>}
 
     {locked && <p className="poll-hint">🔒 Sin mercado abierto: la renovación se negocia en el próximo periodo de mercado.</p>}
     {!closed && !locked && <div className="sheet-form">
