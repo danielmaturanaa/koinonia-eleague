@@ -201,8 +201,8 @@ function RealView({ team, query, balance, marketOpen, canEdit, layout, refresh }
   const projection = query.data?.projection;
   // Duraciones que se pueden firmar hoy (el admin fija un máximo al abrir el mercado).
   const seasonOptions = query.data?.seasonOptions?.length ? query.data.seasonOptions : SEASONS;
-  // De mayor a menor media (sin media al final): así se ve de un vistazo a quién se le juega el plantel.
-  const contracts = [...(query.data?.contracts ?? [])].sort((a, b) => (b.overall ?? -1) - (a.overall ?? -1) || b.salary - a.salary);
+  // De mayor a menor sueldo (a igual sueldo, mayor media): se ve de un vistazo quién pesa más en la nómina.
+  const contracts = [...(query.data?.contracts ?? [])].sort((a, b) => b.salary - a.salary || (b.overall ?? -1) - (a.overall ?? -1));
   const enabled = Boolean(projection?.enabled);
   const cap = projection?.cap ?? null;
   const livePayroll = projection?.payroll ?? 0;
