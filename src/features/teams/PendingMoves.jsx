@@ -50,7 +50,7 @@ function MoveLine({ move }) {
 }
 
 /** Tarjeta de arriba del plantel: resumen de lo comprometido y el selector Ahora / Después. */
-export function PendingMovesCard({ data, mode, onMode }) {
+export function PendingMovesCard({ data, mode = 'ahora', onMode = null }) {
   const { moves, leaving, arriving, when, any, cash } = pendingSummary(data);
   if (!any) return null;
   const after = when.length === 1 ? when[0] : 'cuando se ejecuten';
@@ -60,11 +60,16 @@ export function PendingMovesCard({ data, mode, onMode }) {
         <h3>YA CERRADO, SE EJECUTA {when.length === 1 ? when[0].toUpperCase() : 'MÁS ADELANTE'}</h3>
         <p><b>{leaving.length}</b> {leaving.length === 1 ? 'salida' : 'salidas'} · <b>{arriving.length}</b> {arriving.length === 1 ? 'llegada' : 'llegadas'}{cash !== 0 && <> · plata de estos acuerdos {money(cash)} <small>(ya está en la caja)</small></>}</p>
       </div>
-      <nav className="squad-views" aria-label="Qué plantel ver">
+      {onMode && <nav className="squad-views" aria-label="Qué plantel ver">
         <button type="button" className={mode === 'ahora' ? 'on' : ''} aria-pressed={mode === 'ahora'} onClick={() => onMode('ahora')}>Ahora</button>
         <button type="button" className={mode === 'despues' ? 'on' : ''} aria-pressed={mode === 'despues'} onClick={() => onMode('despues')}>Después ({after})</button>
-      </nav>
+      </nav>}
     </header>
     <ul>{moves.map(move => <MoveLine key={`${move.type}-${move.id}`} move={move}/>)}</ul>
   </section>;
+}
+
+/** Mercado: «Mis preacuerdos», lo que mi club ya cerró y todavía no se ejecuta. */
+export function MyPreagreements({ data }) {
+  return <PendingMovesCard data={data}/>;
 }

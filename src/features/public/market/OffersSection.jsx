@@ -93,7 +93,7 @@ function termsText(offer) {
     terms.toPlayer && playerTerms(terms.toPlayer, offer.fromTeam?.name) && `${upper(offer.toPlayer?.name)} → ${playerTerms(terms.toPlayer, offer.fromTeam?.name)}`].filter(Boolean).join(' · ') || null;
 }
 
-function OfferCard({ offer, onChanged, highlighted = false }) {
+function OfferCard({ offer, onChanged, highlighted = false, timing = null }) {
   const { isAdmin } = useAuth();
   const card = useRef(null);
   useEffect(() => { if (highlighted) card.current?.scrollIntoView({ block: 'center', behavior: 'smooth' }); }, [highlighted]);
@@ -110,7 +110,9 @@ function OfferCard({ offer, onChanged, highlighted = false }) {
   const acceptLabel = incoming ? 'ACEPTAR' : `ACEPTAR POR ${upper(counterpart?.name)}`;
   const rejectLabel = incoming ? 'RECHAZAR' : outgoing ? 'RETIRAR OFERTA' : 'ANULAR';
   const canReject = incoming ? offer.canReject : outgoing ? offer.canWithdraw : isAdmin;
-  const ask = { approve: incoming ? '¿Aceptas? Se mueven los jugadores y los GP al tiro.' : `¿ACEPTAR EN NOMBRE DE ${upper(counterpart?.name)}?`,
+  const later = timing?.kind && timing.kind !== 'now' ? timing.label : null;
+  const acceptNote = later ? `¿Aceptas? Los GP se pagan ahora y el acuerdo queda cerrado, sin vuelta atrás; los jugadores cambian de club ${later}. (Si uno de los jugadores se va libre, el canje es al tiro.)` : '¿Aceptas? Se mueven los jugadores y los GP al tiro.';
+  const ask = { approve: incoming ? acceptNote : `¿ACEPTAR EN NOMBRE DE ${upper(counterpart?.name)}?`,
     reject: incoming ? '¿RECHAZAS ESTA OFERTA?' : outgoing ? '¿RETIRAS TU OFERTA?' : '¿ANULAR ESTA OFERTA?' };
 
   return <article ref={card} className={`offer-card ${incoming ? 'is-incoming' : ''} ${highlighted ? 'is-highlighted' : ''}`}>
@@ -151,6 +153,7 @@ function OfferCard({ offer, onChanged, highlighted = false }) {
 
 export function OffersInbox({ revision, onChanged, highlightId = null }) {
   const offers = useApiQuery(signal => endpoints.marketOffers(signal), [revision]);
+  const marketNow = useApiQuery(signal => endpoints.marketStatus(signal).catch(() => ({ data: null })), [revision]);
   useAutoRefresh(offers.retry, 15000);
   const rows = asList(offers.data);
   const unavailable = offers.error?.status === 404;
@@ -167,7 +170,7 @@ export function OffersInbox({ revision, onChanged, highlightId = null }) {
     {!offers.error && !offers.loading && !rows.length && <p className="empty-copy">NO HAY OFERTAS PENDIENTES.</p>}
     {groups.map(([title, items]) => <div className="offer-group" key={title}>
       <h3 className="market-subtitle">{title}</h3>
-      <div className="offer-list">{items.map(offer => <OfferCard key={`${offer.kind}-${offer.id}`} offer={offer} onChanged={refresh} highlighted={Boolean(highlightId) && String(offer.id) === String(highlightId)}/>)}</div>
+      <div className="offer-list">{items.map(offer => <OfferCard key={`${offer.kind}-${offer.id}`} timing={marketNow.data?.moveTiming ?? null} offer={offer} onChanged={refresh} highlighted={Boolean(highlightId) && String(offer.id) === String(highlightId)}/>)}</div>
     </div>)}
   </section>;
 }

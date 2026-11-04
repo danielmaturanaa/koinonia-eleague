@@ -13,6 +13,7 @@ import { OffersInbox, ProposeOffers } from './market/OffersSection.jsx';
 import { PollsSection } from './market/PollsSection.jsx';
 import { ForSaleSection } from './market/ForSaleSection.jsx';
 import { LeavingSection } from './market/LeavingSection.jsx';
+import { MyPreagreements } from '../teams/PendingMoves.jsx';
 import { AuctionHistory } from './market/AuctionHistory.jsx';
 import { SealedAuctionsSection } from './market/SealedAuctionsSection.jsx';
 import { gpLabel } from '../../utils/money.js';
@@ -218,6 +219,7 @@ export function MarketPage({ teams, initialTab = null, highlightId = null, prefi
   const club = { figures, marketOpen };
   const myTeam = teams.find(team => team.id === myTeamId);
   const interest = useInterest(revision);
+  const pendingMoves = useApiQuery(signal => (myTeamId ? endpoints.teamPendingMoves(myTeamId, signal).catch(() => ({ data: null })) : Promise.resolve({ data: null })), [myTeamId, revision]);
   // Enlaces viejos: encuestas → libres.
   const asked = { encuestas: 'libres' }[initialTab] ?? initialTab;
   const [tab, setTabState] = useState(() => asked || readTab());
@@ -244,6 +246,7 @@ export function MarketPage({ teams, initialTab = null, highlightId = null, prefi
     <MarketPhaseBanner status={status.data} onChanged={refresh}/>
     {operates && <MyClubPanel team={myTeam} figures={figures} profileQuery={myTeamId ? profile : null} status={status.data} statusQuery={status}>
       {myTeamId && <PromiseRecord teamId={myTeamId} revision={revision}/>}
+      {myTeamId && <MyPreagreements data={pendingMoves.data}/>}
     </MyClubPanel>}
     {current === 'subastas' && <SealedAuctionsSection revision={revision} onChanged={refresh} teams={teams}/>}
     {current === 'libres' && <PollsSection teams={teams} revision={revision} onChanged={refresh}>
