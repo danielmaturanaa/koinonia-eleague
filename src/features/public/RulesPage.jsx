@@ -93,7 +93,6 @@ const Contracts = ({ payrollCap }) => <section className="rules-section">
     <li>Cuando el contrato cumple todas sus temporadas queda <strong>vencido</strong>, pero el jugador sigue en el club. Se renueva en el <strong>período de renovaciones</strong> del mercado siguiente (sección 11), negociando hasta 3 propuestas: el jugador firma, contraoferta o se niega.</li>
     <li>Si no se renueva, queda libre <strong>sin castigo ni costo</strong> cuando el mercado pasa a <strong>transacciones</strong>, y se puede fichar en ese mismo mercado (también por su club anterior).</li>
     <li>No se puede soltar a un jugador antes de que termine su contrato sin consecuencias: rescindir cuesta una <strong>indemnización del 50% de las temporadas que faltan</strong>, sin reembolso, y el presidente sufre un castigo de reputación.</li>
-    <li>Un jugador que acaba de renovar no se puede traspasar ni canjear hasta que se cobre su primer torneo.</li>
   </ul>
   <h3>6.4 Contrato de llegada (traspaso, trueque o agente libre)</h3>
   <ul>
