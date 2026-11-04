@@ -25,6 +25,7 @@ import { useNotifications } from '../notifications/NotificationsProvider.jsx';
 import { MessagesTab } from './MessagesTab.jsx';
 import { EventsTab, FansTab, TvRightsTab, VenueTab } from './ClubLife.jsx';
 import { DirectivaTab } from './DirectivaTab.jsx';
+import { PendingMovesCard, leavingMarks, pendingSummary, projectedRoster } from './PendingMoves.jsx';
 import { RivalryTab } from './RivalryTab.jsx';
 import { ClubNicknames, nicknameTitle } from './ClubNicknames.jsx';
 import { ClubKit } from './ClubKit.jsx';
@@ -60,9 +61,9 @@ function splitPlayerName(name) {
   return { flag, rest };
 }
 
-function PlayerRow({ player }) {
+function PlayerRow({ player, mark = null, incoming = null }) {
   const { rest: name } = splitPlayerName(player.name);
-  return <button type="button" className="roster-row roster-player-link" onClick={() => { window.location.hash = `/jugadores/${encodeURIComponent(player.id)}`; }}><b>{player.jerseyNumber ?? '—'}</b><span><PlayerFace src={player.faceUrl} name={name} className="roster-player-face"/><i>{player.flag && <em className="player-flag">{player.flag}</em>}{name}</i></span><small className={hasCoachBoost(player) ? 'ovr-coach' : ''} title={hasCoachBoost(player) ? 'Media base → media con los potenciadores del DT' : undefined}>{player.position ?? '—'} · {overallText(player)}</small><strong>{gp(player.gpValue)} GP</strong></button>;
+  return <button type="button" className={`roster-row roster-player-link ${mark ? 'is-leaving' : ''} ${incoming ? 'is-arriving' : ''}`} title={mark?.title ?? (incoming ? `Llega ${incoming.when} desde ${incoming.club}` : undefined)} onClick={() => { window.location.hash = `/jugadores/${encodeURIComponent(player.id)}`; }}><b>{player.jerseyNumber ?? '—'}</b><span><PlayerFace src={player.faceUrl} name={name} className="roster-player-face"/><i>{player.flag && <em className="player-flag">{player.flag}</em>}{name}{mark && <em className="roster-tag leaving">SALE → {mark.club}</em>}{incoming && <em className="roster-tag arriving">LLEGA ← {incoming.club}</em>}</i></span><small className={hasCoachBoost(player) ? 'ovr-coach' : ''} title={hasCoachBoost(player) ? 'Media base → media con los potenciadores del DT' : undefined}>{player.position ?? '—'}{player.overall != null || player.overallWithCoach != null ? <> · {overallText(player)}</> : null}</small><strong>{gp(player.gpValue)} GP</strong></button>;
 }
 
 function RosterHeader() {
@@ -838,8 +839,8 @@ function useSquadView(ownerMode) {
   return [view === 'roles' && !ownerMode ? 'cancha' : view, choose];
 }
 
-function RosterTable({ starters, substitutes }) {
-  return <div className="roster-panel club-roster"><h3>TITULARES <small>{starters.length} / 11</small></h3><div className="roster-table-scroll"><RosterHeader/><div className="roster-list">{starters.length ? starters.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay titulares definidos.</p>}</div></div><h3>SUPLENTES <small>{substitutes.length}</small></h3><div className="roster-table-scroll"><RosterHeader/><div className="roster-list substitutes">{substitutes.length ? substitutes.map(player => <PlayerRow player={player} key={player.id}/>) : <p className="empty-copy">No hay suplentes registrados.</p>}</div></div></div>;
+function RosterTable({ starters, substitutes, marks = null, incoming = [] }) {
+  return <div className="roster-panel club-roster"><h3>TITULARES <small>{starters.length} / 11</small></h3><div className="roster-table-scroll"><RosterHeader/><div className="roster-list">{starters.length ? starters.map(player => <PlayerRow player={player} mark={marks?.get(player.id)} key={player.id}/>) : <p className="empty-copy">No hay titulares definidos.</p>}</div></div><h3>SUPLENTES <small>{substitutes.length}</small></h3><div className="roster-table-scroll"><RosterHeader/><div className="roster-list substitutes">{substitutes.length ? substitutes.map(player => <PlayerRow player={player} mark={marks?.get(player.id)} key={player.id}/>) : <p className="empty-copy">No hay suplentes registrados.</p>}</div></div>{incoming.length > 0 && <><h3>POR LLEGAR <small>{incoming.length}</small></h3><div className="roster-table-scroll"><RosterHeader/><div className="roster-list incoming">{incoming.map(player => <PlayerRow player={player} incoming={player.incoming} key={player.id}/>)}</div></div></>}</div>;
 }
 
 function SquadTab({ team, squad, starters, substitutes, onChanged, ownerMode, tournaments, president, coach }) {
@@ -848,19 +849,27 @@ function SquadTab({ team, squad, starters, substitutes, onChanged, ownerMode, to
   const [editing, setEditing] = useState(false);
   const [view, setView] = useSquadView(ownerMode);
   const views = [['cancha', 'Cancha'], ['tabla', 'Tabla'], ...(ownerMode ? [['roles', 'Roles y ánimo']] : [])];
+  const pending = useApiQuery(signal => endpoints.teamPendingMoves(team.id, signal).catch(() => ({ data: null })), [team.id]);
+  const [timing, setTiming] = useState('ahora');
+  const marks = leavingMarks(pending.data);
+  const hasPending = pendingSummary(pending.data).any;
+  const projected = hasPending && timing === 'despues' ? projectedRoster([...starters, ...substitutes], pending.data) : null;
+  const showTable = projected && view !== 'roles';
   return <div className="club-squad-tab">
+    <PendingMovesCard data={pending.data} mode={hasPending ? timing : 'ahora'} onMode={setTiming}/>
     <nav className="squad-views" aria-label="Vista del plantel">
       {views.map(([id, label]) => <button type="button" key={id} className={view === id ? 'on' : ''} aria-pressed={view === id} onClick={() => setView(id)}>{label}</button>)}
       {canEdit && <Button size="sm" variant="ghost" icon="shirt" onClick={() => setEditing(true)}>Editar dorsales</Button>}
     </nav>
-    {view === 'cancha' && <div className="squad-top">
-      <PitchBoard team={team} starters={starters} substitutes={substitutes} onChanged={onChanged} readOnly={!canEdit} aside={<SquadAveragesBadge starters={starters} substitutes={substitutes}/>}/>
+    {showTable && <RosterTable starters={projected.stay.filter(player => starters.includes(player))} substitutes={projected.stay.filter(player => !starters.includes(player))} incoming={projected.incoming}/>}
+    {!showTable && view === 'cancha' && <div className="squad-top">
+      <PitchBoard team={team} starters={starters} substitutes={substitutes} marks={marks} onChanged={onChanged} readOnly={!canEdit} aside={<SquadAveragesBadge starters={starters} substitutes={substitutes}/>}/>
       <div className="squad-side">
         <div className="squad-leaders"><LeaderCard {...president}/><LeaderCard {...coach}/></div>
         <ClubScorers teamId={team.id} limit={5} tournaments={tournaments}/>
       </div>
     </div>}
-    {view === 'tabla' && <RosterTable starters={starters} substitutes={substitutes}/>}
+    {!showTable && view === 'tabla' && <RosterTable starters={starters} substitutes={substitutes} marks={marks}/>}
     {view === 'roles' && <RolesPanel team={team}/>}
     {editing && <PersonEditorModal title="EDITAR DORSALES" onClose={() => setEditing(false)}><div className="club-squad-editor"><SquadEditor team={team} squad={squad} onChanged={onChanged}/></div></PersonEditorModal>}
   </div>;

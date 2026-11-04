@@ -106,6 +106,7 @@ export const endpoints = {
   setContractSeasons: (teamId, contractId, body, signal) => apiClient.post(`/teams/${teamId}/contracts/${contractId}/seasons`, body, { actor: 'web', signal }),
   teamRoles: (teamId, signal) => get(`/teams/${teamId}/roles`, null, signal),
   setPlayerRole: (teamId, playerId, body, signal) => apiClient.put(`/teams/${teamId}/roles/${playerId}`, body, { actor: 'web', signal }),
+  teamPendingMoves: (teamId, signal) => get(`/teams/${teamId}/pending-moves`, null, signal),
   teamInbox: (teamId, signal) => get(`/teams/${teamId}/inbox`, null, signal),
   setContractBonuses: (teamId, playerId, body, signal) => apiClient.put(`/teams/${teamId}/contracts/${playerId}/bonuses`, body, { actor: 'web', signal }),
   stadiums: signal => get('/stadiums', null, signal),

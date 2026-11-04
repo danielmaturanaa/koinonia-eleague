@@ -78,14 +78,15 @@ const openPlayer = player => { window.location.hash = `/jugadores/${encodeURICom
 
 // Carta al estilo eFootballDB: media y posición a la izquierda, foto a la derecha
 // sobre los colores del club y el nombre en una franja inferior.
-function PitchCard({ player, selected, swappable, editing, style, onPointerDown, onPointerMove, onPointerUp, onClick, bench, isNew, highlighted }) {
+function PitchCard({ player, selected, swappable, editing, style, onPointerDown, onPointerMove, onPointerUp, onClick, bench, isNew, highlighted, mark }) {
   const offPosition = player.fieldPosition && player.fieldPosition !== player.naturalPosition;
-  return <button type="button" className={`pitch-card ${bench ? 'bench' : ''} ${offPosition ? 'off-position' : ''} ${selected ? 'selected' : ''} ${swappable ? 'swappable' : ''} ${editing ? 'editing' : ''} ${isNew ? 'sim-new' : ''} ${highlighted ? 'just-added' : ''}`} style={style} draggable={false} onDragStart={event => event.preventDefault()} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} onClick={onClick} aria-pressed={editing ? selected : undefined} aria-label={`${player.name}${editing ? (selected ? ', seleccionado' : '') : ', ver ficha'}`}>
+  return <button type="button" className={`pitch-card ${bench ? 'bench' : ''} ${offPosition ? 'off-position' : ''} ${selected ? 'selected' : ''} ${swappable ? 'swappable' : ''} ${editing ? 'editing' : ''} ${isNew ? 'sim-new' : ''} ${highlighted ? 'just-added' : ''} ${mark ? 'has-exit-mark' : ''}`} style={style} draggable={false} onDragStart={event => event.preventDefault()} onPointerDown={onPointerDown} onPointerMove={onPointerMove} onPointerUp={onPointerUp} onPointerCancel={onPointerUp} onClick={onClick} aria-pressed={editing ? selected : undefined} aria-label={`${player.name}${editing ? (selected ? ', seleccionado' : '') : ', ver ficha'}`}>
     <span className="pitch-card-stats">{hasCoachBoost(player)
       ? <><b className="pitch-card-ovr coach" title={`Media con DT: ${player.overallWithCoach} (base ${player.overall})`}>{player.overallWithCoach}</b><em className="pitch-card-base" title="Media base">{player.overall}</em></>
       : <b>{player.overall ?? '—'}</b>}<small title={offPosition ? `Juega de ${player.fieldPosition}; su puesto es ${player.naturalPosition}` : undefined}>{player.position ?? '—'}</small></span>
     <span className="pitch-card-photo"><PlayerFace src={player.faceUrl} name={player.name} className="pitch-card-face"/></span>
     <span className="pitch-card-name"><i>{player.jerseyNumber ?? '–'}</i>{shortPlayerName(player)}</span>
+    {mark && <em className="pitch-card-exit" title={mark.title}>SALE</em>}
   </button>;
 }
 
@@ -95,7 +96,7 @@ function PitchCard({ player, selected, swappable, editing, style, onPointerDown,
 // Con bare se omiten cabecera, ayuda y banca.
 // Con simulation los cambios no van a la API: se delegan en sus callbacks (onSwap, onMove,
 // onReorder, onPrice, onResetPrice, onRemove) y cada carta muestra su precio editable.
-export function PitchBoard({ team, starters, substitutes = [], onChanged, readOnly = false, bare = false, simulation = null, className = '', aside = null, actions = null }) {
+export function PitchBoard({ team, starters, substitutes = [], onChanged, readOnly = false, bare = false, simulation = null, className = '', aside = null, actions = null, marks = null }) {
   const editing = !readOnly;
   const [selectedId, setSelectedId] = useState(null);
   const [localPositions, setLocalPositions] = useState({});
@@ -215,7 +216,7 @@ export function PitchBoard({ team, starters, substitutes = [], onChanged, readOn
       const shown = playerAtPosition(player, position);
       const screen = projection.project(position.x, position.y);
       const style = { left: `${screen.x}%`, top: `${screen.y}%`, '--depth-scale': screen.scale, zIndex: selectedId === player.id ? 30 : 1 + Math.round(position.y / 10) };
-      const card = <PitchCard player={shown} editing={editing} selected={selectedId === player.id} style={simulation ? undefined : style} isNew={simulation?.isNew(player)} highlighted={simulation?.isHighlighted(player)} onPointerDown={onPointerDown(player)} onPointerMove={onPointerMove(player)} onPointerUp={onPointerUp(player)} onClick={onStarterClick(player)}/>;
+      const card = <PitchCard player={shown} editing={editing} selected={selectedId === player.id} style={simulation ? undefined : style} isNew={simulation?.isNew(player)} highlighted={simulation?.isHighlighted(player)} mark={marks?.get(player.id)} onPointerDown={onPointerDown(player)} onPointerMove={onPointerMove(player)} onPointerUp={onPointerUp(player)} onClick={onStarterClick(player)}/>;
       return simulation ? <div className="pitch-slot" key={player.id} style={style}>{card}{tools(player)}</div> : <Fragment key={player.id}>{card}</Fragment>;
     })}
   </div> : <p className="empty-copy">NO HAY TITULARES DEFINIDOS.</p>;
@@ -227,7 +228,7 @@ export function PitchBoard({ team, starters, substitutes = [], onChanged, readOn
     {(formationPicker || actions) && <div className="pitch-board-tools">{formationPicker}{actions}</div>}
     {field}
     <div className="pitch-board-bench"><h4>BANCA</h4>{substitutes.length ? <div>{substitutes.map(player => {
-      const card = <PitchCard bench player={player} editing={editing} selected={selectedId === player.id} swappable={Boolean(selectedId) && selectedId !== player.id} isNew={simulation?.isNew(player)} highlighted={simulation?.isHighlighted(player)} onClick={onBenchClick(player)}/>;
+      const card = <PitchCard bench player={player} editing={editing} selected={selectedId === player.id} swappable={Boolean(selectedId) && selectedId !== player.id} isNew={simulation?.isNew(player)} highlighted={simulation?.isHighlighted(player)} mark={marks?.get(player.id)} onClick={onBenchClick(player)}/>;
       return simulation ? <div className="pitch-bench-slot" key={player.id}>{card}{tools(player)}</div> : <Fragment key={player.id}>{card}</Fragment>;
     })}</div> : <p className="empty-copy">SIN SUPLENTES.</p>}</div>
     {!simulation && <><FormFeedback mutation={swap}/><FormFeedback mutation={move}/><FormFeedback mutation={reorder}/></>}
