@@ -20,13 +20,13 @@ export function BoardPanel({ team }) {
       const [icon, label] = STATUS[row.status];
       return <li key={row.id} className={`board-${row.status}`}>
         <span>{icon}</span>
-        <span><b>{upper(row.text)}</b><small>{label}{row.status !== 'pending' && row.kind !== 'payroll' ? ` · TERMINASTE ${row.result}º` : ''}</small></span>
+        <span><b>{upper(row.text)}</b><small>{label}{row.status !== 'pending' && row.kind !== 'payroll' ? (row.result != null ? ` · TERMINASTE ${row.result}º` : row.status === 'met' ? ' · YA ASEGURADO, TORNEO EN CURSO' : ' · YA IMPOSIBLE, TORNEO EN CURSO') : ''}</small></span>
         <em>{row.status === 'failed' ? `ÁNIMO ${row.moodEffect}` : `PREMIO ${gpLabel(row.reward)}${row.status === 'met' ? ` · ÁNIMO +${row.moodEffect}` : ''}`}</em>
       </li>;
     })}</ul>
   </div>;
   return <section className="board-panel">
-    <header><h3>Objetivos de la directiva</h3><p>Se evalúan al terminar el torneo.</p><HowItWorks><p>La directiva te exige esto según tus resultados de las dos últimas ligas y la historia del club. Si cumples hay premio y los jugadores se animan; si fallas, se desaniman.</p></HowItWorks></header>
+    <header><h3>Objetivos de la directiva</h3><p>Se evalúan al terminar el torneo, o antes si el puesto ya quedó asegurado o perdido.</p><HowItWorks><p>La directiva te exige esto según tus resultados de las dos últimas ligas y la historia del club. Si cumples hay premio y los jugadores se animan; si fallas, se desaniman.</p></HowItWorks></header>
     {block(current)}
     {past.length > 0 && <details><summary>TORNEOS ANTERIORES</summary>{past.map(block)}</details>}
   </section>;

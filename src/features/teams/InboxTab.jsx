@@ -18,7 +18,7 @@ function RequestActions({ team, request, locked, onDone }) {
     onSuccess: response => { setSummary(response?.data?.summary ?? null); onDone?.(); },
   });
   if (request.status === 'closed') return <p className="request-note">YA NO ESTÁ EN TU CLUB.</p>;
-  if (request.kind === 'leave') return <p className="request-note leave">Pidió salir: ya no se le puede renovar. Véndelo o canjéalo desde el mercado.</p>;
+  if (request.kind === 'leave') return <p className="request-note leave">Pidió salir: ya no se le puede renovar. Sale libre al pasar a transacciones; solo puedes canjearlo, sin plata de por medio.</p>;
   if (request.status !== 'open') return <p className="request-note">{summary ?? (request.resolution === 'escalated' ? 'NO LE RESPONDISTE A TIEMPO: PIDIÓ SALIR.' : 'RESPONDIDA.')}</p>;
   return <div className="request-actions">
     <span>¿QUÉ LE RESPONDES? <small>SI NO LE RESPONDES A TIEMPO, PIDE SALIR.</small></span>

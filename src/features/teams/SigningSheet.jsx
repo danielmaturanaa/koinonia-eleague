@@ -56,7 +56,7 @@ function refusalHint(info, contract) {
   const why = info.leave ? `Se quiere ir: ${info.leave.text}.` : `Su ánimo es ${info.mood}/100 y por debajo de 35 no se sienta a negociar.`;
   const reversible = info.leave?.reversible === false ? 'Es una decisión personal: no hay cómo convencerlo.' : 'No es definitivo: si su situación mejora, vuelve a negociar.';
   const lever = fixable.length ? `Lo que sí puedes mover: ${fixable.slice(0, 2).map(reason => reason.text.toLowerCase()).join('; ')}.` : worst ? `Lo que más lo hunde (${worst.text.toLowerCase()}) no se arregla antes de que cierre el mercado.` : '';
-  const exit = contract.exitReason ? 'Puedes traspasarlo desde ya, o dejar que salga libre cuando venza.' : '';
+  const exit = contract.exitReason ? 'No se vende: sale libre al pasar a transacciones (sigue jugando hasta que termine el torneo). Solo puedes canjearlo, sin plata de por medio.' : '';
   return [why, reversible, lever, exit].filter(Boolean).join(' ');
 }
 
