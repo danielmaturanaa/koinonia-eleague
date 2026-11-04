@@ -12,6 +12,7 @@ import { MyClubPanel, clubFigures, signingBlocker, signingNotes } from './market
 import { OffersInbox, ProposeOffers } from './market/OffersSection.jsx';
 import { PollsSection } from './market/PollsSection.jsx';
 import { ForSaleSection } from './market/ForSaleSection.jsx';
+import { LeavingSection } from './market/LeavingSection.jsx';
 import { AuctionHistory } from './market/AuctionHistory.jsx';
 import { SealedAuctionsSection } from './market/SealedAuctionsSection.jsx';
 import { gpLabel } from '../../utils/money.js';
@@ -233,6 +234,7 @@ export function MarketPage({ teams, initialTab = null, highlightId = null, prefi
   const tabs = [
     { id: 'subastas', label: 'Subastas', badge: liveCount },
     ...(operates ? [{ id: 'libres', label: 'Fichar libres' }, { id: 'ofertas', label: 'Ofertas', badge: incoming }, { id: 'venta', label: 'A la venta' }] : []),
+    { id: 'se-van', label: 'Se quieren ir' },
     ...(myTeam ? [{ id: 'seguidos', label: 'Seguidos' }] : []),
     { id: 'historial', label: 'Historial' },
   ];
@@ -254,6 +256,7 @@ export function MarketPage({ teams, initialTab = null, highlightId = null, prefi
       {operates && myTeamId && !prefill && <ProposeOffers teams={teams} marketOpen={marketOpen} onChanged={refresh}/>}
     </>}
     {current === 'venta' && <ForSaleSection teams={teams} revision={revision} onChanged={refresh}/>}
+    {current === 'se-van' && <LeavingSection teams={teams} revision={revision}/>}
     {current === 'seguidos' && myTeam && <WatchlistTab team={myTeam}/>}
     {current === 'historial' && <AuctionHistory revision={revision} teams={teams}/>}
   </Screen>;

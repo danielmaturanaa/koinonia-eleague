@@ -55,14 +55,20 @@ export function TransferChat({ player, teamId, onChanged, onPromiseRole, onClose
     return () => controller.abort();
   }, [player.id, teamId]);
 
-  // Mientras escribe, se pide la conversación justo cuando toca revelar el siguiente mensaje.
+  // Mientras escribe, se vuelve a pedir la conversación hasta que no quede ningún mensaje oculto. El reloj del navegador puede ir
+  // adelantado respecto al servidor (el mensaje aún no se revela), así que se reintenta cada vez, también si falla la petición.
+  const hasHidden = (chat?.messages ?? []).some(item => item.pending && !item.text);
   const nextReveal = (chat?.messages ?? []).filter(item => item.pending && item.revealAt).map(item => Date.parse(item.revealAt)).filter(Number.isFinite).sort((a, b) => a - b)[0] ?? null;
+  const [retry, setRetry] = useState(0);
   useEffect(() => {
-    if (nextReveal == null) return undefined;
+    if (!hasHidden) return undefined;
     const controller = new AbortController();
-    const timer = window.setTimeout(() => fetchChat(controller.signal).catch(() => {}), Math.max(150, nextReveal - Date.now() + 120));
+    const wait = nextReveal == null ? 1500 : Math.min(4000, Math.max(700, nextReveal - Date.now() + 150));
+    const timer = window.setTimeout(() => {
+      fetchChat(controller.signal).catch(() => {}).finally(() => { if (!controller.signal.aborted) setRetry(count => count + 1); });
+    }, wait);
     return () => { window.clearTimeout(timer); controller.abort(); };
-  }, [nextReveal]);
+  }, [hasHidden, nextReveal, retry]);
 
   const visible = (() => {
     const messages = chat?.messages ?? [];
